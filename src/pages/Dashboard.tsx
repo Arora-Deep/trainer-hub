@@ -2,6 +2,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -55,7 +56,7 @@ export default function Dashboard() {
       <PageHeader
         title="Dashboard"
         description="Welcome back, John! Here's what's happening with your training sessions."
-        breadcrumbs={[{ label: "Statistics" }]}
+        breadcrumbs={[{ label: "Dashboard" }]}
       />
 
       {/* Stats Row */}
@@ -88,165 +89,177 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="rounded-lg border border-border bg-card p-4">
-        <h3 className="text-sm font-medium mb-3">Quick Actions</h3>
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" asChild>
-            <Link to="/batches">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Batch
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/labs">
-              <FlaskConical className="mr-2 h-4 w-4" />
-              Create Lab
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/course-builder">
-              <Hammer className="mr-2 h-4 w-4" />
-              Build Course
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm">
-            <Play className="mr-2 h-4 w-4" />
-            Start Session
-          </Button>
-        </div>
-      </div>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-medium">Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild>
+              <Link to="/batches">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Batch
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/labs">
+                <FlaskConical className="mr-2 h-4 w-4" />
+                Create Lab
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/course-builder">
+                <Hammer className="mr-2 h-4 w-4" />
+                Build Course
+              </Link>
+            </Button>
+            <Button variant="outline">
+              <Play className="mr-2 h-4 w-4" />
+              Start Session
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Upcoming Batches */}
-        <div className="rounded-lg border border-border bg-card">
-          <div className="flex items-center justify-between p-4 border-b border-border">
-            <h3 className="text-sm font-medium">Upcoming Batches</h3>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base font-medium">Upcoming Batches</CardTitle>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/batches" className="text-muted-foreground hover:text-foreground">
+              <Link to="/batches">
                 View all <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs">Batch Name</TableHead>
-                <TableHead className="text-xs">Trainer</TableHead>
-                <TableHead className="text-xs">Start Date</TableHead>
-                <TableHead className="text-xs text-right">Students</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {upcomingBatches.map((batch) => (
-                <TableRow key={batch.id}>
-                  <TableCell className="font-medium text-sm">{batch.name}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{batch.trainer}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{batch.startDate}</TableCell>
-                  <TableCell className="text-sm text-right">{batch.students}</TableCell>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Batch Name</TableHead>
+                  <TableHead>Trainer</TableHead>
+                  <TableHead>Start Date</TableHead>
+                  <TableHead className="text-right">Students</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {upcomingBatches.map((batch) => (
+                  <TableRow key={batch.id}>
+                    <TableCell className="font-medium">{batch.name}</TableCell>
+                    <TableCell>{batch.trainer}</TableCell>
+                    <TableCell>{batch.startDate}</TableCell>
+                    <TableCell className="text-right">{batch.students}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
 
         {/* Active Labs */}
-        <div className="rounded-lg border border-border bg-card">
-          <div className="flex items-center justify-between p-4 border-b border-border">
-            <h3 className="text-sm font-medium">Active Labs Right Now</h3>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base font-medium">Active Labs Right Now</CardTitle>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/labs" className="text-muted-foreground hover:text-foreground">
+              <Link to="/labs">
                 View all <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs">Student</TableHead>
-                <TableHead className="text-xs">Lab</TableHead>
-                <TableHead className="text-xs">Status</TableHead>
-                <TableHead className="text-xs text-right">Time Left</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {activeLabs.map((lab) => (
-                <TableRow key={lab.id}>
-                  <TableCell className="font-medium text-sm">{lab.student}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{lab.lab}</TableCell>
-                  <TableCell>
-                    <StatusBadge
-                      status={lab.status === "running" ? "success" : lab.status === "idle" ? "warning" : "error"}
-                      label={lab.status.charAt(0).toUpperCase() + lab.status.slice(1)}
-                    />
-                  </TableCell>
-                  <TableCell className="text-sm text-right text-muted-foreground">{lab.timeRemaining}</TableCell>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Lab</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Time Left</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {activeLabs.map((lab) => (
+                  <TableRow key={lab.id}>
+                    <TableCell className="font-medium">{lab.student}</TableCell>
+                    <TableCell>{lab.lab}</TableCell>
+                    <TableCell>
+                      <StatusBadge
+                        status={lab.status === "running" ? "success" : lab.status === "idle" ? "warning" : "error"}
+                        label={lab.status.charAt(0).toUpperCase() + lab.status.slice(1)}
+                      />
+                    </TableCell>
+                    <TableCell className="text-right">{lab.timeRemaining}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
 
         {/* Alerts & Issues */}
-        <div className="rounded-lg border border-border bg-card">
-          <div className="p-4 border-b border-border">
-            <h3 className="text-sm font-medium">Alerts & Issues</h3>
-          </div>
-          <div className="p-4 space-y-3">
-            {alerts.map((alert) => (
-              <div
-                key={alert.id}
-                className="flex items-start gap-3 rounded-lg border border-border p-3"
-              >
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-medium">Alerts & Issues</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {alerts.map((alert) => (
                 <div
-                  className={`mt-1 h-2 w-2 rounded-full shrink-0 ${
-                    alert.type === "error"
-                      ? "bg-red-500"
-                      : alert.type === "warning"
-                      ? "bg-orange-500"
-                      : "bg-blue-500"
-                  }`}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground">{alert.message}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{alert.time}</p>
+                  key={alert.id}
+                  className="flex items-start gap-3 rounded-lg border border-border p-3"
+                >
+                  <div
+                    className={`mt-0.5 h-2 w-2 rounded-full ${
+                      alert.type === "error"
+                        ? "bg-destructive"
+                        : alert.type === "warning"
+                        ? "bg-warning"
+                        : "bg-info"
+                    }`}
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm text-foreground">{alert.message}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{alert.time}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Course Progress */}
-        <div className="rounded-lg border border-border bg-card">
-          <div className="flex items-center justify-between p-4 border-b border-border">
-            <h3 className="text-sm font-medium">Course Progress Overview</h3>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base font-medium">Course Progress Overview</CardTitle>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/courses" className="text-muted-foreground hover:text-foreground">
+              <Link to="/courses">
                 View all <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
-          </div>
-          <div className="p-4 space-y-4">
-            {courseProgress.map((course, index) => (
-              <div key={index}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">{course.name}</span>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {courseProgress.map((course, index) => (
+                <div key={index}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">{course.name}</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">{course.progress}%</span>
                   </div>
-                  <span className="text-sm text-muted-foreground">{course.progress}%</span>
+                  <div className="h-2 rounded-full bg-secondary">
+                    <div
+                      className="h-2 rounded-full bg-primary transition-all"
+                      style={{ width: `${course.progress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">{course.students} students enrolled</p>
                 </div>
-                <div className="h-1.5 rounded-full bg-muted">
-                  <div
-                    className="h-1.5 rounded-full bg-foreground transition-all"
-                    style={{ width: `${course.progress}%` }}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">{course.students} students enrolled</p>
-              </div>
-            ))}
-          </div>
-        </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

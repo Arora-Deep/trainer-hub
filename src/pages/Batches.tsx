@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -12,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
 
 // Mock data
@@ -58,64 +59,75 @@ export default function Batches() {
       />
 
       {/* Filters */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Tabs value={filter} onValueChange={setFilter}>
-          <TabsList className="bg-muted">
-            <TabsTrigger value="all">All Batches</TabsTrigger>
-            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-            <TabsTrigger value="live">Live</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search batches..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 w-64"
-          />
-        </div>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <Tabs value={filter} onValueChange={setFilter}>
+              <TabsList>
+                <TabsTrigger value="all">All Batches</TabsTrigger>
+                <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                <TabsTrigger value="live">Live</TabsTrigger>
+                <TabsTrigger value="completed">Completed</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <div className="flex gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search batches..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10 w-64"
+                />
+              </div>
+              <Button variant="outline" size="icon">
+                <Filter className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Batches Table */}
-      <div className="rounded-lg border border-border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="font-medium">Batch Name</TableHead>
-              <TableHead className="font-medium">Course</TableHead>
-              <TableHead className="font-medium">Trainer</TableHead>
-              <TableHead className="font-medium">Start Date</TableHead>
-              <TableHead className="font-medium">End Date</TableHead>
-              <TableHead className="font-medium text-center">Students</TableHead>
-              <TableHead className="font-medium">Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredBatches.map((batch) => (
-              <TableRow key={batch.id} className="hover:bg-muted/50">
-                <TableCell>
-                  <Link to={`/batches/${batch.id}`} className="font-medium text-foreground hover:text-foreground/80">
-                    {batch.name}
-                  </Link>
-                </TableCell>
-                <TableCell className="text-muted-foreground">{batch.course}</TableCell>
-                <TableCell className="text-muted-foreground">{batch.trainer}</TableCell>
-                <TableCell className="text-muted-foreground">{batch.startDate}</TableCell>
-                <TableCell className="text-muted-foreground">{batch.endDate}</TableCell>
-                <TableCell className="text-center">{batch.students}</TableCell>
-                <TableCell>
-                  <StatusBadge
-                    status={statusMap[batch.status].status}
-                    label={statusMap[batch.status].label}
-                  />
-                </TableCell>
+      <Card>
+        <CardContent className="pt-6">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Batch Name</TableHead>
+                <TableHead>Course</TableHead>
+                <TableHead>Trainer</TableHead>
+                <TableHead>Start Date</TableHead>
+                <TableHead>End Date</TableHead>
+                <TableHead className="text-center">Students</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {filteredBatches.map((batch) => (
+                <TableRow key={batch.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableCell>
+                    <Link to={`/batches/${batch.id}`} className="font-medium text-primary hover:underline">
+                      {batch.name}
+                    </Link>
+                  </TableCell>
+                  <TableCell>{batch.course}</TableCell>
+                  <TableCell>{batch.trainer}</TableCell>
+                  <TableCell>{batch.startDate}</TableCell>
+                  <TableCell>{batch.endDate}</TableCell>
+                  <TableCell className="text-center">{batch.students}</TableCell>
+                  <TableCell>
+                    <StatusBadge
+                      status={statusMap[batch.status].status}
+                      label={statusMap[batch.status].label}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
