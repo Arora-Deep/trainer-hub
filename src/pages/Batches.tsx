@@ -13,14 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Filter, Users, Calendar, MoreHorizontal } from "lucide-react";
+import { Plus, Search, Filter, Users, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 // Mock data
 const batchesData = [
@@ -58,13 +52,13 @@ export default function Batches() {
   });
 
   return (
-    <div className="space-y-6 animate-in-up">
+    <div className="space-y-6">
       <PageHeader
         title="Batches"
         description="Manage all your training batches and sessions"
         breadcrumbs={[{ label: "Batches" }]}
         actions={
-          <Button className="shadow-md">
+          <Button>
             <Plus className="mr-2 h-4 w-4" />
             Create Batch
           </Button>
@@ -76,33 +70,32 @@ export default function Batches() {
         <CardContent className="py-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Tabs value={filter} onValueChange={setFilter}>
-              <TabsList className="bg-muted/50 p-1">
-                <TabsTrigger value="all" className="gap-1.5 data-[state=active]:shadow-sm">
-                  All <span className="text-muted-foreground text-xs ml-1">{filterCounts.all}</span>
+              <TabsList className="bg-muted/50">
+                <TabsTrigger value="all" className="gap-1.5">
+                  All <span className="text-muted-foreground/70 text-xs">{filterCounts.all}</span>
                 </TabsTrigger>
-                <TabsTrigger value="upcoming" className="gap-1.5 data-[state=active]:shadow-sm">
-                  Upcoming <span className="text-muted-foreground text-xs ml-1">{filterCounts.upcoming}</span>
+                <TabsTrigger value="upcoming" className="gap-1.5">
+                  Upcoming <span className="text-muted-foreground/70 text-xs">{filterCounts.upcoming}</span>
                 </TabsTrigger>
-                <TabsTrigger value="live" className="gap-1.5 data-[state=active]:shadow-sm">
-                  <span className="h-1.5 w-1.5 rounded-full bg-success" />
-                  Live <span className="text-muted-foreground text-xs ml-1">{filterCounts.live}</span>
+                <TabsTrigger value="live" className="gap-1.5">
+                  Live <span className="text-muted-foreground/70 text-xs">{filterCounts.live}</span>
                 </TabsTrigger>
-                <TabsTrigger value="completed" className="gap-1.5 data-[state=active]:shadow-sm">
-                  Completed <span className="text-muted-foreground text-xs ml-1">{filterCounts.completed}</span>
+                <TabsTrigger value="completed" className="gap-1.5">
+                  Completed <span className="text-muted-foreground/70 text-xs">{filterCounts.completed}</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
             <div className="flex gap-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
                 <Input
                   placeholder="Search batches..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 w-64 bg-muted/40 border-0 rounded-lg focus-visible:ring-1 focus-visible:ring-primary/30"
+                  className="pl-10 w-64 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/30"
                 />
               </div>
-              <Button variant="outline" size="icon" className="shrink-0 rounded-lg">
+              <Button variant="outline" size="icon" className="shrink-0">
                 <Filter className="h-4 w-4" />
               </Button>
             </div>
@@ -123,9 +116,10 @@ export default function Batches() {
                   <TableHead className="font-medium">
                     <span className="inline-flex items-center gap-1.5">
                       <Calendar className="h-3.5 w-3.5" />
-                      Duration
+                      Start Date
                     </span>
                   </TableHead>
+                  <TableHead className="font-medium">End Date</TableHead>
                   <TableHead className="font-medium text-center">
                     <span className="inline-flex items-center gap-1.5">
                       <Users className="h-3.5 w-3.5" />
@@ -133,12 +127,11 @@ export default function Batches() {
                     </span>
                   </TableHead>
                   <TableHead className="font-medium">Status</TableHead>
-                  <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredBatches.map((batch) => (
-                  <TableRow key={batch.id} className="table-row-premium group">
+                  <TableRow key={batch.id} className="group hover:bg-muted/30">
                     <TableCell>
                       <Link 
                         to={`/batches/${batch.id}`} 
@@ -148,19 +141,15 @@ export default function Batches() {
                       </Link>
                     </TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center rounded-lg bg-muted/80 px-2.5 py-1 text-xs font-medium">
+                      <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
                         {batch.course}
                       </span>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{batch.trainer}</TableCell>
-                    <TableCell className="text-muted-foreground tabular-nums">
-                      <div className="space-y-0.5">
-                        <div className="text-xs">{batch.startDate}</div>
-                        <div className="text-[10px] text-muted-foreground/70">to {batch.endDate}</div>
-                      </div>
-                    </TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums">{batch.startDate}</TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums">{batch.endDate}</TableCell>
                     <TableCell className="text-center">
-                      <span className="inline-flex items-center justify-center min-w-[2rem] font-semibold tabular-nums text-foreground">
+                      <span className="inline-flex items-center justify-center min-w-[2rem] font-medium tabular-nums">
                         {batch.students}
                       </span>
                     </TableCell>
@@ -168,27 +157,7 @@ export default function Batches() {
                       <StatusBadge
                         status={statusMap[batch.status].status}
                         label={statusMap[batch.status].label}
-                        pulse={batch.status === "live"}
                       />
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Edit Batch</DropdownMenuItem>
-                          <DropdownMenuItem>Manage Students</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -201,10 +170,6 @@ export default function Batches() {
       {/* Results count */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>Showing {filteredBatches.length} of {batchesData.length} batches</span>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" disabled>Previous</Button>
-          <Button variant="outline" size="sm">Next</Button>
-        </div>
       </div>
     </div>
   );

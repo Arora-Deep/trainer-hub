@@ -1,51 +1,29 @@
+import { ReactNode } from "react";
 import { Breadcrumbs } from "./Breadcrumbs";
-import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
   title: string;
   description?: string;
   breadcrumbs?: { label: string; href?: string }[];
-  actions?: React.ReactNode;
-  className?: string;
-  compact?: boolean;
+  actions?: ReactNode;
 }
 
-export function PageHeader({
-  title,
-  description,
-  breadcrumbs,
-  actions,
-  className,
-  compact = false,
-}: PageHeaderProps) {
+export function PageHeader({ title, description, breadcrumbs, actions }: PageHeaderProps) {
   return (
-    <div className={cn(
-      "space-y-1",
-      compact ? "pb-4" : "pb-2",
-      className
-    )}>
-      {breadcrumbs && breadcrumbs.length > 0 && (
-        <Breadcrumbs items={breadcrumbs} />
-      )}
+    <div className="mb-8">
+      {breadcrumbs && <Breadcrumbs items={breadcrumbs} className="mb-4" />}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1 min-w-0">
-          <h1 className={cn(
-            "font-semibold tracking-tight text-foreground",
-            compact ? "text-xl" : "text-2xl"
-          )}>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             {title}
           </h1>
           {description && (
-            <p className="text-sm text-muted-foreground max-w-2xl text-balance leading-relaxed">
+            <p className="text-sm text-muted-foreground max-w-2xl">
               {description}
             </p>
           )}
         </div>
-        {actions && (
-          <div className="flex items-center gap-2 shrink-0">
-            {actions}
-          </div>
-        )}
+        {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
       </div>
     </div>
   );
