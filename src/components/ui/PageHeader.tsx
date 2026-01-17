@@ -1,25 +1,51 @@
-import { ReactNode } from "react";
 import { Breadcrumbs } from "./Breadcrumbs";
+import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
   title: string;
   description?: string;
   breadcrumbs?: { label: string; href?: string }[];
-  actions?: ReactNode;
+  actions?: React.ReactNode;
+  className?: string;
+  compact?: boolean;
 }
 
-export function PageHeader({ title, description, breadcrumbs, actions }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  description,
+  breadcrumbs,
+  actions,
+  className,
+  compact = false,
+}: PageHeaderProps) {
   return (
-    <div className="mb-6 animate-fade-in">
-      {breadcrumbs && <Breadcrumbs items={breadcrumbs} className="mb-3" />}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
+    <div className={cn(
+      "space-y-1",
+      compact ? "pb-4" : "pb-2",
+      className
+    )}>
+      {breadcrumbs && breadcrumbs.length > 0 && (
+        <Breadcrumbs items={breadcrumbs} />
+      )}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1 min-w-0">
+          <h1 className={cn(
+            "font-semibold tracking-tight text-foreground",
+            compact ? "text-xl" : "text-2xl"
+          )}>
+            {title}
+          </h1>
           {description && (
-            <p className="mt-1 text-muted-foreground">{description}</p>
+            <p className="text-sm text-muted-foreground max-w-2xl text-balance leading-relaxed">
+              {description}
+            </p>
           )}
         </div>
-        {actions && <div className="flex items-center gap-3">{actions}</div>}
+        {actions && (
+          <div className="flex items-center gap-2 shrink-0">
+            {actions}
+          </div>
+        )}
       </div>
     </div>
   );

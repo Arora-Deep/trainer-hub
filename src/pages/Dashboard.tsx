@@ -1,8 +1,10 @@
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { DataCard } from "@/components/ui/DataCard";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -20,7 +22,9 @@ import {
   Play,
   Hammer,
   BookOpen,
-  ArrowRight,
+  Clock,
+  Zap,
+  TrendingUp,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -50,9 +54,16 @@ const courseProgress = [
   { name: "Docker Masterclass", progress: 90, students: 30 },
 ];
 
+const quickActions = [
+  { label: "Create Batch", icon: Plus, href: "/batches", primary: true },
+  { label: "Create Lab", icon: FlaskConical, href: "/labs" },
+  { label: "Build Course", icon: Hammer, href: "/course-builder" },
+  { label: "Start Session", icon: Play },
+];
+
 export default function Dashboard() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in-up">
       <PageHeader
         title="Dashboard"
         description="Welcome back, John! Here's what's happening with your training sessions."
@@ -60,63 +71,71 @@ export default function Dashboard() {
       />
 
       {/* Stats Row */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Students Online"
           value={142}
           icon={Users}
           description="Across all batches"
           trend={{ value: 12, isPositive: true }}
+          variant="primary"
         />
         <StatCard
           title="Active Labs"
           value={38}
           icon={FlaskConical}
           description="Running right now"
+          variant="success"
         />
         <StatCard
           title="Upcoming Batches"
           value={8}
           icon={Calendar}
           description="This month"
+          variant="info"
         />
         <StatCard
           title="Active Alerts"
           value={3}
           icon={AlertTriangle}
           description="Needs attention"
+          variant="warning"
         />
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-medium">Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-            <Button asChild>
-              <Link to="/batches">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Batch
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/labs">
-                <FlaskConical className="mr-2 h-4 w-4" />
-                Create Lab
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/course-builder">
-                <Hammer className="mr-2 h-4 w-4" />
-                Build Course
-              </Link>
-            </Button>
-            <Button variant="outline">
-              <Play className="mr-2 h-4 w-4" />
-              Start Session
-            </Button>
+      <Card className="border-dashed bg-muted/20">
+        <CardContent className="py-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 mr-2">
+              <Zap className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Quick actions</span>
+            </div>
+            {quickActions.map((action) => (
+              action.href ? (
+                <Button 
+                  key={action.label}
+                  variant={action.primary ? "default" : "outline"} 
+                  size="sm"
+                  className={action.primary ? "shadow-md" : ""}
+                  asChild
+                >
+                  <Link to={action.href}>
+                    <action.icon className="mr-2 h-4 w-4" />
+                    {action.label}
+                  </Link>
+                </Button>
+              ) : (
+                <Button 
+                  key={action.label}
+                  variant="outline" 
+                  size="sm"
+                >
+                  <action.icon className="mr-2 h-4 w-4" />
+                  {action.label}
+                </Button>
+              )
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -124,92 +143,103 @@ export default function Dashboard() {
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Upcoming Batches */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base font-medium">Upcoming Batches</CardTitle>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/batches">
-                View all <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Batch Name</TableHead>
-                  <TableHead>Trainer</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead className="text-right">Students</TableHead>
+        <DataCard 
+          title="Upcoming Batches" 
+          icon={Calendar}
+          action={{ label: "View all", href: "/batches" }}
+          noPadding
+        >
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/30 hover:bg-muted/30">
+                <TableHead className="font-medium">Batch Name</TableHead>
+                <TableHead className="font-medium">Trainer</TableHead>
+                <TableHead className="font-medium">Start Date</TableHead>
+                <TableHead className="font-medium text-right">Students</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {upcomingBatches.map((batch) => (
+                <TableRow key={batch.id} className="table-row-premium">
+                  <TableCell>
+                    <Link to={`/batches/${batch.id}`} className="font-medium hover:text-primary transition-colors">
+                      {batch.name}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{batch.trainer}</TableCell>
+                  <TableCell className="text-muted-foreground tabular-nums">{batch.startDate}</TableCell>
+                  <TableCell className="text-right tabular-nums font-medium">{batch.students}</TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {upcomingBatches.map((batch) => (
-                  <TableRow key={batch.id}>
-                    <TableCell className="font-medium">{batch.name}</TableCell>
-                    <TableCell>{batch.trainer}</TableCell>
-                    <TableCell>{batch.startDate}</TableCell>
-                    <TableCell className="text-right">{batch.students}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+              ))}
+            </TableBody>
+          </Table>
+        </DataCard>
 
         {/* Active Labs */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base font-medium">Active Labs Right Now</CardTitle>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/labs">
-                View all <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Lab</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Time Left</TableHead>
+        <DataCard 
+          title="Active Labs"
+          icon={FlaskConical}
+          action={{ label: "View all", href: "/labs" }}
+          badge={
+            <span className="flex items-center gap-1.5 text-xs text-success font-medium">
+              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+              Live
+            </span>
+          }
+          noPadding
+        >
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/30 hover:bg-muted/30">
+                <TableHead className="font-medium">Student</TableHead>
+                <TableHead className="font-medium">Lab</TableHead>
+                <TableHead className="font-medium">Status</TableHead>
+                <TableHead className="font-medium text-right">Time Left</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {activeLabs.map((lab) => (
+                <TableRow key={lab.id} className="table-row-premium">
+                  <TableCell className="font-medium">{lab.student}</TableCell>
+                  <TableCell className="text-muted-foreground">{lab.lab}</TableCell>
+                  <TableCell>
+                    <StatusBadge
+                      status={lab.status === "running" ? "success" : lab.status === "idle" ? "warning" : "error"}
+                      label={lab.status.charAt(0).toUpperCase() + lab.status.slice(1)}
+                      pulse={lab.status === "running"}
+                    />
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Clock className="h-3 w-3" />
+                      {lab.timeRemaining}
+                    </span>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {activeLabs.map((lab) => (
-                  <TableRow key={lab.id}>
-                    <TableCell className="font-medium">{lab.student}</TableCell>
-                    <TableCell>{lab.lab}</TableCell>
-                    <TableCell>
-                      <StatusBadge
-                        status={lab.status === "running" ? "success" : lab.status === "idle" ? "warning" : "error"}
-                        label={lab.status.charAt(0).toUpperCase() + lab.status.slice(1)}
-                      />
-                    </TableCell>
-                    <TableCell className="text-right">{lab.timeRemaining}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+              ))}
+            </TableBody>
+          </Table>
+        </DataCard>
 
         {/* Alerts & Issues */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-medium">Alerts & Issues</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {alerts.map((alert) => (
-                <div
-                  key={alert.id}
-                  className="flex items-start gap-3 rounded-lg border border-border p-3"
-                >
-                  <div
-                    className={`mt-0.5 h-2 w-2 rounded-full ${
+        <DataCard 
+          title="Alerts & Issues"
+          icon={AlertTriangle}
+          badge={
+            <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+              {alerts.length} new
+            </span>
+          }
+        >
+          <div className="space-y-2">
+            {alerts.map((alert) => (
+              <div
+                key={alert.id}
+                className="flex items-start gap-3 rounded-xl border border-border p-3 hover:bg-muted/30 hover:border-border/80 transition-all cursor-pointer interactive"
+              >
+                <div className="mt-0.5 shrink-0">
+                  <span
+                    className={`flex h-2 w-2 rounded-full ${
                       alert.type === "error"
                         ? "bg-destructive"
                         : alert.type === "warning"
@@ -217,49 +247,44 @@ export default function Dashboard() {
                         : "bg-info"
                     }`}
                   />
-                  <div className="flex-1">
-                    <p className="text-sm text-foreground">{alert.message}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{alert.time}</p>
-                  </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground leading-snug">{alert.message}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{alert.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DataCard>
 
         {/* Course Progress */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base font-medium">Course Progress Overview</CardTitle>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/courses">
-                View all <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {courseProgress.map((course, index) => (
-                <div key={index}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">{course.name}</span>
+        <DataCard 
+          title="Course Progress"
+          icon={TrendingUp}
+          action={{ label: "View all", href: "/courses" }}
+        >
+          <div className="space-y-5">
+            {courseProgress.map((course, index) => (
+              <div key={index} className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="rounded-lg bg-primary/10 p-2">
+                      <BookOpen className="h-3.5 w-3.5 text-primary" />
                     </div>
-                    <span className="text-sm text-muted-foreground">{course.progress}%</span>
+                    <span className="text-sm font-medium truncate">{course.name}</span>
                   </div>
-                  <div className="h-2 rounded-full bg-secondary">
-                    <div
-                      className="h-2 rounded-full bg-primary transition-all"
-                      style={{ width: `${course.progress}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{course.students} students enrolled</p>
+                  <span className="text-sm font-semibold tabular-nums text-foreground">{course.progress}%</span>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <ProgressBar 
+                  value={course.progress} 
+                  size="default"
+                  variant={course.progress >= 80 ? "success" : course.progress >= 50 ? "primary" : "warning"}
+                />
+                <p className="text-xs text-muted-foreground">{course.students} students enrolled</p>
+              </div>
+            ))}
+          </div>
+        </DataCard>
       </div>
     </div>
   );
