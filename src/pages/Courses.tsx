@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -11,8 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, MoreHorizontal, BookOpen, Users } from "lucide-react";
+import { Search, MoreHorizontal, BookOpen, Users, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
+import { CreateCourseDialog } from "@/components/courses/CreateCourseDialog";
 
 // Mock data
 const courses = [
@@ -31,12 +33,20 @@ const statusConfig: Record<string, { status: "success" | "warning" | "default"; 
 };
 
 export default function Courses() {
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Courses"
         description="Browse and manage all available courses"
         breadcrumbs={[{ label: "Courses" }]}
+        actions={
+          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Create Course
+          </Button>
+        }
       />
 
       <Card>
@@ -61,7 +71,7 @@ export default function Courses() {
             </TableHeader>
             <TableBody>
               {courses.map((course) => (
-                <TableRow key={course.id}>
+                <TableRow key={course.id} className="table-row-premium">
                   <TableCell>
                     <Link to={`/courses/${course.id}`} className="flex items-center gap-3 font-medium text-primary hover:underline">
                       <div className="rounded-lg bg-primary/10 p-2">
@@ -100,6 +110,8 @@ export default function Courses() {
           </Table>
         </CardContent>
       </Card>
+
+      <CreateCourseDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
     </div>
   );
 }
