@@ -13,16 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Search, MoreHorizontal, BookOpen, Users, Plus } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-
-// Mock data
-const courses = [
-  { id: 1, name: "AWS Solutions Architect Professional", deliveryType: "instructor-led", batches: 5, lastUpdated: "Jan 12, 2024", status: "active" },
-  { id: 2, name: "Kubernetes Fundamentals", deliveryType: "self-paced", batches: 3, lastUpdated: "Jan 10, 2024", status: "active" },
-  { id: 3, name: "Docker Masterclass", deliveryType: "instructor-led", batches: 4, lastUpdated: "Jan 8, 2024", status: "active" },
-  { id: 4, name: "Terraform for AWS", deliveryType: "self-paced", batches: 2, lastUpdated: "Jan 5, 2024", status: "draft" },
-  { id: 5, name: "Azure DevOps Pipeline", deliveryType: "instructor-led", batches: 1, lastUpdated: "Dec 28, 2023", status: "archived" },
-  { id: 6, name: "Linux Administration", deliveryType: "self-paced", batches: 6, lastUpdated: "Dec 20, 2023", status: "active" },
-];
+import { useCourseStore } from "@/stores/courseStore";
 
 const statusConfig: Record<string, { status: "success" | "warning" | "default"; label: string }> = {
   active: { status: "success", label: "Active" },
@@ -32,6 +23,7 @@ const statusConfig: Record<string, { status: "success" | "warning" | "default"; 
 
 export default function Courses() {
   const navigate = useNavigate();
+  const courses = useCourseStore((state) => state.courses);
 
   return (
     <div className="space-y-6">
@@ -93,8 +85,8 @@ export default function Courses() {
                   <TableCell className="text-muted-foreground">{course.lastUpdated}</TableCell>
                   <TableCell>
                     <StatusBadge
-                      status={statusConfig[course.status].status}
-                      label={statusConfig[course.status].label}
+                      status={statusConfig[course.status]?.status || "default"}
+                      label={statusConfig[course.status]?.label || course.status}
                     />
                   </TableCell>
                   <TableCell>
