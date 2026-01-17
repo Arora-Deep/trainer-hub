@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -13,8 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Search, MoreHorizontal, BookOpen, Users, Plus } from "lucide-react";
-import { Link } from "react-router-dom";
-import { CreateCourseDialog } from "@/components/courses/CreateCourseDialog";
+import { Link, useNavigate } from "react-router-dom";
 
 // Mock data
 const courses = [
@@ -33,7 +31,7 @@ const statusConfig: Record<string, { status: "success" | "warning" | "default"; 
 };
 
 export default function Courses() {
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-6">
@@ -42,7 +40,7 @@ export default function Courses() {
         description="Browse and manage all available courses"
         breadcrumbs={[{ label: "Courses" }]}
         actions={
-          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+          <Button onClick={() => navigate("/courses/create")} className="gap-2">
             <Plus className="h-4 w-4" />
             Create Course
           </Button>
@@ -110,8 +108,6 @@ export default function Courses() {
           </Table>
         </CardContent>
       </Card>
-
-      <CreateCourseDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
     </div>
   );
 }

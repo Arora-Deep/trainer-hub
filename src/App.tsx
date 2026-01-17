@@ -10,6 +10,7 @@ import BatchDetails from "./pages/BatchDetails";
 import Labs from "./pages/Labs";
 import Courses from "./pages/Courses";
 import CourseDetails from "./pages/CourseDetails";
+import CreateCourse from "./pages/CreateCourse";
 import Programs from "./pages/Programs";
 import Certifications from "./pages/Certifications";
 import Quizzes from "./pages/Quizzes";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/batches/:id" element={<BatchDetails />} />
             <Route path="/labs" element={<Labs />} />
             <Route path="/courses" element={<Courses />} />
+            <Route path="/courses/create" element={<CreateCourse />} />
             <Route path="/courses/:id" element={<CourseDetails />} />
             <Route path="/programs" element={<Programs />} />
             <Route path="/programs/:id" element={<Programs />} />
