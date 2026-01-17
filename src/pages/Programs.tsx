@@ -1,28 +1,88 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, MoreHorizontal, GraduationCap, Users, Clock, ChevronRight } from "lucide-react";
+import { 
+  Plus, 
+  Search, 
+  MoreHorizontal, 
+  GraduationCap, 
+  BookOpen,
+  Users,
+  Clock,
+  Edit,
+  Copy,
+  Trash2,
+  Eye
+} from "lucide-react";
 
 const programs = [
-  { id: "1", name: "Full Stack Development Bootcamp", courses: 8, duration: "16 weeks", enrolled: 156, status: "active" },
-  { id: "2", name: "Data Science Fundamentals", courses: 6, duration: "12 weeks", enrolled: 89, status: "active" },
-  { id: "3", name: "Cloud Architecture Certificate", courses: 5, duration: "10 weeks", enrolled: 45, status: "draft" },
-  { id: "4", name: "DevOps Engineering Path", courses: 7, duration: "14 weeks", enrolled: 72, status: "active" },
-  { id: "5", name: "Cybersecurity Essentials", courses: 4, duration: "8 weeks", enrolled: 0, status: "archived" },
+  {
+    id: "1",
+    name: "Full Stack Development Bootcamp",
+    courses: 8,
+    duration: "16 weeks",
+    enrolled: 156,
+    status: "active",
+    lastUpdated: "2024-01-10",
+  },
+  {
+    id: "2",
+    name: "Data Science Fundamentals",
+    courses: 6,
+    duration: "12 weeks",
+    enrolled: 89,
+    status: "active",
+    lastUpdated: "2024-01-08",
+  },
+  {
+    id: "3",
+    name: "Cloud Architecture Certificate",
+    courses: 5,
+    duration: "10 weeks",
+    enrolled: 45,
+    status: "draft",
+    lastUpdated: "2024-01-05",
+  },
+  {
+    id: "4",
+    name: "DevOps Engineering Path",
+    courses: 7,
+    duration: "14 weeks",
+    enrolled: 72,
+    status: "active",
+    lastUpdated: "2024-01-03",
+  },
+  {
+    id: "5",
+    name: "Cybersecurity Essentials",
+    courses: 4,
+    duration: "8 weeks",
+    enrolled: 0,
+    status: "archived",
+    lastUpdated: "2023-12-15",
+  },
 ];
 
-export default function Programs() {
+const Programs = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -32,109 +92,158 @@ export default function Programs() {
     return matchesSearch && matchesFilter;
   });
 
-  const counts = {
-    all: programs.length,
+  const stats = {
+    total: programs.length,
     active: programs.filter(p => p.status === "active").length,
-    draft: programs.filter(p => p.status === "draft").length,
+    totalEnrolled: programs.reduce((sum, p) => sum + p.enrolled, 0),
+    totalCourses: programs.reduce((sum, p) => sum + p.courses, 0),
   };
 
   const getStatusVariant = (status: string) => {
     switch (status) {
       case "active": return "success";
       case "draft": return "warning";
-      case "archived": return "default";
+      case "archived": return "neutral";
       default: return "default";
     }
   };
 
   return (
-    <div className="space-y-6 animate-in-up">
+    <div className="space-y-6">
       <PageHeader
         title="Programs"
-        description="Learning paths combining multiple courses"
-        breadcrumbs={[{ label: "Programs" }]}
+        description="Create and manage learning programs combining multiple courses"
         actions={
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
             Create Program
           </Button>
         }
       />
 
-      {/* Filters */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Tabs value={activeFilter} onValueChange={setActiveFilter}>
-          <TabsList className="h-9">
-            <TabsTrigger value="all" className="text-xs">All ({counts.all})</TabsTrigger>
-            <TabsTrigger value="active" className="text-xs">Active ({counts.active})</TabsTrigger>
-            <TabsTrigger value="draft" className="text-xs">Draft ({counts.draft})</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search programs..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9"
-          />
-        </div>
+      <div className="grid gap-4 md:grid-cols-4">
+        <StatCard
+          title="Total Programs"
+          value={stats.total}
+          icon={GraduationCap}
+        />
+        <StatCard
+          title="Active Programs"
+          value={stats.active}
+          icon={BookOpen}
+          variant="success"
+        />
+        <StatCard
+          title="Total Enrolled"
+          value={stats.totalEnrolled}
+          icon={Users}
+          variant="info"
+        />
+        <StatCard
+          title="Total Courses"
+          value={stats.totalCourses}
+          icon={Clock}
+        />
       </div>
 
-      {/* Programs Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredPrograms.map((program) => (
-          <Card key={program.id} className="hover:border-border/80 transition-colors group">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between mb-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <GraduationCap className="h-5 w-5 text-primary" />
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Edit Program</DropdownMenuItem>
-                    <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              
-              <Link to={`/programs/${program.id}`} className="block group/link">
-                <h3 className="font-medium text-sm mb-2 group-hover/link:text-primary transition-colors">
-                  {program.name}
-                </h3>
-              </Link>
-              
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                <span>{program.courses} courses</span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {program.duration}
-                </span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Users className="h-3.5 w-3.5" />
-                  <span>{program.enrolled} enrolled</span>
-                </div>
-                <StatusBadge
-                  status={getStatusVariant(program.status) as any}
-                  label={program.status}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex gap-2">
+              {["all", "active", "draft", "archived"].map((filter) => (
+                <Button
+                  key={filter}
+                  variant={activeFilter === filter ? "default" : "outline"}
                   size="sm"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                  onClick={() => setActiveFilter(filter)}
+                  className="capitalize"
+                >
+                  {filter}
+                </Button>
+              ))}
+            </div>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search programs..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Program Name</TableHead>
+                <TableHead>Courses</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Enrolled</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Last Updated</TableHead>
+                <TableHead className="w-12"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredPrograms.map((program) => (
+                <TableRow key={program.id} className="table-row-premium">
+                  <TableCell>
+                    <Link 
+                      to={`/programs/${program.id}`}
+                      className="font-medium hover:text-primary transition-colors"
+                    >
+                      {program.name}
+                    </Link>
+                  </TableCell>
+                  <TableCell>{program.courses} courses</TableCell>
+                  <TableCell>{program.duration}</TableCell>
+                  <TableCell>{program.enrolled}</TableCell>
+                  <TableCell>
+                    <StatusBadge
+                      status={getStatusVariant(program.status) as any}
+                      label={program.status}
+                    />
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {program.lastUpdated}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Eye className="mr-2 h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit Program
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Copy className="mr-2 h-4 w-4" />
+                          Duplicate
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
+
+export default Programs;

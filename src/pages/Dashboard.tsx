@@ -1,8 +1,18 @@
 import { PageHeader } from "@/components/ui/PageHeader";
+import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { DataCard } from "@/components/ui/DataCard";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Users,
   FlaskConical,
@@ -10,30 +20,32 @@ import {
   AlertTriangle,
   Plus,
   Play,
+  Hammer,
   BookOpen,
   Clock,
-  ArrowRight,
+  Zap,
   TrendingUp,
-  ArrowUpRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 // Mock data
 const upcomingBatches = [
-  { id: 1, name: "AWS Solutions Architect", startDate: "Jan 15", students: 24 },
-  { id: 2, name: "Kubernetes Fundamentals", startDate: "Jan 18", students: 18 },
-  { id: 3, name: "Docker Masterclass", startDate: "Jan 22", students: 30 },
+  { id: 1, name: "AWS Solutions Architect", course: "AWS SA Pro", trainer: "John Smith", startDate: "Jan 15, 2024", students: 24 },
+  { id: 2, name: "Kubernetes Fundamentals", course: "K8s Basics", trainer: "Jane Doe", startDate: "Jan 18, 2024", students: 18 },
+  { id: 3, name: "Docker Masterclass", course: "Docker Pro", trainer: "Mike Johnson", startDate: "Jan 22, 2024", students: 30 },
 ];
 
 const activeLabs = [
-  { id: 1, student: "Alice Johnson", lab: "AWS EC2 Setup", status: "running", time: "45m" },
-  { id: 2, student: "Bob Williams", lab: "Kubernetes Pod", status: "idle", time: "30m" },
-  { id: 3, student: "Carol Davis", lab: "Docker Compose", status: "error", time: "15m" },
+  { id: 1, student: "Alice Johnson", lab: "AWS EC2 Setup", status: "running", timeRemaining: "45 min" },
+  { id: 2, student: "Bob Williams", lab: "Kubernetes Pod", status: "idle", timeRemaining: "30 min" },
+  { id: 3, student: "Carol Davis", lab: "Docker Compose", status: "error", timeRemaining: "15 min" },
+  { id: 4, student: "David Brown", lab: "Terraform Basics", status: "running", timeRemaining: "60 min" },
 ];
 
 const alerts = [
-  { id: 1, type: "error", message: "Lab VM offline for Carol Davis", time: "5m ago" },
-  { id: 2, type: "warning", message: "High resource usage in AWS batch", time: "12m ago" },
+  { id: 1, type: "error", message: "Lab VM offline for student Carol Davis", time: "5 min ago" },
+  { id: 2, type: "warning", message: "High resource usage in AWS batch", time: "12 min ago" },
+  { id: 3, type: "info", message: "New support ticket from Mike Chen", time: "25 min ago" },
 ];
 
 const courseProgress = [
@@ -42,215 +54,237 @@ const courseProgress = [
   { name: "Docker Masterclass", progress: 90, students: 30 },
 ];
 
+const quickActions = [
+  { label: "Create Batch", icon: Plus, href: "/batches", primary: true },
+  { label: "Create Lab", icon: FlaskConical, href: "/labs" },
+  { label: "Build Course", icon: Hammer, href: "/course-builder" },
+  { label: "Start Session", icon: Play },
+];
+
 export default function Dashboard() {
   return (
-    <div className="space-y-8 animate-in-up">
+    <div className="space-y-6 animate-in-up">
       <PageHeader
         title="Dashboard"
-        description="Welcome back! Here's your training overview."
+        description="Welcome back, John! Here's what's happening with your training sessions."
         breadcrumbs={[{ label: "Dashboard" }]}
       />
 
-      {/* Stats Overview */}
+      {/* Stats Row */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: "Students Online", value: "142", change: "+12%", icon: Users, color: "text-primary" },
-          { label: "Active Labs", value: "38", icon: FlaskConical, color: "text-success" },
-          { label: "Upcoming Batches", value: "8", icon: Calendar, color: "text-info" },
-          { label: "Active Alerts", value: "3", icon: AlertTriangle, color: "text-warning" },
-        ].map((stat) => (
-          <Card key={stat.label} className="relative overflow-hidden">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-2xl font-semibold tracking-tight">{stat.value}</p>
-                    {stat.change && (
-                      <span className="flex items-center text-xs font-medium text-success">
-                        <TrendingUp className="h-3 w-3 mr-0.5" />
-                        {stat.change}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className={`rounded-xl bg-muted/50 p-2.5 ${stat.color}`}>
-                  <stat.icon className="h-5 w-5" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <StatCard
+          title="Students Online"
+          value={142}
+          icon={Users}
+          description="Across all batches"
+          trend={{ value: 12, isPositive: true }}
+          variant="primary"
+        />
+        <StatCard
+          title="Active Labs"
+          value={38}
+          icon={FlaskConical}
+          description="Running right now"
+          variant="success"
+        />
+        <StatCard
+          title="Upcoming Batches"
+          value={8}
+          icon={Calendar}
+          description="This month"
+          variant="info"
+        />
+        <StatCard
+          title="Active Alerts"
+          value={3}
+          icon={AlertTriangle}
+          description="Needs attention"
+          variant="warning"
+        />
       </div>
 
       {/* Quick Actions */}
-      <div className="flex flex-wrap gap-2">
-        <Button asChild>
-          <Link to="/batches">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Batch
-          </Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link to="/labs">
-            <FlaskConical className="mr-2 h-4 w-4" />
-            New Lab
-          </Link>
-        </Button>
-        <Button variant="outline">
-          <Play className="mr-2 h-4 w-4" />
-          Start Session
-        </Button>
-      </div>
-
-      {/* Main Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left Column - 2/3 width */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Upcoming Batches */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle className="text-base font-semibold">Upcoming Batches</CardTitle>
-              <Button variant="ghost" size="sm" className="text-muted-foreground" asChild>
-                <Link to="/batches">
-                  View all
-                  <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
-              </Button>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-3">
-                {upcomingBatches.map((batch) => (
-                  <Link
-                    key={batch.id}
-                    to={`/batches/${batch.id}`}
-                    className="flex items-center justify-between p-3 -mx-1 rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <BookOpen className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">{batch.name}</p>
-                        <p className="text-xs text-muted-foreground">Starts {batch.startDate}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground">{batch.students} students</span>
-                      <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
+      <Card className="border-dashed bg-muted/20">
+        <CardContent className="py-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 mr-2">
+              <Zap className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Quick actions</span>
+            </div>
+            {quickActions.map((action) => (
+              action.href ? (
+                <Button 
+                  key={action.label}
+                  variant={action.primary ? "default" : "outline"} 
+                  size="sm"
+                  className={action.primary ? "shadow-md" : ""}
+                  asChild
+                >
+                  <Link to={action.href}>
+                    <action.icon className="mr-2 h-4 w-4" />
+                    {action.label}
                   </Link>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </Button>
+              ) : (
+                <Button 
+                  key={action.label}
+                  variant="outline" 
+                  size="sm"
+                >
+                  <action.icon className="mr-2 h-4 w-4" />
+                  {action.label}
+                </Button>
+              )
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-          {/* Course Progress */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle className="text-base font-semibold">Course Progress</CardTitle>
-              <Button variant="ghost" size="sm" className="text-muted-foreground" asChild>
-                <Link to="/courses">
-                  View all
-                  <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
-              </Button>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-5">
-                {courseProgress.map((course, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{course.name}</span>
-                      <span className="text-sm font-semibold tabular-nums">{course.progress}%</span>
-                    </div>
-                    <ProgressBar 
-                      value={course.progress} 
-                      size="sm"
-                      variant={course.progress >= 80 ? "success" : "primary"}
+      {/* Main Content Grid */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Upcoming Batches */}
+        <DataCard 
+          title="Upcoming Batches" 
+          icon={Calendar}
+          action={{ label: "View all", href: "/batches" }}
+          noPadding
+        >
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/30 hover:bg-muted/30">
+                <TableHead className="font-medium">Batch Name</TableHead>
+                <TableHead className="font-medium">Trainer</TableHead>
+                <TableHead className="font-medium">Start Date</TableHead>
+                <TableHead className="font-medium text-right">Students</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {upcomingBatches.map((batch) => (
+                <TableRow key={batch.id} className="table-row-premium">
+                  <TableCell>
+                    <Link to={`/batches/${batch.id}`} className="font-medium hover:text-primary transition-colors">
+                      {batch.name}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{batch.trainer}</TableCell>
+                  <TableCell className="text-muted-foreground tabular-nums">{batch.startDate}</TableCell>
+                  <TableCell className="text-right tabular-nums font-medium">{batch.students}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </DataCard>
+
+        {/* Active Labs */}
+        <DataCard 
+          title="Active Labs"
+          icon={FlaskConical}
+          action={{ label: "View all", href: "/labs" }}
+          badge={
+            <span className="flex items-center gap-1.5 text-xs text-success font-medium">
+              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+              Live
+            </span>
+          }
+          noPadding
+        >
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/30 hover:bg-muted/30">
+                <TableHead className="font-medium">Student</TableHead>
+                <TableHead className="font-medium">Lab</TableHead>
+                <TableHead className="font-medium">Status</TableHead>
+                <TableHead className="font-medium text-right">Time Left</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {activeLabs.map((lab) => (
+                <TableRow key={lab.id} className="table-row-premium">
+                  <TableCell className="font-medium">{lab.student}</TableCell>
+                  <TableCell className="text-muted-foreground">{lab.lab}</TableCell>
+                  <TableCell>
+                    <StatusBadge
+                      status={lab.status === "running" ? "success" : lab.status === "idle" ? "warning" : "error"}
+                      label={lab.status.charAt(0).toUpperCase() + lab.status.slice(1)}
+                      pulse={lab.status === "running"}
                     />
-                    <p className="text-xs text-muted-foreground">{course.students} students</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Clock className="h-3 w-3" />
+                      {lab.timeRemaining}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </DataCard>
 
-        {/* Right Column - 1/3 width */}
-        <div className="space-y-6">
-          {/* Active Labs */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-base font-semibold">Active Labs</CardTitle>
-                <span className="flex items-center gap-1 text-xs text-success font-medium">
-                  <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                  Live
-                </span>
+        {/* Alerts & Issues */}
+        <DataCard 
+          title="Alerts & Issues"
+          icon={AlertTriangle}
+          badge={
+            <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+              {alerts.length} new
+            </span>
+          }
+        >
+          <div className="space-y-2">
+            {alerts.map((alert) => (
+              <div
+                key={alert.id}
+                className="flex items-start gap-3 rounded-xl border border-border p-3 hover:bg-muted/30 hover:border-border/80 transition-all cursor-pointer interactive"
+              >
+                <div className="mt-0.5 shrink-0">
+                  <span
+                    className={`flex h-2 w-2 rounded-full ${
+                      alert.type === "error"
+                        ? "bg-destructive"
+                        : alert.type === "warning"
+                        ? "bg-warning"
+                        : "bg-info"
+                    }`}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground leading-snug">{alert.message}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{alert.time}</p>
+                </div>
               </div>
-              <Button variant="ghost" size="sm" className="text-muted-foreground" asChild>
-                <Link to="/labs">View all</Link>
-              </Button>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-3">
-                {activeLabs.map((lab) => (
-                  <div key={lab.id} className="flex items-center justify-between py-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{lab.student}</p>
-                      <p className="text-xs text-muted-foreground truncate">{lab.lab}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0 ml-3">
-                      <StatusBadge
-                        status={lab.status === "running" ? "success" : lab.status === "idle" ? "warning" : "error"}
-                        label={lab.status}
-                        size="sm"
-                        pulse={lab.status === "running"}
-                      />
-                      <span className="text-xs text-muted-foreground tabular-nums flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {lab.time}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+            ))}
+          </div>
+        </DataCard>
 
-          {/* Alerts */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-base font-semibold">Alerts</CardTitle>
-                <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
-                  {alerts.length}
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-3">
-                {alerts.map((alert) => (
-                  <div
-                    key={alert.id}
-                    className="flex items-start gap-3 p-3 -mx-1 rounded-lg bg-muted/30"
-                  >
-                    <span
-                      className={`mt-1 h-2 w-2 rounded-full shrink-0 ${
-                        alert.type === "error" ? "bg-destructive" : "bg-warning"
-                      }`}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm leading-snug">{alert.message}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{alert.time}</p>
+        {/* Course Progress */}
+        <DataCard 
+          title="Course Progress"
+          icon={TrendingUp}
+          action={{ label: "View all", href: "/courses" }}
+        >
+          <div className="space-y-5">
+            {courseProgress.map((course, index) => (
+              <div key={index} className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="rounded-lg bg-primary/10 p-2">
+                      <BookOpen className="h-3.5 w-3.5 text-primary" />
                     </div>
+                    <span className="text-sm font-medium truncate">{course.name}</span>
                   </div>
-                ))}
+                  <span className="text-sm font-semibold tabular-nums text-foreground">{course.progress}%</span>
+                </div>
+                <ProgressBar 
+                  value={course.progress} 
+                  size="default"
+                  variant={course.progress >= 80 ? "success" : course.progress >= 50 ? "primary" : "warning"}
+                />
+                <p className="text-xs text-muted-foreground">{course.students} students enrolled</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            ))}
+          </div>
+        </DataCard>
       </div>
     </div>
   );

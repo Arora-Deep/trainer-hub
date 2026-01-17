@@ -1,28 +1,103 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, MoreHorizontal, HelpCircle, Clock, Users, BarChart3 } from "lucide-react";
+import { 
+  Plus, 
+  Search, 
+  MoreHorizontal, 
+  HelpCircle, 
+  CheckCircle,
+  Clock,
+  FileQuestion,
+  Edit,
+  Copy,
+  Trash2,
+  Eye,
+  BarChart3
+} from "lucide-react";
 
 const quizzes = [
-  { id: "1", title: "JavaScript Fundamentals Quiz", course: "JavaScript Essentials", questions: 25, duration: "30 min", attempts: 234, avgScore: 78, status: "published" },
-  { id: "2", title: "React Hooks Assessment", course: "Advanced React", questions: 20, duration: "25 min", attempts: 156, avgScore: 72, status: "published" },
-  { id: "3", title: "Python Basics Test", course: "Python for Beginners", questions: 30, duration: "45 min", attempts: 312, avgScore: 81, status: "published" },
-  { id: "4", title: "Database Design Quiz", course: "SQL Masterclass", questions: 15, duration: "20 min", attempts: 89, avgScore: 75, status: "draft" },
-  { id: "5", title: "Docker & Kubernetes Test", course: "DevOps Fundamentals", questions: 35, duration: "50 min", attempts: 0, avgScore: 0, status: "draft" },
-  { id: "6", title: "AWS Services Overview", course: "Cloud Computing", questions: 40, duration: "60 min", attempts: 67, avgScore: 68, status: "published" },
+  {
+    id: "1",
+    title: "JavaScript Fundamentals Quiz",
+    course: "JavaScript Essentials",
+    questions: 25,
+    duration: "30 min",
+    attempts: 234,
+    avgScore: 78,
+    status: "published",
+  },
+  {
+    id: "2",
+    title: "React Hooks Assessment",
+    course: "Advanced React",
+    questions: 20,
+    duration: "25 min",
+    attempts: 156,
+    avgScore: 72,
+    status: "published",
+  },
+  {
+    id: "3",
+    title: "Python Basics Test",
+    course: "Python for Beginners",
+    questions: 30,
+    duration: "45 min",
+    attempts: 312,
+    avgScore: 81,
+    status: "published",
+  },
+  {
+    id: "4",
+    title: "Database Design Quiz",
+    course: "SQL Masterclass",
+    questions: 15,
+    duration: "20 min",
+    attempts: 89,
+    avgScore: 75,
+    status: "draft",
+  },
+  {
+    id: "5",
+    title: "Docker & Kubernetes Test",
+    course: "DevOps Fundamentals",
+    questions: 35,
+    duration: "50 min",
+    attempts: 0,
+    avgScore: 0,
+    status: "draft",
+  },
+  {
+    id: "6",
+    title: "AWS Services Overview",
+    course: "Cloud Computing Basics",
+    questions: 40,
+    duration: "60 min",
+    attempts: 67,
+    avgScore: 68,
+    status: "published",
+  },
 ];
 
-export default function Quizzes() {
+const Quizzes = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -33,10 +108,11 @@ export default function Quizzes() {
     return matchesSearch && matchesFilter;
   });
 
-  const counts = {
-    all: quizzes.length,
+  const stats = {
+    total: quizzes.length,
     published: quizzes.filter(q => q.status === "published").length,
-    draft: quizzes.filter(q => q.status === "draft").length,
+    totalQuestions: quizzes.reduce((sum, q) => sum + q.questions, 0),
+    totalAttempts: quizzes.reduce((sum, q) => sum + q.attempts, 0),
   };
 
   const getStatusVariant = (status: string) => {
@@ -48,101 +124,146 @@ export default function Quizzes() {
   };
 
   return (
-    <div className="space-y-6 animate-in-up">
+    <div className="space-y-6">
       <PageHeader
         title="Quizzes"
-        description="Create and manage assessments"
-        breadcrumbs={[{ label: "Quizzes" }]}
+        description="Create and manage course quizzes and assessments"
         actions={
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
             Create Quiz
           </Button>
         }
       />
 
-      {/* Filters */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Tabs value={activeFilter} onValueChange={setActiveFilter}>
-          <TabsList className="h-9">
-            <TabsTrigger value="all" className="text-xs">All ({counts.all})</TabsTrigger>
-            <TabsTrigger value="published" className="text-xs">Published ({counts.published})</TabsTrigger>
-            <TabsTrigger value="draft" className="text-xs">Draft ({counts.draft})</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search quizzes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9"
-          />
-        </div>
+      <div className="grid gap-4 md:grid-cols-4">
+        <StatCard
+          title="Total Quizzes"
+          value={stats.total}
+          icon={HelpCircle}
+        />
+        <StatCard
+          title="Published"
+          value={stats.published}
+          icon={CheckCircle}
+          variant="success"
+        />
+        <StatCard
+          title="Total Questions"
+          value={stats.totalQuestions}
+          icon={FileQuestion}
+          variant="info"
+        />
+        <StatCard
+          title="Total Attempts"
+          value={stats.totalAttempts}
+          icon={Clock}
+        />
       </div>
 
-      {/* Quizzes Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredQuizzes.map((quiz) => (
-          <Card key={quiz.id} className="hover:border-border/80 transition-colors group">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between mb-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <HelpCircle className="h-5 w-5 text-primary" />
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Preview Quiz</DropdownMenuItem>
-                    <DropdownMenuItem>Edit Questions</DropdownMenuItem>
-                    <DropdownMenuItem>View Analytics</DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              
-              <h3 className="font-medium text-sm mb-1">{quiz.title}</h3>
-              <p className="text-xs text-muted-foreground mb-3">{quiz.course}</p>
-              
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                <span>{quiz.questions} questions</span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {quiz.duration}
-                </span>
-              </div>
-              
-              <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                <div className="flex items-center gap-4 text-xs">
-                  <span className="flex items-center gap-1 text-muted-foreground">
-                    <Users className="h-3.5 w-3.5" />
-                    {quiz.attempts}
-                  </span>
-                  {quiz.avgScore > 0 && (
-                    <span className="flex items-center gap-1">
-                      <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className={quiz.avgScore >= 75 ? 'text-success' : quiz.avgScore >= 60 ? 'text-warning' : 'text-destructive'}>
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex gap-2">
+              {["all", "published", "draft"].map((filter) => (
+                <Button
+                  key={filter}
+                  variant={activeFilter === filter ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveFilter(filter)}
+                  className="capitalize"
+                >
+                  {filter}
+                </Button>
+              ))}
+            </div>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search quizzes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Quiz Title</TableHead>
+                <TableHead>Course</TableHead>
+                <TableHead>Questions</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Attempts</TableHead>
+                <TableHead>Avg Score</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-12"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredQuizzes.map((quiz) => (
+                <TableRow key={quiz.id} className="table-row-premium">
+                  <TableCell className="font-medium">{quiz.title}</TableCell>
+                  <TableCell className="text-muted-foreground">{quiz.course}</TableCell>
+                  <TableCell>{quiz.questions}</TableCell>
+                  <TableCell>{quiz.duration}</TableCell>
+                  <TableCell>{quiz.attempts}</TableCell>
+                  <TableCell>
+                    {quiz.avgScore > 0 ? (
+                      <span className={`font-medium ${quiz.avgScore >= 75 ? 'text-green-600' : quiz.avgScore >= 60 ? 'text-amber-600' : 'text-red-600'}`}>
                         {quiz.avgScore}%
                       </span>
-                    </span>
-                  )}
-                </div>
-                <StatusBadge
-                  status={getStatusVariant(quiz.status) as any}
-                  label={quiz.status}
-                  size="sm"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge
+                      status={getStatusVariant(quiz.status) as any}
+                      label={quiz.status}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Eye className="mr-2 h-4 w-4" />
+                          Preview Quiz
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit Questions
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <BarChart3 className="mr-2 h-4 w-4" />
+                          View Analytics
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Copy className="mr-2 h-4 w-4" />
+                          Duplicate
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
+
+export default Quizzes;
