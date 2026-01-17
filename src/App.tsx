@@ -8,10 +8,13 @@ import Dashboard from "./pages/Dashboard";
 import Batches from "./pages/Batches";
 import BatchDetails from "./pages/BatchDetails";
 import Labs from "./pages/Labs";
-import CourseBuilder from "./pages/CourseBuilder";
-import CourseEditor from "./pages/CourseEditor";
 import Courses from "./pages/Courses";
 import CourseDetails from "./pages/CourseDetails";
+import Programs from "./pages/Programs";
+import Certifications from "./pages/Certifications";
+import Quizzes from "./pages/Quizzes";
+import Assignments from "./pages/Assignments";
+import Exercises from "./pages/Exercises";
 import Support from "./pages/Support";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -30,10 +33,14 @@ const App = () => (
             <Route path="/batches" element={<Batches />} />
             <Route path="/batches/:id" element={<BatchDetails />} />
             <Route path="/labs" element={<Labs />} />
-            <Route path="/course-builder" element={<CourseBuilder />} />
-            <Route path="/course-builder/:id" element={<CourseEditor />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:id" element={<CourseDetails />} />
+            <Route path="/programs" element={<Programs />} />
+            <Route path="/programs/:id" element={<Programs />} />
+            <Route path="/certifications" element={<Certifications />} />
+            <Route path="/quizzes" element={<Quizzes />} />
+            <Route path="/assignments" element={<Assignments />} />
+            <Route path="/exercises" element={<Exercises />} />
             <Route path="/support" element={<Support />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
