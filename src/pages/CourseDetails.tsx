@@ -17,22 +17,12 @@ import {
   FlaskConical,
   Clock,
   Edit,
-  ExternalLink,
 } from "lucide-react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, Navigate } from "react-router-dom";
+import { useCourseStore } from "@/stores/courseStore";
+import { CourseContentEditor } from "@/components/courses/CourseContentEditor";
 
-// Mock data
-const courseDetails = {
-  id: 1,
-  name: "AWS Solutions Architect Professional",
-  description: "Comprehensive training program for AWS Solutions Architect Professional certification. Covers advanced architectural concepts, best practices, and hands-on labs.",
-  deliveryType: "instructor-led",
-  duration: "40 hours",
-  modules: 12,
-  lessons: 48,
-  status: "active",
-};
-
+// Mock data for labs and batches (these could also be in stores later)
 const attachedLabs = [
   { id: 1, name: "EC2 Instance Setup", type: "Linux", duration: "60 min" },
   { id: 2, name: "S3 Bucket Configuration", type: "AWS Console", duration: "45 min" },
@@ -48,15 +38,28 @@ const enrolledBatches = [
 
 export default function CourseDetails() {
   const { id } = useParams();
+  const course = useCourseStore((state) => state.getCourse(id || ""));
+
+  if (!course) {
+    return <Navigate to="/courses" replace />;
+  }
+
+  const totalLessons = course.chapters.reduce((acc, ch) => acc + ch.lessons.length, 0);
+  const totalDuration = course.chapters.reduce((acc, ch) => {
+    return acc + ch.lessons.reduce((lAcc, l) => {
+      const match = l.duration.match(/(\d+)/);
+      return lAcc + (match ? parseInt(match[1]) : 0);
+    }, 0);
+  }, 0);
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={courseDetails.name}
-        description={courseDetails.description}
+        title={course.name}
+        description={course.description || "No description provided"}
         breadcrumbs={[
           { label: "Courses", href: "/courses" },
-          { label: courseDetails.name },
+          { label: course.name },
         ]}
         actions={
           <div className="flex gap-2">
@@ -79,8 +82,8 @@ export default function CourseDetails() {
                 <BookOpen className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-semibold">{courseDetails.modules}</p>
-                <p className="text-sm text-muted-foreground">Modules</p>
+                <p className="text-2xl font-semibold">{course.chapters.length}</p>
+                <p className="text-sm text-muted-foreground">Chapters</p>
               </div>
             </div>
           </CardContent>
@@ -92,7 +95,7 @@ export default function CourseDetails() {
                 <Clock className="h-5 w-5 text-info" />
               </div>
               <div>
-                <p className="text-2xl font-semibold">{courseDetails.duration}</p>
+                <p className="text-2xl font-semibold">{totalDuration} min</p>
                 <p className="text-sm text-muted-foreground">Duration</p>
               </div>
             </div>
@@ -147,19 +150,25 @@ export default function CourseDetails() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Delivery Type</p>
-                    <StatusBadge status="primary" label="Instructor-led" />
+                    <StatusBadge 
+                      status="primary" 
+                      label={course.deliveryType === "instructor-led" ? "Instructor-led" : "Self-paced"} 
+                    />
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Status</p>
-                    <StatusBadge status="success" label="Active" />
+                    <StatusBadge 
+                      status={course.status === "active" ? "success" : course.status === "draft" ? "warning" : "default"} 
+                      label={course.status.charAt(0).toUpperCase() + course.status.slice(1)} 
+                    />
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Total Duration</p>
-                    <p className="font-medium">{courseDetails.duration}</p>
+                    <p className="font-medium">{totalDuration} min</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Lessons</p>
-                    <p className="font-medium">{courseDetails.lessons} lessons</p>
+                    <p className="font-medium">{totalLessons} lessons</p>
                   </div>
                 </div>
               </CardContent>
@@ -190,22 +199,11 @@ export default function CourseDetails() {
 
         <TabsContent value="content">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader>
               <CardTitle className="text-base">Course Content</CardTitle>
-              <Button variant="outline" size="sm">
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Open in Moodle
-              </Button>
             </CardHeader>
             <CardContent>
-              <div className="rounded-lg border border-dashed border-border bg-muted/30 p-12 text-center">
-                <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Moodle LMS Content</h3>
-                <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  Course content is managed through Moodle LMS and will be embedded here.
-                  Click "Open in Moodle" to edit the content directly.
-                </p>
-              </div>
+              <CourseContentEditor courseId={course.id} chapters={course.chapters} />
             </CardContent>
           </Card>
         </TabsContent>

@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { useCourseStore } from "@/stores/courseStore";
 
 const categories = [
   "Cloud Computing",
@@ -65,6 +66,7 @@ const instructors = [
 
 export default function CreateCourse() {
   const navigate = useNavigate();
+  const addCourse = useCourseStore((state) => state.addCourse);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Form state
@@ -144,10 +146,19 @@ export default function CreateCourse() {
     setIsSubmitting(true);
     
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Add to store
+    const courseId = addCourse({
+      name: formData.title,
+      deliveryType: formData.deliveryType || "self-paced",
+      status: asDraft ? "draft" : (formData.isPublished ? "active" : "draft"),
+      category: formData.category,
+      description: formData.aboutCourse,
+    });
     
     toast.success(asDraft ? "Course saved as draft!" : "Course created successfully!");
-    navigate("/courses");
+    navigate(`/courses/${courseId}`);
     setIsSubmitting(false);
   };
 
