@@ -4,13 +4,17 @@ import {
   Home,
   Users,
   FlaskConical,
-  Hammer,
   BookOpen,
   HelpCircle,
   Settings,
   ChevronLeft,
   GraduationCap,
   Sparkles,
+  Layers,
+  Award,
+  FileQuestion,
+  ClipboardList,
+  Code2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -25,8 +29,12 @@ const navItems = [
   { title: "Home", icon: Home, path: "/" },
   { title: "Batches", icon: Users, path: "/batches" },
   { title: "Labs", icon: FlaskConical, path: "/labs" },
-  { title: "Course Builder", icon: Hammer, path: "/course-builder" },
   { title: "Courses", icon: BookOpen, path: "/courses" },
+  { title: "Programs", icon: Layers, path: "/programs" },
+  { title: "Certifications", icon: Award, path: "/certifications" },
+  { title: "Quizzes", icon: FileQuestion, path: "/quizzes" },
+  { title: "Assignments", icon: ClipboardList, path: "/assignments" },
+  { title: "Exercises", icon: Code2, path: "/exercises" },
 ];
 
 const bottomNavItems = [
