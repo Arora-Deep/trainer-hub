@@ -6,9 +6,9 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-background">
       <AppSidebar />
-      <div className="pl-60 transition-all duration-200 has-[aside.w-\\[68px\\]]:pl-[68px]">
+      <div className="pl-64 transition-all duration-300">
         <AppHeader />
-        <main className="p-6 max-w-[1600px]">
+        <main className="p-6">
           <Outlet />
         </main>
       </div>

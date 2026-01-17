@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { StatCard } from "@/components/ui/StatCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,24 +14,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   Plus,
   Search,
   RefreshCw,
   Square,
   Clock,
   Terminal,
+  MoreHorizontal,
   Cpu,
   HardDrive,
-  Activity,
-  AlertCircle,
-  MoreHorizontal,
-  Play,
 } from "lucide-react";
 
 // Mock data
@@ -61,263 +51,231 @@ const statusConfig: Record<string, { status: "success" | "warning" | "error" | "
 
 export default function Labs() {
   const [search, setSearch] = useState("");
-  
-  const runningCount = labInstances.filter(l => l.status === "running").length;
-  const stoppedCount = labInstances.filter(l => l.status === "stopped").length;
-  const errorCount = labInstances.filter(l => l.status === "error").length;
-  const avgCpu = Math.round(labInstances.filter(l => l.status === "running").reduce((acc, l) => acc + l.cpu, 0) / runningCount);
 
   return (
-    <TooltipProvider>
-      <div className="space-y-6">
-        <PageHeader
-          title="Labs"
-          description="Manage lab templates and monitor active lab instances"
-          breadcrumbs={[{ label: "Labs" }]}
-          actions={
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Lab Template
-            </Button>
-          }
-        />
+    <div className="space-y-6">
+      <PageHeader
+        title="Labs"
+        description="Manage lab templates and monitor active lab instances"
+        breadcrumbs={[{ label: "Labs" }]}
+        actions={
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Lab Template
+          </Button>
+        }
+      />
 
-        <Tabs defaultValue="instances" className="space-y-6">
-          <TabsList className="bg-muted/50">
-            <TabsTrigger value="instances" className="gap-2">
-              <Activity className="h-4 w-4" />
-              Lab Instances
-              <span className="rounded-full bg-success/10 px-1.5 py-0.5 text-xs font-medium text-success">
-                {runningCount} live
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="templates" className="gap-2">
-              Templates
-              <span className="text-muted-foreground/70 text-xs">{labTemplates.length}</span>
-            </TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="templates" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="templates">Lab Templates</TabsTrigger>
+          <TabsTrigger value="instances">Lab Instances (Live)</TabsTrigger>
+        </TabsList>
 
-          {/* Lab Instances (Live) */}
-          <TabsContent value="instances" className="space-y-6 mt-0">
-            {/* Stats */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard
-                title="Running"
-                value={runningCount}
-                icon={Play}
-                variant="success"
-              />
-              <StatCard
-                title="Stopped"
-                value={stoppedCount}
-                icon={Square}
-                variant="default"
-              />
-              <StatCard
-                title="Errors"
-                value={errorCount}
-                icon={AlertCircle}
-                variant="warning"
-              />
-              <StatCard
-                title="Avg CPU Usage"
-                value={`${avgCpu}%`}
-                icon={Cpu}
-                variant="info"
-              />
-            </div>
+        {/* Lab Templates */}
+        <TabsContent value="templates" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
+              <CardTitle className="text-base">All Templates</CardTitle>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="Search templates..." className="pl-10 w-64" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Template Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>OS Version</TableHead>
+                    <TableHead>Runtime Limit</TableHead>
+                    <TableHead>Last Updated</TableHead>
+                    <TableHead className="w-12"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {labTemplates.map((template) => (
+                    <TableRow key={template.id}>
+                      <TableCell className="font-medium">{template.name}</TableCell>
+                      <TableCell>
+                        <StatusBadge
+                          status={template.type === "Linux" ? "success" : "info"}
+                          label={template.type}
+                        />
+                      </TableCell>
+                      <TableCell>{template.os}</TableCell>
+                      <TableCell>{template.runtime}</TableCell>
+                      <TableCell className="text-muted-foreground">{template.lastUpdated}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
+        {/* Lab Instances (Live) */}
+        <TabsContent value="instances" className="space-y-4">
+          {/* Stats */}
+          <div className="grid gap-4 md:grid-cols-4">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-4">
-                <CardTitle className="text-base font-semibold">Live Lab Instances</CardTitle>
-                <div className="flex gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
-                    <Input
-                      placeholder="Search instances..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="pl-10 w-64 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/30"
-                    />
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-semibold text-success">4</p>
+                    <p className="text-sm text-muted-foreground">Running</p>
                   </div>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="outline" size="icon">
-                        <RefreshCw className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Refresh</TooltipContent>
-                  </Tooltip>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="rounded-lg overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/30 hover:bg-muted/30">
-                        <TableHead className="font-medium">Student</TableHead>
-                        <TableHead className="font-medium">Batch</TableHead>
-                        <TableHead className="font-medium">Lab</TableHead>
-                        <TableHead className="font-medium">Status</TableHead>
-                        <TableHead className="font-medium">
-                          <span className="inline-flex items-center gap-1">
-                            <Clock className="h-3.5 w-3.5" />
-                            Time Left
-                          </span>
-                        </TableHead>
-                        <TableHead className="font-medium">
-                          <span className="inline-flex items-center gap-1">
-                            <Cpu className="h-3.5 w-3.5" />
-                            CPU
-                          </span>
-                        </TableHead>
-                        <TableHead className="font-medium">
-                          <span className="inline-flex items-center gap-1">
-                            <HardDrive className="h-3.5 w-3.5" />
-                            Memory
-                          </span>
-                        </TableHead>
-                        <TableHead className="font-medium text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {labInstances.map((instance) => (
-                        <TableRow key={instance.id} className="hover:bg-muted/30">
-                          <TableCell className="font-medium">{instance.student}</TableCell>
-                          <TableCell>
-                            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
-                              {instance.batch}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">{instance.lab}</TableCell>
-                          <TableCell>
-                            <StatusBadge
-                              status={statusConfig[instance.status].status}
-                              label={statusConfig[instance.status].label}
-                            />
-                          </TableCell>
-                          <TableCell className="tabular-nums text-muted-foreground">{instance.timeRemaining}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
-                                <div
-                                  className="h-full rounded-full bg-primary transition-all"
-                                  style={{ width: `${instance.cpu}%` }}
-                                />
-                              </div>
-                              <span className="text-xs tabular-nums text-muted-foreground w-8">{instance.cpu}%</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
-                                <div
-                                  className="h-full rounded-full bg-info transition-all"
-                                  style={{ width: `${instance.memory}%` }}
-                                />
-                              </div>
-                              <span className="text-xs tabular-nums text-muted-foreground w-8">{instance.memory}%</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex justify-end gap-0.5">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <RefreshCw className="h-3.5 w-3.5" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Reset Lab</TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <Square className="h-3.5 w-3.5" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Stop Lab</TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <Clock className="h-3.5 w-3.5" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Extend Time</TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <Terminal className="h-3.5 w-3.5" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Open Console</TooltipContent>
-                              </Tooltip>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <div className="h-3 w-3 rounded-full bg-success animate-pulse" />
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* Lab Templates */}
-          <TabsContent value="templates" className="space-y-6 mt-0">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-4">
-                <CardTitle className="text-base font-semibold">All Templates</CardTitle>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-semibold text-muted-foreground">1</p>
+                    <p className="text-sm text-muted-foreground">Stopped</p>
+                  </div>
+                  <Square className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-semibold text-destructive">1</p>
+                    <p className="text-sm text-muted-foreground">Errors</p>
+                  </div>
+                  <div className="h-3 w-3 rounded-full bg-destructive" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-semibold">40%</p>
+                    <p className="text-sm text-muted-foreground">Avg CPU Usage</p>
+                  </div>
+                  <Cpu className="h-4 w-4 text-primary" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
+              <CardTitle className="text-base">Live Lab Instances</CardTitle>
+              <div className="flex gap-2">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
-                  <Input 
-                    placeholder="Search templates..." 
-                    className="pl-10 w-64 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/30" 
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search instances..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-10 w-64"
                   />
                 </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="rounded-lg overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/30 hover:bg-muted/30">
-                        <TableHead className="font-medium">Template Name</TableHead>
-                        <TableHead className="font-medium">Type</TableHead>
-                        <TableHead className="font-medium">OS Version</TableHead>
-                        <TableHead className="font-medium">Runtime Limit</TableHead>
-                        <TableHead className="font-medium">Last Updated</TableHead>
-                        <TableHead className="w-12"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {labTemplates.map((template) => (
-                        <TableRow key={template.id} className="hover:bg-muted/30">
-                          <TableCell className="font-medium">{template.name}</TableCell>
-                          <TableCell>
-                            <StatusBadge
-                              status={template.type === "Linux" ? "success" : "info"}
-                              label={template.type}
+                <Button variant="outline" size="icon">
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Batch</TableHead>
+                    <TableHead>Lab</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        Time Left
+                      </div>
+                    </TableHead>
+                    <TableHead>
+                      <div className="flex items-center gap-1">
+                        <Cpu className="h-4 w-4" />
+                        CPU
+                      </div>
+                    </TableHead>
+                    <TableHead>
+                      <div className="flex items-center gap-1">
+                        <HardDrive className="h-4 w-4" />
+                        Memory
+                      </div>
+                    </TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {labInstances.map((instance) => (
+                    <TableRow key={instance.id}>
+                      <TableCell className="font-medium">{instance.student}</TableCell>
+                      <TableCell className="text-muted-foreground">{instance.batch}</TableCell>
+                      <TableCell>{instance.lab}</TableCell>
+                      <TableCell>
+                        <StatusBadge
+                          status={statusConfig[instance.status].status}
+                          label={statusConfig[instance.status].label}
+                        />
+                      </TableCell>
+                      <TableCell>{instance.timeRemaining}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-12 rounded-full bg-secondary">
+                            <div
+                              className="h-2 rounded-full bg-primary"
+                              style={{ width: `${instance.cpu}%` }}
                             />
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">{template.os}</TableCell>
-                          <TableCell className="tabular-nums text-muted-foreground">{template.runtime}</TableCell>
-                          <TableCell className="text-muted-foreground">{template.lastUpdated}</TableCell>
-                          <TableCell>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </TooltipProvider>
+                          </div>
+                          <span className="text-sm text-muted-foreground">{instance.cpu}%</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-12 rounded-full bg-secondary">
+                            <div
+                              className="h-2 rounded-full bg-info"
+                              style={{ width: `${instance.memory}%` }}
+                            />
+                          </div>
+                          <span className="text-sm text-muted-foreground">{instance.memory}%</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm" className="h-8 px-2">
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 px-2">
+                            <Square className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 px-2">
+                            <Clock className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 px-2">
+                            <Terminal className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

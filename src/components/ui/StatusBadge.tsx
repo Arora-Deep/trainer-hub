@@ -5,58 +5,27 @@ type StatusType = "success" | "warning" | "error" | "info" | "default" | "primar
 interface StatusBadgeProps {
   status: StatusType;
   label: string;
-  showDot?: boolean;
   className?: string;
 }
 
-const statusStyles: Record<StatusType, { bg: string; text: string; dot: string }> = {
-  success: {
-    bg: "bg-success/10",
-    text: "text-success",
-    dot: "bg-success",
-  },
-  warning: {
-    bg: "bg-warning/10",
-    text: "text-warning",
-    dot: "bg-warning",
-  },
-  error: {
-    bg: "bg-destructive/10",
-    text: "text-destructive",
-    dot: "bg-destructive",
-  },
-  info: {
-    bg: "bg-info/10",
-    text: "text-info",
-    dot: "bg-info",
-  },
-  default: {
-    bg: "bg-muted",
-    text: "text-muted-foreground",
-    dot: "bg-muted-foreground",
-  },
-  primary: {
-    bg: "bg-primary/10",
-    text: "text-primary",
-    dot: "bg-primary",
-  },
+const statusStyles: Record<StatusType, string> = {
+  success: "bg-success/10 text-success border-success/20",
+  warning: "bg-warning/10 text-warning border-warning/20",
+  error: "bg-destructive/10 text-destructive border-destructive/20",
+  info: "bg-info/10 text-info border-info/20",
+  default: "bg-muted text-muted-foreground border-border",
+  primary: "bg-primary/10 text-primary border-primary/20",
 };
 
-export function StatusBadge({ status, label, showDot = true, className }: StatusBadgeProps) {
-  const styles = statusStyles[status];
-  
+export function StatusBadge({ status, label, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
-        styles.bg,
-        styles.text,
+        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
+        statusStyles[status],
         className
       )}
     >
-      {showDot && (
-        <span className={cn("h-1.5 w-1.5 rounded-full", styles.dot)} />
-      )}
       {label}
     </span>
   );
