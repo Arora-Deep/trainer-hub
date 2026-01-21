@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Batches from "./pages/Batches";
 import BatchDetails from "./pages/BatchDetails";
+import CreateBatch from "./pages/CreateBatch";
 import Labs from "./pages/Labs";
 import LabDetails from "./pages/LabDetails";
 import CreateLabTemplate from "./pages/CreateLabTemplate";
@@ -35,6 +36,7 @@ const App = () => (
           <Route element={<AppLayout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/batches" element={<Batches />} />
+            <Route path="/batches/create" element={<CreateBatch />} />
             <Route path="/batches/:id" element={<BatchDetails />} />
             <Route path="/labs" element={<Labs />} />
             <Route path="/labs/create" element={<CreateLab />} />

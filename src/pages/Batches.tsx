@@ -14,23 +14,15 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Search, Filter, Users, Calendar, MoreHorizontal } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-// Mock data
-const batchesData = [
-  { id: 1, name: "AWS Solutions Architect - Batch 12", course: "AWS SA Pro", trainer: "John Smith", startDate: "Jan 15, 2024", endDate: "Feb 15, 2024", students: 24, status: "upcoming" },
-  { id: 2, name: "Kubernetes Fundamentals - Batch 8", course: "K8s Basics", trainer: "Jane Doe", startDate: "Jan 10, 2024", endDate: "Feb 10, 2024", students: 18, status: "live" },
-  { id: 3, name: "Docker Masterclass - Batch 15", course: "Docker Pro", trainer: "Mike Johnson", startDate: "Dec 1, 2023", endDate: "Jan 1, 2024", students: 30, status: "completed" },
-  { id: 4, name: "Terraform Advanced - Batch 5", course: "Terraform Pro", trainer: "Sarah Wilson", startDate: "Jan 20, 2024", endDate: "Feb 20, 2024", students: 15, status: "upcoming" },
-  { id: 5, name: "Azure DevOps - Batch 3", course: "Azure DevOps", trainer: "Tom Brown", startDate: "Jan 8, 2024", endDate: "Feb 8, 2024", students: 22, status: "live" },
-  { id: 6, name: "Linux Administration - Batch 20", course: "Linux Admin", trainer: "Emily Chen", startDate: "Nov 15, 2023", endDate: "Dec 15, 2023", students: 28, status: "completed" },
-];
+import { useBatchStore } from "@/stores/batchStore";
+import { format } from "date-fns";
 
 const statusMap: Record<string, { status: "success" | "warning" | "primary" | "default"; label: string }> = {
   upcoming: { status: "primary", label: "Upcoming" },
@@ -38,24 +30,35 @@ const statusMap: Record<string, { status: "success" | "warning" | "primary" | "d
   completed: { status: "default", label: "Completed" },
 };
 
-const filterCounts = {
-  all: batchesData.length,
-  upcoming: batchesData.filter(b => b.status === "upcoming").length,
-  live: batchesData.filter(b => b.status === "live").length,
-  completed: batchesData.filter(b => b.status === "completed").length,
-};
-
 export default function Batches() {
+  const navigate = useNavigate();
+  const { batches } = useBatchStore();
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
 
-  const filteredBatches = batchesData.filter((batch) => {
+  const filterCounts = {
+    all: batches.length,
+    upcoming: batches.filter((b) => b.status === "upcoming").length,
+    live: batches.filter((b) => b.status === "live").length,
+    completed: batches.filter((b) => b.status === "completed").length,
+  };
+
+  const filteredBatches = batches.filter((batch) => {
     const matchesFilter = filter === "all" || batch.status === filter;
-    const matchesSearch = batch.name.toLowerCase().includes(search.toLowerCase()) ||
-      batch.course.toLowerCase().includes(search.toLowerCase()) ||
-      batch.trainer.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch =
+      batch.name.toLowerCase().includes(search.toLowerCase()) ||
+      batch.courseName?.toLowerCase().includes(search.toLowerCase()) ||
+      batch.instructors.some((i) => i.toLowerCase().includes(search.toLowerCase()));
     return matchesFilter && matchesSearch;
   });
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return format(new Date(dateStr), "MMM d, yyyy");
+    } catch {
+      return dateStr;
+    }
+  };
 
   return (
     <div className="space-y-6 animate-in-up">
@@ -64,7 +67,7 @@ export default function Batches() {
         description="Manage all your training batches and sessions"
         breadcrumbs={[{ label: "Batches" }]}
         actions={
-          <Button className="shadow-md">
+          <Button className="shadow-md" onClick={() => navigate("/batches/create")}>
             <Plus className="mr-2 h-4 w-4" />
             Create Batch
           </Button>
@@ -140,8 +143,8 @@ export default function Batches() {
                 {filteredBatches.map((batch) => (
                   <TableRow key={batch.id} className="table-row-premium group">
                     <TableCell>
-                      <Link 
-                        to={`/batches/${batch.id}`} 
+                      <Link
+                        to={`/batches/${batch.id}`}
                         className="font-medium text-foreground hover:text-primary transition-colors"
                       >
                         {batch.name}
@@ -149,19 +152,23 @@ export default function Batches() {
                     </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center rounded-lg bg-muted/80 px-2.5 py-1 text-xs font-medium">
-                        {batch.course}
+                        {batch.courseName || "Not assigned"}
                       </span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{batch.trainer}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {batch.instructors.join(", ") || "No instructor"}
+                    </TableCell>
                     <TableCell className="text-muted-foreground tabular-nums">
                       <div className="space-y-0.5">
-                        <div className="text-xs">{batch.startDate}</div>
-                        <div className="text-[10px] text-muted-foreground/70">to {batch.endDate}</div>
+                        <div className="text-xs">{formatDate(batch.startDate)}</div>
+                        <div className="text-[10px] text-muted-foreground/70">
+                          to {formatDate(batch.endDate)}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
                       <span className="inline-flex items-center justify-center min-w-[2rem] font-semibold tabular-nums text-foreground">
-                        {batch.students}
+                        {batch.students.length}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -174,16 +181,18 @@ export default function Batches() {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
+                        <DropdownMenuContent align="end" className="bg-popover">
+                          <DropdownMenuItem onClick={() => navigate(`/batches/${batch.id}`)}>
+                            View Details
+                          </DropdownMenuItem>
                           <DropdownMenuItem>Edit Batch</DropdownMenuItem>
                           <DropdownMenuItem>Manage Students</DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
@@ -200,10 +209,16 @@ export default function Batches() {
 
       {/* Results count */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>Showing {filteredBatches.length} of {batchesData.length} batches</span>
+        <span>
+          Showing {filteredBatches.length} of {batches.length} batches
+        </span>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" disabled>Previous</Button>
-          <Button variant="outline" size="sm">Next</Button>
+          <Button variant="outline" size="sm" disabled>
+            Previous
+          </Button>
+          <Button variant="outline" size="sm">
+            Next
+          </Button>
         </div>
       </div>
     </div>
