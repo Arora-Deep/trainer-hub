@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { StatCard } from "@/components/ui/StatCard";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -14,6 +18,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Users,
   Calendar,
@@ -27,65 +47,146 @@ import {
   Clock,
   BookOpen,
   Megaphone,
+  Trash2,
+  Plus,
 } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useBatchStore } from "@/stores/batchStore";
+import { useCourseStore } from "@/stores/courseStore";
+import { useLabStore } from "@/stores/labStore";
+import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
-// Mock data
-const batchDetails = {
-  id: 1,
-  name: "AWS Solutions Architect - Batch 12",
-  course: "AWS SA Pro",
-  trainer: "John Smith",
-  startDate: "Jan 15, 2024",
-  endDate: "Feb 15, 2024",
-  students: 24,
-  status: "live",
-  description: "Comprehensive AWS Solutions Architect training covering EC2, S3, VPC, and more.",
+const statusMap: Record<string, { status: "success" | "warning" | "primary" | "default"; label: string }> = {
+  upcoming: { status: "primary", label: "Upcoming" },
+  live: { status: "success", label: "Live" },
+  completed: { status: "default", label: "Completed" },
 };
-
-const students = [
-  { id: 1, name: "Alice Johnson", email: "alice@example.com", progress: 75, lastActive: "2 hours ago", avatar: "alice" },
-  { id: 2, name: "Bob Williams", email: "bob@example.com", progress: 60, lastActive: "1 hour ago", avatar: "bob" },
-  { id: 3, name: "Carol Davis", email: "carol@example.com", progress: 90, lastActive: "30 min ago", avatar: "carol" },
-  { id: 4, name: "David Brown", email: "david@example.com", progress: 45, lastActive: "5 hours ago", avatar: "david" },
-  { id: 5, name: "Eva Martinez", email: "eva@example.com", progress: 80, lastActive: "1 hour ago", avatar: "eva" },
-];
-
-const assignedLabs = [
-  { id: 1, name: "EC2 Instance Setup", type: "Linux", duration: "60 min", completions: 20 },
-  { id: 2, name: "S3 Bucket Configuration", type: "AWS Console", duration: "45 min", completions: 18 },
-  { id: 3, name: "VPC Network Design", type: "AWS Console", duration: "90 min", completions: 15 },
-];
-
-const attendance = [
-  { date: "Jan 15, 2024", present: 22, absent: 2 },
-  { date: "Jan 16, 2024", present: 24, absent: 0 },
-  { date: "Jan 17, 2024", present: 21, absent: 3 },
-  { date: "Jan 18, 2024", present: 23, absent: 1 },
-];
-
-const announcements = [
-  { id: 1, title: "Lab Schedule Update", content: "Tomorrow's lab session will start 30 minutes early.", date: "Jan 17, 2024" },
-  { id: 2, title: "New Study Materials", content: "Additional practice tests have been uploaded to the course portal.", date: "Jan 16, 2024" },
-];
 
 export default function BatchDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { getBatch, addStudent, removeStudent, assignLab, removeLab, addAnnouncement, setCourse } = useBatchStore();
+  const { courses } = useCourseStore();
+  const { labs } = useLabStore();
+
+  const batch = getBatch(id || "");
+
+  // Dialog states
+  const [addStudentOpen, setAddStudentOpen] = useState(false);
+  const [newStudentName, setNewStudentName] = useState("");
+  const [newStudentEmail, setNewStudentEmail] = useState("");
+
+  const [assignLabOpen, setAssignLabOpen] = useState(false);
+  const [selectedLabId, setSelectedLabId] = useState("");
+
+  const [announcementOpen, setAnnouncementOpen] = useState(false);
+  const [announcementTitle, setAnnouncementTitle] = useState("");
+  const [announcementContent, setAnnouncementContent] = useState("");
+
+  const [assignCourseOpen, setAssignCourseOpen] = useState(false);
+  const [selectedCourseId, setSelectedCourseId] = useState("");
+
+  if (!batch) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold">Batch not found</h2>
+          <p className="text-muted-foreground mt-2">The batch you're looking for doesn't exist.</p>
+          <Button className="mt-4" onClick={() => navigate("/batches")}>
+            Back to Batches
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return format(new Date(dateStr), "MMM d, yyyy");
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const handleAddStudent = () => {
+    if (!newStudentName.trim() || !newStudentEmail.trim()) {
+      toast({ title: "Error", description: "Name and email are required", variant: "destructive" });
+      return;
+    }
+    addStudent(batch.id, { name: newStudentName.trim(), email: newStudentEmail.trim() });
+    toast({ title: "Success", description: "Student added successfully" });
+    setNewStudentName("");
+    setNewStudentEmail("");
+    setAddStudentOpen(false);
+  };
+
+  const handleAssignLab = () => {
+    const lab = labs.find((l) => l.id === selectedLabId);
+    if (!lab) {
+      toast({ title: "Error", description: "Please select a lab", variant: "destructive" });
+      return;
+    }
+    assignLab(batch.id, {
+      labId: lab.id,
+      name: lab.name,
+      type: lab.templateName,
+      duration: "60 min",
+    });
+    toast({ title: "Success", description: "Lab assigned successfully" });
+    setSelectedLabId("");
+    setAssignLabOpen(false);
+  };
+
+  const handleAddAnnouncement = () => {
+    if (!announcementTitle.trim() || !announcementContent.trim()) {
+      toast({ title: "Error", description: "Title and content are required", variant: "destructive" });
+      return;
+    }
+    addAnnouncement(batch.id, { title: announcementTitle.trim(), content: announcementContent.trim() });
+    toast({ title: "Success", description: "Announcement posted successfully" });
+    setAnnouncementTitle("");
+    setAnnouncementContent("");
+    setAnnouncementOpen(false);
+  };
+
+  const handleAssignCourse = () => {
+    const course = courses.find((c) => c.id === selectedCourseId);
+    if (!course) {
+      toast({ title: "Error", description: "Please select a course", variant: "destructive" });
+      return;
+    }
+    setCourse(batch.id, course.id, course.name);
+    toast({ title: "Success", description: "Course assigned successfully" });
+    setSelectedCourseId("");
+    setAssignCourseOpen(false);
+  };
+
+  const daysRemaining = () => {
+    try {
+      const end = new Date(batch.endDate);
+      const now = new Date();
+      const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      return diff > 0 ? diff : 0;
+    } catch {
+      return 0;
+    }
+  };
 
   return (
     <div className="space-y-6 animate-in-up">
       <PageHeader
-        title={batchDetails.name}
-        description={batchDetails.description}
+        title={batch.name}
+        description={batch.description}
         breadcrumbs={[
           { label: "Batches", href: "/batches" },
-          { label: batchDetails.name },
+          { label: batch.name },
         ]}
         actions={
           <div className="flex gap-2">
@@ -105,31 +206,35 @@ export default function BatchDetails() {
       <div className="grid gap-4 md:grid-cols-4">
         <StatCard
           title="Students"
-          value={batchDetails.students}
+          value={batch.students.length}
           icon={Users}
           variant="primary"
           size="compact"
         />
         <StatCard
           title="Days Remaining"
-          value={12}
+          value={daysRemaining()}
           icon={Calendar}
           variant="success"
           size="compact"
         />
         <StatCard
           title="Labs Assigned"
-          value={3}
+          value={batch.assignedLabs.length}
           icon={FlaskConical}
           variant="info"
           size="compact"
         />
         <Card className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
-            <StatusBadge status="success" label="Live" pulse />
+            <StatusBadge
+              status={statusMap[batch.status].status}
+              label={statusMap[batch.status].label}
+              pulse={batch.status === "live"}
+            />
             <div>
               <p className="text-sm font-medium">Status</p>
-              <p className="text-xs text-muted-foreground">In Progress</p>
+              <p className="text-xs text-muted-foreground capitalize">{batch.status}</p>
             </div>
           </div>
           <Clock className="h-5 w-5 text-muted-foreground" />
@@ -142,7 +247,7 @@ export default function BatchDetails() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
           <TabsTrigger value="labs">Labs Assigned</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
+          <TabsTrigger value="course">Course/Program</TabsTrigger>
           <TabsTrigger value="announcements">Announcements</TabsTrigger>
           <TabsTrigger value="assessments">Assessments</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
@@ -161,19 +266,27 @@ export default function BatchDetails() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">Course</p>
-                    <p className="font-medium">{batchDetails.course}</p>
+                    <p className="font-medium">{batch.courseName || "Not assigned"}</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Trainer</p>
-                    <p className="font-medium">{batchDetails.trainer}</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Instructors</p>
+                    <p className="font-medium">{batch.instructors.join(", ") || "None"}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">Start Date</p>
-                    <p className="font-medium tabular-nums">{batchDetails.startDate}</p>
+                    <p className="font-medium tabular-nums">{formatDate(batch.startDate)}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">End Date</p>
-                    <p className="font-medium tabular-nums">{batchDetails.endDate}</p>
+                    <p className="font-medium tabular-nums">{formatDate(batch.endDate)}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Seat Count</p>
+                    <p className="font-medium">{batch.seatCount}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Medium</p>
+                    <p className="font-medium capitalize">{batch.medium}</p>
                   </div>
                 </div>
               </CardContent>
@@ -186,13 +299,17 @@ export default function BatchDetails() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {announcements.map((announcement) => (
-                  <div key={announcement.id} className="border-b border-border pb-3 last:border-0 last:pb-0">
-                    <p className="font-medium text-sm">{announcement.title}</p>
-                    <p className="text-sm text-muted-foreground mt-0.5">{announcement.content}</p>
-                    <p className="text-xs text-muted-foreground/70 mt-1.5">{announcement.date}</p>
-                  </div>
-                ))}
+                {batch.announcements.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No announcements yet.</p>
+                ) : (
+                  batch.announcements.slice(0, 3).map((announcement) => (
+                    <div key={announcement.id} className="border-b border-border pb-3 last:border-0 last:pb-0">
+                      <p className="font-medium text-sm">{announcement.title}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">{announcement.content}</p>
+                      <p className="text-xs text-muted-foreground/70 mt-1.5">{announcement.date}</p>
+                    </div>
+                  ))
+                )}
               </CardContent>
             </Card>
           </div>
@@ -202,70 +319,128 @@ export default function BatchDetails() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-base">Students ({students.length})</CardTitle>
+                <CardTitle className="text-base">Students ({batch.students.length}/{batch.seatCount})</CardTitle>
                 <CardDescription>Manage enrolled students and track their progress</CardDescription>
               </div>
-              <Button size="sm" className="shadow-sm">
-                <UserPlus className="mr-2 h-4 w-4" />
-                Add Students
-              </Button>
+              <Dialog open={addStudentOpen} onOpenChange={setAddStudentOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="shadow-sm">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Add Students
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add Student</DialogTitle>
+                    <DialogDescription>Add a new student to this batch.</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="studentName">Name</Label>
+                      <Input
+                        id="studentName"
+                        placeholder="Student name"
+                        value={newStudentName}
+                        onChange={(e) => setNewStudentName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="studentEmail">Email</Label>
+                      <Input
+                        id="studentEmail"
+                        type="email"
+                        placeholder="student@example.com"
+                        value={newStudentEmail}
+                        onChange={(e) => setNewStudentEmail(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setAddStudentOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAddStudent}>Add Student</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="font-medium">Student</TableHead>
-                    <TableHead className="font-medium">Email</TableHead>
-                    <TableHead className="font-medium">Progress</TableHead>
-                    <TableHead className="font-medium">Last Active</TableHead>
-                    <TableHead className="w-12"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {students.map((student) => (
-                    <TableRow key={student.id} className="table-row-premium group">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-9 w-9 border-2 border-primary/10">
-                            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.avatar}`} />
-                            <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                              {student.name.split(" ").map(n => n[0]).join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium">{student.name}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{student.email}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3 min-w-[140px]">
-                          <ProgressBar 
-                            value={student.progress} 
-                            size="sm" 
-                            variant={student.progress >= 75 ? "success" : student.progress >= 50 ? "primary" : "warning"}
-                            showValue
-                          />
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{student.lastActive}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>View Profile</DropdownMenuItem>
-                            <DropdownMenuItem>Send Message</DropdownMenuItem>
-                            <DropdownMenuItem>View Progress</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">Remove</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+              {batch.students.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Users className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                  <h3 className="text-lg font-semibold">No students enrolled</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mt-1.5">
+                    Add students to this batch to get started.
+                  </p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead className="font-medium">Student</TableHead>
+                      <TableHead className="font-medium">Email</TableHead>
+                      <TableHead className="font-medium">Progress</TableHead>
+                      <TableHead className="font-medium">Last Active</TableHead>
+                      <TableHead className="w-12"></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {batch.students.map((student) => (
+                      <TableRow key={student.id} className="table-row-premium group">
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-9 w-9 border-2 border-primary/10">
+                              <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.name}`} />
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                                {student.name.split(" ").map((n) => n[0]).join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium">{student.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{student.email}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3 min-w-[140px]">
+                            <ProgressBar
+                              value={student.progress}
+                              size="sm"
+                              variant={student.progress >= 75 ? "success" : student.progress >= 50 ? "primary" : "warning"}
+                              showValue
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{student.lastActive}</TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-popover">
+                              <DropdownMenuItem>View Profile</DropdownMenuItem>
+                              <DropdownMenuItem>Send Message</DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => {
+                                  removeStudent(batch.id, student.id);
+                                  toast({ title: "Removed", description: "Student removed from batch" });
+                                }}
+                              >
+                                Remove
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -277,87 +452,161 @@ export default function BatchDetails() {
                 <CardTitle className="text-base">Assigned Labs</CardTitle>
                 <CardDescription>Labs attached to this batch for hands-on practice</CardDescription>
               </div>
-              <Button size="sm" className="shadow-sm">
-                <FlaskConical className="mr-2 h-4 w-4" />
-                Attach Lab
-              </Button>
+              <Dialog open={assignLabOpen} onOpenChange={setAssignLabOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="shadow-sm">
+                    <FlaskConical className="mr-2 h-4 w-4" />
+                    Attach Lab
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Assign Lab</DialogTitle>
+                    <DialogDescription>Select a lab to assign to this batch.</DialogDescription>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <Label>Select Lab</Label>
+                    <Select value={selectedLabId} onValueChange={setSelectedLabId}>
+                      <SelectTrigger className="mt-2">
+                        <SelectValue placeholder="Choose a lab..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {labs.map((lab) => (
+                          <SelectItem key={lab.id} value={lab.id}>
+                            {lab.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setAssignLabOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAssignLab}>Assign Lab</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="font-medium">Lab Name</TableHead>
-                    <TableHead className="font-medium">Type</TableHead>
-                    <TableHead className="font-medium">Duration</TableHead>
-                    <TableHead className="font-medium text-center">Completions</TableHead>
-                    <TableHead className="w-12"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {assignedLabs.map((lab) => (
-                    <TableRow key={lab.id} className="table-row-premium group">
-                      <TableCell className="font-medium">{lab.name}</TableCell>
-                      <TableCell>
-                        <StatusBadge status="info" label={lab.type} dot={false} />
-                      </TableCell>
-                      <TableCell className="tabular-nums text-muted-foreground">{lab.duration}</TableCell>
-                      <TableCell className="text-center">
-                        <span className="font-medium">{lab.completions}</span>
-                        <span className="text-muted-foreground">/{batchDetails.students}</span>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
+              {batch.assignedLabs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <FlaskConical className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                  <h3 className="text-lg font-semibold">No labs assigned</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mt-1.5">
+                    Attach labs to this batch for hands-on practice.
+                  </p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead className="font-medium">Lab Name</TableHead>
+                      <TableHead className="font-medium">Type</TableHead>
+                      <TableHead className="font-medium">Duration</TableHead>
+                      <TableHead className="font-medium text-center">Completions</TableHead>
+                      <TableHead className="w-12"></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {batch.assignedLabs.map((lab) => (
+                      <TableRow key={lab.id} className="table-row-premium group">
+                        <TableCell className="font-medium">{lab.name}</TableCell>
+                        <TableCell>
+                          <StatusBadge status="info" label={lab.type} dot={false} />
+                        </TableCell>
+                        <TableCell className="tabular-nums text-muted-foreground">{lab.duration}</TableCell>
+                        <TableCell className="text-center">
+                          <span className="font-medium">{lab.completions}</span>
+                          <span className="text-muted-foreground">/{batch.students.length}</span>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive"
+                            onClick={() => {
+                              removeLab(batch.id, lab.id);
+                              toast({ title: "Removed", description: "Lab removed from batch" });
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="attendance">
+        <TabsContent value="course">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Attendance Record</CardTitle>
-              <CardDescription>Track daily attendance for all sessions</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-base">Course/Program</CardTitle>
+                <CardDescription>Assign a course or program to this batch</CardDescription>
+              </div>
+              <Dialog open={assignCourseOpen} onOpenChange={setAssignCourseOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="shadow-sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    {batch.courseName ? "Change Course" : "Assign Course"}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Assign Course</DialogTitle>
+                    <DialogDescription>Select a course for this batch.</DialogDescription>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <Label>Select Course</Label>
+                    <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
+                      <SelectTrigger className="mt-2">
+                        <SelectValue placeholder="Choose a course..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {courses.map((course) => (
+                          <SelectItem key={course.id} value={course.id}>
+                            {course.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setAssignCourseOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAssignCourse}>Assign Course</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="font-medium">Date</TableHead>
-                    <TableHead className="font-medium text-center">Present</TableHead>
-                    <TableHead className="font-medium text-center">Absent</TableHead>
-                    <TableHead className="font-medium text-center">Rate</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {attendance.map((record, index) => {
-                    const rate = Math.round((record.present / (record.present + record.absent)) * 100);
-                    return (
-                      <TableRow key={index} className="table-row-premium">
-                        <TableCell className="font-medium tabular-nums">{record.date}</TableCell>
-                        <TableCell className="text-center">
-                          <span className="text-success font-medium">{record.present}</span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="text-destructive font-medium">{record.absent}</span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <StatusBadge 
-                            status={rate >= 90 ? "success" : rate >= 75 ? "warning" : "error"} 
-                            label={`${rate}%`}
-                            dot={false}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+            <CardContent>
+              {batch.courseName ? (
+                <div className="rounded-xl border border-border p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <h4 className="text-lg font-semibold">{batch.courseName}</h4>
+                      <p className="text-sm text-muted-foreground">Assigned to this batch</p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/courses/${batch.courseId}`)}>
+                      View Course
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <BookOpen className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                  <h3 className="text-lg font-semibold">No course assigned</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mt-1.5">
+                    Assign a course to this batch to get started.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -369,23 +618,73 @@ export default function BatchDetails() {
                 <CardTitle className="text-base">Announcements</CardTitle>
                 <CardDescription>Broadcast messages to all students in this batch</CardDescription>
               </div>
-              <Button size="sm" className="shadow-sm">
-                <Mail className="mr-2 h-4 w-4" />
-                New Announcement
-              </Button>
+              <Dialog open={announcementOpen} onOpenChange={setAnnouncementOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="shadow-sm">
+                    <Mail className="mr-2 h-4 w-4" />
+                    New Announcement
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>New Announcement</DialogTitle>
+                    <DialogDescription>Create an announcement for this batch.</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="announcementTitle">Title</Label>
+                      <Input
+                        id="announcementTitle"
+                        placeholder="Announcement title"
+                        value={announcementTitle}
+                        onChange={(e) => setAnnouncementTitle(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="announcementContent">Content</Label>
+                      <Textarea
+                        id="announcementContent"
+                        placeholder="Write your announcement..."
+                        value={announcementContent}
+                        onChange={(e) => setAnnouncementContent(e.target.value)}
+                        className="min-h-[100px]"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setAnnouncementOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAddAnnouncement}>Post Announcement</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </CardHeader>
             <CardContent className="space-y-4">
-              {announcements.map((announcement) => (
-                <div key={announcement.id} className="rounded-xl border border-border p-4 hover:bg-muted/30 transition-colors">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <h4 className="font-semibold">{announcement.title}</h4>
-                      <p className="text-sm text-muted-foreground">{announcement.content}</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground shrink-0">{announcement.date}</span>
-                  </div>
+              {batch.announcements.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Megaphone className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                  <h3 className="text-lg font-semibold">No announcements yet</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mt-1.5">
+                    Create an announcement to broadcast to all students.
+                  </p>
                 </div>
-              ))}
+              ) : (
+                batch.announcements.map((announcement) => (
+                  <div
+                    key={announcement.id}
+                    className="rounded-xl border border-border p-4 hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <h4 className="font-semibold">{announcement.title}</h4>
+                        <p className="text-sm text-muted-foreground">{announcement.content}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground shrink-0">{announcement.date}</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </TabsContent>
