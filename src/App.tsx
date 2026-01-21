@@ -10,6 +10,7 @@ import BatchDetails from "./pages/BatchDetails";
 import Labs from "./pages/Labs";
 import LabDetails from "./pages/LabDetails";
 import CreateLabTemplate from "./pages/CreateLabTemplate";
+import CreateLab from "./pages/CreateLab";
 import Courses from "./pages/Courses";
 import CourseDetails from "./pages/CourseDetails";
 import CreateCourse from "./pages/CreateCourse";
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/batches" element={<Batches />} />
             <Route path="/batches/:id" element={<BatchDetails />} />
             <Route path="/labs" element={<Labs />} />
+            <Route path="/labs/create" element={<CreateLab />} />
             <Route path="/labs/create-template" element={<CreateLabTemplate />} />
             <Route path="/labs/:id" element={<LabDetails />} />
             <Route path="/courses" element={<Courses />} />
