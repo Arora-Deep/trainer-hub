@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -33,56 +33,11 @@ import {
   Trash2,
   Eye
 } from "lucide-react";
-
-const programs = [
-  {
-    id: "1",
-    name: "Full Stack Development Bootcamp",
-    courses: 8,
-    duration: "16 weeks",
-    enrolled: 156,
-    status: "active",
-    lastUpdated: "2024-01-10",
-  },
-  {
-    id: "2",
-    name: "Data Science Fundamentals",
-    courses: 6,
-    duration: "12 weeks",
-    enrolled: 89,
-    status: "active",
-    lastUpdated: "2024-01-08",
-  },
-  {
-    id: "3",
-    name: "Cloud Architecture Certificate",
-    courses: 5,
-    duration: "10 weeks",
-    enrolled: 45,
-    status: "draft",
-    lastUpdated: "2024-01-05",
-  },
-  {
-    id: "4",
-    name: "DevOps Engineering Path",
-    courses: 7,
-    duration: "14 weeks",
-    enrolled: 72,
-    status: "active",
-    lastUpdated: "2024-01-03",
-  },
-  {
-    id: "5",
-    name: "Cybersecurity Essentials",
-    courses: 4,
-    duration: "8 weeks",
-    enrolled: 0,
-    status: "archived",
-    lastUpdated: "2023-12-15",
-  },
-];
+import { useProgramStore } from "@/stores/programStore";
 
 const Programs = () => {
+  const navigate = useNavigate();
+  const programs = useProgramStore((state) => state.programs);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -96,7 +51,7 @@ const Programs = () => {
     total: programs.length,
     active: programs.filter(p => p.status === "active").length,
     totalEnrolled: programs.reduce((sum, p) => sum + p.enrolled, 0),
-    totalCourses: programs.reduce((sum, p) => sum + p.courses, 0),
+    totalCourses: programs.reduce((sum, p) => sum + p.courses.length, 0),
   };
 
   const getStatusVariant = (status: string) => {
@@ -114,7 +69,7 @@ const Programs = () => {
         title="Programs"
         description="Create and manage learning programs combining multiple courses"
         actions={
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => navigate("/programs/create")}>
             <Plus className="h-4 w-4" />
             Create Program
           </Button>
@@ -197,7 +152,7 @@ const Programs = () => {
                       {program.name}
                     </Link>
                   </TableCell>
-                  <TableCell>{program.courses} courses</TableCell>
+                  <TableCell>{program.courses.length} courses</TableCell>
                   <TableCell>{program.duration}</TableCell>
                   <TableCell>{program.enrolled}</TableCell>
                   <TableCell>

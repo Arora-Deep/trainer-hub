@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -33,61 +34,11 @@ import {
   Eye,
   Download
 } from "lucide-react";
-
-const certifications = [
-  {
-    id: "1",
-    name: "AWS Solutions Architect",
-    program: "Cloud Architecture Certificate",
-    issued: 45,
-    pending: 12,
-    validityPeriod: "2 years",
-    status: "active",
-    passingScore: 70,
-  },
-  {
-    id: "2",
-    name: "Full Stack Developer",
-    program: "Full Stack Development Bootcamp",
-    issued: 89,
-    pending: 23,
-    validityPeriod: "Lifetime",
-    status: "active",
-    passingScore: 75,
-  },
-  {
-    id: "3",
-    name: "Data Science Professional",
-    program: "Data Science Fundamentals",
-    issued: 34,
-    pending: 8,
-    validityPeriod: "3 years",
-    status: "active",
-    passingScore: 80,
-  },
-  {
-    id: "4",
-    name: "DevOps Engineer",
-    program: "DevOps Engineering Path",
-    issued: 56,
-    pending: 15,
-    validityPeriod: "2 years",
-    status: "draft",
-    passingScore: 70,
-  },
-  {
-    id: "5",
-    name: "Cybersecurity Analyst",
-    program: "Cybersecurity Essentials",
-    issued: 0,
-    pending: 0,
-    validityPeriod: "1 year",
-    status: "draft",
-    passingScore: 85,
-  },
-];
+import { useCertificationStore } from "@/stores/certificationStore";
 
 const Certifications = () => {
+  const navigate = useNavigate();
+  const certifications = useCertificationStore((state) => state.certifications);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -119,7 +70,7 @@ const Certifications = () => {
         title="Certifications"
         description="Manage certification templates and track issued certificates"
         actions={
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => navigate("/certifications/create")}>
             <Plus className="h-4 w-4" />
             Create Certification
           </Button>
