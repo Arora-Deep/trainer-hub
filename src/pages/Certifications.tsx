@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -20,6 +20,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   Plus, 
   Search, 
@@ -35,12 +43,16 @@ import {
   Download
 } from "lucide-react";
 import { useCertificationStore } from "@/stores/certificationStore";
+import { useToast } from "@/hooks/use-toast";
 
 const Certifications = () => {
   const navigate = useNavigate();
-  const certifications = useCertificationStore((state) => state.certifications);
+  const { toast } = useToast();
+  const { certifications, deleteCertification, addCertification } = useCertificationStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [certToDelete, setCertToDelete] = useState<string | null>(null);
 
   const filteredCertifications = certifications.filter((cert) => {
     const matchesSearch = cert.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -62,6 +74,61 @@ const Certifications = () => {
       case "draft": return "warning";
       default: return "default";
     }
+  };
+
+  const handleView = (id: string) => {
+    navigate(`/certifications/${id}`);
+  };
+
+  const handleEdit = (id: string) => {
+    navigate(`/certifications/${id}/edit`);
+  };
+
+  const handleDelete = (id: string) => {
+    setCertToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (certToDelete) {
+      const cert = certifications.find(c => c.id === certToDelete);
+      deleteCertification(certToDelete);
+      toast({
+        title: "Certification Deleted",
+        description: `"${cert?.name}" has been deleted.`,
+      });
+      setCertToDelete(null);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  const handleDuplicate = (id: string) => {
+    const cert = certifications.find(c => c.id === id);
+    if (cert) {
+      addCertification({
+        name: `${cert.name} (Copy)`,
+        description: cert.description,
+        program: cert.program,
+        passingScore: cert.passingScore,
+        validityPeriod: cert.validityPeriod,
+        validityYears: cert.validityYears,
+        status: "draft",
+        requirements: [...cert.requirements],
+        badgeColor: cert.badgeColor,
+      });
+      toast({
+        title: "Certification Duplicated",
+        description: `A copy of "${cert.name}" has been created.`,
+      });
+    }
+  };
+
+  const handleExport = (id: string) => {
+    const cert = certifications.find(c => c.id === id);
+    toast({
+      title: "Export Started",
+      description: `Exporting issued certificates for "${cert?.name}"...`,
+    });
   };
 
   return (
@@ -176,24 +243,27 @@ const Certifications = () => {
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                      <DropdownMenuContent align="end" className="bg-popover">
+                        <DropdownMenuItem onClick={() => handleView(cert.id)}>
                           <Eye className="mr-2 h-4 w-4" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(cert.id)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit Template
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExport(cert.id)}>
                           <Download className="mr-2 h-4 w-4" />
                           Export Issued
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDuplicate(cert.id)}>
                           <Copy className="mr-2 h-4 w-4" />
                           Duplicate
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem 
+                          className="text-destructive"
+                          onClick={() => handleDelete(cert.id)}
+                        >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
@@ -206,6 +276,26 @@ const Certifications = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Certification</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this certification? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
