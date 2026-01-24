@@ -91,6 +91,9 @@ const CreateCertification = () => {
 
     const filteredRequirements = formData.requirements.filter((req) => req.trim() !== "");
 
+    // Use isPublished state to determine status, unless explicitly saving as draft
+    const status = asDraft ? "draft" : (isPublished ? "active" : "draft");
+
     const certification = addCertification({
       name: formData.name,
       description: formData.description,
@@ -98,7 +101,7 @@ const CreateCertification = () => {
       passingScore: formData.passingScore,
       validityPeriod: getValidityPeriod(formData.validityYears),
       validityYears: formData.validityYears,
-      status: asDraft ? "draft" : "active",
+      status: status,
       requirements: filteredRequirements,
       badgeColor: formData.badgeColor,
     });

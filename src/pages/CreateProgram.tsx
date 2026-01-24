@@ -7,7 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -23,9 +28,9 @@ import {
   GraduationCap, 
   Plus, 
   X, 
-  GripVertical,
   BookOpen,
-  Clock,
+  ChevronUp,
+  ChevronDown,
   Target
 } from "lucide-react";
 
@@ -94,15 +99,11 @@ const CreateProgram = () => {
     }));
   };
 
-  const handleCourseToggle = (courseId: string, courseName: string) => {
-    setSelectedCourses((prev) => {
-      const exists = prev.find((c) => c.id === courseId);
-      if (exists) {
-        return prev.filter((c) => c.id !== courseId);
-      } else {
-        return [...prev, { id: courseId, name: courseName, order: prev.length + 1 }];
-      }
-    });
+  const handleAddCourse = (courseId: string, courseName: string) => {
+    setSelectedCourses((prev) => [
+      ...prev,
+      { id: courseId, name: courseName, order: prev.length + 1 }
+    ]);
   };
 
   const handleRemoveCourse = (courseId: string) => {
@@ -164,6 +165,7 @@ const CreateProgram = () => {
     navigate("/programs");
   };
 
+  // Filter out courses that are already selected
   const availableCourses = courses.filter(
     (course) => !selectedCourses.find((sc) => sc.id === course.id)
   );
@@ -255,93 +257,98 @@ const CreateProgram = () => {
             </CardContent>
           </Card>
 
-          {/* Course Selection */}
+          {/* Program Course Structure */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                Program Courses
-              </CardTitle>
-              <CardDescription>
-                Select and order courses for this program ({selectedCourses.length} selected)
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Selected Courses */}
-              {selectedCourses.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Selected Courses (drag to reorder)</Label>
-                  <div className="space-y-2 rounded-lg border p-3">
-                    {selectedCourses.map((course, index) => (
-                      <div
-                        key={course.id}
-                        className="flex items-center gap-2 rounded-md border bg-muted/50 p-2"
-                      >
-                        <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                          {index + 1}
-                        </span>
-                        <span className="flex-1 font-medium">{course.name}</span>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => moveCourse(index, "up")}
-                            disabled={index === 0}
-                          >
-                            ↑
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => moveCourse(index, "down")}
-                            disabled={index === selectedCourses.length - 1}
-                          >
-                            ↓
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRemoveCourse(course.id)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    Program Course Structure
+                  </CardTitle>
+                  <CardDescription>
+                    Add and order courses for this program ({selectedCourses.length} courses)
+                  </CardDescription>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button disabled={availableCourses.length === 0}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Course
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-72 max-h-80 overflow-y-auto bg-popover">
+                    {availableCourses.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-muted-foreground">
+                        All courses have been added
                       </div>
-                    ))}
-                  </div>
+                    ) : (
+                      availableCourses.map((course) => (
+                        <DropdownMenuItem
+                          key={course.id}
+                          onClick={() => handleAddCourse(course.id, course.name)}
+                          className="cursor-pointer"
+                        >
+                          <BookOpen className="mr-2 h-4 w-4 text-muted-foreground" />
+                          {course.name}
+                        </DropdownMenuItem>
+                      ))
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {selectedCourses.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
+                  <BookOpen className="mb-2 h-10 w-10 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    No courses added yet. Click "Add Course" to get started.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {selectedCourses.map((course, index) => (
+                    <div
+                      key={course.id}
+                      className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                        {index + 1}
+                      </span>
+                      <span className="flex-1 font-medium">{course.name}</span>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => moveCourse(index, "up")}
+                          disabled={index === 0}
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => moveCourse(index, "down")}
+                          disabled={index === selectedCourses.length - 1}
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => handleRemoveCourse(course.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
-
-              {/* Available Courses */}
-              <div className="space-y-2">
-                <Label>Available Courses</Label>
-                <div className="max-h-60 space-y-2 overflow-y-auto rounded-lg border p-3">
-                  {availableCourses.length === 0 ? (
-                    <p className="text-center text-sm text-muted-foreground py-4">
-                      All courses have been added to this program
-                    </p>
-                  ) : (
-                    availableCourses.map((course) => (
-                      <div
-                        key={course.id}
-                        className="flex items-center space-x-3 rounded-md border p-2 hover:bg-muted/50"
-                      >
-                      <Checkbox
-                          id={`course-${course.id}`}
-                          onCheckedChange={() => handleCourseToggle(course.id, course.name)}
-                        />
-                        <label
-                          htmlFor={`course-${course.id}`}
-                          className="flex-1 cursor-pointer text-sm font-medium"
-                        >
-                          {course.name}
-                        </label>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
             </CardContent>
           </Card>
 
@@ -480,48 +487,22 @@ const CreateProgram = () => {
                 <span className="font-medium capitalize">{formData.difficulty}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Certification</span>
-                <span className="font-medium">{formData.certification ? "Yes" : "No"}</span>
+                <span className="text-muted-foreground">Prerequisites</span>
+                <span className="font-medium">
+                  {formData.prerequisites.filter((p) => p.trim()).length}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Learning Outcomes</span>
+                <span className="font-medium">
+                  {formData.outcomes.filter((o) => o.trim()).length}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Status</span>
                 <span className="font-medium capitalize">
                   {isPublished ? "Active" : "Draft"}
                 </span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Program Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <BookOpen className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{selectedCourses.length}</p>
-                    <p className="text-xs text-muted-foreground">Total Courses</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <Target className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">
-                      {formData.outcomes.filter((o) => o.trim()).length}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Learning Outcomes</p>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>
