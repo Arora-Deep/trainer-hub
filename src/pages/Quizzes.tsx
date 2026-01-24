@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -33,71 +34,11 @@ import {
   Eye,
   BarChart3
 } from "lucide-react";
-
-const quizzes = [
-  {
-    id: "1",
-    title: "JavaScript Fundamentals Quiz",
-    course: "JavaScript Essentials",
-    questions: 25,
-    duration: "30 min",
-    attempts: 234,
-    avgScore: 78,
-    status: "published",
-  },
-  {
-    id: "2",
-    title: "React Hooks Assessment",
-    course: "Advanced React",
-    questions: 20,
-    duration: "25 min",
-    attempts: 156,
-    avgScore: 72,
-    status: "published",
-  },
-  {
-    id: "3",
-    title: "Python Basics Test",
-    course: "Python for Beginners",
-    questions: 30,
-    duration: "45 min",
-    attempts: 312,
-    avgScore: 81,
-    status: "published",
-  },
-  {
-    id: "4",
-    title: "Database Design Quiz",
-    course: "SQL Masterclass",
-    questions: 15,
-    duration: "20 min",
-    attempts: 89,
-    avgScore: 75,
-    status: "draft",
-  },
-  {
-    id: "5",
-    title: "Docker & Kubernetes Test",
-    course: "DevOps Fundamentals",
-    questions: 35,
-    duration: "50 min",
-    attempts: 0,
-    avgScore: 0,
-    status: "draft",
-  },
-  {
-    id: "6",
-    title: "AWS Services Overview",
-    course: "Cloud Computing Basics",
-    questions: 40,
-    duration: "60 min",
-    attempts: 67,
-    avgScore: 68,
-    status: "published",
-  },
-];
+import { useQuizStore } from "@/stores/quizStore";
 
 const Quizzes = () => {
+  const navigate = useNavigate();
+  const { quizzes } = useQuizStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -111,7 +52,7 @@ const Quizzes = () => {
   const stats = {
     total: quizzes.length,
     published: quizzes.filter(q => q.status === "published").length,
-    totalQuestions: quizzes.reduce((sum, q) => sum + q.questions, 0),
+    totalQuestions: quizzes.reduce((sum, q) => sum + q.questions.length, 0),
     totalAttempts: quizzes.reduce((sum, q) => sum + q.attempts, 0),
   };
 
@@ -129,7 +70,7 @@ const Quizzes = () => {
         title="Quizzes"
         description="Create and manage course quizzes and assessments"
         actions={
-          <Button className="gap-2">
+          <Button onClick={() => navigate("/quizzes/create")} className="gap-2">
             <Plus className="h-4 w-4" />
             Create Quiz
           </Button>
@@ -207,8 +148,8 @@ const Quizzes = () => {
                 <TableRow key={quiz.id} className="table-row-premium">
                   <TableCell className="font-medium">{quiz.title}</TableCell>
                   <TableCell className="text-muted-foreground">{quiz.course}</TableCell>
-                  <TableCell>{quiz.questions}</TableCell>
-                  <TableCell>{quiz.duration}</TableCell>
+                  <TableCell>{quiz.questions.length}</TableCell>
+                  <TableCell>{quiz.duration} min</TableCell>
                   <TableCell>{quiz.attempts}</TableCell>
                   <TableCell>
                     {quiz.avgScore > 0 ? (
