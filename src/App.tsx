@@ -16,7 +16,9 @@ import Courses from "./pages/Courses";
 import CourseDetails from "./pages/CourseDetails";
 import CreateCourse from "./pages/CreateCourse";
 import Programs from "./pages/Programs";
+import CreateProgram from "./pages/CreateProgram";
 import Certifications from "./pages/Certifications";
+import CreateCertification from "./pages/CreateCertification";
 import Quizzes from "./pages/Quizzes";
 import CreateQuiz from "./pages/CreateQuiz";
 import Assignments from "./pages/Assignments";
@@ -49,8 +51,10 @@ const App = () => (
             <Route path="/courses/create" element={<CreateCourse />} />
             <Route path="/courses/:id" element={<CourseDetails />} />
             <Route path="/programs" element={<Programs />} />
+            <Route path="/programs/create" element={<CreateProgram />} />
             <Route path="/programs/:id" element={<Programs />} />
             <Route path="/certifications" element={<Certifications />} />
+            <Route path="/certifications/create" element={<CreateCertification />} />
             <Route path="/quizzes" element={<Quizzes />} />
             <Route path="/quizzes/create" element={<CreateQuiz />} />
             <Route path="/assignments" element={<Assignments />} />
