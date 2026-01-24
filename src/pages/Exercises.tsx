@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -34,99 +35,11 @@ import {
   Play,
   BarChart3
 } from "lucide-react";
-
-const exercises = [
-  {
-    id: "1",
-    title: "Two Sum Problem",
-    language: "Python",
-    difficulty: "easy",
-    submissions: 456,
-    successRate: 89,
-    testCases: 12,
-    status: "published",
-    topic: "Arrays",
-  },
-  {
-    id: "2",
-    title: "Binary Search Tree",
-    language: "JavaScript",
-    difficulty: "medium",
-    submissions: 234,
-    successRate: 72,
-    testCases: 18,
-    status: "published",
-    topic: "Trees",
-  },
-  {
-    id: "3",
-    title: "Graph Traversal (BFS/DFS)",
-    language: "Python",
-    difficulty: "hard",
-    submissions: 123,
-    successRate: 58,
-    testCases: 25,
-    status: "published",
-    topic: "Graphs",
-  },
-  {
-    id: "4",
-    title: "REST API Implementation",
-    language: "Node.js",
-    difficulty: "medium",
-    submissions: 189,
-    successRate: 76,
-    testCases: 15,
-    status: "published",
-    topic: "APIs",
-  },
-  {
-    id: "5",
-    title: "React Component Testing",
-    language: "TypeScript",
-    difficulty: "medium",
-    submissions: 145,
-    successRate: 81,
-    testCases: 10,
-    status: "published",
-    topic: "Testing",
-  },
-  {
-    id: "6",
-    title: "Dynamic Programming - Knapsack",
-    language: "Python",
-    difficulty: "hard",
-    submissions: 67,
-    successRate: 45,
-    testCases: 20,
-    status: "draft",
-    topic: "DP",
-  },
-  {
-    id: "7",
-    title: "SQL Query Optimization",
-    language: "SQL",
-    difficulty: "medium",
-    submissions: 198,
-    successRate: 83,
-    testCases: 8,
-    status: "published",
-    topic: "Database",
-  },
-  {
-    id: "8",
-    title: "Linked List Reversal",
-    language: "Java",
-    difficulty: "easy",
-    submissions: 312,
-    successRate: 92,
-    testCases: 6,
-    status: "published",
-    topic: "Linked Lists",
-  },
-];
+import { useExerciseStore } from "@/stores/exerciseStore";
 
 const Exercises = () => {
+  const navigate = useNavigate();
+  const { exercises } = useExerciseStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [difficultyFilter, setDifficultyFilter] = useState("all");
@@ -144,7 +57,9 @@ const Exercises = () => {
     total: exercises.length,
     published: exercises.filter(e => e.status === "published").length,
     totalSubmissions: exercises.reduce((sum, e) => sum + e.submissions, 0),
-    avgSuccessRate: Math.round(exercises.reduce((sum, e) => sum + e.successRate, 0) / exercises.length),
+    avgSuccessRate: exercises.length > 0 
+      ? Math.round(exercises.reduce((sum, e) => sum + e.successRate, 0) / exercises.length)
+      : 0,
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -170,7 +85,7 @@ const Exercises = () => {
         title="Programming Exercises"
         description="Create and manage coding challenges with automated test cases"
         actions={
-          <Button className="gap-2">
+          <Button onClick={() => navigate("/exercises/create")} className="gap-2">
             <Plus className="h-4 w-4" />
             Create Exercise
           </Button>
@@ -281,7 +196,7 @@ const Exercises = () => {
                       {exercise.difficulty}
                     </span>
                   </TableCell>
-                  <TableCell>{exercise.testCases}</TableCell>
+                  <TableCell>{exercise.testCases.length}</TableCell>
                   <TableCell>{exercise.submissions}</TableCell>
                   <TableCell>
                     <span className={`font-medium ${exercise.successRate >= 80 ? 'text-green-600' : exercise.successRate >= 60 ? 'text-amber-600' : 'text-red-600'}`}>

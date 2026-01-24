@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -34,77 +35,12 @@ import {
   Download,
   AlertCircle
 } from "lucide-react";
-
-const assignments = [
-  {
-    id: "1",
-    title: "Build a REST API",
-    course: "Node.js Backend Development",
-    submissions: 45,
-    pending: 12,
-    dueDate: "2024-01-20",
-    maxScore: 100,
-    status: "active",
-    type: "project",
-  },
-  {
-    id: "2",
-    title: "React Dashboard Component",
-    course: "Advanced React",
-    submissions: 38,
-    pending: 8,
-    dueDate: "2024-01-18",
-    maxScore: 50,
-    status: "active",
-    type: "practical",
-  },
-  {
-    id: "3",
-    title: "Database Schema Design",
-    course: "SQL Masterclass",
-    submissions: 52,
-    pending: 0,
-    dueDate: "2024-01-10",
-    maxScore: 75,
-    status: "completed",
-    type: "practical",
-  },
-  {
-    id: "4",
-    title: "Machine Learning Model",
-    course: "Data Science Fundamentals",
-    submissions: 23,
-    pending: 15,
-    dueDate: "2024-01-25",
-    maxScore: 100,
-    status: "active",
-    type: "project",
-  },
-  {
-    id: "5",
-    title: "CI/CD Pipeline Setup",
-    course: "DevOps Fundamentals",
-    submissions: 0,
-    pending: 0,
-    dueDate: "2024-02-01",
-    maxScore: 80,
-    status: "draft",
-    type: "practical",
-  },
-  {
-    id: "6",
-    title: "Security Audit Report",
-    course: "Cybersecurity Essentials",
-    submissions: 18,
-    pending: 5,
-    dueDate: "2024-01-22",
-    maxScore: 100,
-    status: "active",
-    type: "report",
-  },
-];
+import { useAssignmentStore } from "@/stores/assignmentStore";
+import { format } from "date-fns";
 
 const Assignments = () => {
+  const navigate = useNavigate();
+  const { assignments } = useAssignmentStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -146,7 +82,7 @@ const Assignments = () => {
         title="Assignments"
         description="Create and manage course assignments and track submissions"
         actions={
-          <Button className="gap-2">
+          <Button onClick={() => navigate("/assignments/create")} className="gap-2">
             <Plus className="h-4 w-4" />
             Create Assignment
           </Button>
@@ -235,7 +171,7 @@ const Assignments = () => {
                       {assignment.type}
                     </span>
                   </TableCell>
-                  <TableCell>{assignment.dueDate}</TableCell>
+                  <TableCell>{format(assignment.dueDate, "MMM d, yyyy")}</TableCell>
                   <TableCell>
                     <span className="inline-flex items-center gap-1">
                       <CheckCircle className="h-3.5 w-3.5 text-green-500" />
