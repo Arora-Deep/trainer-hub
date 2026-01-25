@@ -178,7 +178,11 @@ const Exercises = () => {
             </TableHeader>
             <TableBody>
               {filteredExercises.map((exercise) => (
-                <TableRow key={exercise.id} className="table-row-premium">
+                <TableRow 
+                  key={exercise.id} 
+                  className="table-row-premium cursor-pointer"
+                  onClick={() => navigate(`/exercises/${exercise.id}`)}
+                >
                   <TableCell className="font-medium">{exercise.title}</TableCell>
                   <TableCell>
                     <span className="inline-flex items-center px-2 py-0.5 rounded bg-secondary text-secondary-foreground text-xs">
@@ -212,32 +216,49 @@ const Exercises = () => {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/exercises/${exercise.id}`);
+                        }}>
                           <Play className="mr-2 h-4 w-4" />
                           Try Exercise
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/exercises/${exercise.id}`);
+                        }}>
                           <Eye className="mr-2 h-4 w-4" />
-                          View Submissions
+                          View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/exercises/${exercise.id}/edit`);
+                        }}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit Exercise
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
                           <BarChart3 className="mr-2 h-4 w-4" />
                           Analytics
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
                           <Copy className="mr-2 h-4 w-4" />
                           Duplicate
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem 
+                          className="text-destructive"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
