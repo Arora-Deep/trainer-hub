@@ -27,6 +27,7 @@ import Assignments from "./pages/Assignments";
 import CreateAssignment from "./pages/CreateAssignment";
 import Exercises from "./pages/Exercises";
 import CreateExercise from "./pages/CreateExercise";
+import ExerciseDetails from "./pages/ExerciseDetails";
 import Support from "./pages/Support";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -65,6 +66,8 @@ const App = () => (
             <Route path="/assignments/create" element={<CreateAssignment />} />
             <Route path="/exercises" element={<Exercises />} />
             <Route path="/exercises/create" element={<CreateExercise />} />
+            <Route path="/exercises/:id" element={<ExerciseDetails />} />
+            <Route path="/exercises/:id/edit" element={<CreateExercise />} />
             <Route path="/support" element={<Support />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
