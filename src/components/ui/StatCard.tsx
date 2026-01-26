@@ -11,7 +11,7 @@ interface StatCardProps {
     value: number;
     isPositive: boolean;
   };
-  variant?: "default" | "primary" | "success" | "warning" | "info" | "orange";
+  variant?: "default" | "primary" | "success" | "warning" | "info";
   size?: "default" | "compact";
   className?: string;
 }
@@ -20,26 +20,27 @@ const variantStyles = {
   default: {
     iconBg: "bg-muted",
     iconColor: "text-muted-foreground",
+    accentGlow: "from-muted/50 to-transparent",
   },
   primary: {
-    iconBg: "bg-primary/10",
+    iconBg: "bg-gradient-to-br from-primary/15 to-primary/5",
     iconColor: "text-primary",
+    accentGlow: "from-primary/10 via-primary/5 to-transparent",
   },
   success: {
-    iconBg: "bg-success/10",
+    iconBg: "bg-gradient-to-br from-success/15 to-success/5",
     iconColor: "text-success",
+    accentGlow: "from-success/10 via-success/5 to-transparent",
   },
   warning: {
-    iconBg: "bg-warning/10",
+    iconBg: "bg-gradient-to-br from-warning/15 to-warning/5",
     iconColor: "text-warning",
+    accentGlow: "from-warning/10 via-warning/5 to-transparent",
   },
   info: {
-    iconBg: "bg-info/10",
+    iconBg: "bg-gradient-to-br from-info/15 to-info/5",
     iconColor: "text-info",
-  },
-  orange: {
-    iconBg: "bg-orange-500/10",
-    iconColor: "text-orange-500",
+    accentGlow: "from-info/10 via-info/5 to-transparent",
   },
 };
 
@@ -64,28 +65,34 @@ export const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
       <div 
         ref={ref}
         className={cn(
-          "card-soft group",
+          "stat-card-premium group relative",
           isCompact ? "p-4" : "p-5",
           className
         )}
       >
-        <div className="flex items-start justify-between gap-4">
+        {/* Animated gradient accent */}
+        <div className={cn(
+          "absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl opacity-60 pointer-events-none transition-opacity duration-500 group-hover:opacity-100",
+          styles.accentGlow
+        )} />
+        
+        <div className="relative flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0 space-y-1.5">
             <p className={cn(
-              "font-medium text-muted-foreground",
+              "font-medium text-muted-foreground tracking-tight",
               isCompact ? "text-xs" : "text-sm"
             )}>
               {title}
             </p>
             <p className={cn(
-              "font-bold text-foreground stat-number",
+              "font-bold tracking-tight text-foreground stat-number",
               isCompact ? "text-2xl" : "text-3xl"
             )}>
               {typeof value === 'number' ? value.toLocaleString() : value}
             </p>
             {description && (
               <p className={cn(
-                "text-muted-foreground",
+                "text-muted-foreground/80",
                 isCompact ? "text-xs" : "text-sm"
               )}>
                 {description}
@@ -96,10 +103,10 @@ export const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
                 <div className={cn(
                   "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold",
                   trend.isPositive 
-                    ? "bg-success/10 text-success" 
+                    ? "bg-success/15 text-success" 
                     : trend.value === 0 
                       ? "bg-muted text-muted-foreground"
-                      : "bg-destructive/10 text-destructive"
+                      : "bg-destructive/15 text-destructive"
                 )}>
                   {trend.value === 0 ? (
                     <Minus className="h-3 w-3" />
@@ -110,12 +117,13 @@ export const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
                   )}
                   <span>{Math.abs(trend.value)}%</span>
                 </div>
-                <span className="text-xs text-muted-foreground">vs last week</span>
+                <span className="text-xs text-muted-foreground/60">vs last week</span>
               </div>
             )}
           </div>
           <div className={cn(
-            "rounded-2xl p-3 transition-transform duration-300 group-hover:scale-105",
+            "rounded-2xl transition-all duration-300 group-hover:scale-105",
+            isCompact ? "p-3" : "p-3.5",
             styles.iconBg
           )}>
             <Icon className={cn(

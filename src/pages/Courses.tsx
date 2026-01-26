@@ -32,21 +32,21 @@ export default function Courses() {
         description="Browse and manage all available courses"
         breadcrumbs={[{ label: "Courses" }]}
         actions={
-          <Button onClick={() => navigate("/courses/create")} className="btn-orange">
+          <Button onClick={() => navigate("/courses/create")} className="btn-gradient">
             <Plus className="h-4 w-4" />
             Create Course
           </Button>
         }
       />
 
-      <Card className="card-soft overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-border/50">
           <CardTitle className="text-base font-semibold">All Courses</CardTitle>
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
             <Input 
               placeholder="Search courses..." 
-              className="pl-10 w-64 bg-muted/40 border-0 rounded-2xl focus-visible:ring-2 focus-visible:ring-primary/20" 
+              className="pl-10 w-64 bg-muted/40 border-0 rounded-xl focus-visible:ring-2 focus-visible:ring-primary/20" 
             />
           </div>
         </CardHeader>
@@ -64,13 +64,13 @@ export default function Courses() {
             </TableHeader>
             <TableBody>
               {courses.map((course) => (
-                <TableRow key={course.id} className="table-row-soft group border-b border-border/30 last:border-0">
+                <TableRow key={course.id} className="table-row-premium group border-b border-border/30 last:border-0">
                   <TableCell>
                     <Link 
                       to={`/courses/${course.id}`} 
                       className="flex items-center gap-3 font-medium text-foreground hover:text-primary transition-colors group/link"
                     >
-                      <div className="rounded-2xl p-2.5 bg-primary/10">
+                      <div className="rounded-xl p-2.5" style={{ background: "var(--gradient-primary-soft)" }}>
                         <BookOpen className="h-4 w-4 text-primary" />
                       </div>
                       <span className="flex items-center gap-1">
@@ -103,7 +103,7 @@ export default function Courses() {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"
+                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"
                     >
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
