@@ -21,16 +21,16 @@ export function PageHeader({
   return (
     <div className={cn(
       "space-y-1",
-      compact ? "pb-4" : "pb-2",
+      compact ? "pb-4" : "pb-3",
       className
     )}>
       {breadcrumbs && breadcrumbs.length > 0 && (
         <Breadcrumbs items={breadcrumbs} />
       )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1 min-w-0">
+        <div className="space-y-1.5 min-w-0">
           <h1 className={cn(
-            "font-semibold tracking-tight text-foreground",
+            "font-bold tracking-tight text-foreground",
             compact ? "text-xl" : "text-2xl"
           )}>
             {title}
@@ -42,7 +42,7 @@ export function PageHeader({
           )}
         </div>
         {actions && (
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
             {actions}
           </div>
         )}
