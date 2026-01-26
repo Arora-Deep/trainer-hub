@@ -1,334 +1,315 @@
-import { PageHeader } from "@/components/ui/PageHeader";
-import { StatCard } from "@/components/ui/StatCard";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { DataCard } from "@/components/ui/DataCard";
-import { ProgressBar } from "@/components/ui/ProgressBar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Users,
-  FlaskConical,
-  Calendar,
-  AlertTriangle,
-  Plus,
-  Play,
-  Hammer,
-  BookOpen,
-  Clock,
-  Zap,
+import { useState } from "react";
+import { format } from "date-fns";
+import { 
+  Users, 
+  ChevronRight, 
   TrendingUp,
+  Calendar,
+  MessageSquare,
+  MoreHorizontal,
   ArrowUpRight,
-  Sparkles,
+  Briefcase,
+  Target,
+  Star
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CircularProgress } from "@/components/ui/CircularProgress";
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  Area,
+  AreaChart
+} from "recharts";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 // Mock data
-const upcomingBatches = [
-  { id: 1, name: "AWS Solutions Architect", course: "AWS SA Pro", trainer: "John Smith", startDate: "Jan 15, 2024", students: 24 },
-  { id: 2, name: "Kubernetes Fundamentals", course: "K8s Basics", trainer: "Jane Doe", startDate: "Jan 18, 2024", students: 18 },
-  { id: 3, name: "Docker Masterclass", course: "Docker Pro", trainer: "Mike Johnson", startDate: "Jan 22, 2024", students: 30 },
+const activityData = [
+  { day: "Mon", value: 30 },
+  { day: "Tue", value: 45 },
+  { day: "Wed", value: 35 },
+  { day: "Thu", value: 50 },
+  { day: "Fri", value: 80 },
+  { day: "Sat", value: 65 },
+  { day: "Sun", value: 40 },
 ];
 
-const activeLabs = [
-  { id: 1, student: "Alice Johnson", lab: "AWS EC2 Setup", status: "running", timeRemaining: "45 min" },
-  { id: 2, student: "Bob Williams", lab: "Kubernetes Pod", status: "idle", timeRemaining: "30 min" },
-  { id: 3, student: "Carol Davis", lab: "Docker Compose", status: "error", timeRemaining: "15 min" },
-  { id: 4, student: "David Brown", lab: "Terraform Basics", status: "running", timeRemaining: "60 min" },
+const todayTasks = [
+  { id: 1, title: "Review Course Content", subtitle: "AWS Solutions Architect", icon: Target, color: "text-primary" },
+  { id: 2, title: "Prepare Lab Environment", subtitle: "Kubernetes Batch", icon: Briefcase, color: "text-orange-500" },
+  { id: 3, title: "Update Quiz Questions", subtitle: "Docker Fundamentals", icon: Star, color: "text-primary" },
 ];
 
-const alerts = [
-  { id: 1, type: "error", message: "Lab VM offline for student Carol Davis", time: "5 min ago" },
-  { id: 2, type: "warning", message: "High resource usage in AWS batch", time: "12 min ago" },
-  { id: 3, type: "info", message: "New support ticket from Mike Chen", time: "25 min ago" },
+const teamMembers = [
+  { id: 1, name: "Sarah Miller", role: "Co-Trainer", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah", online: true },
+  { id: 2, name: "James Wilson", role: "Lab Assistant", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=James", online: true },
+  { id: 3, name: "Emily Chen", role: "Content Creator", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emily", online: false },
 ];
 
-const courseProgress = [
-  { name: "AWS Solutions Architect", progress: 75, students: 24 },
-  { name: "Kubernetes Fundamentals", progress: 45, students: 18 },
-  { name: "Docker Masterclass", progress: 90, students: 30 },
-];
-
-const quickActions = [
-  { label: "Create Batch", icon: Plus, href: "/batches/create", primary: true },
-  { label: "Create Lab", icon: FlaskConical, href: "/labs/create" },
-  { label: "Build Course", icon: Hammer, href: "/course-builder" },
-  { label: "Start Session", icon: Play },
+const projects = [
+  { id: 1, name: "AWS Certification", category: "Cloud", color: "bg-orange-500", progress: 75 },
+  { id: 2, name: "Kubernetes Mastery", category: "DevOps", color: "bg-primary", progress: 45 },
+  { id: 3, name: "Docker Workshop", category: "Containers", color: "bg-success", progress: 90 },
 ];
 
 export default function Dashboard() {
+  const currentDate = format(new Date(), "EEEE, dd MMMM yyyy");
+
   return (
-    <div className="space-y-8 animate-in-up">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-3xl p-8 border border-border/50"
-        style={{ 
-          background: "var(--gradient-primary-soft)",
-          boxShadow: "var(--shadow-card)"
-        }}
-      >
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="h-10 w-10 rounded-xl flex items-center justify-center"
-              style={{ background: "var(--gradient-primary)" }}
-            >
-              <Sparkles className="h-5 w-5 text-white" />
+    <div className="animate-in-up">
+      {/* Three-column layout */}
+      <div className="flex gap-6">
+        {/* Main Content - Left & Center */}
+        <div className="flex-1 space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+              <p className="text-sm text-muted-foreground">{currentDate}</p>
             </div>
-            <span className="text-sm font-semibold text-primary">Welcome back</span>
+            <Button className="btn-orange gap-2 h-10">
+              <Calendar className="h-4 w-4" />
+              Aug - Dec 2024
+            </Button>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">
-            Good morning, John! 👋
-          </h1>
-          <p className="text-muted-foreground text-base max-w-xl">
-            Here's what's happening with your training sessions today. You have 3 batches scheduled and 4 active labs running.
-          </p>
-        </div>
-        {/* Decorative elements */}
-        <div className="absolute -top-20 -right-20 h-60 w-60 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-primary/5 blur-2xl" />
-      </div>
 
-      {/* Stats Row */}
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Students Online"
-          value={142}
-          icon={Users}
-          description="Across all batches"
-          trend={{ value: 12, isPositive: true }}
-          variant="primary"
-        />
-        <StatCard
-          title="Active Labs"
-          value={38}
-          icon={FlaskConical}
-          description="Running right now"
-          variant="success"
-        />
-        <StatCard
-          title="Upcoming Batches"
-          value={8}
-          icon={Calendar}
-          description="This month"
-          variant="info"
-        />
-        <StatCard
-          title="Active Alerts"
-          value={3}
-          icon={AlertTriangle}
-          description="Needs attention"
-          variant="warning"
-        />
-      </div>
-
-      {/* Quick Actions */}
-      <Card className="border-dashed border-2 border-primary/20 bg-gradient-to-r from-primary/5 via-transparent to-primary/5">
-        <CardContent className="py-5">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2.5 mr-2">
-              <div className="h-9 w-9 rounded-xl flex items-center justify-center"
-                style={{ background: "var(--gradient-primary-soft)" }}
-              >
-                <Zap className="h-4 w-4 text-primary" />
+          {/* Hero Banner */}
+          <div className="hero-banner p-8 flex items-center gap-8">
+            <div className="flex-1 text-white">
+              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 mb-4">
+                <MessageSquare className="h-4 w-4" />
+                <span className="text-sm font-medium">Welcome back!</span>
               </div>
-              <span className="text-sm font-semibold text-foreground">Quick actions</span>
+              <h2 className="text-3xl font-bold mb-3">Hello, John Doe 👋</h2>
+              <p className="text-white/90 text-sm leading-relaxed max-w-md">
+                You have 3 upcoming batches this week. Among them are 2 AWS sessions, 
+                1 Kubernetes workshop. Your progress is looking great at 70%!
+              </p>
             </div>
-            {quickActions.map((action) => (
-              action.href ? (
-                <Button 
-                  key={action.label}
-                  variant={action.primary ? "default" : "outline"} 
-                  size="sm"
-                  className={action.primary ? "btn-gradient rounded-xl" : "rounded-xl hover:border-primary/30"}
-                  asChild
-                >
-                  <Link to={action.href}>
-                    <action.icon className="mr-2 h-4 w-4" />
-                    {action.label}
-                  </Link>
-                </Button>
-              ) : (
-                <Button 
-                  key={action.label}
-                  variant="outline" 
-                  size="sm"
-                  className="rounded-xl hover:border-primary/30"
-                >
-                  <action.icon className="mr-2 h-4 w-4" />
-                  {action.label}
-                </Button>
-              )
-            ))}
+            <div className="hidden lg:block">
+              <div className="w-48 h-48 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                <div className="w-40 h-40 rounded-full bg-white/20 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <div className="text-4xl font-bold">70%</div>
+                    <div className="text-sm opacity-90">Overall</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Upcoming Batches */}
-        <DataCard 
-          title="Upcoming Batches" 
-          icon={Calendar}
-          action={{ label: "View all", href: "/batches" }}
-          noPadding
-        >
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/50">
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Batch Name</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Trainer</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Start Date</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground text-right">Students</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {upcomingBatches.map((batch) => (
-                <TableRow key={batch.id} className="table-row-premium border-b border-border/30 last:border-0">
-                  <TableCell>
-                    <Link 
-                      to={`/batches/${batch.id}`} 
-                      className="font-medium hover:text-primary transition-colors flex items-center gap-1 group"
-                    >
-                      {batch.name}
-                      <ArrowUpRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{batch.trainer}</TableCell>
-                  <TableCell className="text-muted-foreground tabular-nums">{batch.startDate}</TableCell>
-                  <TableCell className="text-right">
-                    <span className="inline-flex items-center gap-1.5 font-semibold tabular-nums">
-                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                      {batch.students}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </DataCard>
-
-        {/* Active Labs */}
-        <DataCard 
-          title="Active Labs"
-          icon={FlaskConical}
-          action={{ label: "View all", href: "/labs" }}
-          badge={
-            <span className="flex items-center gap-1.5 text-xs text-success font-semibold px-2 py-1 rounded-full bg-success/10">
-              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-              Live
-            </span>
-          }
-          noPadding
-        >
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/50">
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Student</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Lab</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground text-right">Time Left</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {activeLabs.map((lab) => (
-                <TableRow key={lab.id} className="table-row-premium border-b border-border/30 last:border-0">
-                  <TableCell className="font-medium">{lab.student}</TableCell>
-                  <TableCell className="text-muted-foreground">{lab.lab}</TableCell>
-                  <TableCell>
-                    <StatusBadge
-                      status={lab.status === "running" ? "success" : lab.status === "idle" ? "warning" : "error"}
-                      label={lab.status.charAt(0).toUpperCase() + lab.status.slice(1)}
-                      pulse={lab.status === "running"}
+          {/* Activity & Progress Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Activity Chart */}
+            <div className="card-soft p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-foreground">Activity</h3>
+                <select className="text-sm bg-muted rounded-lg px-3 py-1.5 border-0 font-medium text-muted-foreground">
+                  <option>This Week</option>
+                  <option>This Month</option>
+                </select>
+              </div>
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={activityData}>
+                    <defs>
+                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(262, 60%, 65%)" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(262, 60%, 65%)" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis 
+                      dataKey="day" 
+                      axisLine={false} 
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                     />
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5" />
-                      {lab.timeRemaining}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </DataCard>
-
-        {/* Alerts & Issues */}
-        <DataCard 
-          title="Alerts & Issues"
-          icon={AlertTriangle}
-          badge={
-            <span className="rounded-full bg-destructive/15 px-2.5 py-1 text-[11px] font-semibold text-destructive">
-              {alerts.length} new
-            </span>
-          }
-        >
-          <div className="space-y-3">
-            {alerts.map((alert) => (
-              <div
-                key={alert.id}
-                className="flex items-start gap-3 rounded-xl border border-border/50 p-4 hover:bg-muted/30 hover:border-border transition-all cursor-pointer group"
-              >
-                <div className="mt-0.5 shrink-0">
-                  <span
-                    className={`flex h-2.5 w-2.5 rounded-full ${
-                      alert.type === "error"
-                        ? "bg-destructive"
-                        : alert.type === "warning"
-                        ? "bg-warning"
-                        : "bg-info"
-                    }`}
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground leading-snug font-medium group-hover:text-primary transition-colors">
-                    {alert.message}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">{alert.time}</p>
-                </div>
-                <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        background: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '12px',
+                        boxShadow: 'var(--shadow-lg)'
+                      }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="hsl(262, 60%, 65%)" 
+                      strokeWidth={3}
+                      fill="url(#colorValue)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
-            ))}
-          </div>
-        </DataCard>
+            </div>
 
-        {/* Course Progress */}
-        <DataCard 
-          title="Course Progress"
-          icon={TrendingUp}
-          action={{ label: "View all", href: "/courses" }}
-        >
-          <div className="space-y-6">
-            {courseProgress.map((course, index) => (
-              <div key={index} className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="rounded-xl p-2.5" style={{ background: "var(--gradient-primary-soft)" }}>
-                      <BookOpen className="h-4 w-4 text-primary" />
+            {/* Progress & Stats */}
+            <div className="card-soft p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-foreground">Progress</h3>
+                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex items-center gap-8">
+                <CircularProgress value={70} size={130} strokeWidth={12} color="orange" />
+                <div className="flex-1 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                      <Users className="h-5 w-5 text-primary" />
                     </div>
-                    <div className="min-w-0">
-                      <span className="text-sm font-semibold truncate block">{course.name}</span>
-                      <span className="text-xs text-muted-foreground">{course.students} students</span>
+                    <div>
+                      <div className="text-2xl font-bold text-foreground">5</div>
+                      <div className="text-xs text-muted-foreground">Active Batches</div>
                     </div>
                   </div>
-                  <span className="text-lg font-bold tabular-nums text-foreground">{course.progress}%</span>
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-2xl icon-box-orange flex items-center justify-center">
+                      <Target className="h-5 w-5 text-orange-500" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-foreground">142+</div>
+                      <div className="text-xs text-muted-foreground">Students Online</div>
+                    </div>
+                  </div>
                 </div>
-                <ProgressBar 
-                  value={course.progress} 
-                  size="default"
-                  variant={course.progress >= 80 ? "success" : course.progress >= 50 ? "primary" : "warning"}
-                  animated
-                />
               </div>
-            ))}
+            </div>
           </div>
-        </DataCard>
+
+          {/* Projects Section */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Active Courses</h3>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="px-3 py-1 rounded-full bg-muted text-muted-foreground">2 Design</span>
+                <span className="px-3 py-1 rounded-full bg-muted text-muted-foreground">3 DevOps</span>
+                <span className="px-3 py-1 rounded-full bg-muted text-muted-foreground">2 Cloud</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {projects.map((project) => (
+                <Link to="/courses" key={project.id}>
+                  <div className="project-card group">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center", project.color)}>
+                        <Briefcase className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                          {project.name}
+                        </h4>
+                        <p className="text-xs text-muted-foreground">{project.category}</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                      Track progress and manage all training materials in one place.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className={cn("h-full rounded-full", project.color)}
+                          style={{ width: `${project.progress}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-semibold text-muted-foreground">{project.progress}%</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Sidebar */}
+        <div className="w-[300px] shrink-0 space-y-6">
+          {/* Profile Card */}
+          <div className="card-soft p-6 text-center">
+            <div className="flex justify-end mb-2">
+              <Button variant="ghost" size="sm" className="text-muted-foreground h-8 w-8 p-0">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </div>
+            <h3 className="text-sm font-semibold text-foreground mb-1">My Profile</h3>
+            <p className="text-xs text-muted-foreground mb-4">70% Complete</p>
+            <div className="profile-avatar-ring w-24 h-24 mx-auto mb-4">
+              <Avatar className="w-full h-full">
+                <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" />
+                <AvatarFallback className="text-lg font-bold">JD</AvatarFallback>
+              </Avatar>
+            </div>
+            <h4 className="font-bold text-foreground">John Doe</h4>
+            <p className="text-xs text-muted-foreground">Senior Trainer</p>
+          </div>
+
+          {/* Today's Tasks */}
+          <div className="card-soft p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-foreground">Today</h3>
+              <Link to="/batches" className="text-xs text-primary font-medium hover:underline">
+                View All
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {todayTasks.map((task) => (
+                <div key={task.id} className="task-item group">
+                  <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center", 
+                    task.color === "text-primary" ? "bg-primary/10" : "bg-orange-500/10"
+                  )}>
+                    <task.icon className={cn("h-5 w-5", task.color)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-medium text-foreground truncate">{task.title}</h4>
+                    <p className="text-xs text-muted-foreground truncate">{task.subtitle}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Team */}
+          <div className="card-soft p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-foreground">Team</h3>
+              <Link to="/settings" className="text-xs text-primary font-medium hover:underline">
+                View All
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {teamMembers.map((member) => (
+                <div key={member.id} className="team-member">
+                  <div className="relative">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={member.avatar} />
+                      <AvatarFallback>{member.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    {member.online && (
+                      <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-success border-2 border-card" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-medium text-foreground">{member.name}</h4>
+                    <p className="text-xs text-muted-foreground">{member.role}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
