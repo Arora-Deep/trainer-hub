@@ -15,6 +15,7 @@ import {
   FileQuestion,
   ClipboardList,
   Code2,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -26,7 +27,7 @@ import {
 } from "@/components/ui/tooltip";
 
 const navItems = [
-  { title: "Home", icon: Home, path: "/" },
+  { title: "Dashboard", icon: Home, path: "/" },
   { title: "Batches", icon: Users, path: "/batches" },
   { title: "Labs", icon: FlaskConical, path: "/labs" },
   { title: "Courses", icon: BookOpen, path: "/courses" },
@@ -54,19 +55,27 @@ export function AppSidebar() {
       <NavLink
         to={item.path}
         className={cn(
-          "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+          "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300",
           isActive
-            ? "bg-primary text-primary-foreground shadow-md"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            ? "text-primary-foreground shadow-lg"
+            : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
           collapsed && "justify-center px-2.5"
         )}
-        style={isActive ? { boxShadow: "0 2px 8px -2px hsl(var(--primary) / 0.4)" } : undefined}
+        style={isActive ? { 
+          background: "var(--gradient-primary)",
+          boxShadow: "var(--shadow-glow-sm)"
+        } : undefined}
       >
         <item.icon className={cn(
-          "h-[18px] w-[18px] shrink-0 transition-transform duration-200",
-          !isActive && "group-hover:scale-110"
+          "h-[18px] w-[18px] shrink-0 transition-all duration-300",
+          !isActive && "group-hover:scale-110 group-hover:text-primary"
         )} />
-        {!collapsed && <span>{item.title}</span>}
+        {!collapsed && (
+          <span className="truncate">{item.title}</span>
+        )}
+        {isActive && !collapsed && (
+          <div className="absolute right-2 h-1.5 w-1.5 rounded-full bg-white/80" />
+        )}
       </NavLink>
     );
 
@@ -74,7 +83,10 @@ export function AppSidebar() {
       return (
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>{link}</TooltipTrigger>
-          <TooltipContent side="right" className="font-medium">
+          <TooltipContent 
+            side="right" 
+            className="font-medium bg-card border-border/50 shadow-lg"
+          >
             {item.title}
           </TooltipContent>
         </Tooltip>
@@ -88,25 +100,31 @@ export function AppSidebar() {
     <TooltipProvider>
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 ease-out",
-          collapsed ? "w-[72px]" : "w-64"
+          "fixed left-0 top-0 z-40 flex h-screen flex-col glass-sidebar transition-all duration-300 ease-out border-sidebar-border",
+          collapsed ? "w-[76px]" : "w-[260px]"
         )}
       >
         {/* Logo */}
         <div className={cn(
-          "flex h-16 items-center border-b border-sidebar-border px-4 gap-3",
-          collapsed && "justify-center px-2"
+          "flex h-[70px] items-center border-b border-sidebar-border/50 px-4 gap-3",
+          collapsed && "justify-center px-3"
         )}>
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shrink-0">
+          <div className="relative flex h-11 w-11 items-center justify-center rounded-xl shrink-0"
+            style={{ 
+              background: "var(--gradient-primary)",
+              boxShadow: "var(--shadow-glow-sm)"
+            }}
+          >
             <GraduationCap className="h-5 w-5 text-primary-foreground" />
-            <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-success border-2 border-sidebar" />
+            <div className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-success border-2 border-sidebar animate-pulse" />
           </div>
           {!collapsed && (
-            <div className="min-w-0">
-              <span className="font-semibold text-sidebar-foreground tracking-tight block">
+            <div className="min-w-0 flex-1">
+              <span className="font-bold text-sidebar-foreground tracking-tight block text-[15px]">
                 Trainer Portal
               </span>
-              <span className="text-[10px] text-muted-foreground font-medium">
+              <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                 Enterprise Edition
               </span>
             </div>
@@ -123,30 +141,45 @@ export function AppSidebar() {
           
           {/* Pro Feature Promo (when not collapsed) */}
           {!collapsed && (
-            <div className="mt-6 p-3 rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/10">
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-xs font-semibold text-foreground">Pro Features</span>
+            <div className="mt-6 p-4 rounded-2xl border border-primary/20 relative overflow-hidden"
+              style={{ background: "var(--gradient-primary-soft)" }}
+            >
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-8 w-8 rounded-lg flex items-center justify-center"
+                    style={{ background: "var(--gradient-primary)" }}
+                  >
+                    <Sparkles className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">Pro Features</span>
+                </div>
+                <p className="text-[12px] text-muted-foreground leading-relaxed mb-3">
+                  Unlock advanced analytics, custom branding, and more.
+                </p>
+                <Button 
+                  size="sm" 
+                  className="w-full h-9 text-xs font-semibold btn-gradient rounded-xl"
+                >
+                  Upgrade Now
+                  <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                </Button>
               </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Unlock advanced analytics, custom branding, and more.
-              </p>
-              <Button size="sm" variant="outline" className="w-full mt-3 h-8 text-xs">
-                Upgrade Now
-              </Button>
+              {/* Decorative elements */}
+              <div className="absolute -top-6 -right-6 h-20 w-20 rounded-full bg-primary/10 blur-2xl" />
+              <div className="absolute -bottom-4 -left-4 h-16 w-16 rounded-full bg-primary/5 blur-xl" />
             </div>
           )}
         </nav>
 
         {/* Bottom Navigation */}
-        <div className="border-t border-sidebar-border p-3 space-y-1">
+        <div className="border-t border-sidebar-border/50 p-3 space-y-1">
           {bottomNavItems.map((item) => (
             <NavItem key={item.path} item={item} />
           ))}
         </div>
 
         {/* Collapse Button */}
-        <div className="border-t border-sidebar-border p-3">
+        <div className="border-t border-sidebar-border/50 p-3">
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <Button
@@ -154,21 +187,21 @@ export function AppSidebar() {
                 size="sm"
                 onClick={() => setCollapsed(!collapsed)}
                 className={cn(
-                  "w-full text-muted-foreground hover:text-foreground hover:bg-muted",
-                  collapsed ? "justify-center px-2" : "justify-start"
+                  "w-full text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-xl h-10",
+                  collapsed ? "justify-center px-2" : "justify-between px-3"
                 )}
               >
+                {!collapsed && <span className="text-sm">Collapse</span>}
                 <ChevronLeft
                   className={cn(
                     "h-4 w-4 transition-transform duration-300",
                     collapsed && "rotate-180"
                   )}
                 />
-                {!collapsed && <span className="ml-2 text-sm">Collapse</span>}
               </Button>
             </TooltipTrigger>
             {collapsed && (
-              <TooltipContent side="right">
+              <TooltipContent side="right" className="bg-card border-border/50">
                 Expand sidebar
               </TooltipContent>
             )}
