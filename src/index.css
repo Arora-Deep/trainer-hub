@@ -57,16 +57,16 @@
     --sidebar-border: 240 8% 92%;
     --sidebar-ring: 262 83% 58%;
     
-    /* Premium gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(292 84% 55%) 50%, hsl(328 85% 60%) 100%);
-    --gradient-primary-soft: linear-gradient(135deg, hsl(262 83% 58% / 0.12) 0%, hsl(292 84% 55% / 0.08) 100%);
+    /* Premium gradients - Purple to Orange */
+    --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(280 70% 50%) 35%, hsl(25 95% 55%) 100%);
+    --gradient-primary-soft: linear-gradient(135deg, hsl(262 83% 58% / 0.12) 0%, hsl(25 95% 55% / 0.08) 100%);
     --gradient-success: linear-gradient(135deg, hsl(152 76% 42%) 0%, hsl(172 72% 45%) 100%);
     --gradient-warning: linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(28 95% 55%) 100%);
     --gradient-info: linear-gradient(135deg, hsl(205 100% 50%) 0%, hsl(215 95% 55%) 100%);
     --gradient-mesh: 
       radial-gradient(at 0% 0%, hsl(262 83% 58% / 0.08) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsl(292 84% 55% / 0.06) 0px, transparent 50%),
-      radial-gradient(at 50% 100%, hsl(328 85% 60% / 0.04) 0px, transparent 50%);
+      radial-gradient(at 100% 0%, hsl(25 95% 55% / 0.06) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, hsl(280 70% 50% / 0.04) 0px, transparent 50%);
     
     /* Premium shadows */
     --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.03);
@@ -129,12 +129,12 @@
     --sidebar-border: 240 12% 14%;
     --sidebar-ring: 262 83% 68%;
     
-    --gradient-primary: linear-gradient(135deg, hsl(262 83% 68%) 0%, hsl(292 84% 62%) 50%, hsl(328 85% 65%) 100%);
-    --gradient-primary-soft: linear-gradient(135deg, hsl(262 83% 68% / 0.15) 0%, hsl(292 84% 62% / 0.1) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(262 83% 68%) 0%, hsl(280 70% 55%) 35%, hsl(25 95% 60%) 100%);
+    --gradient-primary-soft: linear-gradient(135deg, hsl(262 83% 68% / 0.15) 0%, hsl(25 95% 60% / 0.1) 100%);
     --gradient-mesh: 
       radial-gradient(at 0% 0%, hsl(262 83% 68% / 0.12) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsl(292 84% 62% / 0.08) 0px, transparent 50%),
-      radial-gradient(at 50% 100%, hsl(328 85% 65% / 0.06) 0px, transparent 50%);
+      radial-gradient(at 100% 0%, hsl(25 95% 60% / 0.08) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, hsl(280 70% 55% / 0.06) 0px, transparent 50%);
     
     --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
     --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.25), 0 1px 2px -1px rgb(0 0 0 / 0.2);
