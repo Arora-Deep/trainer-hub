@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { StatCard } from "@/components/ui/StatCard";
@@ -58,6 +59,8 @@ import {
   Monitor,
   Cpu,
   HardDrive,
+  Zap,
+  ArrowUpRight,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -71,6 +74,8 @@ import { useCourseStore } from "@/stores/courseStore";
 import { useLabStore } from "@/stores/labStore";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { LabConfigCard } from "@/components/labs/LabConfigCard";
+import { InstanceMonitorGrid } from "@/components/labs/InstanceMonitorGrid";
 
 const statusMap: Record<string, { status: "success" | "warning" | "primary" | "default"; label: string }> = {
   upcoming: { status: "primary", label: "Upcoming" },
@@ -456,189 +461,153 @@ export default function BatchDetails() {
 
         <TabsContent value="labs">
           <div className="space-y-6">
+            {/* Lab Stats Overview */}
+            {batch.labConfigs.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="grid grid-cols-2 md:grid-cols-4 gap-4"
+              >
+                <div className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+                  <div className="flex items-center gap-2 text-primary mb-1">
+                    <FlaskConical className="h-4 w-4" />
+                    <span className="text-xs font-semibold uppercase tracking-wide">Labs</span>
+                  </div>
+                  <p className="text-3xl font-bold text-primary">{batch.labConfigs.length}</p>
+                </div>
+                <div className="p-4 rounded-xl bg-gradient-to-br from-success/10 to-success/5 border border-success/20">
+                  <div className="flex items-center gap-2 text-success mb-1">
+                    <Zap className="h-4 w-4" />
+                    <span className="text-xs font-semibold uppercase tracking-wide">Active</span>
+                  </div>
+                  <p className="text-3xl font-bold text-success">{batch.labConfigs.filter(l => l.status === "active").length}</p>
+                </div>
+                <div className="p-4 rounded-xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/50">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                    <Server className="h-4 w-4" />
+                    <span className="text-xs font-semibold uppercase tracking-wide">Total VMs</span>
+                  </div>
+                  <p className="text-3xl font-bold">
+                    {batch.labConfigs.reduce((sum, l) => {
+                      const vms = (l.vmType === "multi" ? l.vmTemplates.length : 1) * l.participantCount + l.adminCount;
+                      return sum + vms;
+                    }, 0)}
+                  </p>
+                </div>
+                <div className="p-4 rounded-xl bg-gradient-to-br from-warning/10 to-warning/5 border border-warning/20">
+                  <div className="flex items-center gap-2 text-warning mb-1">
+                    <DollarSign className="h-4 w-4" />
+                    <span className="text-xs font-semibold uppercase tracking-wide">Total Cost</span>
+                  </div>
+                  <p className="text-3xl font-bold text-warning">
+                    ${batch.labConfigs.reduce((sum, l) => sum + l.pricing.total, 0).toFixed(0)}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
             {/* Lab Configurations */}
-            <Card>
+            <Card className="glass-card border-white/10 overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-primary via-primary/60 to-transparent" />
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <FlaskConical className="h-4 w-4 text-primary" />
+                    <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5">
+                      <FlaskConical className="h-5 w-5 text-primary" />
+                    </div>
                     Lab Configurations
                   </CardTitle>
                   <CardDescription>Manage and provision lab environments for this batch</CardDescription>
                 </div>
-                <Button size="sm" className="shadow-sm" onClick={() => navigate(`/batches/create`)}>
+                <Button size="sm" className="shadow-sm bg-gradient-to-r from-primary to-primary/80" onClick={() => navigate(`/batches/create`)}>
                   <Plus className="mr-2 h-4 w-4" />
                   Add Lab Config
                 </Button>
               </CardHeader>
               <CardContent>
                 {batch.labConfigs.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <FlaskConical className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center justify-center py-16 text-center"
+                  >
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 mb-4">
+                      <FlaskConical className="h-12 w-12 text-muted-foreground/40" />
+                    </div>
                     <h3 className="text-lg font-semibold">No labs configured</h3>
-                    <p className="text-sm text-muted-foreground max-w-sm mt-1.5">
+                    <p className="text-sm text-muted-foreground max-w-sm mt-1.5 mb-4">
                       Create lab configurations when setting up the batch or add them later.
                     </p>
-                  </div>
+                    <Button variant="outline" onClick={() => navigate(`/batches/create`)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Configure Labs
+                    </Button>
+                  </motion.div>
                 ) : (
                   <div className="space-y-4">
-                    {batch.labConfigs.map((labConfig) => {
-                      const totalVMs = (labConfig.vmType === "multi" ? labConfig.vmTemplates.length : 1) * labConfig.participantCount + labConfig.adminCount;
-                      const isApproved = labConfig.approval.cloudAdda === "approved" && labConfig.approval.companyAdmin === "approved";
-                      
-                      return (
-                        <div key={labConfig.id} className="p-4 rounded-xl border border-border/50 bg-muted/20 space-y-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 rounded-lg bg-primary/10">
-                                <FlaskConical className="h-5 w-5 text-primary" />
-                              </div>
-                              <div>
-                                <h4 className="font-semibold">{labConfig.name}</h4>
-                                <p className="text-sm text-muted-foreground">{labConfig.description}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {labConfig.status === "draft" && (
-                                <StatusBadge status="default" label="Draft" />
-                              )}
-                              {labConfig.status === "pending_approval" && (
-                                <StatusBadge status="warning" label="Pending Approval" pulse />
-                              )}
-                              {labConfig.status === "approved" && (
-                                <StatusBadge status="primary" label="Approved" />
-                              )}
-                              {labConfig.status === "provisioning" && (
-                                <StatusBadge status="warning" label="Provisioning" pulse />
-                              )}
-                              {labConfig.status === "active" && (
-                                <StatusBadge status="success" label="Active" pulse />
-                              )}
-                              {labConfig.status === "completed" && (
-                                <StatusBadge status="default" label="Completed" />
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <div className="p-3 rounded-lg bg-background/50">
-                              <p className="text-xs text-muted-foreground">Total VMs</p>
-                              <p className="font-semibold">{totalVMs}</p>
-                            </div>
-                            <div className="p-3 rounded-lg bg-background/50">
-                              <p className="text-xs text-muted-foreground">Participants</p>
-                              <p className="font-semibold">{labConfig.participantCount}</p>
-                            </div>
-                            <div className="p-3 rounded-lg bg-background/50">
-                              <p className="text-xs text-muted-foreground">VM Type</p>
-                              <p className="font-semibold capitalize">{labConfig.vmType}</p>
-                            </div>
-                            <div className="p-3 rounded-lg bg-background/50">
-                              <p className="text-xs text-muted-foreground">Total Cost</p>
-                              <p className="font-semibold text-primary">${labConfig.pricing.total.toFixed(2)}</p>
-                            </div>
-                          </div>
-
-                          {/* VM Templates */}
-                          <div className="space-y-2">
-                            <p className="text-xs text-muted-foreground font-medium uppercase">Templates</p>
-                            <div className="flex flex-wrap gap-2">
-                              {labConfig.vmTemplates.map((vm, idx) => {
-                                const template = templates.find(t => t.id === vm.templateId);
-                                return (
-                                  <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 text-sm">
-                                    <Monitor className="h-3 w-3 text-muted-foreground" />
-                                    <span className="font-medium">{vm.instanceName}</span>
-                                    {template && (
-                                      <span className="text-muted-foreground">
-                                        ({template.name})
-                                      </span>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-
-                          {/* Approval Status */}
-                          <div className="flex items-center gap-4 pt-2 border-t border-border/50">
-                            <div className="flex items-center gap-2">
-                              <Shield className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">CloudAdda:</span>
-                              {labConfig.approval.cloudAdda === "approved" ? (
-                                <CheckCircle2 className="h-4 w-4 text-success" />
-                              ) : (
-                                <span className="text-xs text-muted-foreground">Pending</span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm">Company Admin:</span>
-                              {labConfig.approval.companyAdmin === "approved" ? (
-                                <CheckCircle2 className="h-4 w-4 text-success" />
-                              ) : (
-                                <span className="text-xs text-muted-foreground">Pending</span>
-                              )}
-                            </div>
-                            <div className="flex-1" />
-                            
-                            {labConfig.status === "approved" && (
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  provisionLab(batch.id, labConfig.id);
-                                  toast({ title: "Provisioning Started", description: "Lab instances are being provisioned..." });
-                                }}
-                                className="bg-gradient-to-r from-primary to-primary/80"
-                              >
-                                <Play className="mr-2 h-3 w-3" />
-                                Provision Lab
-                              </Button>
-                            )}
-                            {labConfig.status === "provisioning" && (
-                              <Button size="sm" disabled>
-                                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                                Provisioning...
-                              </Button>
-                            )}
-                            {labConfig.status === "active" && (
-                              <Button size="sm" variant="outline">
-                                <Eye className="mr-2 h-3 w-3" />
-                                View Instances
-                              </Button>
-                            )}
-                          </div>
-
-                          {/* Active Instances */}
-                          {labConfig.status === "active" && labConfig.instances.length > 0 && (
-                            <div className="pt-3 border-t border-border/50">
-                              <p className="text-xs text-muted-foreground font-medium uppercase mb-2">
-                                Running Instances ({labConfig.instances.filter(i => i.status === "running").length}/{labConfig.instances.length})
-                              </p>
-                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-[200px] overflow-y-auto">
-                                {labConfig.instances.slice(0, 8).map((instance) => (
-                                  <div key={instance.id} className="flex items-center gap-2 p-2 rounded-lg bg-background/50 text-sm">
-                                    <div className={`w-2 h-2 rounded-full ${instance.status === "running" ? "bg-success" : instance.status === "provisioning" ? "bg-warning animate-pulse" : "bg-muted"}`} />
-                                    <div className="min-w-0 flex-1">
-                                      <p className="font-medium truncate">{instance.studentName}</p>
-                                      <p className="text-xs text-muted-foreground truncate">{instance.ipAddress}</p>
-                                    </div>
-                                  </div>
-                                ))}
-                                {labConfig.instances.length > 8 && (
-                                  <div className="flex items-center justify-center p-2 rounded-lg bg-muted/50 text-sm text-muted-foreground">
-                                    +{labConfig.instances.length - 8} more
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                    <AnimatePresence mode="popLayout">
+                      {batch.labConfigs.map((labConfig) => (
+                        <LabConfigCard
+                          key={labConfig.id}
+                          labConfig={labConfig}
+                          templates={templates}
+                          onProvision={() => {
+                            provisionLab(batch.id, labConfig.id);
+                            toast({ title: "Provisioning Started", description: "Lab instances are being provisioned..." });
+                          }}
+                          onViewInstances={() => {
+                            // Could open a dialog with InstanceMonitorGrid
+                            toast({ title: "View Instances", description: `Viewing ${labConfig.instances.length} instances` });
+                          }}
+                          onDelete={() => {
+                            // Could add a remove function
+                            toast({ title: "Not Implemented", description: "Delete functionality coming soon" });
+                          }}
+                          variant="detailed"
+                        />
+                      ))}
+                    </AnimatePresence>
                   </div>
                 )}
               </CardContent>
             </Card>
+
+            {/* Active Lab Instances Monitor */}
+            {batch.labConfigs.some(l => l.status === "active" && l.instances.length > 0) && (
+              <Card className="glass-card border-white/10 overflow-hidden">
+                <div className="h-1 bg-gradient-to-r from-success via-success/60 to-transparent" />
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <div className="p-2 rounded-xl bg-gradient-to-br from-success/20 to-success/5">
+                      <Monitor className="h-5 w-5 text-success" />
+                    </div>
+                    Live Instance Monitor
+                  </CardTitle>
+                  <CardDescription>Real-time overview of all running lab instances</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {batch.labConfigs
+                    .filter(l => l.status === "active" && l.instances.length > 0)
+                    .map((labConfig) => (
+                      <div key={labConfig.id} className="mb-6 last:mb-0">
+                        <div className="flex items-center gap-2 mb-4">
+                          <FlaskConical className="h-4 w-4 text-primary" />
+                          <span className="font-semibold">{labConfig.name}</span>
+                          <StatusBadge status="success" label="Active" pulse />
+                        </div>
+                        <InstanceMonitorGrid
+                          instances={labConfig.instances}
+                          labName={labConfig.name}
+                          onStartInstance={(id) => toast({ title: "Starting", description: `Starting instance ${id}` })}
+                          onStopInstance={(id) => toast({ title: "Stopping", description: `Stopping instance ${id}` })}
+                          onRestartInstance={(id) => toast({ title: "Restarting", description: `Restarting instance ${id}` })}
+                          onConnectInstance={(id) => toast({ title: "Connecting", description: `Opening connection to ${id}` })}
+                        />
+                      </div>
+                    ))}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Legacy Assigned Labs (backward compatibility) */}
             {batch.assignedLabs.length > 0 && (
