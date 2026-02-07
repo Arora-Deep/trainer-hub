@@ -14,8 +14,8 @@ import {
   MoreHorizontal,
   ArrowUpRight,
   CheckCircle2,
-  Link2,
   Activity,
+  Zap,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -71,11 +71,11 @@ const quickActions = [
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-xl border border-border bg-card px-3 py-2 shadow-lg">
-        <p className="text-xs font-medium text-foreground mb-1">{label}</p>
+      <div className="rounded-xl border border-border/50 bg-card/95 backdrop-blur-md px-3.5 py-2.5 shadow-xl">
+        <p className="text-xs font-semibold text-foreground mb-1.5">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} className="text-xs text-muted-foreground">
-            {entry.name}: <span className="font-semibold text-foreground">{entry.value}</span>
+            {entry.name}: <span className="font-bold text-foreground">{entry.value}</span>
           </p>
         ))}
       </div>
@@ -84,11 +84,11 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-// Donut segment component
+// Donut chart
 function DonutChart({ segments }: { segments: { value: number; color: string; label: string }[] }) {
   const total = segments.reduce((s, seg) => s + seg.value, 0);
-  const size = 120;
-  const strokeWidth = 14;
+  const size = 130;
+  const strokeWidth = 16;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   let offset = 0;
@@ -96,6 +96,16 @@ function DonutChart({ segments }: { segments: { value: number; color: string; la
   return (
     <div className="relative">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+        {/* Background ring */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="hsl(var(--muted))"
+          strokeWidth={strokeWidth}
+          opacity={0.4}
+        />
         {segments.map((seg, i) => {
           const dashLength = (seg.value / total) * circumference;
           const dashOffset = -offset;
@@ -112,12 +122,14 @@ function DonutChart({ segments }: { segments: { value: number; color: string; la
               strokeDasharray={`${dashLength} ${circumference - dashLength}`}
               strokeDashoffset={dashOffset}
               strokeLinecap="round"
+              style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}
             />
           );
         })}
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <Monitor className="h-5 w-5 text-coral" />
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <Monitor className="h-5 w-5 text-coral mb-0.5" />
+        <span className="text-[10px] font-semibold text-muted-foreground">VMs</span>
       </div>
     </div>
   );
@@ -125,13 +137,13 @@ function DonutChart({ segments }: { segments: { value: number; color: string; la
 
 export default function Dashboard() {
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Training platform overview
+          <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Training platform overview — Real-time metrics
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -139,9 +151,8 @@ export default function Dashboard() {
             action.href ? (
               <Button
                 key={action.label}
-                variant={action.primary ? "default" : "outline"}
+                variant={action.primary ? "coral" : "outline"}
                 size="sm"
-                className={action.primary ? "bg-coral hover:bg-coral-dark text-white" : ""}
                 asChild
               >
                 <Link to={action.href}>
@@ -159,38 +170,44 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Top Row – Asymmetric grid like screenshot */}
-      <div className="grid gap-4 grid-cols-12">
-        {/* Hero Card – Coral gradient, Students Online */}
-        <Card className="col-span-5 p-6 relative overflow-hidden border-0"
+      {/* Top Row */}
+      <div className="grid gap-5 grid-cols-12">
+        {/* Hero Card — Coral gradient */}
+        <div className="col-span-5 rounded-2xl p-6 relative overflow-hidden shimmer-overlay"
           style={{
-            background: "linear-gradient(135deg, hsl(var(--coral)) 0%, hsl(var(--coral-light)) 100%)",
+            background: "var(--gradient-coral)",
+            boxShadow: "0 8px 32px hsl(var(--coral) / 0.25), 0 2px 8px hsl(var(--coral) / 0.1)",
           }}
         >
           <div className="relative z-10">
             <div className="flex items-start justify-between">
-              <p className="text-sm font-medium text-white/80">Total Students</p>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-white/60 hover:text-white hover:bg-white/10">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-white/15 backdrop-blur-sm">
+                  <Users className="h-4 w-4 text-white" />
+                </div>
+                <p className="text-sm font-semibold text-white/90">Total Students</p>
+              </div>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-white/50 hover:text-white hover:bg-white/10 rounded-lg">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </div>
-            <p className="text-5xl font-bold tracking-tight tabular-nums text-white mt-2">
+            <p className="text-5xl font-extrabold tracking-tight tabular-nums text-white mt-3">
               23,847
             </p>
-            {/* Mini sparkline area */}
+            {/* Sparkline */}
             <div className="h-16 mt-4 -mx-2">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={activityData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gradHero" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="rgba(255,255,255,0.3)" />
+                      <stop offset="0%" stopColor="rgba(255,255,255,0.25)" />
                       <stop offset="100%" stopColor="rgba(255,255,255,0)" />
                     </linearGradient>
                   </defs>
                   <Area
                     type="monotone"
                     dataKey="students"
-                    stroke="rgba(255,255,255,0.6)"
+                    stroke="rgba(255,255,255,0.5)"
                     strokeWidth={2}
                     fill="url(#gradHero)"
                   />
@@ -198,37 +215,40 @@ export default function Dashboard() {
               </ResponsiveContainer>
             </div>
             {/* Sub metrics */}
-            <div className="flex items-center gap-8 mt-3">
-              <div className="text-center">
-                <p className="text-xs text-white/60">Active</p>
-                <p className="text-lg font-bold text-white tabular-nums">%68</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-white/60">In Labs</p>
-                <p className="text-lg font-bold text-white tabular-nums">%22</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-white/60">Idle</p>
-                <p className="text-lg font-bold text-white tabular-nums">%10</p>
-              </div>
+            <div className="flex items-center gap-6 mt-3">
+              {[
+                { label: "Active", value: "68%" },
+                { label: "In Labs", value: "22%" },
+                { label: "Idle", value: "10%" },
+              ].map((m) => (
+                <div key={m.label} className="text-center">
+                  <p className="text-[11px] text-white/50 font-medium">{m.label}</p>
+                  <p className="text-lg font-bold text-white tabular-nums">{m.value}</p>
+                </div>
+              ))}
             </div>
           </div>
-        </Card>
+        </div>
 
-        {/* Active VMs Card – with donut chart */}
-        <Card className="col-span-4 p-6">
+        {/* Active VMs Card */}
+        <Card className="col-span-4 p-6 hover:shadow-[var(--shadow-card-hover)]">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Active VMs</p>
-              <p className="text-4xl font-bold tracking-tight tabular-nums mt-2">
+              <div className="flex items-center gap-2">
+                <div className="icon-container-coral p-2">
+                  <Zap className="h-4 w-4 text-coral" />
+                </div>
+                <p className="text-sm font-semibold text-muted-foreground">Active VMs</p>
+              </div>
+              <p className="text-4xl font-extrabold tracking-tight tabular-nums mt-3">
                 142
               </p>
             </div>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground rounded-lg">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </div>
-          <div className="flex items-center gap-6 mt-4">
+          <div className="flex items-center gap-6 mt-5">
             <DonutChart
               segments={[
                 { value: 80, color: "hsl(var(--coral))", label: "Running" },
@@ -236,40 +256,41 @@ export default function Dashboard() {
               ]}
             />
             <div className="space-y-3 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-coral" />
-                <span className="text-xs text-muted-foreground">Running</span>
-                <span className="ml-auto text-sm font-semibold tabular-nums">%80</span>
+              <div className="flex items-center gap-2.5">
+                <span className="h-3 w-3 rounded-full" style={{ background: "var(--gradient-coral)" }} />
+                <span className="text-xs font-medium text-muted-foreground">Running</span>
+                <span className="ml-auto text-sm font-bold tabular-nums">80%</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-warning" />
-                <span className="text-xs text-muted-foreground">Idle</span>
-                <span className="ml-auto text-sm font-semibold tabular-nums">%20</span>
+              <div className="flex items-center gap-2.5">
+                <span className="h-3 w-3 rounded-full bg-warning" />
+                <span className="text-xs font-medium text-muted-foreground">Idle</span>
+                <span className="ml-auto text-sm font-bold tabular-nums">20%</span>
               </div>
             </div>
           </div>
         </Card>
 
-        {/* Right column – Two stacked compact cards */}
-        <div className="col-span-3 flex flex-col gap-4">
+        {/* Right stacked cards */}
+        <div className="col-span-3 flex flex-col gap-5">
           {/* Active Batches */}
-          <Card className="p-5 flex-1">
+          <Card className="p-5 flex-1 hover:shadow-[var(--shadow-card-hover)]">
             <div className="flex items-start gap-3">
-              <div className="text-3xl font-bold tabular-nums text-coral">12</div>
+              <div className="text-3xl font-extrabold tabular-nums text-gradient-coral">12</div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">Active Batches</p>
-                <div className="h-1.5 rounded-full bg-muted mt-2 overflow-hidden">
-                  <div className="h-full rounded-full bg-coral" style={{ width: "75%" }} />
+                <p className="text-sm font-semibold">Active Batches</p>
+                <div className="h-2 rounded-full bg-muted mt-3 overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: "75%", background: "var(--gradient-coral)" }} />
                 </div>
+                <p className="text-[10px] text-muted-foreground mt-1">75% capacity</p>
               </div>
             </div>
           </Card>
 
-          {/* VM Stats – mini bar chart with line */}
-          <Card className="p-5 flex-1">
-            <div className="flex items-start justify-between mb-2">
-              <p className="text-sm font-medium">VM Stats</p>
-              <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground">
+          {/* VM Stats */}
+          <Card className="p-5 flex-1 hover:shadow-[var(--shadow-card-hover)]">
+            <div className="flex items-start justify-between mb-3">
+              <p className="text-sm font-semibold">VM Stats</p>
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground rounded-lg">
                 <MoreHorizontal className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -282,8 +303,8 @@ export default function Dashboard() {
                     tickLine={false}
                     tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
                   />
-                  <Bar dataKey="vms" fill="hsl(var(--muted))" radius={[3, 3, 0, 0]} barSize={14} />
-                  <Bar dataKey="trend" fill="hsl(var(--coral))" radius={[3, 3, 0, 0]} barSize={4} />
+                  <Bar dataKey="vms" fill="hsl(var(--muted))" radius={[4, 4, 0, 0]} barSize={14} />
+                  <Bar dataKey="trend" fill="hsl(var(--coral))" radius={[4, 4, 0, 0]} barSize={4} />
                   <Line
                     type="monotone"
                     dataKey="trend"
@@ -298,14 +319,14 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Middle Row – Activity list + Side metrics */}
-      <div className="grid gap-4 grid-cols-12">
-        {/* Batch Activity – Post Activity style list */}
+      {/* Middle Row */}
+      <div className="grid gap-5 grid-cols-12">
+        {/* Batch Activity */}
         <Card className="col-span-8 p-6">
           <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-4">
-              <h2 className="text-sm font-semibold">Batch Activity</h2>
-              <span className="text-xs text-muted-foreground px-2.5 py-1 rounded-full bg-muted">Recent</span>
+            <div className="flex items-center gap-3">
+              <h2 className="text-sm font-bold">Batch Activity</h2>
+              <span className="text-[10px] font-semibold text-muted-foreground px-2.5 py-1 rounded-full bg-muted/80">Recent</span>
             </div>
             <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground gap-1" asChild>
               <Link to="/batches">
@@ -319,31 +340,31 @@ export default function Dashboard() {
               <Link
                 key={batch.id}
                 to={`/batches/${batch.id}`}
-                className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/60 transition-colors group"
+                className="flex items-center gap-4 p-3.5 rounded-xl hover:bg-muted/50 transition-all duration-200 group"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-lg">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted/80 text-lg group-hover:scale-105 transition-transform">
                   {batch.avatar}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate group-hover:text-coral transition-colors">
+                  <p className="text-sm font-semibold truncate group-hover:text-coral transition-colors">
                     {batch.name}
                   </p>
-                  <p className="text-xs text-muted-foreground">Batch #{batch.id}</p>
+                  <p className="text-xs text-muted-foreground/70">Batch #{batch.id}</p>
                 </div>
-                <span className="text-xs text-muted-foreground px-2.5 py-1 rounded-full bg-muted">
+                <span className="text-[10px] font-semibold text-muted-foreground px-2.5 py-1 rounded-full bg-muted/80">
                   {batch.type}
                 </span>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
                     <Users className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-sm font-medium tabular-nums">{batch.count}</span>
+                    <span className="text-sm font-bold tabular-nums">{batch.count}</span>
                   </div>
-                  <span className="text-xs font-medium text-success flex items-center gap-0.5">
+                  <span className="text-xs font-semibold text-success flex items-center gap-0.5 bg-success/8 px-1.5 py-0.5 rounded-full">
                     <TrendingUp className="h-3 w-3" />
                     {batch.change}
                   </span>
                 </div>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground opacity-0 group-hover:opacity-100">
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground opacity-0 group-hover:opacity-100 rounded-lg">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </Link>
@@ -351,47 +372,26 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Right side metrics */}
-        <div className="col-span-4 flex flex-col gap-4">
-          {/* Completed Sessions */}
-          <Card className="p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10">
-                <CheckCircle2 className="h-5 w-5 text-success" />
+        {/* Right metrics */}
+        <div className="col-span-4 flex flex-col gap-5">
+          {[
+            { label: "Completed Sessions", sublabel: "This Week", value: "874", icon: CheckCircle2, iconClass: "text-success", containerClass: "icon-container-success" },
+            { label: "VMs Provisioned", sublabel: "All Time", value: "10.4k", icon: Monitor, iconClass: "text-coral", containerClass: "icon-container-coral" },
+            { label: "Platform Uptime", sublabel: "30 Days", value: "99.9%", icon: Activity, iconClass: "text-primary", containerClass: "icon-container-primary" },
+          ].map((metric) => (
+            <Card key={metric.label} className="p-5 hover:shadow-[var(--shadow-card-hover)]">
+              <div className="flex items-center gap-3.5">
+                <div className={`${metric.containerClass} p-2.5`}>
+                  <metric.icon className={`h-5 w-5 ${metric.iconClass}`} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-medium text-muted-foreground">{metric.label}</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-0.5">{metric.sublabel}</p>
+                </div>
+                <span className="text-2xl font-extrabold tabular-nums">{metric.value}</span>
               </div>
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground">Completed Sessions</p>
-                <p className="text-sm text-muted-foreground mt-0.5">This Week</p>
-              </div>
-              <span className="text-3xl font-bold tabular-nums">874</span>
-            </div>
-          </Card>
-
-          {/* Total VMs Provisioned */}
-          <Card className="p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-coral/10">
-                <Monitor className="h-5 w-5 text-coral" />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground">VMs Provisioned</p>
-              </div>
-              <span className="text-3xl font-bold tabular-nums">10.4k</span>
-            </div>
-          </Card>
-
-          {/* Uptime */}
-          <Card className="p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                <Activity className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground">Platform Uptime</p>
-              </div>
-              <span className="text-3xl font-bold tabular-nums">99.9%</span>
-            </div>
-          </Card>
+            </Card>
+          ))}
         </div>
       </div>
 
@@ -399,11 +399,11 @@ export default function Dashboard() {
       <Card className="p-6">
         <div className="flex items-start justify-between mb-2">
           <div>
-            <p className="text-sm font-semibold">Activity Overview</p>
-            <div className="flex items-baseline gap-3 mt-1">
-              <span className="text-3xl font-bold tracking-tight tabular-nums">142</span>
-              <span className="text-xs text-muted-foreground">Active Now</span>
-              <span className="flex items-center gap-1.5 ml-1 text-[11px] font-medium text-success">
+            <p className="text-sm font-bold">Activity Overview</p>
+            <div className="flex items-baseline gap-3 mt-1.5">
+              <span className="text-3xl font-extrabold tracking-tight tabular-nums">142</span>
+              <span className="text-xs text-muted-foreground font-medium">Active Now</span>
+              <span className="flex items-center gap-1.5 ml-1 text-[11px] font-semibold text-success bg-success/8 px-2 py-0.5 rounded-full">
                 <span className="relative flex h-1.5 w-1.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
@@ -414,25 +414,25 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-5">
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-coral" />
-              <span className="text-xs text-muted-foreground">Students</span>
+              <span className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--gradient-coral)" }} />
+              <span className="text-xs font-medium text-muted-foreground">Students</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-primary" />
-              <span className="text-xs text-muted-foreground">VMs</span>
+              <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+              <span className="text-xs font-medium text-muted-foreground">VMs</span>
             </div>
           </div>
         </div>
-        <div className="h-56 mt-4">
+        <div className="h-60 mt-4">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={activityData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradStudents" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--coral))" stopOpacity={0.25} />
+                  <stop offset="0%" stopColor="hsl(var(--coral))" stopOpacity={0.2} />
                   <stop offset="100%" stopColor="hsl(var(--coral))" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gradVMs" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.12} />
                   <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                 </linearGradient>
               </defs>
@@ -453,7 +453,7 @@ export default function Dashboard() {
                 dataKey="students"
                 name="Students"
                 stroke="hsl(var(--coral))"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 fillOpacity={1}
                 fill="url(#gradStudents)"
               />
