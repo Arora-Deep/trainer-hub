@@ -6,26 +6,26 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 9%;
+    --background: 30 25% 96%;
+    --foreground: 220 20% 14%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    --card: 30 20% 99%;
+    --card-foreground: 220 20% 14%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
+    --popover: 30 20% 99%;
+    --popover-foreground: 220 20% 14%;
 
     --primary: 211 100% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
+    --secondary: 30 15% 93%;
+    --secondary-foreground: 220 20% 14%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 30 15% 93%;
+    --muted-foreground: 220 10% 46%;
 
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 9%;
+    --accent: 12 80% 62%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -39,47 +39,51 @@
     --info: 211 100% 50%;
     --info-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 211 100% 50%;
+    --coral: 12 80% 62%;
+    --coral-light: 12 85% 72%;
+    --coral-dark: 12 75% 52%;
+
+    --border: 30 15% 88%;
+    --input: 30 15% 88%;
+    --ring: 12 80% 62%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 9%;
-    --sidebar-primary: 211 100% 50%;
+    --sidebar-background: 220 20% 14%;
+    --sidebar-foreground: 30 15% 93%;
+    --sidebar-primary: 12 80% 62%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 95%;
-    --sidebar-accent-foreground: 0 0% 9%;
-    --sidebar-border: 0 0% 92%;
-    --sidebar-ring: 211 100% 50%;
+    --sidebar-accent: 220 18% 20%;
+    --sidebar-accent-foreground: 30 15% 93%;
+    --sidebar-border: 220 18% 22%;
+    --sidebar-ring: 12 80% 62%;
 
-    --shadow-card: 0 0 0 1px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-card-hover: 0 0 0 1px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.06);
-    --shadow-elevated: 0 0 0 1px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.08);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+    --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.06);
+    --shadow-elevated: 0 8px 24px rgba(0,0,0,0.08);
   }
 
   .dark {
-    --background: 0 0% 6%;
-    --foreground: 0 0% 96%;
+    --background: 220 18% 10%;
+    --foreground: 30 15% 93%;
 
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 96%;
+    --card: 220 18% 14%;
+    --card-foreground: 30 15% 93%;
 
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 96%;
+    --popover: 220 18% 14%;
+    --popover-foreground: 30 15% 93%;
 
     --primary: 211 100% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 14%;
-    --secondary-foreground: 0 0% 96%;
+    --secondary: 220 18% 18%;
+    --secondary-foreground: 30 15% 93%;
 
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 55%;
+    --muted: 220 18% 18%;
+    --muted-foreground: 220 10% 55%;
 
-    --accent: 0 0% 14%;
-    --accent-foreground: 0 0% 96%;
+    --accent: 12 80% 62%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62% 55%;
     --destructive-foreground: 0 0% 100%;
@@ -93,22 +97,26 @@
     --info: 211 100% 60%;
     --info-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 211 100% 60%;
+    --coral: 12 80% 62%;
+    --coral-light: 12 85% 72%;
+    --coral-dark: 12 75% 52%;
 
-    --sidebar-background: 0 0% 8%;
-    --sidebar-foreground: 0 0% 96%;
-    --sidebar-primary: 211 100% 60%;
+    --border: 220 18% 22%;
+    --input: 220 18% 22%;
+    --ring: 12 80% 62%;
+
+    --sidebar-background: 220 20% 8%;
+    --sidebar-foreground: 30 15% 93%;
+    --sidebar-primary: 12 80% 62%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 14%;
-    --sidebar-accent-foreground: 0 0% 96%;
-    --sidebar-border: 0 0% 16%;
-    --sidebar-ring: 211 100% 60%;
+    --sidebar-accent: 220 18% 16%;
+    --sidebar-accent-foreground: 30 15% 93%;
+    --sidebar-border: 220 18% 18%;
+    --sidebar-ring: 12 80% 62%;
 
-    --shadow-card: 0 0 0 1px rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.3);
-    --shadow-card-hover: 0 0 0 1px rgba(255,255,255,0.08), 0 4px 12px rgba(0,0,0,0.4);
-    --shadow-elevated: 0 0 0 1px rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.5);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-elevated: 0 8px 24px rgba(0,0,0,0.5);
   }
 }
 
