@@ -25,6 +25,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  TrendingUp,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -76,7 +77,7 @@ export default function Batches() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header */}
       <PageHeader
         title="Batches"
@@ -88,7 +89,7 @@ export default function Batches() {
               <Download className="mr-1.5 h-4 w-4" />
               Export
             </Button>
-            <Button size="sm" onClick={() => navigate("/batches/create")}>
+            <Button variant="coral" size="sm" onClick={() => navigate("/batches/create")}>
               <Plus className="mr-1.5 h-4 w-4" />
               Create Batch
             </Button>
@@ -96,68 +97,71 @@ export default function Batches() {
         }
       />
 
-      {/* Summary */}
-      <div className="grid gap-3 sm:grid-cols-4">
+      {/* Summary Cards */}
+      <div className="grid gap-4 sm:grid-cols-4">
         {[
-          { label: "Total", value: batches.length },
-          { label: "Live", value: filterCounts.live, live: true },
-          { label: "Upcoming", value: filterCounts.upcoming },
-          { label: "Completed", value: filterCounts.completed },
+          { label: "Total Batches", value: batches.length, icon: Users },
+          { label: "Live", value: filterCounts.live, live: true, icon: TrendingUp },
+          { label: "Upcoming", value: filterCounts.upcoming, icon: Calendar },
+          { label: "Completed", value: filterCounts.completed, icon: Calendar },
         ].map((stat) => (
-          <div
+          <Card
             key={stat.label}
-            className="rounded-xl border border-border bg-card p-4"
-            style={{ boxShadow: "var(--shadow-card)" }}
+            className="p-4 hover:shadow-[var(--shadow-card-hover)] transition-all duration-300"
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
-                <p className="text-2xl font-semibold mt-0.5 tabular-nums">{stat.value}</p>
+                <p className="text-2xl font-bold mt-1 tabular-nums">{stat.value}</p>
               </div>
-              {stat.live && stat.value > 0 && (
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-success" />
+              {stat.live && stat.value > 0 ? (
+                <span className="relative flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-50" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-success" />
                 </span>
+              ) : (
+                <div className="icon-container p-2">
+                  <stat.icon className="h-4 w-4 text-muted-foreground" />
+                </div>
               )}
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Tabs value={filter} onValueChange={setFilter}>
-          <TabsList className="h-9">
-            <TabsTrigger value="all" className="text-xs gap-1.5">
+          <TabsList className="h-9 bg-muted/50 rounded-xl p-1">
+            <TabsTrigger value="all" className="text-xs gap-1.5 rounded-lg">
               All
-              <Badge variant="secondary" className="ml-0.5 px-1.5 py-0 text-[10px] h-4 rounded">
+              <Badge variant="secondary" className="ml-0.5 px-1.5 py-0 text-[10px] h-4 rounded-full font-semibold">
                 {filterCounts.all}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="upcoming" className="text-xs">Upcoming</TabsTrigger>
-            <TabsTrigger value="live" className="text-xs gap-1.5">
+            <TabsTrigger value="upcoming" className="text-xs rounded-lg">Upcoming</TabsTrigger>
+            <TabsTrigger value="live" className="text-xs gap-1.5 rounded-lg">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
               </span>
               Live
             </TabsTrigger>
-            <TabsTrigger value="completed" className="text-xs">Completed</TabsTrigger>
+            <TabsTrigger value="completed" className="text-xs rounded-lg">Completed</TabsTrigger>
           </TabsList>
         </Tabs>
 
         <div className="flex gap-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
             <Input
               placeholder="Search batches..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 w-56 h-9 bg-muted/50 border-0 text-sm"
+              className="pl-9 w-56 h-9 bg-muted/40 border-border/50 text-sm rounded-xl focus:bg-card transition-all"
             />
           </div>
-          <div className="hidden sm:flex border border-border rounded-lg overflow-hidden">
+          <div className="hidden sm:flex border border-border/50 rounded-xl overflow-hidden">
             <Button
               variant={viewMode === "table" ? "secondary" : "ghost"}
               size="icon"
@@ -180,27 +184,27 @@ export default function Batches() {
 
       {/* Content */}
       {viewMode === "table" ? (
-        <Card>
+        <Card className="overflow-hidden">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="text-xs font-medium text-muted-foreground">Batch Name</TableHead>
-                  <TableHead className="text-xs font-medium text-muted-foreground">Course</TableHead>
-                  <TableHead className="text-xs font-medium text-muted-foreground">Trainer</TableHead>
-                  <TableHead className="text-xs font-medium text-muted-foreground">Duration</TableHead>
-                  <TableHead className="text-xs font-medium text-muted-foreground text-center">Students</TableHead>
-                  <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
+                <TableRow className="hover:bg-transparent border-b border-border/50">
+                  <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Batch Name</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Course</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Trainer</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Duration</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">Students</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</TableHead>
                   <TableHead className="w-10"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredBatches.map((batch) => (
-                  <TableRow key={batch.id} className="group">
+                  <TableRow key={batch.id} className="group table-row-premium border-b border-border/30">
                     <TableCell>
                       <Link
                         to={`/batches/${batch.id}`}
-                        className="text-sm font-medium text-foreground hover:text-primary transition-colors inline-flex items-center gap-1"
+                        className="text-sm font-semibold text-foreground hover:text-coral transition-colors inline-flex items-center gap-1"
                       >
                         {batch.name}
                         <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -216,12 +220,12 @@ export default function Batches() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground tabular-nums">
                       <div>
-                        <div className="text-xs">{formatDate(batch.startDate)}</div>
-                        <div className="text-[10px] text-muted-foreground">to {formatDate(batch.endDate)}</div>
+                        <div className="text-xs font-medium">{formatDate(batch.startDate)}</div>
+                        <div className="text-[10px] text-muted-foreground/60">to {formatDate(batch.endDate)}</div>
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className="text-sm font-medium tabular-nums">{batch.students.length}</span>
+                      <span className="text-sm font-bold tabular-nums">{batch.students.length}</span>
                     </TableCell>
                     <TableCell>
                       <StatusBadge
@@ -236,19 +240,19 @@ export default function Batches() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem onClick={() => navigate(`/batches/${batch.id}`)}>
+                        <DropdownMenuContent align="end" className="w-44 rounded-xl">
+                          <DropdownMenuItem onClick={() => navigate(`/batches/${batch.id}`)} className="rounded-lg">
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                          <DropdownMenuItem className="rounded-lg">Edit</DropdownMenuItem>
+                          <DropdownMenuItem className="rounded-lg">Duplicate</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive rounded-lg">Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -259,17 +263,17 @@ export default function Batches() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredBatches.map((batch) => (
             <Card
               key={batch.id}
-              className="cursor-pointer hover:border-border transition-colors"
+              className="cursor-pointer hover:shadow-[var(--shadow-card-hover)] hover:border-border transition-all duration-300"
               onClick={() => navigate(`/batches/${batch.id}`)}
             >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-sm font-medium text-foreground">{batch.name}</h3>
+                    <h3 className="text-sm font-bold text-foreground">{batch.name}</h3>
                     <p className="text-xs text-muted-foreground mt-0.5">{batch.courseName || "No course"}</p>
                   </div>
                   <StatusBadge
@@ -279,7 +283,7 @@ export default function Batches() {
                     size="sm"
                   />
                 </div>
-                <div className="space-y-1.5 text-xs text-muted-foreground">
+                <div className="space-y-2 text-xs text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-3.5 w-3.5" />
                     <span>{formatDate(batch.startDate)} — {formatDate(batch.endDate)}</span>
@@ -298,11 +302,11 @@ export default function Batches() {
       {/* Pagination */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
-          Showing <span className="font-medium text-foreground">{filteredBatches.length}</span> of{" "}
-          <span className="font-medium text-foreground">{batches.length}</span> batches
+          Showing <span className="font-semibold text-foreground">{filteredBatches.length}</span> of{" "}
+          <span className="font-semibold text-foreground">{batches.length}</span> batches
         </span>
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="sm" disabled className="gap-1">
+          <Button variant="outline" size="sm" disabled className="gap-1 rounded-lg">
             <ChevronLeft className="h-4 w-4" />
             Previous
           </Button>
@@ -311,12 +315,12 @@ export default function Batches() {
               key={page}
               variant={page === 1 ? "default" : "ghost"}
               size="sm"
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 rounded-lg"
             >
               {page}
             </Button>
           ))}
-          <Button variant="outline" size="sm" className="gap-1">
+          <Button variant="outline" size="sm" className="gap-1 rounded-lg">
             Next
             <ChevronRight className="h-4 w-4" />
           </Button>

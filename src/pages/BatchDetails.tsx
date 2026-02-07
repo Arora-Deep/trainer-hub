@@ -130,31 +130,33 @@ export default function BatchDetails() {
 
       {/* Quick Stats */}
       <div className="grid gap-4 md:grid-cols-4">
-        <StatCard title="Students" value={batch.students.length} icon={Users} variant="primary" size="compact" />
+        <StatCard title="Students" value={batch.students.length} icon={Users} variant="coral" size="compact" />
         <StatCard title="Days Remaining" value={daysRemaining()} icon={Calendar} variant="success" size="compact" />
         <StatCard title="VMs" value={vm ? (vm.studentVMs.length || (vm.trainerVM.status !== "not_provisioned" ? 1 : 0)) : 0} icon={Monitor} variant="info" size="compact" />
-        <Card className="flex items-center justify-between p-4">
+        <Card className="flex items-center justify-between p-4 hover:shadow-[var(--shadow-card-hover)] transition-all duration-300">
           <div className="flex items-center gap-3">
             <StatusBadge status={statusMap[batch.status].status} label={statusMap[batch.status].label} pulse={batch.status === "live"} />
             <div>
-              <p className="text-sm font-medium">Status</p>
+              <p className="text-sm font-semibold">Status</p>
               <p className="text-xs text-muted-foreground capitalize">{batch.status}</p>
             </div>
           </div>
-          <Clock className="h-5 w-5 text-muted-foreground" />
+          <div className="icon-container p-2">
+            <Clock className="h-5 w-5 text-muted-foreground" />
+          </div>
         </Card>
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-muted/50 p-1">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="vms">VMs</TabsTrigger>
-          <TabsTrigger value="course">Course/Program</TabsTrigger>
-          <TabsTrigger value="announcements">Announcements</TabsTrigger>
-          <TabsTrigger value="assessments">Assessments</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
+        <TabsList className="bg-muted/50 p-1 rounded-xl">
+          <TabsTrigger value="overview" className="rounded-lg">Overview</TabsTrigger>
+          <TabsTrigger value="students" className="rounded-lg">Students</TabsTrigger>
+          <TabsTrigger value="vms" className="rounded-lg">VMs</TabsTrigger>
+          <TabsTrigger value="course" className="rounded-lg">Course/Program</TabsTrigger>
+          <TabsTrigger value="announcements" className="rounded-lg">Announcements</TabsTrigger>
+          <TabsTrigger value="assessments" className="rounded-lg">Assessments</TabsTrigger>
+          <TabsTrigger value="reports" className="rounded-lg">Reports</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -246,11 +248,11 @@ export default function BatchDetails() {
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/30 hover:bg-muted/30">
-                      <TableHead className="font-medium">Student</TableHead>
-                      <TableHead className="font-medium">Email</TableHead>
-                      <TableHead className="font-medium">Progress</TableHead>
-                      <TableHead className="font-medium">Last Active</TableHead>
+                     <TableRow className="hover:bg-transparent border-b border-border/50">
+                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Student</TableHead>
+                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email</TableHead>
+                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Progress</TableHead>
+                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Last Active</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -311,31 +313,28 @@ export default function BatchDetails() {
               <>
                 {/* VM Overview */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Template</p>
-                    <p className="font-semibold">{templates.find(t => t.id === vm.vmTemplates[0]?.templateId)?.name || vm.vmTemplates[0]?.instanceName || "—"}</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Type</p>
-                    <p className="font-semibold capitalize">{vm.vmType} VM</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Student VMs</p>
-                    <p className="font-semibold">{vm.studentVMs.length}</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Est. Cost</p>
-                    <p className="font-semibold text-primary">${vm.pricing.total.toFixed(0)}</p>
-                  </div>
+                  {[
+                    { label: "Template", value: templates.find(t => t.id === vm.vmTemplates[0]?.templateId)?.name || vm.vmTemplates[0]?.instanceName || "—" },
+                    { label: "Type", value: `${vm.vmType} VM`, capitalize: true },
+                    { label: "Student VMs", value: vm.studentVMs.length },
+                    { label: "Est. Cost", value: `$${vm.pricing.total.toFixed(0)}`, highlight: true },
+                  ].map((item) => (
+                    <div key={item.label} className="p-4 rounded-xl border border-border/40 hover:shadow-sm transition-all duration-200" style={{ background: "var(--gradient-surface)" }}>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5">{item.label}</p>
+                      <p className={cn("font-bold", item.capitalize && "capitalize", item.highlight && "text-coral")}>{item.value}</p>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Trainer VM Workflow */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
+                  <CardTitle className="text-base font-bold flex items-center gap-2">
+                    <div className="icon-container-primary p-1.5">
                       <Terminal className="h-4 w-4 text-primary" />
-                      Trainer VM
-                    </CardTitle>
+                    </div>
+                    Trainer VM
+                  </CardTitle>
                     <CardDescription>Provision, configure, and clone the trainer VM for all students</CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -490,11 +489,11 @@ export default function BatchDetails() {
                     <CardContent className="p-0">
                       <Table>
                         <TableHeader>
-                          <TableRow className="bg-muted/30 hover:bg-muted/30">
-                            <TableHead className="font-medium">Assigned To</TableHead>
-                            <TableHead className="font-medium">VM Name</TableHead>
-                            <TableHead className="font-medium">IP Address</TableHead>
-                            <TableHead className="font-medium">Status</TableHead>
+                         <TableRow className="hover:bg-transparent border-b border-border/50">
+                            <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assigned To</TableHead>
+                            <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">VM Name</TableHead>
+                            <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">IP Address</TableHead>
+                            <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</TableHead>
                             <TableHead className="w-24"></TableHead>
                           </TableRow>
                         </TableHeader>
