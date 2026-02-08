@@ -135,21 +135,21 @@
 @layer components {
   /* Floating sidebar */
   .sidebar-floating {
-    background: linear-gradient(165deg, hsl(220 60% 18%), hsl(225 55% 12%), hsl(230 50% 8%));
+    background: linear-gradient(165deg, hsl(211 80% 52%), hsl(215 70% 38%), hsl(220 60% 22%));
     box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.06),
-      0 20px 50px -12px rgba(0, 0, 0, 0.5),
-      0 8px 20px -8px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      0 0 0 1px rgba(255, 255, 255, 0.08),
+      0 20px 50px -12px rgba(0, 0, 0, 0.4),
+      0 8px 20px -8px rgba(0, 0, 0, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
   }
 
   .dark .sidebar-floating {
-    background: linear-gradient(165deg, hsl(220 50% 14%), hsl(225 45% 10%), hsl(230 40% 6%));
+    background: linear-gradient(165deg, hsl(211 70% 42%), hsl(215 60% 28%), hsl(220 50% 16%));
     box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.04),
-      0 20px 50px -12px rgba(0, 0, 0, 0.7),
-      0 8px 20px -8px rgba(0, 0, 0, 0.5),
-      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      0 0 0 1px rgba(255, 255, 255, 0.05),
+      0 20px 50px -12px rgba(0, 0, 0, 0.6),
+      0 8px 20px -8px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 
   /* Scrollbar */
