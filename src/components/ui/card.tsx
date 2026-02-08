@@ -10,10 +10,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
         "rounded-2xl border border-white/15 bg-white/20 text-card-foreground backdrop-blur-2xl dark:border-white/[0.06] dark:bg-white/[0.04]",
         className
       )}
-      style={{
-        boxShadow: "0 4px 24px rgba(120,80,180,0.08), 0 1px 3px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.4)",
-        ...style,
-      }}
+      style={style}
       {...props}
     />
   )
