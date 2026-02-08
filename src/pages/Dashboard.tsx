@@ -1,20 +1,35 @@
+import { StatCard } from "@/components/ui/StatCard";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { DataCard } from "@/components/ui/DataCard";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Users,
-  Monitor,
+  FlaskConical,
+  Calendar,
+  AlertTriangle,
+  Plus,
+  Play,
+  Hammer,
+  BookOpen,
+  Clock,
   TrendingUp,
-  TrendingDown,
   ArrowUpRight,
-  CalendarDays,
-  CreditCard,
-  Layers,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  MoreHorizontal,
+  BarChart3,
+  CheckCircle2,
+  XCircle,
+  MoreVertical,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Link } from "react-router-dom";
 import {
   AreaChart,
   Area,
@@ -22,41 +37,73 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  CartesianGrid,
+  BarChart,
+  Bar,
 } from "recharts";
 
-// --- Mock Data ---
-const revenueData = [
-  { date: "Feb 14", current: 62000, previous: 58000 },
-  { date: "Feb 15", current: 55000, previous: 60000 },
-  { date: "Feb 16", current: 68000, previous: 62000 },
-  { date: "Feb 17", current: 72000, previous: 65000 },
-  { date: "Feb 18", current: 58000, previous: 63000 },
-  { date: "Feb 19", current: 64000, previous: 59000 },
-  { date: "Feb 22", current: 78000, previous: 67000 },
+const upcomingBatches = [
+  { id: 1, name: "AWS Solutions Architect", course: "AWS SA Pro", trainer: "John Smith", startDate: "Jan 15, 2024", students: 24 },
+  { id: 2, name: "Kubernetes Fundamentals", course: "K8s Basics", trainer: "Jane Doe", startDate: "Jan 18, 2024", students: 18 },
+  { id: 3, name: "Docker Masterclass", course: "Docker Pro", trainer: "Mike Johnson", startDate: "Jan 22, 2024", students: 30 },
 ];
 
-const recentEmails = [
-  { name: "Hannah Morgan", subject: "Meeting scheduled", time: "1:34 PM", avatar: "HM", color: "hsl(350 70% 55%)" },
-  { name: "Megan Clark", subject: "Update on marketing campaign", time: "12:32 PM", avatar: "MC", color: "hsl(260 60% 55%)" },
-  { name: "Brandon Williams", subject: "Designing 2.0 is about to launch", time: "Yesterday at 8:57 PM", avatar: "BW", color: "hsl(200 65% 50%)" },
+const activeLabs = [
+  { id: 1, student: "Alice Johnson", lab: "AWS EC2 Setup", status: "running", timeRemaining: "45 min" },
+  { id: 2, student: "Bob Williams", lab: "Kubernetes Pod", status: "idle", timeRemaining: "30 min" },
+  { id: 3, student: "Carol Davis", lab: "Docker Compose", status: "error", timeRemaining: "15 min" },
+  { id: 4, student: "David Brown", lab: "Terraform Basics", status: "running", timeRemaining: "60 min" },
 ];
 
-const todoItems = [
-  { label: "Run payroll", due: "Mar 4 at 6:00 pm" },
-  { label: "Review time off request", due: "Mar 7 at 6:00 pm" },
-  { label: "Sign board resolution", due: "Mar 12 at 6:00 pm" },
-  { label: "Finish onboarding Tony", due: "Mar 12 at 6:00 pm" },
+const alerts = [
+  { id: 1, type: "error", message: "Lab VM offline for student Carol Davis", time: "5 min ago" },
+  { id: 2, type: "warning", message: "High resource usage in AWS batch", time: "12 min ago" },
+  { id: 3, type: "info", message: "New support ticket from Mike Chen", time: "25 min ago" },
+];
+
+const courseProgress = [
+  { name: "AWS Solutions Architect", progress: 75, students: 24 },
+  { name: "Kubernetes Fundamentals", progress: 45, students: 18 },
+  { name: "Docker Masterclass", progress: 90, students: 30 },
+];
+
+const quickActions = [
+  { label: "Create Batch", icon: Plus, href: "/batches/create", primary: true },
+  { label: "Create Lab", icon: FlaskConical, href: "/labs/create" },
+  { label: "Build Course", icon: Hammer, href: "/course-builder" },
+  { label: "Start Session", icon: Play },
+];
+
+const activityData = [
+  { time: "9:00AM", students: 32, labs: 18 },
+  { time: "10:00AM", students: 55, labs: 28 },
+  { time: "11:00AM", students: 48, labs: 32 },
+  { time: "12:00PM", students: 78, labs: 45 },
+  { time: "1:00PM", students: 65, labs: 38 },
+  { time: "2:00PM", students: 98, labs: 55 },
+  { time: "3:00PM", students: 120, labs: 68 },
+  { time: "4:00PM", students: 142, labs: 85 },
+  { time: "5:00PM", students: 118, labs: 72 },
+  { time: "6:00PM", students: 95, labs: 58 },
+];
+
+const weeklyData = [
+  { day: "S", value: 42 },
+  { day: "M", value: 78 },
+  { day: "T", value: 65 },
+  { day: "W", value: 90 },
+  { day: "T", value: 82 },
+  { day: "F", value: 110 },
+  { day: "S", value: 55 },
 ];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg border border-border/50 bg-card/95 backdrop-blur-md px-3 py-2 shadow-lg">
-        <p className="text-xs font-semibold text-foreground mb-1">{label}</p>
+      <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-lg">
+        <p className="text-xs font-medium text-foreground mb-1">{label}</p>
         {payload.map((entry: any, index: number) => (
-          <p key={index} className="text-[11px] text-muted-foreground">
-            {entry.name}: <span className="font-bold text-foreground">${(entry.value / 1000).toFixed(0)}K</span>
+          <p key={index} className="text-xs text-muted-foreground">
+            {entry.name}: <span className="font-medium text-foreground">{entry.value}</span>
           </p>
         ))}
       </div>
@@ -65,284 +112,392 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-// Circular icon with dotted border — matches reference exactly
-function CircleIcon({ icon: Icon }: { icon: any }) {
-  return (
-    <div className="relative flex items-center justify-center w-[52px] h-[52px] flex-shrink-0">
-      <svg className="absolute inset-0 w-[52px] h-[52px]" viewBox="0 0 52 52">
-        <circle
-          cx="26" cy="26" r="23"
-          fill="none"
-          stroke="hsl(var(--border))"
-          strokeWidth="1.5"
-          strokeDasharray="3.5 3"
-        />
-      </svg>
-      <Icon className="h-5 w-5 text-foreground/70" />
-    </div>
-  );
-}
-
-// Progress stepper for Formation Status
-function ProgressStepper() {
-  return (
-    <div className="flex items-center gap-0 my-4">
-      {/* Completed dot */}
-      <div className="w-2.5 h-2.5 rounded-full bg-foreground" />
-      <div className="flex-1 h-px bg-foreground" />
-      {/* Current dot */}
-      <div className="w-3 h-3 rounded-full border-2 border-foreground bg-card" />
-      <div className="flex-1 h-px border-t border-dashed border-muted-foreground/40" />
-      {/* Future dot */}
-      <div className="w-2.5 h-2.5 rounded-full border-2 border-muted-foreground/30 bg-card" />
-    </div>
-  );
-}
-
 export default function Dashboard() {
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-
   return (
-    <div className="space-y-5">
-      {/* Greeting Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-[22px] font-bold tracking-tight">
-          {greeting}, James!
-        </h1>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-card border-border/60">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-card border-border/60">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-          <Avatar className="h-10 w-10 ring-2 ring-card shadow-md">
-            <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=James" />
-            <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">JD</AvatarFallback>
-          </Avatar>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Good morning, John</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Here's what's happening with your training sessions today.
+          </p>
         </div>
-      </div>
-
-      {/* Top Row: Stats + Formation Status */}
-      <div className="grid grid-cols-12 gap-5">
-        {/* 4 Stat Cards in one unified card */}
-        <div className="col-span-8">
-          <Card className="p-1.5 relative">
-            {/* Close & Menu buttons */}
-            <div className="absolute left-3 top-3 z-10">
-              <button className="w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center hover:bg-foreground/20 transition-colors">
-                <X className="h-3 w-3 text-foreground/60" />
-              </button>
-            </div>
-            <div className="absolute right-3 top-3 z-10">
-              <button className="w-5 h-5 rounded-full hover:bg-foreground/10 flex items-center justify-center transition-colors">
-                <MoreHorizontal className="h-3.5 w-3.5 text-foreground/40" />
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-4 divide-x divide-border/40 pt-4 pb-2">
-              {[
-                { icon: CreditCard, label: "Your bank\nbalance", value: "$143,624" },
-                { icon: Layers, label: "Uncategorised\ntransactions", value: "12" },
-                { icon: Users, label: "Employees\nworking today", value: "7" },
-                { icon: Monitor, label: "This week's\ncard spending", value: "$3,287.49" },
-              ].map((stat) => (
-                <div key={stat.label} className="flex items-center gap-3 px-4 py-2">
-                  <CircleIcon icon={stat.icon} />
-                  <div className="min-w-0">
-                    <p className="text-lg font-bold tracking-tight tabular-nums leading-tight">{stat.value}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1 leading-tight whitespace-pre-line">{stat.label}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
-
-        {/* Formation Status Card */}
-        <div className="col-span-4">
-          <Card className="p-5 h-full flex flex-col">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Formation status</h3>
-              <span className="text-[10px] font-semibold text-foreground bg-foreground/10 px-2.5 py-1 rounded-full">
-                In progress
-              </span>
-            </div>
-            
-            <ProgressStepper />
-            
-            <div className="flex-1 flex flex-col justify-end">
-              <p className="text-xs text-muted-foreground text-center">
-                Estimated processing
-              </p>
-              <p className="text-sm font-bold text-center mt-0.5">4–6 business days</p>
-              <Button variant="outline" size="sm" className="mt-3 w-full text-xs rounded-full border-foreground/20 hover:bg-foreground/5">
-                View status
-              </Button>
-            </div>
-          </Card>
-        </div>
-      </div>
-
-      {/* Middle Row: Metrics + Chart + ToDo */}
-      <div className="grid grid-cols-12 gap-5">
-        {/* Left: Two small metric cards */}
-        <div className="col-span-3 flex flex-col gap-5">
-          {/* New Clients */}
-          <Card className="p-5 flex-1">
-            <p className="text-xs font-medium text-muted-foreground mb-3">New clients</p>
-            <div className="flex items-baseline gap-2.5">
-              <span className="text-[38px] font-extrabold tracking-tight tabular-nums leading-none">54</span>
-              <span className="flex items-center gap-0.5 text-[11px] font-semibold text-success bg-success/10 px-2 py-0.5 rounded-full">
-                <TrendingUp className="h-3 w-3" />
-                18.7%
-              </span>
-            </div>
-          </Card>
-
-          {/* Invoices Overdue */}
-          <Card className="p-5 flex-1">
-            <p className="text-xs font-medium text-muted-foreground mb-3">Invoices overdue</p>
-            <div className="flex items-baseline gap-2.5">
-              <span className="text-[38px] font-extrabold tracking-tight tabular-nums leading-none">6</span>
-              <span className="flex items-center gap-0.5 text-[11px] font-semibold text-destructive bg-destructive/10 px-2 py-0.5 rounded-full">
-                <TrendingUp className="h-3 w-3" />
-                2.7%
-              </span>
-            </div>
-          </Card>
-        </div>
-
-        {/* Center: Revenue Chart */}
-        <div className="col-span-5">
-          <Card className="p-5 h-full">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold">Revenue</h3>
-              <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-                <span>Last 7 days VS prior week</span>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-foreground" />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={revenueData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="gradCurrent" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity={0.06} />
-                      <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                    tickFormatter={(v) => `${v / 1000}K`}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area
-                    type="monotone"
-                    dataKey="previous"
-                    name="Prior Week"
-                    stroke="hsl(var(--muted-foreground) / 0.25)"
-                    strokeWidth={1.5}
-                    strokeDasharray="4 4"
-                    fillOpacity={0}
-                    fill="none"
-                    dot={false}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="current"
-                    name="This Week"
-                    stroke="hsl(var(--foreground))"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#gradCurrent)"
-                    dot={false}
-                    activeDot={{ r: 4, strokeWidth: 2, stroke: "hsl(var(--card))" }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-        </div>
-
-        {/* Right: To-Do + Meeting */}
-        <div className="col-span-4 flex flex-col gap-5">
-          {/* To-Do List */}
-          <Card className="p-5 flex-1">
-            <h3 className="text-sm font-semibold mb-4">Your to-Do list</h3>
-            <div className="space-y-4">
-              {todoItems.map((item, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className="mt-1.5 flex-shrink-0 w-2.5 h-2.5 rounded-full bg-coral" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium leading-tight">{item.label}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{item.due}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Board Meeting */}
-          <Card 
-            className="p-4 text-white border-0"
-            style={{ background: "var(--gradient-sidebar)" }}
-          >
-            <h3 className="text-[13px] font-semibold mb-1.5">Board meeting</h3>
-            <div className="flex items-center gap-2 text-white/70 mb-1.5">
-              <CalendarDays className="h-3.5 w-3.5" />
-              <span className="text-[11px] font-medium">Feb 22 at 6:00 PM</span>
-            </div>
-            <p className="text-[10px] text-white/40 leading-relaxed">
-              You have been invited to attend a meeting of the Board of Directors.
-            </p>
-          </Card>
-        </div>
-      </div>
-
-      {/* Bottom: Recent Emails */}
-      <Card className="p-5">
-        <h3 className="text-sm font-semibold mb-4">Recent emails</h3>
-        <div className="space-y-0.5">
-          {recentEmails.map((email, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-4 p-2.5 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer"
-            >
-              <div 
-                className="h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-                style={{ background: email.color }}
+        <div className="flex items-center gap-2">
+          {quickActions.map((action) => (
+            action.href ? (
+              <Button
+                key={action.label}
+                variant={action.primary ? "default" : "outline"}
+                size="sm"
+                asChild
               >
-                {email.avatar}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold truncate">{email.name}</p>
-              </div>
-              <p className="text-[13px] text-muted-foreground truncate flex-1">{email.subject}</p>
-              <p className="text-[11px] text-muted-foreground whitespace-nowrap">{email.time}</p>
-            </div>
+                <Link to={action.href}>
+                  <action.icon className="mr-1.5 h-4 w-4" />
+                  {action.label}
+                </Link>
+              </Button>
+            ) : (
+              <Button key={action.label} variant="outline" size="sm">
+                <action.icon className="mr-1.5 h-4 w-4" />
+                {action.label}
+              </Button>
+            )
           ))}
         </div>
+      </div>
+
+      {/* Top Stats Row – 3 columns like reference */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* Students Card – Big number with sub-metrics */}
+        <Card className="p-6">
+          <div className="flex items-start justify-between mb-6">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Students Online
+            </p>
+            <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1 text-muted-foreground">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-5xl font-bold tracking-tight tabular-nums">
+            142
+          </p>
+          <div className="mt-3 flex items-center gap-1.5">
+            <span className="text-xs font-medium text-success">+23.8%</span>
+            <span className="text-xs text-muted-foreground">more students than last week.</span>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-border flex items-center gap-8">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold tabular-nums">96</span>
+              <div className="flex flex-col">
+                <span className="flex items-center gap-1 text-[10px] font-medium text-success">
+                  <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                  ACTIVE
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold tabular-nums">46</span>
+              <div className="flex flex-col">
+                <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+                  IDLE
+                </span>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Labs Card – Rating style with weekly bar chart */}
+        <Card className="p-6">
+          <div className="flex items-start justify-between mb-6">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Lab Utilization
+            </p>
+            <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1 text-muted-foreground">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <p className="text-5xl font-bold tracking-tight tabular-nums">
+              4.6
+            </p>
+            <span className="text-lg text-muted-foreground">/5</span>
+          </div>
+          <div className="mt-2 flex items-center gap-1.5">
+            <span className="text-xs font-medium text-success">+0.3</span>
+            <span className="text-xs text-muted-foreground">points from last week.</span>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-border">
+            <div className="h-16">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyData} barCategoryGap="20%">
+                  <XAxis 
+                    dataKey="day" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  />
+                  <Bar 
+                    dataKey="value" 
+                    fill="hsl(var(--primary))" 
+                    radius={[3, 3, 0, 0]}
+                    opacity={0.7}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </Card>
+
+        {/* Batch Status Card – Donut-style breakdown */}
+        <Card className="p-6">
+          <div className="flex items-start justify-between mb-6">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Batch Overview
+            </p>
+            <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1 text-muted-foreground">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/10">
+                <CheckCircle2 className="h-5 w-5 text-success" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Active Batches</p>
+                <p className="text-xs text-muted-foreground">Currently running</p>
+              </div>
+              <span className="text-2xl font-bold tabular-nums">12</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-warning/10">
+                <Calendar className="h-5 w-5 text-warning" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Upcoming</p>
+                <p className="text-xs text-muted-foreground">Scheduled this month</p>
+              </div>
+              <span className="text-2xl font-bold tabular-nums">8</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                <XCircle className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Completed</p>
+                <p className="text-xs text-muted-foreground">Last 30 days</p>
+              </div>
+              <span className="text-2xl font-bold tabular-nums">24</span>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Activity Chart – Full width, prominent like reference */}
+      <Card className="p-6">
+        <div className="flex items-start justify-between mb-2">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Activity Overview
+            </p>
+            <div className="flex items-baseline gap-3 mt-2">
+              <span className="text-4xl font-bold tracking-tight tabular-nums">142</span>
+              <span className="text-sm text-muted-foreground">Students Today</span>
+              <span className="flex items-center gap-1.5 ml-2 text-[11px] font-medium text-success">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
+                </span>
+                Live
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-5">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-primary" />
+              <span className="text-xs text-muted-foreground">Students</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-success" />
+              <span className="text-xs text-muted-foreground">Labs</span>
+            </div>
+          </div>
+        </div>
+        <div className="h-64 mt-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={activityData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="gradStudents" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(211, 100%, 50%)" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="hsl(211, 100%, 50%)" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gradLabs" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0.2} />
+                  <stop offset="100%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="time"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+              />
+              <YAxis 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} 
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Area
+                type="monotone"
+                dataKey="students"
+                name="Students"
+                stroke="hsl(211, 100%, 50%)"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#gradStudents)"
+              />
+              <Area
+                type="monotone"
+                dataKey="labs"
+                name="Active Labs"
+                stroke="hsl(142, 71%, 45%)"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#gradLabs)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       </Card>
+
+      {/* Bottom Grid */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Upcoming Batches */}
+        <DataCard
+          title="Upcoming Batches"
+          icon={Calendar}
+          action={{ label: "View all", href: "/batches" }}
+          noPadding
+        >
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs font-medium text-muted-foreground">Batch</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Trainer</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Start</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground text-right">Students</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {upcomingBatches.map((batch) => (
+                <TableRow key={batch.id} className="group">
+                  <TableCell>
+                    <Link
+                      to={`/batches/${batch.id}`}
+                      className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                    >
+                      {batch.name}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{batch.trainer}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground tabular-nums">{batch.startDate}</TableCell>
+                  <TableCell className="text-sm text-right tabular-nums font-medium">{batch.students}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </DataCard>
+
+        {/* Active Labs */}
+        <DataCard
+          title="Active Labs"
+          icon={FlaskConical}
+          action={{ label: "View all", href: "/labs" }}
+          badge={
+            <span className="flex items-center gap-1.5 text-[11px] font-medium text-success">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
+              </span>
+              Live
+            </span>
+          }
+          noPadding
+        >
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs font-medium text-muted-foreground">Student</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Lab</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground text-right">Time Left</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {activeLabs.map((lab) => (
+                <TableRow key={lab.id}>
+                  <TableCell className="text-sm font-medium">{lab.student}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{lab.lab}</TableCell>
+                  <TableCell>
+                    <StatusBadge
+                      status={lab.status === "running" ? "success" : lab.status === "idle" ? "warning" : "error"}
+                      label={lab.status.charAt(0).toUpperCase() + lab.status.slice(1)}
+                      pulse={lab.status === "running"}
+                    />
+                  </TableCell>
+                  <TableCell className="text-sm text-right tabular-nums text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Clock className="h-3 w-3" />
+                      {lab.timeRemaining}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </DataCard>
+
+        {/* Alerts */}
+        <DataCard
+          title="Alerts"
+          icon={AlertTriangle}
+          badge={
+            <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-medium text-destructive">
+              {alerts.length} new
+            </span>
+          }
+        >
+          <div className="space-y-2">
+            {alerts.map((alert) => (
+              <div
+                key={alert.id}
+                className="flex items-start gap-3 rounded-lg border border-border p-3 hover:bg-muted/50 transition-colors cursor-pointer"
+              >
+                <span
+                  className={`mt-1.5 flex h-2 w-2 shrink-0 rounded-full ${
+                    alert.type === "error"
+                      ? "bg-destructive"
+                      : alert.type === "warning"
+                      ? "bg-warning"
+                      : "bg-info"
+                  }`}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground">{alert.message}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{alert.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DataCard>
+
+        {/* Course Progress */}
+        <DataCard title="Course Progress" icon={TrendingUp} action={{ label: "View all", href: "/courses" }}>
+          <div className="space-y-5">
+            {courseProgress.map((course, index) => (
+              <div key={index} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{course.name}</p>
+                    <p className="text-xs text-muted-foreground">{course.students} students</p>
+                  </div>
+                  <span className="text-sm font-semibold tabular-nums">{course.progress}%</span>
+                </div>
+                <ProgressBar
+                  value={course.progress}
+                  size="default"
+                  variant={course.progress >= 80 ? "success" : course.progress >= 50 ? "primary" : "warning"}
+                />
+              </div>
+            ))}
+          </div>
+        </DataCard>
+      </div>
     </div>
   );
 }

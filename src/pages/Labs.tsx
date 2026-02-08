@@ -54,6 +54,7 @@ export default function Labs() {
   const [search, setSearch] = useState("");
   const [templateSearch, setTemplateSearch] = useState("");
 
+  // Get all instances across all labs
   const allInstances = labs.flatMap((lab) =>
     lab.instances.map((instance) => ({
       ...instance,
@@ -77,6 +78,8 @@ export default function Labs() {
   );
 
   const runningCount = allInstances.filter((i) => i.status === "running").length;
+  const stoppedCount = allInstances.filter((i) => i.status === "stopped").length;
+  const errorCount = allInstances.filter((i) => i.status === "error").length;
   const runningInstances = allInstances.filter((i) => i.status === "running");
   const avgCpu = runningInstances.length > 0
     ? Math.round(runningInstances.reduce((acc, i) => acc + i.cpu, 0) / runningInstances.length)
@@ -84,7 +87,7 @@ export default function Labs() {
 
   return (
     <TooltipProvider>
-      <div className="space-y-6">
+      <div className="space-y-6 animate-in-up">
         <PageHeader
           title="Labs"
           description="Manage lab templates and monitor active lab instances"
@@ -95,7 +98,7 @@ export default function Labs() {
                 <Plus className="mr-2 h-4 w-4" />
                 Create Template
               </Button>
-              <Button variant="coral" onClick={() => navigate("/labs/create")}>
+              <Button className="shadow-md" onClick={() => navigate("/labs/create")}>
                 <Plus className="mr-2 h-4 w-4" />
                 Create Lab
               </Button>
@@ -104,15 +107,15 @@ export default function Labs() {
         />
 
         <Tabs defaultValue="labs" className="space-y-6">
-          <TabsList className="bg-muted/50 p-1 rounded-xl">
-            <TabsTrigger value="labs" className="gap-2 rounded-lg data-[state=active]:shadow-sm">
+          <TabsList className="bg-muted/50 p-1">
+            <TabsTrigger value="labs" className="gap-2 data-[state=active]:shadow-sm">
               <Server className="h-4 w-4" />
               Labs
-              <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: "hsl(var(--coral) / 0.1)", color: "hsl(var(--coral))" }}>
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
                 {labs.length}
               </span>
             </TabsTrigger>
-            <TabsTrigger value="templates" className="gap-2 rounded-lg data-[state=active]:shadow-sm">
+            <TabsTrigger value="templates" className="gap-2 data-[state=active]:shadow-sm">
               Templates
               <span className="text-muted-foreground text-xs">{templates.length}</span>
             </TabsTrigger>
@@ -130,30 +133,30 @@ export default function Labs() {
                 size="compact"
               />
               <StatCard title="Total Instances" value={allInstances.length} icon={Users} variant="default" size="compact" />
-              <StatCard title="Running" value={runningCount} icon={Activity} variant="coral" size="compact" />
+              <StatCard title="Running" value={runningCount} icon={Activity} variant="success" size="compact" />
             </div>
 
-            <Card className="overflow-hidden">
+            <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-4">
-                <CardTitle className="text-base font-bold">All Labs</CardTitle>
+                <CardTitle className="text-base font-semibold">All Labs</CardTitle>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
                   <Input
                     placeholder="Search labs..."
-                    className="pl-10 w-64 bg-muted/40 border-border/50 rounded-xl text-sm focus:bg-card transition-all"
+                    className="pl-10 w-64 bg-muted/40 border-0 rounded-lg"
                   />
                 </div>
               </CardHeader>
               <CardContent className="p-0">
                 <Table>
                   <TableHeader>
-                    <TableRow className="hover:bg-transparent border-b border-border/50">
-                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Lab Name</TableHead>
-                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Template</TableHead>
-                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Batch</TableHead>
-                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</TableHead>
-                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Instances</TableHead>
-                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Created</TableHead>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead className="font-medium">Lab Name</TableHead>
+                      <TableHead className="font-medium">Template</TableHead>
+                      <TableHead className="font-medium">Batch</TableHead>
+                      <TableHead className="font-medium">Status</TableHead>
+                      <TableHead className="font-medium">Instances</TableHead>
+                      <TableHead className="font-medium">Created</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -163,13 +166,13 @@ export default function Labs() {
                       return (
                         <TableRow
                           key={lab.id}
-                          className="table-row-premium group cursor-pointer border-b border-border/30"
+                          className="table-row-premium group cursor-pointer"
                           onClick={() => navigate(`/labs/${lab.id}`)}
                         >
-                          <TableCell className="font-semibold">{lab.name}</TableCell>
+                          <TableCell className="font-medium">{lab.name}</TableCell>
                           <TableCell className="text-muted-foreground">{lab.templateName}</TableCell>
                           <TableCell>
-                            <span className="inline-flex items-center rounded-lg bg-muted/60 px-2.5 py-1 text-xs font-semibold">
+                            <span className="inline-flex items-center rounded-lg bg-muted/80 px-2.5 py-1 text-xs font-medium">
                               {lab.batchName}
                             </span>
                           </TableCell>
@@ -182,18 +185,18 @@ export default function Labs() {
                           </TableCell>
                           <TableCell>
                             <span className="inline-flex items-center gap-1.5 text-sm">
-                              <span className="font-bold text-success">{labRunning}</span>
-                              <span className="text-muted-foreground/50">/</span>
+                              <span className="font-medium text-success">{labRunning}</span>
+                              <span className="text-muted-foreground">/</span>
                               <span className="text-muted-foreground">{lab.instances.length}</span>
-                              <span className="text-[10px] text-muted-foreground/60">running</span>
+                              <span className="text-xs text-muted-foreground">running</span>
                             </span>
                           </TableCell>
-                          <TableCell className="text-muted-foreground text-sm">{lab.createdAt}</TableCell>
+                          <TableCell className="text-muted-foreground">{lab.createdAt}</TableCell>
                           <TableCell>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"
+                              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <MoreHorizontal className="h-4 w-4" />
@@ -210,36 +213,36 @@ export default function Labs() {
 
           {/* Templates Tab */}
           <TabsContent value="templates" className="space-y-6 mt-0">
-            <Card className="overflow-hidden">
+            <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-4">
-                <CardTitle className="text-base font-bold">All Templates</CardTitle>
+                <CardTitle className="text-base font-semibold">All Templates</CardTitle>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
                   <Input
                     placeholder="Search templates..."
                     value={templateSearch}
                     onChange={(e) => setTemplateSearch(e.target.value)}
-                    className="pl-10 w-64 bg-muted/40 border-border/50 rounded-xl text-sm focus:bg-card transition-all"
+                    className="pl-10 w-64 bg-muted/40 border-0 rounded-lg"
                   />
                 </div>
               </CardHeader>
               <CardContent className="p-0">
                 <Table>
                   <TableHeader>
-                    <TableRow className="hover:bg-transparent border-b border-border/50">
-                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Template Name</TableHead>
-                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Type</TableHead>
-                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">OS Version</TableHead>
-                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Resources</TableHead>
-                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Runtime Limit</TableHead>
-                      <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Last Updated</TableHead>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead className="font-medium">Template Name</TableHead>
+                      <TableHead className="font-medium">Type</TableHead>
+                      <TableHead className="font-medium">OS Version</TableHead>
+                      <TableHead className="font-medium">Resources</TableHead>
+                      <TableHead className="font-medium">Runtime Limit</TableHead>
+                      <TableHead className="font-medium">Last Updated</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredTemplates.map((template) => (
-                      <TableRow key={template.id} className="table-row-premium group border-b border-border/30">
-                        <TableCell className="font-semibold">{template.name}</TableCell>
+                      <TableRow key={template.id} className="table-row-premium group">
+                        <TableCell className="font-medium">{template.name}</TableCell>
                         <TableCell>
                           <StatusBadge
                             status={template.type === "Linux" ? "success" : "info"}
@@ -261,7 +264,7 @@ export default function Labs() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>

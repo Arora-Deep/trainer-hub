@@ -14,45 +14,31 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 
 export function AppHeader() {
-  const [isDark, setIsDark] = useState(() => {
-    // Default to light mode; respect saved preference
-    const saved = localStorage.getItem("theme");
-    return saved === "dark";
-  });
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    // Apply theme on mount
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [isDark]);
+    const isDarkMode = document.documentElement.classList.contains('dark');
+    setIsDark(isDarkMode);
+  }, []);
 
   const toggleTheme = () => {
-    const newDark = !isDark;
-    setIsDark(newDark);
-    localStorage.setItem("theme", newDark ? "dark" : "light");
-    if (newDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.classList.toggle('dark');
+    setIsDark(!isDark);
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-[60px] items-center justify-between border-b border-border/40 bg-card/80 backdrop-blur-xl px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm px-6">
       {/* Search */}
       <div className="relative w-full max-w-sm">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Search anything..."
-          className="pl-9 pr-14 h-9 bg-background/60 border-border/50 rounded-xl text-sm placeholder:text-muted-foreground/50 focus:bg-card focus:border-primary/30 transition-all duration-200"
+          placeholder="Search..."
+          className="pl-9 pr-14 h-9 bg-muted/50 border-0 rounded-lg text-sm placeholder:text-muted-foreground"
         />
-        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-muted/60 border border-border/50">
-          <Command className="h-3 w-3 text-muted-foreground/60" />
-          <span className="text-[10px] text-muted-foreground/60 font-medium">K</span>
+        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-background border border-border">
+          <Command className="h-3 w-3 text-muted-foreground" />
+          <span className="text-[10px] text-muted-foreground font-medium">K</span>
         </div>
       </div>
 
@@ -61,7 +47,7 @@ export function AppHeader() {
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 text-muted-foreground/70 hover:text-foreground rounded-xl"
+          className="h-9 w-9 text-muted-foreground hover:text-foreground"
           onClick={toggleTheme}
         >
           {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -72,64 +58,62 @@ export function AppHeader() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="relative h-9 w-9 text-muted-foreground/70 hover:text-foreground rounded-xl"
+              className="relative h-9 w-9 text-muted-foreground hover:text-foreground"
             >
               <Bell className="h-4 w-4" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-coral ring-2 ring-card" />
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 rounded-xl">
+          <DropdownMenuContent align="end" className="w-72">
             <DropdownMenuLabel className="flex items-center justify-between text-sm">
-              <span className="font-semibold">Notifications</span>
-              <Badge variant="secondary" className="text-[10px] px-2 py-0.5 h-5 rounded-full font-semibold">
+              <span>Notifications</span>
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 rounded">
                 3 new
               </Badge>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex flex-col items-start gap-0.5 py-3 cursor-pointer rounded-lg">
+            <DropdownMenuItem className="flex flex-col items-start gap-0.5 py-2.5 cursor-pointer">
               <span className="text-sm font-medium">Lab Error Alert</span>
               <span className="text-xs text-muted-foreground">Lab VM offline for student Carol Davis</span>
-              <span className="text-[10px] text-muted-foreground/60">5 min ago</span>
+              <span className="text-[10px] text-muted-foreground">5 min ago</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex flex-col items-start gap-0.5 py-3 cursor-pointer rounded-lg">
+            <DropdownMenuItem className="flex flex-col items-start gap-0.5 py-2.5 cursor-pointer">
               <span className="text-sm font-medium">High Resource Usage</span>
               <span className="text-xs text-muted-foreground">AWS batch exceeding CPU threshold</span>
-              <span className="text-[10px] text-muted-foreground/60">12 min ago</span>
+              <span className="text-[10px] text-muted-foreground">12 min ago</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="justify-center text-sm text-primary cursor-pointer font-medium rounded-lg">
+            <DropdownMenuItem className="justify-center text-sm text-primary cursor-pointer">
               View all notifications
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <div className="w-px h-6 bg-border/50 mx-1" />
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
               variant="ghost" 
-              className="gap-2.5 pl-2 pr-3 h-9 ml-1 rounded-xl"
+              className="gap-2.5 pl-2 pr-3 h-9 ml-1"
             >
-              <Avatar className="h-7 w-7 ring-2 ring-border/50">
+              <Avatar className="h-7 w-7">
                 <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" />
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                <AvatarFallback className="bg-muted text-xs font-medium">
                   JD
                 </AvatarFallback>
               </Avatar>
               <span className="hidden md:block text-sm font-medium">John Doe</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52 rounded-xl">
+          <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel className="font-normal">
-              <p className="text-sm font-semibold">John Doe</p>
+              <p className="text-sm font-medium">John Doe</p>
               <p className="text-xs text-muted-foreground">john@example.com</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer text-sm rounded-lg">Profile</DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer text-sm rounded-lg">Settings</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer text-sm">Profile</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer text-sm">Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive cursor-pointer text-sm rounded-lg">
+            <DropdownMenuItem className="text-destructive cursor-pointer text-sm">
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

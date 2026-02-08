@@ -48,16 +48,16 @@ export function AppSidebar() {
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
-            "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200",
-            "text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+            "group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors",
+            "text-muted-foreground hover:bg-muted hover:text-foreground",
             collapsed && "justify-center px-2.5"
           )}
         >
-          <item.icon className="h-[18px] w-[18px] shrink-0 transition-colors" />
+          <item.icon className="h-[18px] w-[18px] shrink-0" />
           {!collapsed && (
             <>
               <span className="truncate flex-1">{item.title}</span>
-              <ExternalLink className="h-3 w-3 opacity-40 group-hover:opacity-70 transition-opacity" />
+              <ExternalLink className="h-3 w-3 opacity-50" />
             </>
           )}
         </a>
@@ -80,15 +80,14 @@ export function AppSidebar() {
       <NavLink
         to={item.path}
         className={cn(
-          "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 relative",
+          "group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors",
           isActive
-            ? "text-white"
-            : "text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+            ? "bg-primary text-primary-foreground"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground",
           collapsed && "justify-center px-2.5"
         )}
-        style={isActive ? { background: "var(--gradient-teal)" } : undefined}
       >
-        <item.icon className="h-[18px] w-[18px] shrink-0 transition-colors" />
+        <item.icon className="h-[18px] w-[18px] shrink-0" />
         {!collapsed && (
           <span className="truncate">{item.title}</span>
         )}
@@ -116,32 +115,28 @@ export function AppSidebar() {
     <TooltipProvider>
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-sidebar-border transition-all duration-300",
+          "fixed left-0 top-0 z-40 flex h-screen flex-col bg-sidebar border-r border-sidebar-border transition-all duration-200",
           collapsed ? "w-[68px]" : "w-[240px]"
         )}
-        style={{ background: "var(--gradient-sidebar)" }}
       >
         {/* Logo */}
         <div className={cn(
-          "flex h-[60px] items-center border-b border-sidebar-border/50 px-4 gap-3",
+          "flex h-14 items-center border-b border-sidebar-border px-4 gap-3",
           collapsed && "justify-center px-3"
         )}>
-          <div 
-            className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0 shadow-lg"
-            style={{ background: "var(--gradient-teal)" }}
-          >
-            <GraduationCap className="h-[18px] w-[18px] text-white" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shrink-0">
+            <GraduationCap className="h-4 w-4 text-primary-foreground" />
           </div>
           {!collapsed && (
-            <span className="font-bold text-white text-sm tracking-tight">
+            <span className="font-semibold text-sidebar-foreground text-sm tracking-tight">
               Trainer Portal
             </span>
           )}
         </div>
 
         {/* Main Navigation */}
-        <nav className="flex-1 p-3 overflow-y-auto scrollbar-thin">
-          <div className="space-y-1">
+        <nav className="flex-1 p-2 overflow-y-auto scrollbar-thin">
+          <div className="space-y-0.5">
             {navItems.map((item) => (
               <NavItem key={item.path} item={item} />
             ))}
@@ -149,14 +144,14 @@ export function AppSidebar() {
         </nav>
 
         {/* Bottom Navigation */}
-        <div className="border-t border-sidebar-border/50 p-3 space-y-1">
+        <div className="border-t border-sidebar-border p-2 space-y-0.5">
           {bottomNavItems.map((item) => (
             <NavItem key={item.path} item={item} />
           ))}
         </div>
 
         {/* Collapse Button */}
-        <div className="border-t border-sidebar-border/50 p-3">
+        <div className="border-t border-sidebar-border p-2">
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <Button
@@ -164,14 +159,14 @@ export function AppSidebar() {
                 size="sm"
                 onClick={() => setCollapsed(!collapsed)}
                 className={cn(
-                  "w-full text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent h-8 rounded-xl",
+                  "w-full text-muted-foreground hover:text-foreground h-8",
                   collapsed ? "justify-center px-2" : "justify-between px-3"
                 )}
               >
                 {!collapsed && <span className="text-xs">Collapse</span>}
                 <ChevronLeft
                   className={cn(
-                    "h-4 w-4 transition-transform duration-300",
+                    "h-4 w-4 transition-transform duration-200",
                     collapsed && "rotate-180"
                   )}
                 />

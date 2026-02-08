@@ -57,38 +57,35 @@ export default function Support() {
       />
 
       {/* System Status Banner */}
-      <div className="rounded-2xl p-5 border border-success/20 shimmer-overlay overflow-hidden"
-        style={{ background: "linear-gradient(135deg, hsl(var(--success) / 0.06) 0%, hsl(var(--success) / 0.02) 100%)" }}
-      >
-        <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="relative flex h-3 w-3">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-50" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-success" />
+      <Card className="border-success/30 bg-success/5">
+        <CardContent className="py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-3 w-3 rounded-full bg-success animate-pulse" />
+              <div>
+                <p className="font-medium text-foreground">All Systems Operational</p>
+                <p className="text-sm text-muted-foreground">Last checked: 2 minutes ago</p>
+              </div>
             </div>
-            <div>
-              <p className="font-bold text-foreground">All Systems Operational</p>
-              <p className="text-sm text-muted-foreground">Last checked: 2 minutes ago</p>
-            </div>
+            <Button variant="outline" size="sm" className="gap-2">
+              <ExternalLink className="h-4 w-4" />
+              Status Page
+            </Button>
           </div>
-          <Button variant="outline" size="sm" className="gap-2">
-            <ExternalLink className="h-4 w-4" />
-            Status Page
-          </Button>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Knowledgebase */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-4">
-            <div className="flex items-center gap-2.5">
-              <div className="icon-container-primary p-2.5">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-primary/10 p-2">
                 <BookOpen className="h-4 w-4 text-primary" />
               </div>
-              <CardTitle className="text-base font-bold">Knowledgebase</CardTitle>
+              <CardTitle className="text-base font-semibold">Knowledgebase</CardTitle>
             </div>
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground gap-1">
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
               View All <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </CardHeader>
@@ -97,10 +94,10 @@ export default function Support() {
               {knowledgebaseArticles.map((article) => (
                 <button
                   key={article.id}
-                  className="flex w-full items-center justify-between rounded-xl border border-border/40 p-3.5 text-left hover:bg-muted/30 hover:border-border/80 hover:shadow-sm transition-all duration-200 group"
+                  className="flex w-full items-center justify-between rounded-lg border border-border p-3 text-left hover:bg-muted/30 hover:border-border/80 transition-all group"
                 >
-                  <span className="font-semibold text-sm group-hover:text-coral transition-colors">{article.title}</span>
-                  <span className="text-[10px] font-semibold text-muted-foreground bg-muted/80 px-2.5 py-1 rounded-full">
+                  <span className="font-medium text-sm group-hover:text-primary transition-colors">{article.title}</span>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md">
                     {article.category}
                   </span>
                 </button>
@@ -112,13 +109,13 @@ export default function Support() {
         {/* Video Tutorials */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-4">
-            <div className="flex items-center gap-2.5">
-              <div className="icon-container-coral p-2.5">
-                <PlayCircle className="h-4 w-4 text-coral" />
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-primary/10 p-2">
+                <PlayCircle className="h-4 w-4 text-primary" />
               </div>
-              <CardTitle className="text-base font-bold">Video Tutorials</CardTitle>
+              <CardTitle className="text-base font-semibold">Video Tutorials</CardTitle>
             </div>
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground gap-1">
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
               View All <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </CardHeader>
@@ -127,15 +124,15 @@ export default function Support() {
               {videoTutorials.map((video) => (
                 <button
                   key={video.id}
-                  className="flex w-full items-center justify-between rounded-xl border border-border/40 p-3.5 text-left hover:bg-muted/30 hover:border-border/80 hover:shadow-sm transition-all duration-200 group"
+                  className="flex w-full items-center justify-between rounded-lg border border-border p-3 text-left hover:bg-muted/30 hover:border-border/80 transition-all group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="rounded-xl bg-muted/60 h-11 w-11 flex items-center justify-center text-lg group-hover:scale-105 transition-transform">
+                    <div className="rounded-lg bg-muted h-10 w-10 flex items-center justify-center text-lg group-hover:bg-primary/10 transition-colors">
                       {video.thumbnail}
                     </div>
-                    <span className="font-semibold text-sm group-hover:text-coral transition-colors">{video.title}</span>
+                    <span className="font-medium text-sm group-hover:text-primary transition-colors">{video.title}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground font-medium">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="h-3 w-3" />
                     {video.duration}
                   </div>
@@ -148,25 +145,25 @@ export default function Support() {
         {/* Submit a Ticket */}
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2.5">
-              <div className="icon-container-primary p-2.5">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-primary/10 p-2">
                 <Send className="h-4 w-4 text-primary" />
               </div>
-              <CardTitle className="text-base font-bold">Submit a Ticket</CardTitle>
+              <CardTitle className="text-base font-semibold">Submit a Ticket</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="subject">Subject</Label>
-              <Input id="subject" placeholder="Brief description of your issue" className="rounded-xl" />
+              <Input id="subject" placeholder="Brief description of your issue" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
               <Select>
-                <SelectTrigger id="category" className="rounded-xl">
+                <SelectTrigger id="category">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl">
+                <SelectContent>
                   <SelectItem value="technical">Technical Issue</SelectItem>
                   <SelectItem value="billing">Billing</SelectItem>
                   <SelectItem value="feature">Feature Request</SelectItem>
@@ -176,9 +173,9 @@ export default function Support() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea id="description" placeholder="Describe your issue in detail..." className="min-h-[100px] resize-none rounded-xl" />
+              <Textarea id="description" placeholder="Describe your issue in detail..." className="min-h-[100px] resize-none" />
             </div>
-            <Button variant="coral" className="w-full">
+            <Button className="w-full">
               <Send className="mr-2 h-4 w-4" />
               Submit Ticket
             </Button>
@@ -188,23 +185,23 @@ export default function Support() {
         {/* Live Chat */}
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2.5">
-              <div className="icon-container-coral p-2.5">
-                <Headphones className="h-4 w-4 text-coral" />
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-primary/10 p-2">
+                <Headphones className="h-4 w-4 text-primary" />
               </div>
-              <CardTitle className="text-base font-bold">Live Support</CardTitle>
+              <CardTitle className="text-base font-semibold">Live Support</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-2xl border border-dashed border-border/50 p-8 text-center" style={{ background: "var(--gradient-surface)" }}>
-              <div className="mx-auto w-fit rounded-2xl p-4 mb-4 icon-container-primary">
+            <div className="rounded-xl border border-dashed border-border bg-muted/20 p-8 text-center">
+              <div className="mx-auto w-fit rounded-full bg-primary/10 p-4 mb-4">
                 <MessageSquare className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-lg font-bold mb-2">Chat with Support</h3>
+              <h3 className="text-lg font-semibold mb-2">Chat with Support</h3>
               <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
                 Our support team is available Monday-Friday, 9AM-6PM EST
               </p>
-              <Button variant="coral" size="lg">
+              <Button size="lg">
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Start Chat
               </Button>
@@ -216,14 +213,14 @@ export default function Support() {
       {/* Service Status */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base font-bold">Service Status</CardTitle>
+          <CardTitle className="text-base font-semibold">Service Status</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {serviceStatus.map((service, index) => (
               <div 
                 key={index} 
-                className="flex items-center gap-3 rounded-xl border border-border/40 p-4 hover:bg-muted/30 hover:shadow-sm transition-all duration-200"
+                className="flex items-center gap-3 rounded-lg border border-border p-4 hover:bg-muted/30 transition-colors"
               >
                 {service.status === "operational" ? (
                   <CheckCircle className="h-5 w-5 text-success shrink-0" />
@@ -231,7 +228,7 @@ export default function Support() {
                   <AlertCircle className="h-5 w-5 text-warning shrink-0" />
                 )}
                 <div className="min-w-0">
-                  <p className="font-semibold text-sm">{service.name}</p>
+                  <p className="font-medium text-sm">{service.name}</p>
                   <p className="text-xs text-muted-foreground capitalize">{service.status}</p>
                 </div>
               </div>
