@@ -15,9 +15,9 @@ export default {
     extend: {
       fontFamily: {
         sans: [
+          "Inter",
           "-apple-system",
           "BlinkMacSystemFont",
-          "Inter",
           "system-ui",
           "Segoe UI",
           "sans-serif",
@@ -57,6 +57,11 @@ export default {
           DEFAULT: "hsl(var(--coral))",
           light: "hsl(var(--coral-light))",
           dark: "hsl(var(--coral-dark))",
+        },
+        teal: {
+          DEFAULT: "hsl(var(--teal))",
+          light: "hsl(var(--teal-light))",
+          dark: "hsl(var(--teal-dark))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",

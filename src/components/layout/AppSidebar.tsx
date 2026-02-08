@@ -86,7 +86,7 @@ export function AppSidebar() {
             : "text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground",
           collapsed && "justify-center px-2.5"
         )}
-        style={isActive ? { background: "var(--gradient-coral)" } : undefined}
+        style={isActive ? { background: "var(--gradient-teal)" } : undefined}
       >
         <item.icon className="h-[18px] w-[18px] shrink-0 transition-colors" />
         {!collapsed && (
@@ -128,7 +128,7 @@ export function AppSidebar() {
         )}>
           <div 
             className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0 shadow-lg"
-            style={{ background: "var(--gradient-coral)" }}
+            style={{ background: "var(--gradient-teal)" }}
           >
             <GraduationCap className="h-[18px] w-[18px] text-white" />
           </div>

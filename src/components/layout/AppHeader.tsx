@@ -29,7 +29,7 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-30 flex h-[60px] items-center justify-between border-b border-border/40 px-6"
       style={{
-        background: "hsl(var(--background) / 0.7)",
+        background: "hsl(var(--background) / 0.75)",
         backdropFilter: "blur(16px) saturate(180%)",
         WebkitBackdropFilter: "blur(16px) saturate(180%)",
       }}
@@ -40,7 +40,7 @@ export function AppHeader() {
         <Input
           type="search"
           placeholder="Search anything..."
-          className="pl-9 pr-14 h-9 bg-muted/40 border-border/50 rounded-xl text-sm placeholder:text-muted-foreground/50 focus:bg-card focus:border-primary/30 transition-all duration-200"
+          className="pl-9 pr-14 h-9 bg-card/60 border-border/50 rounded-xl text-sm placeholder:text-muted-foreground/50 focus:bg-card focus:border-primary/30 transition-all duration-200"
         />
         <div className="absolute right-2.5 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-muted/60 border border-border/50">
           <Command className="h-3 w-3 text-muted-foreground/60" />
@@ -67,7 +67,7 @@ export function AppHeader() {
               className="relative h-9 w-9 text-muted-foreground/70 hover:text-foreground rounded-xl"
             >
               <Bell className="h-4 w-4" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-coral ring-2 ring-background" />
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80 rounded-xl">
@@ -105,7 +105,7 @@ export function AppHeader() {
             >
               <Avatar className="h-7 w-7 ring-2 ring-border/50">
                 <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" />
-                <AvatarFallback className="bg-coral/10 text-coral text-xs font-semibold">
+                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
                   JD
                 </AvatarFallback>
               </Avatar>
