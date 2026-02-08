@@ -8,7 +8,7 @@ export function AppLayout() {
       <AppSidebar />
       <div className="pl-[240px] transition-all duration-200 has-[aside.w-\\[68px\\]]:pl-[68px]">
         <AppHeader />
-        <main className="p-6 max-w-[1400px]">
+        <main className="px-6 pb-6 max-w-[1400px]">
           <Outlet />
         </main>
       </div>

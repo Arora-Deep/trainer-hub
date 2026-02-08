@@ -1,17 +1,6 @@
-import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { DataCard } from "@/components/ui/DataCard";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Users,
   FlaskConical,
@@ -20,14 +9,15 @@ import {
   Plus,
   Play,
   Hammer,
-  BookOpen,
   Clock,
   TrendingUp,
-  ArrowUpRight,
-  BarChart3,
-  CheckCircle2,
-  XCircle,
+  TrendingDown,
   MoreVertical,
+  DollarSign,
+  Monitor,
+  CheckCircle2,
+  Circle,
+  ArrowRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -37,73 +27,50 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
 } from "recharts";
 
-const upcomingBatches = [
-  { id: 1, name: "AWS Solutions Architect", course: "AWS SA Pro", trainer: "John Smith", startDate: "Jan 15, 2024", students: 24 },
-  { id: 2, name: "Kubernetes Fundamentals", course: "K8s Basics", trainer: "Jane Doe", startDate: "Jan 18, 2024", students: 18 },
-  { id: 3, name: "Docker Masterclass", course: "Docker Pro", trainer: "Mike Johnson", startDate: "Jan 22, 2024", students: 30 },
+/* ── mock data ─────────────────────────────── */
+
+const revenueData = [
+  { date: "Feb 14", current: 62000, prior: 55000 },
+  { date: "Feb 15", current: 58000, prior: 60000 },
+  { date: "Feb 17", current: 72000, prior: 58000 },
+  { date: "Feb 19", current: 65000, prior: 62000 },
+  { date: "Feb 21", current: 80000, prior: 68000 },
+  { date: "Feb 23", current: 75000, prior: 72000 },
 ];
 
-const activeLabs = [
-  { id: 1, student: "Alice Johnson", lab: "AWS EC2 Setup", status: "running", timeRemaining: "45 min" },
-  { id: 2, student: "Bob Williams", lab: "Kubernetes Pod", status: "idle", timeRemaining: "30 min" },
-  { id: 3, student: "Carol Davis", lab: "Docker Compose", status: "error", timeRemaining: "15 min" },
-  { id: 4, student: "David Brown", lab: "Terraform Basics", status: "running", timeRemaining: "60 min" },
+const todoItems = [
+  { id: 1, task: "Provision VMs for AWS batch", due: "star 4 at 6:00 pm", done: false },
+  { id: 2, task: "Review lab template request", due: "star 7 at 6:00 pm", done: false },
+  { id: 3, task: "Configure K8s cluster access", due: "star 10 at 6:00 pm", done: false },
+  { id: 4, task: "Finish onboarding new trainer", due: "star 12 at 6:00 pm", done: false },
 ];
 
-const alerts = [
-  { id: 1, type: "error", message: "Lab VM offline for student Carol Davis", time: "5 min ago" },
-  { id: 2, type: "warning", message: "High resource usage in AWS batch", time: "12 min ago" },
-  { id: 3, type: "info", message: "New support ticket from Mike Chen", time: "25 min ago" },
+const recentActivity = [
+  { id: 1, name: "Alice Johnson", action: "Lab provisioned", time: "1:34 PM", avatar: "Alice" },
+  { id: 2, name: "Bob Williams", action: "Batch enrollment complete", time: "12:32 PM", avatar: "Bob" },
+  { id: 3, name: "Carol Davis", action: "VM template submitted", time: "Yesterday at 8:57 PM", avatar: "Carol" },
 ];
 
-const courseProgress = [
-  { name: "AWS Solutions Architect", progress: 75, students: 24 },
-  { name: "Kubernetes Fundamentals", progress: 45, students: 18 },
-  { name: "Docker Masterclass", progress: 90, students: 30 },
+const formationSteps = [
+  { label: "Batch Created", done: true },
+  { label: "VMs Configured", done: true },
+  { label: "Trainer VM Ready", done: true },
+  { label: "Student VMs Cloned", done: false },
+  { label: "Go Live", done: false },
 ];
 
-const quickActions = [
-  { label: "Create Batch", icon: Plus, href: "/batches/create", primary: true },
-  { label: "Create Lab", icon: FlaskConical, href: "/labs/create" },
-  { label: "Build Course", icon: Hammer, href: "/course-builder" },
-  { label: "Start Session", icon: Play },
-];
-
-const activityData = [
-  { time: "9:00AM", students: 32, labs: 18 },
-  { time: "10:00AM", students: 55, labs: 28 },
-  { time: "11:00AM", students: 48, labs: 32 },
-  { time: "12:00PM", students: 78, labs: 45 },
-  { time: "1:00PM", students: 65, labs: 38 },
-  { time: "2:00PM", students: 98, labs: 55 },
-  { time: "3:00PM", students: 120, labs: 68 },
-  { time: "4:00PM", students: 142, labs: 85 },
-  { time: "5:00PM", students: 118, labs: 72 },
-  { time: "6:00PM", students: 95, labs: 58 },
-];
-
-const weeklyData = [
-  { day: "S", value: 42 },
-  { day: "M", value: 78 },
-  { day: "T", value: 65 },
-  { day: "W", value: 90 },
-  { day: "T", value: 82 },
-  { day: "F", value: 110 },
-  { day: "S", value: 55 },
-];
+/* ── custom tooltip ─────────────────────────── */
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-lg">
+      <div className="rounded-xl border border-border bg-card px-3 py-2 shadow-lg">
         <p className="text-xs font-medium text-foreground mb-1">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} className="text-xs text-muted-foreground">
-            {entry.name}: <span className="font-medium text-foreground">{entry.value}</span>
+            {entry.name}: <span className="font-semibold text-foreground">{entry.value.toLocaleString()}</span>
           </p>
         ))}
       </div>
@@ -112,391 +79,265 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export default function Dashboard() {
+/* ── dotted-border icon component ──────────── */
+
+function DottedIcon({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-end justify-between">
+    <div className={`relative flex items-center justify-center h-12 w-12 ${className || ""}`}>
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 48 48">
+        <circle
+          cx="24" cy="24" r="22"
+          fill="none"
+          stroke="hsl(var(--border))"
+          strokeWidth="1.5"
+          strokeDasharray="3 3"
+        />
+      </svg>
+      {children}
+    </div>
+  );
+}
+
+/* ── dashboard ──────────────────────────────── */
+
+export default function Dashboard() {
+  const currentStep = formationSteps.filter(s => s.done).length;
+
+  return (
+    <div className="space-y-5">
+      {/* Greeting */}
+      <div className="flex items-end justify-between pt-1">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Good morning, John</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Here's what's happening with your training sessions today.
-          </p>
+          <h1 className="text-[26px] font-bold tracking-tight text-foreground">
+            Good morning, John!
+          </h1>
         </div>
         <div className="flex items-center gap-2">
-          {quickActions.map((action) => (
-            action.href ? (
-              <Button
-                key={action.label}
-                variant={action.primary ? "default" : "outline"}
-                size="sm"
-                asChild
-              >
-                <Link to={action.href}>
-                  <action.icon className="mr-1.5 h-4 w-4" />
-                  {action.label}
-                </Link>
-              </Button>
-            ) : (
-              <Button key={action.label} variant="outline" size="sm">
-                <action.icon className="mr-1.5 h-4 w-4" />
-                {action.label}
-              </Button>
-            )
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground">
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* ── Top Stats Row (unified card like Dappr) ─────── */}
+      <Card className="p-0 overflow-hidden">
+        <div className="grid grid-cols-4 divide-x divide-border">
+          {[
+            { icon: <Users className="h-5 w-5 text-primary" />, value: "142", label: "Students online", prefix: "" },
+            { icon: <AlertTriangle className="h-5 w-5 text-coral" />, value: "12", label: "Unresolved alerts", prefix: "" },
+            { icon: <Monitor className="h-5 w-5 text-primary" />, value: "7", label: "VMs running today", prefix: "" },
+            { icon: <DollarSign className="h-5 w-5 text-success" />, value: "$3,287.49", label: "This week's VM spend", prefix: "" },
+          ].map((stat, i) => (
+            <div key={i} className="flex items-center gap-4 px-6 py-5">
+              <DottedIcon>{stat.icon}</DottedIcon>
+              <div>
+                <p className="text-2xl font-bold tracking-tight tabular-nums text-foreground">
+                  {stat.prefix}{stat.value}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
+              </div>
+              {i === 0 && (
+                <Button variant="ghost" size="icon" className="h-6 w-6 ml-auto text-muted-foreground">
+                  <MoreVertical className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
           ))}
-        </div>
-      </div>
-
-      {/* Top Stats Row – 3 columns like reference */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        {/* Students Card – Big number with sub-metrics */}
-        <Card className="p-6">
-          <div className="flex items-start justify-between mb-6">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Students Online
-            </p>
-            <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1 text-muted-foreground">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </div>
-          <p className="text-5xl font-bold tracking-tight tabular-nums">
-            142
-          </p>
-          <div className="mt-3 flex items-center gap-1.5">
-            <span className="text-xs font-medium text-success">+23.8%</span>
-            <span className="text-xs text-muted-foreground">more students than last week.</span>
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-border flex items-center gap-8">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold tabular-nums">96</span>
-              <div className="flex flex-col">
-                <span className="flex items-center gap-1 text-[10px] font-medium text-success">
-                  <span className="h-1.5 w-1.5 rounded-full bg-success" />
-                  ACTIVE
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold tabular-nums">46</span>
-              <div className="flex flex-col">
-                <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
-                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                  IDLE
-                </span>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Labs Card – Rating style with weekly bar chart */}
-        <Card className="p-6">
-          <div className="flex items-start justify-between mb-6">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Lab Utilization
-            </p>
-            <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1 text-muted-foreground">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <p className="text-5xl font-bold tracking-tight tabular-nums">
-              4.6
-            </p>
-            <span className="text-lg text-muted-foreground">/5</span>
-          </div>
-          <div className="mt-2 flex items-center gap-1.5">
-            <span className="text-xs font-medium text-success">+0.3</span>
-            <span className="text-xs text-muted-foreground">points from last week.</span>
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-border">
-            <div className="h-16">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={weeklyData} barCategoryGap="20%">
-                  <XAxis 
-                    dataKey="day" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                  />
-                  <Bar 
-                    dataKey="value" 
-                    fill="hsl(var(--primary))" 
-                    radius={[3, 3, 0, 0]}
-                    opacity={0.7}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </Card>
-
-        {/* Batch Status Card – Donut-style breakdown */}
-        <Card className="p-6">
-          <div className="flex items-start justify-between mb-6">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Batch Overview
-            </p>
-            <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1 text-muted-foreground">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/10">
-                <CheckCircle2 className="h-5 w-5 text-success" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">Active Batches</p>
-                <p className="text-xs text-muted-foreground">Currently running</p>
-              </div>
-              <span className="text-2xl font-bold tabular-nums">12</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-warning/10">
-                <Calendar className="h-5 w-5 text-warning" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">Upcoming</p>
-                <p className="text-xs text-muted-foreground">Scheduled this month</p>
-              </div>
-              <span className="text-2xl font-bold tabular-nums">8</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                <XCircle className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">Completed</p>
-                <p className="text-xs text-muted-foreground">Last 30 days</p>
-              </div>
-              <span className="text-2xl font-bold tabular-nums">24</span>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Activity Chart – Full width, prominent like reference */}
-      <Card className="p-6">
-        <div className="flex items-start justify-between mb-2">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Activity Overview
-            </p>
-            <div className="flex items-baseline gap-3 mt-2">
-              <span className="text-4xl font-bold tracking-tight tabular-nums">142</span>
-              <span className="text-sm text-muted-foreground">Students Today</span>
-              <span className="flex items-center gap-1.5 ml-2 text-[11px] font-medium text-success">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
-                </span>
-                Live
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-5">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-primary" />
-              <span className="text-xs text-muted-foreground">Students</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-success" />
-              <span className="text-xs text-muted-foreground">Labs</span>
-            </div>
-          </div>
-        </div>
-        <div className="h-64 mt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={activityData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="gradStudents" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(211, 100%, 50%)" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="hsl(211, 100%, 50%)" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="gradLabs" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0.2} />
-                  <stop offset="100%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis
-                dataKey="time"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-              />
-              <YAxis 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} 
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Area
-                type="monotone"
-                dataKey="students"
-                name="Students"
-                stroke="hsl(211, 100%, 50%)"
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#gradStudents)"
-              />
-              <Area
-                type="monotone"
-                dataKey="labs"
-                name="Active Labs"
-                stroke="hsl(142, 71%, 45%)"
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#gradLabs)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
         </div>
       </Card>
 
-      {/* Bottom Grid */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Upcoming Batches */}
-        <DataCard
-          title="Upcoming Batches"
-          icon={Calendar}
-          action={{ label: "View all", href: "/batches" }}
-          noPadding
-        >
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-medium text-muted-foreground">Batch</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">Trainer</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">Start</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground text-right">Students</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {upcomingBatches.map((batch) => (
-                <TableRow key={batch.id} className="group">
-                  <TableCell>
-                    <Link
-                      to={`/batches/${batch.id}`}
-                      className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                    >
-                      {batch.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{batch.trainer}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground tabular-nums">{batch.startDate}</TableCell>
-                  <TableCell className="text-sm text-right tabular-nums font-medium">{batch.students}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </DataCard>
+      {/* ── Main Grid ──────────────────────────────────── */}
+      <div className="grid grid-cols-12 gap-5">
 
-        {/* Active Labs */}
-        <DataCard
-          title="Active Labs"
-          icon={FlaskConical}
-          action={{ label: "View all", href: "/labs" }}
-          badge={
-            <span className="flex items-center gap-1.5 text-[11px] font-medium text-success">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
+        {/* Left Column (span 3) */}
+        <div className="col-span-3 space-y-5">
+          {/* New Students */}
+          <Card className="p-5">
+            <p className="text-xs font-medium text-muted-foreground mb-1">New students</p>
+            <div className="flex items-baseline gap-3">
+              <span className="text-4xl font-bold tracking-tight tabular-nums">54</span>
+              <span className="flex items-center gap-1 text-xs font-semibold text-success">
+                <TrendingUp className="h-3 w-3" />
+                +18.7%
               </span>
-              Live
-            </span>
-          }
-          noPadding
-        >
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-medium text-muted-foreground">Student</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">Lab</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground text-right">Time Left</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {activeLabs.map((lab) => (
-                <TableRow key={lab.id}>
-                  <TableCell className="text-sm font-medium">{lab.student}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{lab.lab}</TableCell>
-                  <TableCell>
-                    <StatusBadge
-                      status={lab.status === "running" ? "success" : lab.status === "idle" ? "warning" : "error"}
-                      label={lab.status.charAt(0).toUpperCase() + lab.status.slice(1)}
-                      pulse={lab.status === "running"}
-                    />
-                  </TableCell>
-                  <TableCell className="text-sm text-right tabular-nums text-muted-foreground">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Clock className="h-3 w-3" />
-                      {lab.timeRemaining}
-                    </span>
-                  </TableCell>
-                </TableRow>
+            </div>
+          </Card>
+
+          {/* VM Alerts */}
+          <Card className="p-5">
+            <p className="text-xs font-medium text-muted-foreground mb-1">VM alerts overdue</p>
+            <div className="flex items-baseline gap-3">
+              <span className="text-4xl font-bold tracking-tight tabular-nums">6</span>
+              <span className="flex items-center gap-1 text-xs font-semibold text-coral">
+                <TrendingDown className="h-3 w-3" />
+                +2.7%
+              </span>
+            </div>
+          </Card>
+        </div>
+
+        {/* Center Column - Revenue/Activity Chart (span 5) */}
+        <div className="col-span-5">
+          <Card className="p-5 h-full">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-semibold text-foreground">Activity</p>
+              <span className="text-[11px] text-muted-foreground">Last 7 days VS prior week</span>
+            </div>
+            <div className="h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="gradCurrent" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(174, 62%, 40%)" stopOpacity={0.25} />
+                      <stop offset="100%" stopColor="hsl(174, 62%, 40%)" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="gradPrior" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(220, 25%, 12%)" stopOpacity={0.08} />
+                      <stop offset="100%" stopColor="hsl(220, 25%, 12%)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="date"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="current"
+                    name="This week"
+                    stroke="hsl(174, 62%, 40%)"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#gradCurrent)"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="prior"
+                    name="Prior week"
+                    stroke="hsl(220, 25%, 40%)"
+                    strokeWidth={1.5}
+                    strokeDasharray="4 3"
+                    fillOpacity={1}
+                    fill="url(#gradPrior)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        </div>
+
+        {/* Right Column (span 4) */}
+        <div className="col-span-4 space-y-5">
+          {/* Formation Status */}
+          <Card className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-semibold text-foreground">Batch Status</p>
+              <StatusBadge status="info" label="In progress" size="sm" />
+            </div>
+
+            {/* Stepper */}
+            <div className="flex items-center gap-0 mb-4">
+              {formationSteps.map((step, i) => (
+                <div key={i} className="flex items-center">
+                  <div className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${
+                    step.done ? "bg-primary" : "bg-border"
+                  }`} />
+                  {i < formationSteps.length - 1 && (
+                    <div className={`h-0.5 w-8 flex-shrink-0 ${
+                      formationSteps[i + 1]?.done ? "bg-primary" : "bg-border"
+                    }`} />
+                  )}
+                </div>
               ))}
-            </TableBody>
-          </Table>
-        </DataCard>
+            </div>
 
-        {/* Alerts */}
-        <DataCard
-          title="Alerts"
-          icon={AlertTriangle}
-          badge={
-            <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-medium text-destructive">
-              {alerts.length} new
-            </span>
-          }
-        >
-          <div className="space-y-2">
-            {alerts.map((alert) => (
-              <div
-                key={alert.id}
-                className="flex items-start gap-3 rounded-lg border border-border p-3 hover:bg-muted/50 transition-colors cursor-pointer"
-              >
-                <span
-                  className={`mt-1.5 flex h-2 w-2 shrink-0 rounded-full ${
-                    alert.type === "error"
-                      ? "bg-destructive"
-                      : alert.type === "warning"
-                      ? "bg-warning"
-                      : "bg-info"
-                  }`}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground">{alert.message}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{alert.time}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </DataCard>
+            <p className="text-xs text-muted-foreground mb-3">
+              Estimated processing <span className="font-semibold text-foreground">4-6 business days</span>
+            </p>
+            <Button variant="outline" size="sm" className="w-full rounded-xl text-xs">
+              View status
+            </Button>
+          </Card>
+        </div>
+      </div>
 
-        {/* Course Progress */}
-        <DataCard title="Course Progress" icon={TrendingUp} action={{ label: "View all", href: "/courses" }}>
-          <div className="space-y-5">
-            {courseProgress.map((course, index) => (
-              <div key={index} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{course.name}</p>
-                    <p className="text-xs text-muted-foreground">{course.students} students</p>
+      {/* ── Bottom Grid ────────────────────────────────── */}
+      <div className="grid grid-cols-12 gap-5">
+
+        {/* To-Do List (span 4) */}
+        <div className="col-span-4">
+          <Card className="p-5">
+            <p className="text-sm font-semibold text-foreground mb-4">Your to-Do list</p>
+            <div className="space-y-3">
+              {todoItems.map((item) => (
+                <div key={item.id} className="flex items-start gap-3">
+                  <span className="mt-1.5 flex h-2 w-2 shrink-0 rounded-full bg-coral" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">{item.task}</p>
+                    <p className="text-[11px] text-muted-foreground">{item.due}</p>
                   </div>
-                  <span className="text-sm font-semibold tabular-nums">{course.progress}%</span>
                 </div>
-                <ProgressBar
-                  value={course.progress}
-                  size="default"
-                  variant={course.progress >= 80 ? "success" : course.progress >= 50 ? "primary" : "warning"}
-                />
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* Recent Activity (span 5) */}
+        <div className="col-span-5">
+          <Card className="p-5">
+            <p className="text-sm font-semibold text-foreground mb-4">Recent activity</p>
+            <div className="space-y-4">
+              {recentActivity.map((item) => (
+                <div key={item.id} className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="text-xs font-semibold text-primary">
+                      {item.name.split(" ").map(n => n[0]).join("")}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{item.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{item.action}</p>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">{item.time}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* Next Training Session - Dark card (span 3) */}
+        <div className="col-span-3">
+          <div className="rounded-2xl bg-sidebar p-5 h-full flex flex-col justify-between" style={{ boxShadow: "var(--shadow-elevated)" }}>
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Calendar className="h-4 w-4 text-sidebar-foreground/60" />
+                <span className="text-[11px] font-medium text-sidebar-foreground/60">Next session</span>
               </div>
-            ))}
+              <p className="text-lg font-bold text-sidebar-accent-foreground mb-1">
+                Feb 22 at 6:00 PM
+              </p>
+              <p className="text-xs text-sidebar-foreground/60 leading-relaxed">
+                You have been invited to attend a training review for the AWS batch.
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-4 w-full rounded-xl text-xs border-sidebar-foreground/20 text-sidebar-accent-foreground hover:bg-sidebar-accent"
+            >
+              View details
+              <ArrowRight className="h-3 w-3 ml-1" />
+            </Button>
           </div>
-        </DataCard>
+        </div>
       </div>
     </div>
   );
