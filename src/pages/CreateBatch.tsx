@@ -88,7 +88,8 @@ export default function CreateBatch() {
   const [seatCount, setSeatCount] = useState(20);
   const [medium, setMedium] = useState<"online" | "offline" | "hybrid">("online");
 
-  // Step 3: VM Configuration (always enabled)
+  // Step 3: VM Configuration
+  const [enableVMs, setEnableVMs] = useState(false);
   const [vmStartDate, setVmStartDate] = useState<Date>();
   const [vmEndDate, setVmEndDate] = useState<Date>();
   const [vmType, setVmType] = useState<"single" | "multi">("single");
@@ -130,7 +131,7 @@ export default function CreateBatch() {
 
   // Pricing calculation
   const calculatePricing = () => {
-    if (!vmStartDate || !vmEndDate) return { compute: 0, storage: 0, network: 0, support: 0, total: 0, totalVMs: 0, days: 0 };
+    if (!enableVMs || !vmStartDate || !vmEndDate) return { compute: 0, storage: 0, network: 0, support: 0, total: 0, totalVMs: 0, days: 0 };
     const basePrice = 50;
     const totalVMs = (vmType === "multi" ? vmTemplates.length : 1) * seatCount + 1; // +1 for trainer
     const days = Math.ceil((vmEndDate.getTime() - vmStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
@@ -162,15 +163,15 @@ export default function CreateBatch() {
     switch (currentStep) {
       case 1: return name.trim() && instructors.some(i => i.trim());
       case 2: return startDate && endDate;
-      case 3: return vmStartDate && vmEndDate && vmTemplates.some(t => t.templateId);
-      case 4: return isApproved;
+      case 3: return true;
+      case 4: return !enableVMs || isApproved;
       default: return true;
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isApproved) {
+    if (enableVMs && !isApproved) {
       toast({ title: "Approval Required", description: "Please wait for approval before creating the batch.", variant: "destructive" });
       return;
     }
@@ -178,7 +179,7 @@ export default function CreateBatch() {
     const filteredInstructors = instructors.filter((i) => i.trim());
 
     let vmConfig: VMConfig | undefined;
-    if (vmStartDate && vmEndDate) {
+    if (enableVMs && vmStartDate && vmEndDate) {
       vmConfig = {
         id: `vm-${Date.now()}`,
         dateRange: { from: vmStartDate.toISOString(), to: vmEndDate.toISOString() },
@@ -454,138 +455,160 @@ export default function CreateBatch() {
         {currentStep === 3 && (
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">
-              {/* VM Date Range */}
+              {/* Enable VMs Toggle */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <CalendarIcon className="h-4 w-4 text-primary" />
-                    VM Schedule
-                  </CardTitle>
-                  <CardDescription>Set when VMs should be available</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>VM Start Date *</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button type="button" variant="outline" className={cn("w-full justify-start text-left font-normal", !vmStartDate && "text-muted-foreground")}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {vmStartDate ? format(vmStartDate, "PPP") : "Select date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar mode="single" selected={vmStartDate} onSelect={setVmStartDate} className="p-3 pointer-events-auto" />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>VM End Date *</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button type="button" variant="outline" className={cn("w-full justify-start text-left font-normal", !vmEndDate && "text-muted-foreground")}>
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {vmEndDate ? format(vmEndDate, "PPP") : "Select date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar mode="single" selected={vmEndDate} onSelect={setVmEndDate} className="p-3 pointer-events-auto" />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* VM Type Selection */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Layers className="h-4 w-4 text-primary" />
-                    VM Type
-                  </CardTitle>
-                  <CardDescription>Choose how many VMs each participant gets</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <button
-                      type="button"
-                      onClick={() => { setVmType("single"); setVmTemplates([{ templateId: "", instanceName: "" }]); }}
-                      className={cn(
-                        "p-5 rounded-xl border-2 text-left transition-all",
-                        vmType === "single" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-                      )}
-                    >
-                      <Monitor className="h-6 w-6 mb-2 text-primary" />
-                      <h4 className="font-semibold">Single VM</h4>
-                      <p className="text-xs text-muted-foreground mt-1">One VM per participant</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setVmType("multi")}
-                      className={cn(
-                        "p-5 rounded-xl border-2 text-left transition-all",
-                        vmType === "multi" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-                      )}
-                    >
-                      <Layers className="h-6 w-6 mb-2 text-primary" />
-                      <h4 className="font-semibold">Multi VM</h4>
-                      <p className="text-xs text-muted-foreground mt-1">2-3 VMs per participant</p>
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Template Selection */}
-              <Card>
-                <CardHeader>
+                <CardContent className="py-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Server className="h-4 w-4 text-primary" />
-                        VM Templates
-                      </CardTitle>
-                      <CardDescription>Select template and name your instances</CardDescription>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-primary/10">
+                        <Monitor className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Virtual Machines</h3>
+                        <p className="text-sm text-muted-foreground">Enable VM environments for this batch</p>
+                      </div>
                     </div>
-                    {vmType === "multi" && vmTemplates.length < 3 && (
-                      <Button type="button" variant="outline" size="sm" onClick={handleAddVMTemplate}>
-                        <Plus className="mr-1 h-3 w-3" /> Add VM
-                      </Button>
-                    )}
+                    <Switch checked={enableVMs} onCheckedChange={setEnableVMs} />
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {vmTemplates.map((vm, index) => (
-                    <div key={index} className="p-4 rounded-xl border border-border bg-muted/10 space-y-4">
+                </CardContent>
+              </Card>
+
+              {enableVMs && (
+                <>
+                  {/* VM Date Range */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <CalendarIcon className="h-4 w-4 text-primary" />
+                        VM Schedule
+                      </CardTitle>
+                      <CardDescription>Set when VMs should be available</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label>VM Start Date *</Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button type="button" variant="outline" className={cn("w-full justify-start text-left font-normal", !vmStartDate && "text-muted-foreground")}>
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {vmStartDate ? format(vmStartDate, "PPP") : "Select date"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar mode="single" selected={vmStartDate} onSelect={setVmStartDate} className="p-3 pointer-events-auto" />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>VM End Date *</Label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button type="button" variant="outline" className={cn("w-full justify-start text-left font-normal", !vmEndDate && "text-muted-foreground")}>
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {vmEndDate ? format(vmEndDate, "PPP") : "Select date"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar mode="single" selected={vmEndDate} onSelect={setVmEndDate} className="p-3 pointer-events-auto" />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* VM Type Selection */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Layers className="h-4 w-4 text-primary" />
+                        VM Type
+                      </CardTitle>
+                      <CardDescription>Choose how many VMs each participant gets</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-4">
+                        <button
+                          type="button"
+                          onClick={() => { setVmType("single"); setVmTemplates([{ templateId: "", instanceName: "" }]); }}
+                          className={cn(
+                            "p-5 rounded-xl border-2 text-left transition-all",
+                            vmType === "single" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                          )}
+                        >
+                          <Monitor className="h-6 w-6 mb-2 text-primary" />
+                          <h4 className="font-semibold">Single VM</h4>
+                          <p className="text-xs text-muted-foreground mt-1">One VM per participant</p>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setVmType("multi")}
+                          className={cn(
+                            "p-5 rounded-xl border-2 text-left transition-all",
+                            vmType === "multi" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                          )}
+                        >
+                          <Layers className="h-6 w-6 mb-2 text-primary" />
+                          <h4 className="font-semibold">Multi VM</h4>
+                          <p className="text-xs text-muted-foreground mt-1">2-3 VMs per participant</p>
+                        </button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Template Selection */}
+                  <Card>
+                    <CardHeader>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                            {index + 1}
-                          </div>
-                          VM Configuration
-                        </span>
-                        {vmType === "multi" && vmTemplates.length > 1 && (
-                          <Button type="button" variant="ghost" size="sm" onClick={() => handleRemoveVMTemplate(index)} className="text-muted-foreground hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
+                        <div>
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <Server className="h-4 w-4 text-primary" />
+                            VM Templates
+                          </CardTitle>
+                          <CardDescription>Select template and name your instances</CardDescription>
+                        </div>
+                        {vmType === "multi" && vmTemplates.length < 3 && (
+                          <Button type="button" variant="outline" size="sm" onClick={handleAddVMTemplate}>
+                            <Plus className="mr-1 h-3 w-3" /> Add VM
                           </Button>
                         )}
                       </div>
-                      <div className="space-y-3">
-                        <Label className="text-xs">Select Template</Label>
-                        <TemplatePickerGrid
-                          templates={templates}
-                          selectedId={vm.templateId}
-                          onSelect={(template) => handleVMTemplateChange(index, "templateId", template.id)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs">Instance Name</Label>
-                        <Input placeholder="e.g., Web Server, Database, etc." value={vm.instanceName} onChange={(e) => handleVMTemplateChange(index, "instanceName", e.target.value)} />
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {vmTemplates.map((vm, index) => (
+                        <div key={index} className="p-4 rounded-xl border border-border bg-muted/10 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                                {index + 1}
+                              </div>
+                              VM Configuration
+                            </span>
+                            {vmType === "multi" && vmTemplates.length > 1 && (
+                              <Button type="button" variant="ghost" size="sm" onClick={() => handleRemoveVMTemplate(index)} className="text-muted-foreground hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                          <div className="space-y-3">
+                            <Label className="text-xs">Select Template</Label>
+                            <TemplatePickerGrid
+                              templates={templates}
+                              selectedId={vm.templateId}
+                              onSelect={(template) => handleVMTemplateChange(index, "templateId", template.id)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs">Instance Name</Label>
+                            <Input placeholder="e.g., Web Server, Database, etc." value={vm.instanceName} onChange={(e) => handleVMTemplateChange(index, "instanceName", e.target.value)} />
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
 
             {/* Pricing Sidebar */}
@@ -598,24 +621,32 @@ export default function CreateBatch() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {vmStartDate && vmEndDate ? (
+                  {!enableVMs ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Monitor className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                      <p className="text-sm font-medium">No VMs configured</p>
+                      <p className="text-xs">Enable VMs to see pricing</p>
+                    </div>
+                  ) : (
                     <>
-                      <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
-                        <div className="grid grid-cols-3 gap-3 text-center">
-                          <div>
-                            <p className="text-xs text-muted-foreground">VMs</p>
-                            <p className="text-lg font-bold">{pricing.totalVMs}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">Days</p>
-                            <p className="text-lg font-bold">{pricing.days}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">Type</p>
-                            <p className="text-lg font-bold capitalize">{vmType}</p>
+                      {vmStartDate && vmEndDate && (
+                        <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+                          <div className="grid grid-cols-3 gap-3 text-center">
+                            <div>
+                              <p className="text-xs text-muted-foreground">VMs</p>
+                              <p className="text-lg font-bold">{pricing.totalVMs}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Days</p>
+                              <p className="text-lg font-bold">{pricing.days}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Type</p>
+                              <p className="text-lg font-bold capitalize">{vmType}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
                       <div className="space-y-2">
                         <div className="flex justify-between items-center p-2.5 rounded-lg bg-muted/30 text-sm">
                           <span className="text-muted-foreground flex items-center gap-2"><Server className="h-3.5 w-3.5" /> Compute</span>
@@ -641,12 +672,6 @@ export default function CreateBatch() {
                         </div>
                       </div>
                     </>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <CalendarIcon className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                      <p className="text-sm font-medium">Set VM dates</p>
-                      <p className="text-xs">Select start and end dates to see pricing</p>
-                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -687,127 +712,133 @@ export default function CreateBatch() {
                       <p className="text-xs text-muted-foreground uppercase tracking-wide">Medium</p>
                       <p className="font-semibold mt-1 capitalize">{medium}</p>
                     </div>
-                    <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                    <div className={cn("p-4 rounded-lg border", enableVMs ? "bg-primary/5 border-primary/20" : "bg-muted/30 border-border/50")}>
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">VMs</p>
-                      <p className="font-semibold mt-1">{pricing.totalVMs} VMs</p>
+                      <p className="font-semibold mt-1">{enableVMs ? `${pricing.totalVMs} VMs` : "None"}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Monitor className="h-4 w-4 text-primary" />
-                    VM Configuration
-                  </CardTitle>
-                  <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" />View Breakdown</Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-lg">
-                      <DialogHeader>
-                        <DialogTitle>Pricing Breakdown</DialogTitle>
-                        <DialogDescription>Detailed cost breakdown for VM infrastructure</DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-3 py-4">
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div className="flex justify-between"><span className="text-muted-foreground">Total VMs:</span><span className="font-medium">{pricing.totalVMs}</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Duration:</span><span className="font-medium">{pricing.days} days</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Compute:</span><span className="font-medium">${pricing.compute.toFixed(0)}</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Storage:</span><span className="font-medium">${pricing.storage.toFixed(0)}</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Network:</span><span className="font-medium">${pricing.network.toFixed(0)}</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Support:</span><span className="font-medium">${pricing.support.toFixed(0)}</span></div>
+              {enableVMs && (
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Monitor className="h-4 w-4 text-primary" />
+                      VM Configuration
+                    </CardTitle>
+                    <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" />View Breakdown</Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-lg">
+                        <DialogHeader>
+                          <DialogTitle>Pricing Breakdown</DialogTitle>
+                          <DialogDescription>Detailed cost breakdown for VM infrastructure</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-3 py-4">
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="flex justify-between"><span className="text-muted-foreground">Total VMs:</span><span className="font-medium">{pricing.totalVMs}</span></div>
+                            <div className="flex justify-between"><span className="text-muted-foreground">Duration:</span><span className="font-medium">{pricing.days} days</span></div>
+                            <div className="flex justify-between"><span className="text-muted-foreground">Compute:</span><span className="font-medium">${pricing.compute.toFixed(0)}</span></div>
+                            <div className="flex justify-between"><span className="text-muted-foreground">Storage:</span><span className="font-medium">${pricing.storage.toFixed(0)}</span></div>
+                            <div className="flex justify-between"><span className="text-muted-foreground">Network:</span><span className="font-medium">${pricing.network.toFixed(0)}</span></div>
+                            <div className="flex justify-between"><span className="text-muted-foreground">Support:</span><span className="font-medium">${pricing.support.toFixed(0)}</span></div>
+                          </div>
+                          <div className="border-t pt-3 flex justify-between items-center">
+                            <span className="font-semibold">Grand Total</span>
+                            <span className="text-2xl font-bold text-primary">${pricing.total.toFixed(0)}</span>
+                          </div>
                         </div>
-                        <div className="border-t pt-3 flex justify-between items-center">
-                          <span className="font-semibold">Grand Total</span>
-                          <span className="text-2xl font-bold text-primary">${pricing.total.toFixed(0)}</span>
+                      </DialogContent>
+                    </Dialog>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-primary/10">
+                          <Monitor className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-semibold">{vmType === "multi" ? `${vmTemplates.length} VMs per participant` : "Single VM per participant"}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {pricing.totalVMs} total VMs • {pricing.days} days
+                          </p>
                         </div>
                       </div>
-                    </DialogContent>
-                  </Dialog>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-primary/10">
-                        <Monitor className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-semibold">{vmType === "multi" ? `${vmTemplates.length} VMs per participant` : "Single VM per participant"}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {pricing.totalVMs} total VMs • {pricing.days} days
-                        </p>
-                      </div>
+                      <span className="text-lg font-bold text-primary">${pricing.total.toFixed(0)}</span>
                     </div>
-                    <span className="text-lg font-bold text-primary">${pricing.total.toFixed(0)}</span>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Approval & Actions */}
             <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-primary" />
-                    Approval Status
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
-                    <div className="flex items-center gap-2">
-                      <Server className={cn("h-4 w-4", cloudAddaApproval === "approved" ? "text-primary" : "text-muted-foreground")} />
-                      <span className="font-medium text-sm">CloudAdda</span>
+              {enableVMs && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-primary" />
+                      Approval Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+                      <div className="flex items-center gap-2">
+                        <Server className={cn("h-4 w-4", cloudAddaApproval === "approved" ? "text-primary" : "text-muted-foreground")} />
+                        <span className="font-medium text-sm">CloudAdda</span>
+                      </div>
+                      {getApprovalStatusBadge(cloudAddaApproval)}
                     </div>
-                    {getApprovalStatusBadge(cloudAddaApproval)}
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
-                    <div className="flex items-center gap-2">
-                      <Building2 className={cn("h-4 w-4", companyAdminApproval === "approved" ? "text-primary" : "text-muted-foreground")} />
-                      <span className="font-medium text-sm">Company Admin</span>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+                      <div className="flex items-center gap-2">
+                        <Building2 className={cn("h-4 w-4", companyAdminApproval === "approved" ? "text-primary" : "text-muted-foreground")} />
+                        <span className="font-medium text-sm">Company Admin</span>
+                      </div>
+                      {getApprovalStatusBadge(companyAdminApproval)}
                     </div>
-                    {getApprovalStatusBadge(companyAdminApproval)}
-                  </div>
 
-                  {!approvalRequested && (
-                    <Button type="button" onClick={handleRequestApproval} className="w-full" variant="outline">
-                      <Send className="mr-2 h-4 w-4" />
-                      Request Approval
-                    </Button>
-                  )}
+                    {!approvalRequested && (
+                      <Button type="button" onClick={handleRequestApproval} className="w-full" variant="outline">
+                        <Send className="mr-2 h-4 w-4" />
+                        Request Approval
+                      </Button>
+                    )}
 
-                  {approvalRequested && !isApproved && (
-                    <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-sm text-muted-foreground flex items-center gap-2">
-                      <Info className="h-4 w-4 shrink-0" />
-                      <span>Waiting for approvals...</span>
+                    {approvalRequested && !isApproved && (
+                      <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-sm text-muted-foreground flex items-center gap-2">
+                        <Info className="h-4 w-4 shrink-0" />
+                        <span>Waiting for approvals...</span>
+                      </div>
+                    )}
+
+                    {isApproved && (
+                      <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 text-sm text-primary flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 shrink-0" />
+                        <span>All approvals received!</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {enableVMs && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-primary" />
+                      Total Cost
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-4">
+                      <span className="text-4xl font-bold text-primary">${pricing.total.toFixed(0)}</span>
+                      <p className="text-sm text-muted-foreground mt-1">{pricing.totalVMs} VMs for {pricing.days} days</p>
                     </div>
-                  )}
-
-                  {isApproved && (
-                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 text-sm text-primary flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 shrink-0" />
-                      <span>All approvals received!</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-primary" />
-                    Total Cost
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-4">
-                    <span className="text-4xl font-bold text-primary">${pricing.total.toFixed(0)}</span>
-                    <p className="text-sm text-muted-foreground mt-1">{pricing.totalVMs} VMs for {pricing.days} days</p>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         )}
@@ -825,7 +856,7 @@ export default function CreateBatch() {
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
-            <Button type="submit" size="lg" disabled={!isApproved}>
+            <Button type="submit" size="lg" disabled={enableVMs && !isApproved}>
               <CheckCircle2 className="mr-2 h-4 w-4" />
               Create Batch
             </Button>
