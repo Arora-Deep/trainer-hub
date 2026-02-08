@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { VMsTab } from "@/components/batches/VMsTab";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { StatCard } from "@/components/ui/StatCard";
@@ -37,7 +38,7 @@ import {
 import {
   Users,
   Calendar,
-  FlaskConical,
+  Server,
   Play,
   UserPlus,
   RefreshCw,
@@ -59,7 +60,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useBatchStore } from "@/stores/batchStore";
 import { useCourseStore } from "@/stores/courseStore";
-import { useLabStore } from "@/stores/labStore";
+
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -72,9 +73,8 @@ const statusMap: Record<string, { status: "success" | "warning" | "primary" | "d
 export default function BatchDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getBatch, addStudent, removeStudent, assignLab, removeLab, addAnnouncement, setCourse } = useBatchStore();
+  const { getBatch, addStudent, removeStudent, addAnnouncement, setCourse } = useBatchStore();
   const { courses } = useCourseStore();
-  const { labs } = useLabStore();
 
   const batch = getBatch(id || "");
 
@@ -83,8 +83,6 @@ export default function BatchDetails() {
   const [newStudentName, setNewStudentName] = useState("");
   const [newStudentEmail, setNewStudentEmail] = useState("");
 
-  const [assignLabOpen, setAssignLabOpen] = useState(false);
-  const [selectedLabId, setSelectedLabId] = useState("");
 
   const [announcementOpen, setAnnouncementOpen] = useState(false);
   const [announcementTitle, setAnnouncementTitle] = useState("");
@@ -125,23 +123,6 @@ export default function BatchDetails() {
     setNewStudentName("");
     setNewStudentEmail("");
     setAddStudentOpen(false);
-  };
-
-  const handleAssignLab = () => {
-    const lab = labs.find((l) => l.id === selectedLabId);
-    if (!lab) {
-      toast({ title: "Error", description: "Please select a lab", variant: "destructive" });
-      return;
-    }
-    assignLab(batch.id, {
-      labId: lab.id,
-      name: lab.name,
-      type: lab.templateName,
-      duration: "60 min",
-    });
-    toast({ title: "Success", description: "Lab assigned successfully" });
-    setSelectedLabId("");
-    setAssignLabOpen(false);
   };
 
   const handleAddAnnouncement = () => {
@@ -219,9 +200,9 @@ export default function BatchDetails() {
           size="compact"
         />
         <StatCard
-          title="Labs Assigned"
-          value={batch.assignedLabs.length}
-          icon={FlaskConical}
+          title="Total VMs"
+          value={batch.vmConfig ? batch.vmConfig.participantCount * (batch.vmConfig.vmType === "multi" ? batch.vmConfig.templates.length : 1) + batch.vmConfig.adminCount : batch.assignedLabs.length}
+          icon={Server}
           variant="info"
           size="compact"
         />
@@ -246,7 +227,7 @@ export default function BatchDetails() {
         <TabsList className="bg-muted/50 p-1">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="labs">Labs Assigned</TabsTrigger>
+          <TabsTrigger value="vms">VMs</TabsTrigger>
           <TabsTrigger value="course">Course/Program</TabsTrigger>
           <TabsTrigger value="announcements">Announcements</TabsTrigger>
           <TabsTrigger value="assessments">Assessments</TabsTrigger>
@@ -445,101 +426,8 @@ export default function BatchDetails() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="labs">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-base">Assigned Labs</CardTitle>
-                <CardDescription>Labs attached to this batch for hands-on practice</CardDescription>
-              </div>
-              <Dialog open={assignLabOpen} onOpenChange={setAssignLabOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" className="shadow-sm">
-                    <FlaskConical className="mr-2 h-4 w-4" />
-                    Attach Lab
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Assign Lab</DialogTitle>
-                    <DialogDescription>Select a lab to assign to this batch.</DialogDescription>
-                  </DialogHeader>
-                  <div className="py-4">
-                    <Label>Select Lab</Label>
-                    <Select value={selectedLabId} onValueChange={setSelectedLabId}>
-                      <SelectTrigger className="mt-2">
-                        <SelectValue placeholder="Choose a lab..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {labs.map((lab) => (
-                          <SelectItem key={lab.id} value={lab.id}>
-                            {lab.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setAssignLabOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleAssignLab}>Assign Lab</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </CardHeader>
-            <CardContent className="p-0">
-              {batch.assignedLabs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <FlaskConical className="h-12 w-12 text-muted-foreground/40 mb-4" />
-                  <h3 className="text-lg font-semibold">No labs assigned</h3>
-                  <p className="text-sm text-muted-foreground max-w-sm mt-1.5">
-                    Attach labs to this batch for hands-on practice.
-                  </p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/30 hover:bg-muted/30">
-                      <TableHead className="font-medium">Lab Name</TableHead>
-                      <TableHead className="font-medium">Type</TableHead>
-                      <TableHead className="font-medium">Duration</TableHead>
-                      <TableHead className="font-medium text-center">Completions</TableHead>
-                      <TableHead className="w-12"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {batch.assignedLabs.map((lab) => (
-                      <TableRow key={lab.id} className="table-row-premium group">
-                        <TableCell className="font-medium">{lab.name}</TableCell>
-                        <TableCell>
-                          <StatusBadge status="info" label={lab.type} dot={false} />
-                        </TableCell>
-                        <TableCell className="tabular-nums text-muted-foreground">{lab.duration}</TableCell>
-                        <TableCell className="text-center">
-                          <span className="font-medium">{lab.completions}</span>
-                          <span className="text-muted-foreground">/{batch.students.length}</span>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive"
-                            onClick={() => {
-                              removeLab(batch.id, lab.id);
-                              toast({ title: "Removed", description: "Lab removed from batch" });
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+        <TabsContent value="vms">
+          <VMsTab batch={batch} />
         </TabsContent>
 
         <TabsContent value="course">
