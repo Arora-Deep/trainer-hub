@@ -17,6 +17,27 @@ export interface AssignedLab {
   completions: number;
 }
 
+export interface BatchVMTemplate {
+  templateId: string;
+  instanceName: string;
+}
+
+export interface BatchVMConfig {
+  vmType: "single" | "multi";
+  templates: BatchVMTemplate[];
+  participantCount: number;
+  adminCount: number;
+  vmStartDate: string;
+  vmEndDate: string;
+  adminVmProvisioned: boolean;
+  adminVmCloned: boolean;
+  approvalStatus: {
+    requested: boolean;
+    cloudAdda: "pending" | "approved" | "rejected";
+    companyAdmin: "pending" | "approved" | "rejected";
+  };
+}
+
 export interface Announcement {
   id: string;
   title: string;
@@ -47,6 +68,7 @@ export interface Batch {
   students: Student[];
   assignedLabs: AssignedLab[];
   announcements: Announcement[];
+  vmConfig?: BatchVMConfig;
 }
 
 interface BatchStore {
@@ -61,6 +83,7 @@ interface BatchStore {
   removeLab: (batchId: string, labAssignmentId: string) => void;
   addAnnouncement: (batchId: string, announcement: Omit<Announcement, "id" | "date">) => void;
   setCourse: (batchId: string, courseId: string, courseName: string) => void;
+  updateVMConfig: (batchId: string, vmConfig: Partial<BatchVMConfig>) => void;
 }
 
 const determineStatus = (startDate: string, endDate: string): "upcoming" | "live" | "completed" => {
@@ -105,6 +128,17 @@ const initialBatches: Batch[] = [
       { id: "ann1", title: "Lab Schedule Update", content: "Tomorrow's lab session will start 30 minutes early.", date: "Jan 17, 2024" },
       { id: "ann2", title: "New Study Materials", content: "Additional practice tests have been uploaded to the course portal.", date: "Jan 16, 2024" },
     ],
+    vmConfig: {
+      vmType: "single",
+      templates: [{ templateId: "tpl-1", instanceName: "AWS Lab Instance" }],
+      participantCount: 25,
+      adminCount: 2,
+      vmStartDate: "2024-01-15",
+      vmEndDate: "2024-02-15",
+      adminVmProvisioned: true,
+      adminVmCloned: false,
+      approvalStatus: { requested: true, cloudAdda: "approved", companyAdmin: "approved" },
+    },
   },
   {
     id: "2",
@@ -299,6 +333,16 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     set((state) => ({
       batches: state.batches.map((b) =>
         b.id === batchId ? { ...b, courseId, courseName } : b
+      ),
+    }));
+  },
+
+  updateVMConfig: (batchId, vmConfigUpdates) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId
+          ? { ...b, vmConfig: { ...b.vmConfig!, ...vmConfigUpdates } }
+          : b
       ),
     }));
   },
