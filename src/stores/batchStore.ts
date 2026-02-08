@@ -8,6 +8,51 @@ export interface Student {
   lastActive: string;
 }
 
+export interface VMTemplateConfig {
+  templateId: string;
+  instanceName: string;
+}
+
+export interface VMInstance {
+  id: string;
+  assignedTo: string;
+  assignedEmail: string;
+  vmName: string;
+  status: "running" | "stopped" | "error" | "provisioning";
+  ipAddress: string;
+  startedAt: string;
+}
+
+export interface VMConfig {
+  id: string;
+  dateRange: { from: string; to: string };
+  vmType: "single" | "multi";
+  vmTemplates: VMTemplateConfig[];
+  trainerVM: {
+    status: "not_provisioned" | "provisioning" | "running" | "configured" | "stopped";
+    ipAddress: string;
+    provisionedAt: string;
+  };
+  studentVMs: VMInstance[];
+  cloneStatus: "not_cloned" | "cloning" | "cloned";
+  pricing: {
+    compute: number;
+    storage: number;
+    network: number;
+    support: number;
+    total: number;
+  };
+  approval: {
+    cloudAdda: "pending" | "approved" | "rejected";
+    companyAdmin: "pending" | "approved" | "rejected";
+    requested: boolean;
+  };
+  createdAt: string;
+}
+
+// Keep backward compat exports
+export interface LabConfig extends VMConfig {}
+
 export interface AssignedLab {
   id: string;
   labId: string;
@@ -15,27 +60,6 @@ export interface AssignedLab {
   type: string;
   duration: string;
   completions: number;
-}
-
-export interface BatchVMTemplate {
-  templateId: string;
-  instanceName: string;
-}
-
-export interface BatchVMConfig {
-  vmType: "single" | "multi";
-  templates: BatchVMTemplate[];
-  participantCount: number;
-  adminCount: number;
-  vmStartDate: string;
-  vmEndDate: string;
-  adminVmProvisioned: boolean;
-  adminVmCloned: boolean;
-  approvalStatus: {
-    requested: boolean;
-    cloudAdda: "pending" | "approved" | "rejected";
-    companyAdmin: "pending" | "approved" | "rejected";
-  };
 }
 
 export interface Announcement {
@@ -68,12 +92,13 @@ export interface Batch {
   students: Student[];
   assignedLabs: AssignedLab[];
   announcements: Announcement[];
-  vmConfig?: BatchVMConfig;
+  vmConfig?: VMConfig;
+  labConfigs: VMConfig[]; // kept for backward compat
 }
 
 interface BatchStore {
   batches: Batch[];
-  addBatch: (batch: Omit<Batch, "id" | "createdAt" | "status" | "students" | "assignedLabs" | "announcements">) => string;
+  addBatch: (batch: Omit<Batch, "id" | "createdAt" | "status" | "students" | "assignedLabs" | "announcements" | "labConfigs">, vmConfig?: VMConfig) => string;
   getBatch: (id: string) => Batch | undefined;
   updateBatch: (id: string, updates: Partial<Batch>) => void;
   deleteBatch: (id: string) => void;
@@ -83,7 +108,15 @@ interface BatchStore {
   removeLab: (batchId: string, labAssignmentId: string) => void;
   addAnnouncement: (batchId: string, announcement: Omit<Announcement, "id" | "date">) => void;
   setCourse: (batchId: string, courseId: string, courseName: string) => void;
-  updateVMConfig: (batchId: string, vmConfig: Partial<BatchVMConfig>) => void;
+  setVMConfig: (batchId: string, vmConfig: VMConfig) => void;
+  provisionTrainerVM: (batchId: string) => void;
+  markTrainerVMConfigured: (batchId: string) => void;
+  cloneTrainerVMForBatch: (batchId: string) => void;
+  // Legacy compat
+  addLabConfig: (batchId: string, labConfig: any) => void;
+  updateLabConfig: (batchId: string, labConfigId: string, updates: any) => void;
+  removeLabConfig: (batchId: string, labConfigId: string) => void;
+  provisionLab: (batchId: string, labConfigId: string) => void;
 }
 
 const determineStatus = (startDate: string, endDate: string): "upcoming" | "live" | "completed" => {
@@ -129,16 +162,22 @@ const initialBatches: Batch[] = [
       { id: "ann2", title: "New Study Materials", content: "Additional practice tests have been uploaded to the course portal.", date: "Jan 16, 2024" },
     ],
     vmConfig: {
+      id: "vm-1",
+      dateRange: { from: "2024-01-15", to: "2024-02-15" },
       vmType: "single",
-      templates: [{ templateId: "tpl-1", instanceName: "AWS Lab Instance" }],
-      participantCount: 25,
-      adminCount: 2,
-      vmStartDate: "2024-01-15",
-      vmEndDate: "2024-02-15",
-      adminVmProvisioned: true,
-      adminVmCloned: false,
-      approvalStatus: { requested: true, cloudAdda: "approved", companyAdmin: "approved" },
+      vmTemplates: [{ templateId: "tpl-1", instanceName: "EC2 Instance" }],
+      trainerVM: {
+        status: "configured",
+        ipAddress: "10.0.1.100",
+        provisionedAt: "2024-01-14T10:00:00Z",
+      },
+      studentVMs: [],
+      cloneStatus: "not_cloned",
+      pricing: { compute: 3125, storage: 312.5, network: 125, support: 60, total: 3622.5 },
+      approval: { cloudAdda: "approved", companyAdmin: "approved", requested: true },
+      createdAt: "Jan 10, 2024",
     },
+    labConfigs: [],
   },
   {
     id: "2",
@@ -159,6 +198,7 @@ const initialBatches: Batch[] = [
     students: [],
     assignedLabs: [],
     announcements: [],
+    labConfigs: [],
   },
   {
     id: "3",
@@ -179,6 +219,7 @@ const initialBatches: Batch[] = [
     students: [],
     assignedLabs: [],
     announcements: [],
+    labConfigs: [],
   },
   {
     id: "4",
@@ -199,6 +240,7 @@ const initialBatches: Batch[] = [
     students: [],
     assignedLabs: [],
     announcements: [],
+    labConfigs: [],
   },
   {
     id: "5",
@@ -219,6 +261,7 @@ const initialBatches: Batch[] = [
     students: [],
     assignedLabs: [],
     announcements: [],
+    labConfigs: [],
   },
   {
     id: "6",
@@ -239,13 +282,14 @@ const initialBatches: Batch[] = [
     students: [],
     assignedLabs: [],
     announcements: [],
+    labConfigs: [],
   },
 ];
 
 export const useBatchStore = create<BatchStore>((set, get) => ({
   batches: initialBatches,
 
-  addBatch: (batch) => {
+  addBatch: (batch, vmConfig) => {
     const id = Date.now().toString();
     const status = determineStatus(batch.startDate, batch.endDate);
     const newBatch: Batch = {
@@ -256,6 +300,8 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
       students: [],
       assignedLabs: [],
       announcements: [],
+      vmConfig,
+      labConfigs: [],
     };
     set((state) => ({ batches: [...state.batches, newBatch] }));
     return id;
@@ -337,13 +383,140 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     }));
   },
 
-  updateVMConfig: (batchId, vmConfigUpdates) => {
+  setVMConfig: (batchId, vmConfig) => {
     set((state) => ({
       batches: state.batches.map((b) =>
-        b.id === batchId
-          ? { ...b, vmConfig: { ...b.vmConfig!, ...vmConfigUpdates } }
+        b.id === batchId ? { ...b, vmConfig } : b
+      ),
+    }));
+  },
+
+  provisionTrainerVM: (batchId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b,
+              vmConfig: {
+                ...b.vmConfig,
+                trainerVM: {
+                  ...b.vmConfig.trainerVM,
+                  status: "provisioning" as const,
+                },
+              },
+            }
+          : b
+      ),
+    }));
+
+    // Simulate provisioning
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? {
+                ...b,
+                vmConfig: {
+                  ...b.vmConfig,
+                  trainerVM: {
+                    status: "running" as const,
+                    ipAddress: "10.0.1.100",
+                    provisionedAt: new Date().toISOString(),
+                  },
+                },
+              }
+            : b
+        ),
+      }));
+    }, 3000);
+  },
+
+  markTrainerVMConfigured: (batchId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b,
+              vmConfig: {
+                ...b.vmConfig,
+                trainerVM: {
+                  ...b.vmConfig.trainerVM,
+                  status: "configured" as const,
+                },
+              },
+            }
           : b
       ),
     }));
   },
+
+  cloneTrainerVMForBatch: (batchId) => {
+    const batch = get().batches.find((b) => b.id === batchId);
+    if (!batch?.vmConfig) return;
+
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b,
+              vmConfig: {
+                ...b.vmConfig,
+                cloneStatus: "cloning" as const,
+              },
+            }
+          : b
+      ),
+    }));
+
+    // Simulate cloning
+    setTimeout(() => {
+      const currentBatch = get().batches.find((b) => b.id === batchId);
+      if (!currentBatch?.vmConfig) return;
+
+      const studentVMs: VMInstance[] = currentBatch.students.map((student, idx) => ({
+        id: `vm-student-${Date.now()}-${idx}`,
+        assignedTo: student.name,
+        assignedEmail: student.email,
+        vmName: currentBatch.vmConfig!.vmTemplates[0]?.instanceName || "Student VM",
+        status: "running" as const,
+        ipAddress: `10.0.${Math.floor((idx + 1) / 255)}.${((idx + 1) % 255) + 1}`,
+        startedAt: new Date().toISOString(),
+      }));
+
+      // Add VMs for unassigned seats too
+      const remaining = currentBatch.seatCount - currentBatch.students.length;
+      for (let i = 0; i < Math.min(remaining, 5); i++) {
+        studentVMs.push({
+          id: `vm-unassigned-${Date.now()}-${i}`,
+          assignedTo: `Seat ${currentBatch.students.length + i + 1}`,
+          assignedEmail: "unassigned",
+          vmName: currentBatch.vmConfig!.vmTemplates[0]?.instanceName || "Student VM",
+          status: "running" as const,
+          ipAddress: `10.0.${Math.floor((currentBatch.students.length + i + 1) / 255)}.${((currentBatch.students.length + i + 1) % 255) + 1}`,
+          startedAt: new Date().toISOString(),
+        });
+      }
+
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? {
+                ...b,
+                vmConfig: {
+                  ...b.vmConfig,
+                  cloneStatus: "cloned" as const,
+                  studentVMs,
+                },
+              }
+            : b
+        ),
+      }));
+    }, 4000);
+  },
+
+  // Legacy compatibility stubs
+  addLabConfig: () => {},
+  updateLabConfig: () => {},
+  removeLabConfig: () => {},
+  provisionLab: () => {},
 }));

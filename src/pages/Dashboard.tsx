@@ -1,10 +1,9 @@
-import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { DataCard } from "@/components/ui/DataCard";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -23,14 +22,25 @@ import {
   Hammer,
   BookOpen,
   Clock,
-  Zap,
   TrendingUp,
   ArrowUpRight,
-  Sparkles,
+  BarChart3,
+  CheckCircle2,
+  XCircle,
+  MoreVertical,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+} from "recharts";
 
-// Mock data
 const upcomingBatches = [
   { id: 1, name: "AWS Solutions Architect", course: "AWS SA Pro", trainer: "John Smith", startDate: "Jan 15, 2024", students: 24 },
   { id: 2, name: "Kubernetes Fundamentals", course: "K8s Basics", trainer: "Jane Doe", startDate: "Jan 18, 2024", students: 18 },
@@ -63,150 +73,320 @@ const quickActions = [
   { label: "Start Session", icon: Play },
 ];
 
+const activityData = [
+  { time: "9:00AM", students: 32, labs: 18 },
+  { time: "10:00AM", students: 55, labs: 28 },
+  { time: "11:00AM", students: 48, labs: 32 },
+  { time: "12:00PM", students: 78, labs: 45 },
+  { time: "1:00PM", students: 65, labs: 38 },
+  { time: "2:00PM", students: 98, labs: 55 },
+  { time: "3:00PM", students: 120, labs: 68 },
+  { time: "4:00PM", students: 142, labs: 85 },
+  { time: "5:00PM", students: 118, labs: 72 },
+  { time: "6:00PM", students: 95, labs: 58 },
+];
+
+const weeklyData = [
+  { day: "S", value: 42 },
+  { day: "M", value: 78 },
+  { day: "T", value: 65 },
+  { day: "W", value: 90 },
+  { day: "T", value: 82 },
+  { day: "F", value: 110 },
+  { day: "S", value: 55 },
+];
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-lg">
+        <p className="text-xs font-medium text-foreground mb-1">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} className="text-xs text-muted-foreground">
+            {entry.name}: <span className="font-medium text-foreground">{entry.value}</span>
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function Dashboard() {
   return (
-    <div className="space-y-8 animate-in-up">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-3xl p-8 border border-border/50"
-        style={{ 
-          background: "var(--gradient-primary-soft)",
-          boxShadow: "var(--shadow-card)"
-        }}
-      >
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="h-10 w-10 rounded-xl flex items-center justify-center"
-              style={{ background: "var(--gradient-primary)" }}
-            >
-              <Sparkles className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-sm font-semibold text-primary">Welcome back</span>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">
-            Good morning, John! 👋
-          </h1>
-          <p className="text-muted-foreground text-base max-w-xl">
-            Here's what's happening with your training sessions today. You have 3 batches scheduled and 4 active labs running.
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Good morning, John</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Here's what's happening with your training sessions today.
           </p>
         </div>
-        {/* Decorative elements */}
-        <div className="absolute -top-20 -right-20 h-60 w-60 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-primary/5 blur-2xl" />
-      </div>
-
-      {/* Stats Row */}
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Students Online"
-          value={142}
-          icon={Users}
-          description="Across all batches"
-          trend={{ value: 12, isPositive: true }}
-          variant="primary"
-        />
-        <StatCard
-          title="Active Labs"
-          value={38}
-          icon={FlaskConical}
-          description="Running right now"
-          variant="success"
-        />
-        <StatCard
-          title="Upcoming Batches"
-          value={8}
-          icon={Calendar}
-          description="This month"
-          variant="info"
-        />
-        <StatCard
-          title="Active Alerts"
-          value={3}
-          icon={AlertTriangle}
-          description="Needs attention"
-          variant="warning"
-        />
-      </div>
-
-      {/* Quick Actions */}
-      <Card className="border-dashed border-2 border-primary/20 bg-gradient-to-r from-primary/5 via-transparent to-primary/5">
-        <CardContent className="py-5">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2.5 mr-2">
-              <div className="h-9 w-9 rounded-xl flex items-center justify-center"
-                style={{ background: "var(--gradient-primary-soft)" }}
+        <div className="flex items-center gap-2">
+          {quickActions.map((action) => (
+            action.href ? (
+              <Button
+                key={action.label}
+                variant={action.primary ? "default" : "outline"}
+                size="sm"
+                asChild
               >
-                <Zap className="h-4 w-4 text-primary" />
-              </div>
-              <span className="text-sm font-semibold text-foreground">Quick actions</span>
-            </div>
-            {quickActions.map((action) => (
-              action.href ? (
-                <Button 
-                  key={action.label}
-                  variant={action.primary ? "default" : "outline"} 
-                  size="sm"
-                  className={action.primary ? "btn-gradient rounded-xl" : "rounded-xl hover:border-primary/30"}
-                  asChild
-                >
-                  <Link to={action.href}>
-                    <action.icon className="mr-2 h-4 w-4" />
-                    {action.label}
-                  </Link>
-                </Button>
-              ) : (
-                <Button 
-                  key={action.label}
-                  variant="outline" 
-                  size="sm"
-                  className="rounded-xl hover:border-primary/30"
-                >
-                  <action.icon className="mr-2 h-4 w-4" />
+                <Link to={action.href}>
+                  <action.icon className="mr-1.5 h-4 w-4" />
                   {action.label}
-                </Button>
-              )
-            ))}
+                </Link>
+              </Button>
+            ) : (
+              <Button key={action.label} variant="outline" size="sm">
+                <action.icon className="mr-1.5 h-4 w-4" />
+                {action.label}
+              </Button>
+            )
+          ))}
+        </div>
+      </div>
+
+      {/* Top Stats Row – 3 columns like reference */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* Students Card – Big number with sub-metrics */}
+        <Card className="p-6">
+          <div className="flex items-start justify-between mb-6">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Students Online
+            </p>
+            <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1 text-muted-foreground">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
           </div>
-        </CardContent>
+          <p className="text-5xl font-bold tracking-tight tabular-nums">
+            142
+          </p>
+          <div className="mt-3 flex items-center gap-1.5">
+            <span className="text-xs font-medium text-success">+23.8%</span>
+            <span className="text-xs text-muted-foreground">more students than last week.</span>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-border flex items-center gap-8">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold tabular-nums">96</span>
+              <div className="flex flex-col">
+                <span className="flex items-center gap-1 text-[10px] font-medium text-success">
+                  <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                  ACTIVE
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold tabular-nums">46</span>
+              <div className="flex flex-col">
+                <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+                  IDLE
+                </span>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Labs Card – Rating style with weekly bar chart */}
+        <Card className="p-6">
+          <div className="flex items-start justify-between mb-6">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Lab Utilization
+            </p>
+            <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1 text-muted-foreground">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <p className="text-5xl font-bold tracking-tight tabular-nums">
+              4.6
+            </p>
+            <span className="text-lg text-muted-foreground">/5</span>
+          </div>
+          <div className="mt-2 flex items-center gap-1.5">
+            <span className="text-xs font-medium text-success">+0.3</span>
+            <span className="text-xs text-muted-foreground">points from last week.</span>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-border">
+            <div className="h-16">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyData} barCategoryGap="20%">
+                  <XAxis 
+                    dataKey="day" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  />
+                  <Bar 
+                    dataKey="value" 
+                    fill="hsl(var(--primary))" 
+                    radius={[3, 3, 0, 0]}
+                    opacity={0.7}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </Card>
+
+        {/* Batch Status Card – Donut-style breakdown */}
+        <Card className="p-6">
+          <div className="flex items-start justify-between mb-6">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Batch Overview
+            </p>
+            <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1 text-muted-foreground">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/10">
+                <CheckCircle2 className="h-5 w-5 text-success" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Active Batches</p>
+                <p className="text-xs text-muted-foreground">Currently running</p>
+              </div>
+              <span className="text-2xl font-bold tabular-nums">12</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-warning/10">
+                <Calendar className="h-5 w-5 text-warning" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Upcoming</p>
+                <p className="text-xs text-muted-foreground">Scheduled this month</p>
+              </div>
+              <span className="text-2xl font-bold tabular-nums">8</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                <XCircle className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Completed</p>
+                <p className="text-xs text-muted-foreground">Last 30 days</p>
+              </div>
+              <span className="text-2xl font-bold tabular-nums">24</span>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Activity Chart – Full width, prominent like reference */}
+      <Card className="p-6">
+        <div className="flex items-start justify-between mb-2">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Activity Overview
+            </p>
+            <div className="flex items-baseline gap-3 mt-2">
+              <span className="text-4xl font-bold tracking-tight tabular-nums">142</span>
+              <span className="text-sm text-muted-foreground">Students Today</span>
+              <span className="flex items-center gap-1.5 ml-2 text-[11px] font-medium text-success">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
+                </span>
+                Live
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-5">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-primary" />
+              <span className="text-xs text-muted-foreground">Students</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-success" />
+              <span className="text-xs text-muted-foreground">Labs</span>
+            </div>
+          </div>
+        </div>
+        <div className="h-64 mt-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={activityData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="gradStudents" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(211, 100%, 50%)" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="hsl(211, 100%, 50%)" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gradLabs" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0.2} />
+                  <stop offset="100%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="time"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+              />
+              <YAxis 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} 
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Area
+                type="monotone"
+                dataKey="students"
+                name="Students"
+                stroke="hsl(211, 100%, 50%)"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#gradStudents)"
+              />
+              <Area
+                type="monotone"
+                dataKey="labs"
+                name="Active Labs"
+                stroke="hsl(142, 71%, 45%)"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#gradLabs)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       </Card>
 
-      {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Bottom Grid */}
+      <div className="grid gap-4 lg:grid-cols-2">
         {/* Upcoming Batches */}
-        <DataCard 
-          title="Upcoming Batches" 
+        <DataCard
+          title="Upcoming Batches"
           icon={Calendar}
           action={{ label: "View all", href: "/batches" }}
           noPadding
         >
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/50">
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Batch Name</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Trainer</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Start Date</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground text-right">Students</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs font-medium text-muted-foreground">Batch</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Trainer</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Start</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground text-right">Students</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {upcomingBatches.map((batch) => (
-                <TableRow key={batch.id} className="table-row-premium border-b border-border/30 last:border-0">
+                <TableRow key={batch.id} className="group">
                   <TableCell>
-                    <Link 
-                      to={`/batches/${batch.id}`} 
-                      className="font-medium hover:text-primary transition-colors flex items-center gap-1 group"
+                    <Link
+                      to={`/batches/${batch.id}`}
+                      className="text-sm font-medium text-foreground hover:text-primary transition-colors"
                     >
                       {batch.name}
-                      <ArrowUpRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </Link>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{batch.trainer}</TableCell>
-                  <TableCell className="text-muted-foreground tabular-nums">{batch.startDate}</TableCell>
-                  <TableCell className="text-right">
-                    <span className="inline-flex items-center gap-1.5 font-semibold tabular-nums">
-                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                      {batch.students}
-                    </span>
-                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{batch.trainer}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground tabular-nums">{batch.startDate}</TableCell>
+                  <TableCell className="text-sm text-right tabular-nums font-medium">{batch.students}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -214,13 +394,16 @@ export default function Dashboard() {
         </DataCard>
 
         {/* Active Labs */}
-        <DataCard 
+        <DataCard
           title="Active Labs"
           icon={FlaskConical}
           action={{ label: "View all", href: "/labs" }}
           badge={
-            <span className="flex items-center gap-1.5 text-xs text-success font-semibold px-2 py-1 rounded-full bg-success/10">
-              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+            <span className="flex items-center gap-1.5 text-[11px] font-medium text-success">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
+              </span>
               Live
             </span>
           }
@@ -228,18 +411,18 @@ export default function Dashboard() {
         >
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/50">
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Student</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Lab</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Status</TableHead>
-                <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground text-right">Time Left</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs font-medium text-muted-foreground">Student</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Lab</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground text-right">Time Left</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {activeLabs.map((lab) => (
-                <TableRow key={lab.id} className="table-row-premium border-b border-border/30 last:border-0">
-                  <TableCell className="font-medium">{lab.student}</TableCell>
-                  <TableCell className="text-muted-foreground">{lab.lab}</TableCell>
+                <TableRow key={lab.id}>
+                  <TableCell className="text-sm font-medium">{lab.student}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{lab.lab}</TableCell>
                   <TableCell>
                     <StatusBadge
                       status={lab.status === "running" ? "success" : lab.status === "idle" ? "warning" : "error"}
@@ -247,9 +430,9 @@ export default function Dashboard() {
                       pulse={lab.status === "running"}
                     />
                   </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                  <TableCell className="text-sm text-right tabular-nums text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5" />
+                      <Clock className="h-3 w-3" />
                       {lab.timeRemaining}
                     </span>
                   </TableCell>
@@ -259,71 +442,56 @@ export default function Dashboard() {
           </Table>
         </DataCard>
 
-        {/* Alerts & Issues */}
-        <DataCard 
-          title="Alerts & Issues"
+        {/* Alerts */}
+        <DataCard
+          title="Alerts"
           icon={AlertTriangle}
           badge={
-            <span className="rounded-full bg-destructive/15 px-2.5 py-1 text-[11px] font-semibold text-destructive">
+            <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-medium text-destructive">
               {alerts.length} new
             </span>
           }
         >
-          <div className="space-y-3">
+          <div className="space-y-2">
             {alerts.map((alert) => (
               <div
                 key={alert.id}
-                className="flex items-start gap-3 rounded-xl border border-border/50 p-4 hover:bg-muted/30 hover:border-border transition-all cursor-pointer group"
+                className="flex items-start gap-3 rounded-lg border border-border p-3 hover:bg-muted/50 transition-colors cursor-pointer"
               >
-                <div className="mt-0.5 shrink-0">
-                  <span
-                    className={`flex h-2.5 w-2.5 rounded-full ${
-                      alert.type === "error"
-                        ? "bg-destructive"
-                        : alert.type === "warning"
-                        ? "bg-warning"
-                        : "bg-info"
-                    }`}
-                  />
-                </div>
+                <span
+                  className={`mt-1.5 flex h-2 w-2 shrink-0 rounded-full ${
+                    alert.type === "error"
+                      ? "bg-destructive"
+                      : alert.type === "warning"
+                      ? "bg-warning"
+                      : "bg-info"
+                  }`}
+                />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground leading-snug font-medium group-hover:text-primary transition-colors">
-                    {alert.message}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">{alert.time}</p>
+                  <p className="text-sm text-foreground">{alert.message}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{alert.time}</p>
                 </div>
-                <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             ))}
           </div>
         </DataCard>
 
         {/* Course Progress */}
-        <DataCard 
-          title="Course Progress"
-          icon={TrendingUp}
-          action={{ label: "View all", href: "/courses" }}
-        >
-          <div className="space-y-6">
+        <DataCard title="Course Progress" icon={TrendingUp} action={{ label: "View all", href: "/courses" }}>
+          <div className="space-y-5">
             {courseProgress.map((course, index) => (
-              <div key={index} className="space-y-3">
+              <div key={index} className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="rounded-xl p-2.5" style={{ background: "var(--gradient-primary-soft)" }}>
-                      <BookOpen className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="text-sm font-semibold truncate block">{course.name}</span>
-                      <span className="text-xs text-muted-foreground">{course.students} students</span>
-                    </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{course.name}</p>
+                    <p className="text-xs text-muted-foreground">{course.students} students</p>
                   </div>
-                  <span className="text-lg font-bold tabular-nums text-foreground">{course.progress}%</span>
+                  <span className="text-sm font-semibold tabular-nums">{course.progress}%</span>
                 </div>
-                <ProgressBar 
-                  value={course.progress} 
+                <ProgressBar
+                  value={course.progress}
                   size="default"
                   variant={course.progress >= 80 ? "success" : course.progress >= 50 ? "primary" : "warning"}
-                  animated
                 />
               </div>
             ))}
