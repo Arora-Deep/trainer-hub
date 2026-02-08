@@ -8,8 +8,11 @@ import {
   HelpCircle,
   Settings,
   ChevronLeft,
-  GraduationCap,
   ExternalLink,
+  LayoutDashboard,
+  Monitor,
+  Headphones,
+  Cog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -21,15 +24,15 @@ import {
 } from "@/components/ui/tooltip";
 
 const navItems = [
-  { title: "Dashboard", icon: Home, path: "/" },
+  { title: "Dashboard", icon: LayoutDashboard, path: "/" },
   { title: "Batches", icon: Users, path: "/batches" },
-  { title: "Labs", icon: FlaskConical, path: "/labs" },
+  { title: "Labs", icon: Monitor, path: "/labs" },
   { title: "LMS", icon: BookOpen, path: "https://lms.cloudadda.com", external: true },
 ];
 
 const bottomNavItems = [
-  { title: "Support", icon: HelpCircle, path: "/support" },
-  { title: "Settings", icon: Settings, path: "/settings" },
+  { title: "Support", icon: Headphones, path: "/support" },
+  { title: "Settings", icon: Cog, path: "/settings" },
 ];
 
 export function AppSidebar() {
@@ -48,8 +51,8 @@ export function AppSidebar() {
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
-            "group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors",
-            "text-muted-foreground hover:bg-muted hover:text-foreground",
+            "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
+            "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             collapsed && "justify-center px-2.5"
           )}
         >
@@ -57,7 +60,7 @@ export function AppSidebar() {
           {!collapsed && (
             <>
               <span className="truncate flex-1">{item.title}</span>
-              <ExternalLink className="h-3 w-3 opacity-50" />
+              <ExternalLink className="h-3 w-3 opacity-40" />
             </>
           )}
         </a>
@@ -80,10 +83,10 @@ export function AppSidebar() {
       <NavLink
         to={item.path}
         className={cn(
-          "group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors",
+          "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
           isActive
-            ? "bg-primary text-primary-foreground"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            ? "bg-coral text-coral-foreground shadow-md shadow-coral/20"
+            : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
           collapsed && "justify-center px-2.5"
         )}
       >
@@ -115,28 +118,39 @@ export function AppSidebar() {
     <TooltipProvider>
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 flex h-screen flex-col bg-sidebar border-r border-sidebar-border transition-all duration-200",
+          "fixed left-0 top-0 z-40 flex h-screen flex-col bg-sidebar transition-all duration-200",
           collapsed ? "w-[68px]" : "w-[240px]"
         )}
       >
         {/* Logo */}
         <div className={cn(
-          "flex h-14 items-center border-b border-sidebar-border px-4 gap-3",
+          "flex h-16 items-center px-4 gap-3",
           collapsed && "justify-center px-3"
         )}>
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shrink-0">
-            <GraduationCap className="h-4 w-4 text-primary-foreground" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-coral shrink-0 shadow-lg shadow-coral/20">
+            <span className="text-coral-foreground font-bold text-sm">CA</span>
           </div>
           {!collapsed && (
-            <span className="font-semibold text-sidebar-foreground text-sm tracking-tight">
-              Trainer Portal
-            </span>
+            <div className="flex flex-col">
+              <span className="font-semibold text-sidebar-accent-foreground text-sm tracking-tight">
+                CloudAdda
+              </span>
+              <span className="text-[10px] text-sidebar-foreground/50 font-medium">
+                Trainer Portal
+              </span>
+            </div>
           )}
         </div>
 
         {/* Main Navigation */}
-        <nav className="flex-1 p-2 overflow-y-auto scrollbar-thin">
-          <div className="space-y-0.5">
+        <nav className="flex-1 px-3 pt-4 overflow-y-auto scrollbar-thin">
+          <p className={cn(
+            "text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/30 mb-3",
+            collapsed && "text-center"
+          )}>
+            {collapsed ? "•" : "Menu"}
+          </p>
+          <div className="space-y-1">
             {navItems.map((item) => (
               <NavItem key={item.path} item={item} />
             ))}
@@ -144,14 +158,20 @@ export function AppSidebar() {
         </nav>
 
         {/* Bottom Navigation */}
-        <div className="border-t border-sidebar-border p-2 space-y-0.5">
+        <div className="px-3 pb-2 space-y-1">
+          <p className={cn(
+            "text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/30 mb-3",
+            collapsed && "text-center"
+          )}>
+            {collapsed ? "•" : "System"}
+          </p>
           {bottomNavItems.map((item) => (
             <NavItem key={item.path} item={item} />
           ))}
         </div>
 
         {/* Collapse Button */}
-        <div className="border-t border-sidebar-border p-2">
+        <div className="px-3 py-3">
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <Button
@@ -159,7 +179,7 @@ export function AppSidebar() {
                 size="sm"
                 onClick={() => setCollapsed(!collapsed)}
                 className={cn(
-                  "w-full text-muted-foreground hover:text-foreground h-8",
+                  "w-full text-sidebar-foreground/40 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent h-8 rounded-xl",
                   collapsed ? "justify-center px-2" : "justify-between px-3"
                 )}
               >
