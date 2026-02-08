@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 250 30% 97%;
+    --background: 0 0% 98%;
     --foreground: 260 10% 12%;
 
     --card: 255 25% 99%;
@@ -120,19 +120,21 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     background-image: 
-      radial-gradient(ellipse 80% 60% at 10% 0%, hsl(270 60% 85% / 0.7) 0%, transparent 60%),
-      radial-gradient(ellipse 70% 50% at 90% 20%, hsl(240 50% 88% / 0.6) 0%, transparent 55%),
-      radial-gradient(ellipse 60% 80% at 70% 90%, hsl(260 55% 82% / 0.5) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 30% 60%, hsl(280 40% 90% / 0.4) 0%, transparent 50%);
+      radial-gradient(ellipse 70% 55% at 5% -10%, hsl(270 80% 72% / 0.45) 0%, transparent 65%),
+      radial-gradient(ellipse 50% 45% at 95% 15%, hsl(220 75% 68% / 0.35) 0%, transparent 60%),
+      radial-gradient(ellipse 55% 70% at 75% 95%, hsl(260 70% 74% / 0.4) 0%, transparent 60%),
+      radial-gradient(ellipse 45% 35% at 25% 65%, hsl(290 65% 70% / 0.3) 0%, transparent 55%),
+      radial-gradient(ellipse 40% 30% at 50% 35%, hsl(240 60% 78% / 0.25) 0%, transparent 50%);
     background-attachment: fixed;
   }
 
   .dark body {
     background-image: 
-      radial-gradient(ellipse 80% 60% at 10% 0%, hsl(270 50% 18% / 0.8) 0%, transparent 60%),
-      radial-gradient(ellipse 70% 50% at 90% 20%, hsl(240 45% 15% / 0.6) 0%, transparent 55%),
-      radial-gradient(ellipse 60% 80% at 70% 90%, hsl(260 50% 14% / 0.5) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 30% 60%, hsl(280 40% 12% / 0.4) 0%, transparent 50%);
+      radial-gradient(ellipse 70% 55% at 5% -10%, hsl(270 60% 25% / 0.6) 0%, transparent 65%),
+      radial-gradient(ellipse 50% 45% at 95% 15%, hsl(220 55% 20% / 0.45) 0%, transparent 60%),
+      radial-gradient(ellipse 55% 70% at 75% 95%, hsl(260 55% 22% / 0.5) 0%, transparent 60%),
+      radial-gradient(ellipse 45% 35% at 25% 65%, hsl(290 50% 18% / 0.35) 0%, transparent 55%),
+      radial-gradient(ellipse 40% 30% at 50% 35%, hsl(240 45% 16% / 0.3) 0%, transparent 50%);
     background-attachment: fixed;
   }
 
