@@ -24,7 +24,6 @@ import {
 const navItems = [
   { title: "Dashboard", icon: Home, path: "/" },
   { title: "Batches", icon: Users, path: "/batches" },
-  { title: "Labs", icon: FlaskConical, path: "/labs" },
   { title: "LMS", icon: BookOpen, path: "https://lms.cloudadda.com", external: true },
 ];
 
