@@ -39,8 +39,8 @@ export const DataCard = React.forwardRef<HTMLDivElement, DataCardProps>(
         <CardHeader className="flex flex-row items-center justify-between pb-4">
           <div className="flex items-center gap-2.5">
             {Icon && (
-              <div className="rounded-lg bg-muted p-2">
-                <Icon className="h-4 w-4 text-muted-foreground" />
+              <div className="rounded-lg bg-primary/10 p-2">
+                <Icon className="h-4 w-4 text-primary" />
               </div>
             )}
             <CardTitle className="text-sm font-semibold">{title}</CardTitle>
