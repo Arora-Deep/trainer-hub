@@ -26,6 +26,7 @@ import {
   ChevronRight,
   Download,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Link, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -99,26 +100,31 @@ export default function Batches() {
       {/* Summary */}
       <div className="grid gap-3 sm:grid-cols-4">
         {[
-          { label: "Total", value: batches.length },
-          { label: "Live", value: filterCounts.live, live: true },
-          { label: "Upcoming", value: filterCounts.upcoming },
-          { label: "Completed", value: filterCounts.completed },
+          { label: "Total", value: batches.length, accent: "from-primary/30 to-primary/5", iconBg: "bg-primary/10", iconColor: "text-primary" },
+          { label: "Live", value: filterCounts.live, live: true, accent: "from-success/30 to-success/5", iconBg: "bg-success/10", iconColor: "text-success" },
+          { label: "Upcoming", value: filterCounts.upcoming, accent: "from-warning/30 to-warning/5", iconBg: "bg-warning/10", iconColor: "text-warning" },
+          { label: "Completed", value: filterCounts.completed, accent: "from-muted-foreground/20 to-muted-foreground/5", iconBg: "bg-muted/60", iconColor: "text-muted-foreground" },
         ].map((stat) => (
           <div
             key={stat.label}
-            className="rounded-xl border border-border bg-card p-4"
+            className="relative rounded-2xl border border-black/[0.06] bg-white/25 backdrop-blur-2xl p-4 overflow-hidden transition-all duration-300 hover:bg-white/30 hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] dark:border-white/[0.06] dark:bg-white/[0.04] dark:hover:bg-white/[0.06]"
             style={{ boxShadow: "var(--shadow-card)" }}
           >
+            <div className={cn("absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r", stat.accent)} />
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
                 <p className="text-2xl font-semibold mt-0.5 tabular-nums">{stat.value}</p>
               </div>
-              {stat.live && stat.value > 0 && (
+              {stat.live && stat.value > 0 ? (
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
                   <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-success" />
                 </span>
+              ) : (
+                <div className={cn("rounded-lg p-2", stat.iconBg)}>
+                  <Users className={cn("h-4 w-4", stat.iconColor)} />
+                </div>
               )}
             </div>
           </div>
@@ -263,7 +269,7 @@ export default function Batches() {
           {filteredBatches.map((batch) => (
             <Card
               key={batch.id}
-              className="cursor-pointer hover:border-border transition-colors"
+              className="cursor-pointer group hover:border-primary/20 transition-all duration-300"
               onClick={() => navigate(`/batches/${batch.id}`)}
             >
               <CardContent className="p-4">
