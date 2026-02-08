@@ -6,26 +6,26 @@
 
 @layer base {
   :root {
-    --background: 260 25% 10%;
-    --foreground: 0 0% 95%;
+    --background: 0 0% 98%;
+    --foreground: 260 25% 15%;
 
-    --card: 260 20% 16%;
-    --card-foreground: 0 0% 95%;
+    --card: 0 0% 100%;
+    --card-foreground: 260 25% 15%;
 
-    --popover: 260 20% 14%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 260 25% 15%;
 
-    --primary: 265 60% 58%;
+    --primary: 265 70% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 260 18% 18%;
-    --secondary-foreground: 0 0% 90%;
+    --secondary: 260 20% 94%;
+    --secondary-foreground: 260 25% 20%;
 
-    --muted: 260 15% 18%;
-    --muted-foreground: 260 10% 60%;
+    --muted: 260 15% 93%;
+    --muted-foreground: 260 10% 45%;
 
-    --accent: 265 35% 22%;
-    --accent-foreground: 265 50% 80%;
+    --accent: 265 40% 92%;
+    --accent-foreground: 265 50% 40%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
@@ -36,27 +36,27 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --info: 265 60% 58%;
+    --info: 265 70% 55%;
     --info-foreground: 0 0% 100%;
 
-    --border: 260 15% 22%;
-    --input: 260 15% 20%;
-    --ring: 265 60% 58%;
+    --border: 260 15% 88%;
+    --input: 260 15% 90%;
+    --ring: 265 70% 55%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 260 25% 10%;
+    --sidebar-background: 260 30% 18%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 265 60% 58%;
+    --sidebar-primary: 265 70% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 265 35% 22%;
+    --sidebar-accent: 265 35% 25%;
     --sidebar-accent-foreground: 265 50% 80%;
-    --sidebar-border: 260 15% 22%;
-    --sidebar-ring: 265 60% 58%;
+    --sidebar-border: 260 20% 25%;
+    --sidebar-ring: 265 70% 60%;
 
-    --shadow-card: 0 0 0 1px rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.3);
-    --shadow-card-hover: 0 0 0 1px rgba(255,255,255,0.1), 0 8px 24px rgba(0,0,0,0.4);
-    --shadow-elevated: 0 0 0 1px rgba(255,255,255,0.08), 0 12px 36px rgba(0,0,0,0.5);
+    --shadow-card: 0 2px 12px rgba(120,80,180,0.08), 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-card-hover: 0 8px 28px rgba(120,80,180,0.12), 0 2px 6px rgba(0,0,0,0.08);
+    --shadow-elevated: 0 12px 40px rgba(120,80,180,0.15), 0 4px 12px rgba(0,0,0,0.1);
   }
 
   .dark {
@@ -120,12 +120,12 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     background-image: 
-      radial-gradient(ellipse 90% 70% at 5% -10%, hsl(280 70% 30% / 0.6) 0%, transparent 50%),
-      radial-gradient(ellipse 60% 50% at 95% 10%, hsl(220 60% 25% / 0.5) 0%, transparent 45%),
-      radial-gradient(ellipse 70% 60% at 60% 100%, hsl(270 50% 22% / 0.5) 0%, transparent 50%),
-      radial-gradient(ellipse 50% 50% at 30% 50%, hsl(300 40% 18% / 0.3) 0%, transparent 45%),
-      radial-gradient(circle at 20% 80%, hsl(250 60% 28% / 0.35) 0%, transparent 35%),
-      radial-gradient(circle at 80% 60%, hsl(265 50% 20% / 0.25) 0%, transparent 30%);
+      radial-gradient(ellipse 80% 60% at 10% 0%, hsl(270 80% 75% / 0.35) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 50% at 90% 5%, hsl(230 70% 65% / 0.3) 0%, transparent 45%),
+      radial-gradient(ellipse 70% 60% at 50% 100%, hsl(280 60% 70% / 0.25) 0%, transparent 50%),
+      radial-gradient(ellipse 50% 40% at 30% 50%, hsl(300 50% 80% / 0.2) 0%, transparent 45%),
+      radial-gradient(circle at 15% 75%, hsl(250 70% 72% / 0.2) 0%, transparent 35%),
+      radial-gradient(circle at 85% 65%, hsl(265 60% 78% / 0.15) 0%, transparent 30%);
     background-attachment: fixed;
   }
 

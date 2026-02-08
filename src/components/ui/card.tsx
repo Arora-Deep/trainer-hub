@@ -7,11 +7,11 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
     <div
       ref={ref}
       className={cn(
-        "rounded-2xl border border-white/[0.08] bg-white/[0.05] text-card-foreground backdrop-blur-xl dark:border-white/[0.06] dark:bg-white/[0.04]",
+        "rounded-2xl border border-white/20 bg-white/40 text-card-foreground backdrop-blur-2xl dark:border-white/[0.06] dark:bg-white/[0.04]",
         className
       )}
       style={{
-        boxShadow: "0 0 0 1px rgba(255,255,255,0.05), 0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08)",
+        boxShadow: "0 4px 24px rgba(120,80,180,0.08), 0 1px 3px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.4)",
         ...style,
       }}
       {...props}
