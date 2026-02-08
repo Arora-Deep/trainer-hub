@@ -6,28 +6,28 @@
 
 @layer base {
   :root {
-    --background: 250 30% 97%;
-    --foreground: 260 10% 12%;
+    --background: 260 25% 10%;
+    --foreground: 0 0% 95%;
 
-    --card: 255 25% 99%;
-    --card-foreground: 260 10% 12%;
+    --card: 260 20% 16%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 255 25% 99%;
-    --popover-foreground: 260 10% 12%;
+    --popover: 260 20% 14%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 260 50% 44%;
+    --primary: 265 60% 58%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 255 20% 95%;
-    --secondary-foreground: 260 10% 12%;
+    --secondary: 260 18% 18%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 255 20% 95%;
-    --muted-foreground: 260 10% 45%;
+    --muted: 260 15% 18%;
+    --muted-foreground: 260 10% 60%;
 
-    --accent: 260 40% 96%;
-    --accent-foreground: 260 50% 30%;
+    --accent: 265 35% 22%;
+    --accent-foreground: 265 50% 80%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
     --success: 142 71% 45%;
@@ -36,50 +36,50 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --info: 260 50% 44%;
+    --info: 265 60% 58%;
     --info-foreground: 0 0% 100%;
 
-    --border: 255 15% 90%;
-    --input: 255 15% 90%;
-    --ring: 260 50% 44%;
+    --border: 260 15% 22%;
+    --input: 260 15% 20%;
+    --ring: 265 60% 58%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 250 25% 97%;
-    --sidebar-foreground: 260 10% 12%;
-    --sidebar-primary: 260 50% 44%;
+    --sidebar-background: 260 25% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 265 60% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 260 40% 95%;
-    --sidebar-accent-foreground: 260 50% 30%;
-    --sidebar-border: 255 15% 90%;
-    --sidebar-ring: 260 50% 44%;
+    --sidebar-accent: 265 35% 22%;
+    --sidebar-accent-foreground: 265 50% 80%;
+    --sidebar-border: 260 15% 22%;
+    --sidebar-ring: 265 60% 58%;
 
-    --shadow-card: 0 0 0 1px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-card-hover: 0 0 0 1px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.06);
-    --shadow-elevated: 0 0 0 1px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.08);
+    --shadow-card: 0 0 0 1px rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-card-hover: 0 0 0 1px rgba(255,255,255,0.1), 0 8px 24px rgba(0,0,0,0.4);
+    --shadow-elevated: 0 0 0 1px rgba(255,255,255,0.08), 0 12px 36px rgba(0,0,0,0.5);
   }
 
   .dark {
-    --background: 0 0% 6%;
+    --background: 260 30% 7%;
     --foreground: 0 0% 96%;
 
-    --card: 0 0% 10%;
+    --card: 260 25% 12%;
     --card-foreground: 0 0% 96%;
 
-    --popover: 0 0% 10%;
+    --popover: 260 25% 10%;
     --popover-foreground: 0 0% 96%;
 
-    --primary: 260 50% 60%;
+    --primary: 265 65% 62%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 14%;
+    --secondary: 260 20% 14%;
     --secondary-foreground: 0 0% 96%;
 
-    --muted: 0 0% 14%;
+    --muted: 260 18% 14%;
     --muted-foreground: 0 0% 55%;
 
-    --accent: 260 30% 18%;
-    --accent-foreground: 260 40% 80%;
+    --accent: 265 30% 18%;
+    --accent-foreground: 265 45% 80%;
 
     --destructive: 0 62% 55%;
     --destructive-foreground: 0 0% 100%;
@@ -90,25 +90,25 @@
     --warning: 38 92% 55%;
     --warning-foreground: 0 0% 100%;
 
-    --info: 260 50% 60%;
+    --info: 265 65% 62%;
     --info-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 260 50% 60%;
+    --border: 260 18% 18%;
+    --input: 260 18% 18%;
+    --ring: 265 65% 62%;
 
-    --sidebar-background: 0 0% 8%;
+    --sidebar-background: 260 30% 7%;
     --sidebar-foreground: 0 0% 96%;
-    --sidebar-primary: 260 50% 60%;
+    --sidebar-primary: 265 65% 62%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 260 30% 18%;
-    --sidebar-accent-foreground: 260 40% 80%;
-    --sidebar-border: 0 0% 16%;
-    --sidebar-ring: 260 50% 60%;
+    --sidebar-accent: 265 30% 18%;
+    --sidebar-accent-foreground: 265 45% 80%;
+    --sidebar-border: 260 18% 16%;
+    --sidebar-ring: 265 65% 62%;
 
-    --shadow-card: 0 0 0 1px rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.3);
-    --shadow-card-hover: 0 0 0 1px rgba(255,255,255,0.08), 0 4px 12px rgba(0,0,0,0.4);
-    --shadow-elevated: 0 0 0 1px rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.5);
+    --shadow-card: 0 0 0 1px rgba(255,255,255,0.04), 0 2px 8px rgba(0,0,0,0.4);
+    --shadow-card-hover: 0 0 0 1px rgba(255,255,255,0.08), 0 8px 24px rgba(0,0,0,0.5);
+    --shadow-elevated: 0 0 0 1px rgba(255,255,255,0.06), 0 12px 36px rgba(0,0,0,0.6);
   }
 }
 
@@ -120,19 +120,23 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     background-image: 
-      radial-gradient(ellipse 80% 60% at 10% 0%, hsl(270 60% 85% / 0.7) 0%, transparent 60%),
-      radial-gradient(ellipse 70% 50% at 90% 20%, hsl(240 50% 88% / 0.6) 0%, transparent 55%),
-      radial-gradient(ellipse 60% 80% at 70% 90%, hsl(260 55% 82% / 0.5) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 30% 60%, hsl(280 40% 90% / 0.4) 0%, transparent 50%);
+      radial-gradient(ellipse 90% 70% at 5% -10%, hsl(280 70% 30% / 0.6) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 50% at 95% 10%, hsl(220 60% 25% / 0.5) 0%, transparent 45%),
+      radial-gradient(ellipse 70% 60% at 60% 100%, hsl(270 50% 22% / 0.5) 0%, transparent 50%),
+      radial-gradient(ellipse 50% 50% at 30% 50%, hsl(300 40% 18% / 0.3) 0%, transparent 45%),
+      radial-gradient(circle at 20% 80%, hsl(250 60% 28% / 0.35) 0%, transparent 35%),
+      radial-gradient(circle at 80% 60%, hsl(265 50% 20% / 0.25) 0%, transparent 30%);
     background-attachment: fixed;
   }
 
   .dark body {
     background-image: 
-      radial-gradient(ellipse 80% 60% at 10% 0%, hsl(270 50% 18% / 0.8) 0%, transparent 60%),
-      radial-gradient(ellipse 70% 50% at 90% 20%, hsl(240 45% 15% / 0.6) 0%, transparent 55%),
-      radial-gradient(ellipse 60% 80% at 70% 90%, hsl(260 50% 14% / 0.5) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 30% 60%, hsl(280 40% 12% / 0.4) 0%, transparent 50%);
+      radial-gradient(ellipse 90% 70% at 5% -10%, hsl(280 65% 22% / 0.7) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 50% at 95% 10%, hsl(220 55% 18% / 0.6) 0%, transparent 45%),
+      radial-gradient(ellipse 70% 60% at 60% 100%, hsl(270 50% 16% / 0.5) 0%, transparent 50%),
+      radial-gradient(ellipse 50% 50% at 30% 50%, hsl(300 40% 12% / 0.4) 0%, transparent 45%),
+      radial-gradient(circle at 20% 80%, hsl(250 55% 20% / 0.4) 0%, transparent 35%),
+      radial-gradient(circle at 80% 60%, hsl(265 45% 14% / 0.3) 0%, transparent 30%);
     background-attachment: fixed;
   }
 
