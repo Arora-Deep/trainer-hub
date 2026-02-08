@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Users,
-  Plus,
   Monitor,
   TrendingUp,
   TrendingDown,
@@ -10,14 +9,14 @@ import {
   CalendarDays,
   CreditCard,
   Layers,
-  CheckCircle2,
   Circle,
-  Clock,
   Mail,
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
-  ExternalLink,
+  CheckCircle2,
+  Clock,
+  Activity,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -48,10 +47,10 @@ const recentEmails = [
 ];
 
 const todoItems = [
-  { label: "Run payroll", due: "Mar 4 at 6:00 pm", done: false },
-  { label: "Review time off request", due: "Mar 7 at 6:00 pm", done: false },
-  { label: "Sign board resolution", due: "Mar 12 at 6:00 pm", done: false },
-  { label: "Finish onboarding Tony", due: "Mar 12 at 6:00 pm", done: false },
+  { label: "Run payroll", due: "Mar 4 at 6:00 pm", done: false, icon: CreditCard },
+  { label: "Review time off request", due: "Mar 7 at 6:00 pm", done: false, icon: Clock },
+  { label: "Sign board resolution", due: "Mar 12 at 6:00 pm", done: false, icon: CheckCircle2 },
+  { label: "Finish onboarding Tony", due: "Mar 12 at 6:00 pm", done: false, icon: Users },
 ];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -71,26 +70,22 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 // Circular icon with dotted border
-function CircleIcon({ icon: Icon, variant = "default" }: { icon: any; variant?: string }) {
-  const colors: Record<string, string> = {
-    default: "text-foreground",
-    coral: "text-coral",
-    primary: "text-primary",
-    success: "text-success",
-  };
-
+function CircleIcon({ icon: Icon, color }: { icon: any; color: string }) {
   return (
-    <div className="relative flex items-center justify-center w-12 h-12">
-      <svg className="absolute inset-0 w-12 h-12" viewBox="0 0 48 48">
+    <div className="relative flex items-center justify-center w-14 h-14">
+      <svg className="absolute inset-0 w-14 h-14" viewBox="0 0 56 56">
         <circle
-          cx="24" cy="24" r="21"
+          cx="28" cy="28" r="25"
           fill="none"
-          stroke="hsl(var(--border))"
+          stroke={color}
           strokeWidth="1.5"
           strokeDasharray="4 3"
+          opacity={0.4}
         />
       </svg>
-      <Icon className={`h-5 w-5 ${colors[variant] || colors.default}`} />
+      <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: `${color}12` }}>
+        <Icon className="h-4.5 w-4.5" style={{ color }} />
+      </div>
     </div>
   );
 }
@@ -100,17 +95,17 @@ export default function Dashboard() {
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Greeting Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">
-          {greeting}, Admin!
+          {greeting}, James!
         </h1>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl">
+          <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl bg-card border-border/60">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl">
+          <Button variant="outline" size="icon" className="h-8 w-8 rounded-xl bg-card border-border/60">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -118,21 +113,21 @@ export default function Dashboard() {
 
       {/* Top Row: Stats + Formation Status */}
       <div className="grid grid-cols-12 gap-5">
-        {/* 4 Stat Cards */}
+        {/* 4 Stat Cards in one unified card */}
         <div className="col-span-8">
-          <Card className="p-1.5">
+          <Card className="p-2">
             <div className="grid grid-cols-4 divide-x divide-border/40">
               {[
-                { icon: CreditCard, label: "Monthly Revenue", value: "$143,624", variant: "default" },
-                { icon: Layers, label: "Active Batches", value: "12", variant: "coral" },
-                { icon: Users, label: "Students Online", value: "7", variant: "primary" },
-                { icon: Monitor, label: "VM Spend (MTD)", value: "$3,287.49", variant: "success" },
+                { icon: CreditCard, label: "Your bank balance", value: "$143,624", color: "hsl(var(--foreground))" },
+                { icon: Layers, label: "Uncategorised transactions", value: "12", color: "hsl(var(--primary))" },
+                { icon: Users, label: "Employees working today", value: "7", color: "hsl(var(--primary))" },
+                { icon: Monitor, label: "This week's card spending", value: "$3,287.49", color: "hsl(var(--foreground))" },
               ].map((stat) => (
-                <div key={stat.label} className="flex items-center gap-3.5 px-5 py-4">
-                  <CircleIcon icon={stat.icon} variant={stat.variant} />
+                <div key={stat.label} className="flex items-center gap-3 px-4 py-3">
+                  <CircleIcon icon={stat.icon} color={stat.color} />
                   <div className="min-w-0">
                     <p className="text-xl font-bold tracking-tight tabular-nums">{stat.value}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">{stat.label}</p>
                   </div>
                 </div>
               ))}
@@ -145,28 +140,17 @@ export default function Dashboard() {
           <Card className="p-5 h-full flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">System Status</h3>
-                <span className="text-[10px] font-semibold text-success bg-success/10 px-2.5 py-1 rounded-full">
-                  Operational
+                <h3 className="text-sm font-semibold">Formation status</h3>
+                <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                  In progress
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                All services running normally
+              <p className="text-xs text-muted-foreground mt-3">
+                Estimated processing
               </p>
+              <p className="text-sm font-bold mt-0.5">4–6 business days</p>
             </div>
-            <div className="mt-3">
-              <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-                <span>Uptime</span>
-                <span className="font-semibold text-foreground">99.9%</span>
-              </div>
-              <div className="h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ width: "99.9%", background: "var(--gradient-coral)" }}
-                />
-              </div>
-            </div>
-            <Button variant="outline" size="sm" className="mt-3 w-full text-xs">
+            <Button variant="outline" size="sm" className="mt-4 w-full text-xs rounded-xl">
               View status
             </Button>
           </Card>
@@ -177,11 +161,11 @@ export default function Dashboard() {
       <div className="grid grid-cols-12 gap-5">
         {/* Left: Two small metric cards */}
         <div className="col-span-3 flex flex-col gap-5">
-          {/* New Enrollments */}
+          {/* New Clients */}
           <Card className="p-5 flex-1">
-            <p className="text-xs font-medium text-muted-foreground mb-3">New Enrollments</p>
+            <p className="text-xs font-medium text-muted-foreground mb-3">New clients</p>
             <div className="flex items-baseline gap-2.5">
-              <span className="text-4xl font-bold tracking-tight tabular-nums">54</span>
+              <span className="text-4xl font-extrabold tracking-tight tabular-nums">54</span>
               <span className="flex items-center gap-0.5 text-xs font-semibold text-success bg-success/10 px-2 py-0.5 rounded-full">
                 <TrendingUp className="h-3 w-3" />
                 18.7%
@@ -189,12 +173,12 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          {/* VMs Provisioned */}
+          {/* Invoices Overdue */}
           <Card className="p-5 flex-1">
-            <p className="text-xs font-medium text-muted-foreground mb-3">VMs Provisioned</p>
+            <p className="text-xs font-medium text-muted-foreground mb-3">Invoices overdue</p>
             <div className="flex items-baseline gap-2.5">
-              <span className="text-4xl font-bold tracking-tight tabular-nums">6</span>
-              <span className="flex items-center gap-0.5 text-xs font-semibold text-coral bg-coral/10 px-2 py-0.5 rounded-full">
+              <span className="text-4xl font-extrabold tracking-tight tabular-nums">6</span>
+              <span className="flex items-center gap-0.5 text-xs font-semibold text-destructive bg-destructive/10 px-2 py-0.5 rounded-full">
                 <TrendingDown className="h-3 w-3" />
                 2.7%
               </span>
@@ -206,7 +190,7 @@ export default function Dashboard() {
         <div className="col-span-5">
           <Card className="p-5 h-full">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold">Usage</h3>
+              <h3 className="text-sm font-semibold">Revenue</h3>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-foreground" />
@@ -223,7 +207,7 @@ export default function Dashboard() {
                 <AreaChart data={revenueData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gradCurrent" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity={0.08} />
+                      <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity={0.06} />
                       <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
@@ -261,7 +245,7 @@ export default function Dashboard() {
                     fillOpacity={1}
                     fill="url(#gradCurrent)"
                     dot={false}
-                    activeDot={{ r: 4, strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                    activeDot={{ r: 4, strokeWidth: 2, stroke: "hsl(var(--card))" }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -274,11 +258,11 @@ export default function Dashboard() {
           {/* To-Do List */}
           <Card className="p-5 flex-1">
             <h3 className="text-sm font-semibold mb-3">Your to-Do list</h3>
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {todoItems.map((item, i) => (
-                <div key={i} className="flex items-start gap-2.5 group">
-                  <div className="mt-0.5 flex-shrink-0">
-                    <Circle className="h-4 w-4 text-coral" />
+                <div key={i} className="flex items-start gap-3 group">
+                  <div className="mt-0.5 flex-shrink-0 w-7 h-7 rounded-full bg-primary/8 flex items-center justify-center">
+                    <item.icon className="h-3.5 w-3.5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium leading-tight">{item.label}</p>
@@ -289,23 +273,26 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          {/* Upcoming Session */}
-          <Card className="p-5 bg-sidebar text-sidebar-foreground" style={{ background: "var(--gradient-sidebar)" }}>
+          {/* Board Meeting */}
+          <Card 
+            className="p-5 text-white border-0"
+            style={{ background: "var(--gradient-sidebar)" }}
+          >
             <div className="flex items-center gap-2 mb-2">
-              <CalendarDays className="h-4 w-4 text-coral" />
-              <h3 className="text-sm font-semibold text-sidebar-accent-foreground">Board meeting</h3>
+              <h3 className="text-sm font-semibold">Board meeting</h3>
             </div>
-            <p className="text-xs text-sidebar-foreground/70">
-              Feb 22 at 6:00 PM
-            </p>
-            <p className="text-[11px] text-sidebar-foreground/50 mt-1">
+            <div className="flex items-center gap-2 text-white/80 mb-2">
+              <CalendarDays className="h-3.5 w-3.5" />
+              <span className="text-xs font-medium">Feb 22 at 6:00 PM</span>
+            </div>
+            <p className="text-[11px] text-white/50 leading-relaxed">
               You have been invited to attend a meeting of the Board of Directors.
             </p>
           </Card>
         </div>
       </div>
 
-      {/* Bottom: Recent Activity */}
+      {/* Bottom: Recent Emails */}
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold">Recent emails</h3>
@@ -320,7 +307,7 @@ export default function Dashboard() {
               key={i}
               className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group"
             >
-              <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-xs font-semibold text-muted-foreground flex-shrink-0">
+              <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary flex-shrink-0">
                 {email.avatar}
               </div>
               <div className="flex-1 min-w-0">

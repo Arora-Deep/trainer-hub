@@ -11,7 +11,7 @@ interface StatCardProps {
     value: number;
     isPositive: boolean;
   };
-  variant?: "default" | "primary" | "success" | "warning" | "info" | "coral";
+  variant?: "default" | "primary" | "success" | "warning" | "info" | "teal" | "coral";
   size?: "default" | "compact";
   className?: string;
 }
@@ -22,7 +22,7 @@ const variantIconStyles: Record<string, string> = {
   success: "icon-container-success",
   warning: "icon-container",
   info: "icon-container-primary",
-  coral: "icon-container-coral",
+  teal: "icon-container-teal",
 };
 
 const variantIconColors: Record<string, string> = {
@@ -31,7 +31,7 @@ const variantIconColors: Record<string, string> = {
   success: "text-success",
   warning: "text-warning",
   info: "text-info",
-  coral: "text-coral",
+  teal: "text-teal",
 };
 
 export const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
