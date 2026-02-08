@@ -221,12 +221,4 @@
   .text-balance {
     text-wrap: balance;
   }
-
-  /* Table row hover for glass cards */
-  .table-row-premium {
-    @apply transition-colors duration-200;
-  }
-  .table-row-premium:hover {
-    background: hsl(var(--muted) / 0.3);
-  }
 }

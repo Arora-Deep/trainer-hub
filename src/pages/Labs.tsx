@@ -150,7 +150,7 @@ export default function Labs() {
               <CardContent className="p-0">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/20 hover:bg-muted/20 border-b border-border/50">
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
                       <TableHead className="font-medium">Lab Name</TableHead>
                       <TableHead className="font-medium">Template</TableHead>
                       <TableHead className="font-medium">Batch</TableHead>
@@ -229,7 +229,7 @@ export default function Labs() {
               <CardContent className="p-0">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/20 hover:bg-muted/20 border-b border-border/50">
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
                       <TableHead className="font-medium">Template Name</TableHead>
                       <TableHead className="font-medium">Type</TableHead>
                       <TableHead className="font-medium">OS Version</TableHead>

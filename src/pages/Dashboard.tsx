@@ -147,48 +147,41 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Top Stats Row – 3 columns */}
+      {/* Top Stats Row – 3 columns like reference */}
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* Students Card */}
-        <Card className="relative overflow-hidden p-6">
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/40 to-primary/5" />
+        {/* Students Card – Big number with sub-metrics */}
+        <Card className="p-6">
           <div className="flex items-start justify-between mb-6">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Students Online
             </p>
-            <div className="rounded-xl bg-primary/10 p-2.5">
-              <Users className="h-4 w-4 text-primary" />
-            </div>
+            <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1 text-muted-foreground">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
           </div>
           <p className="text-5xl font-bold tracking-tight tabular-nums">
             142
           </p>
           <div className="mt-3 flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
-              <TrendingUp className="h-3 w-3" />
-              +23.8%
-            </span>
-            <span className="text-xs text-muted-foreground">vs last week</span>
+            <span className="text-xs font-medium text-success">+23.8%</span>
+            <span className="text-xs text-muted-foreground">more students than last week.</span>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-border/50 flex items-center gap-8">
-            <div className="flex items-center gap-2.5">
+          <div className="mt-6 pt-4 border-t border-border flex items-center gap-8">
+            <div className="flex items-center gap-2">
               <span className="text-2xl font-bold tabular-nums">96</span>
               <div className="flex flex-col">
                 <span className="flex items-center gap-1 text-[10px] font-medium text-success">
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
-                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
-                  </span>
+                  <span className="h-1.5 w-1.5 rounded-full bg-success" />
                   ACTIVE
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-2.5">
-              <span className="text-2xl font-bold tabular-nums text-muted-foreground">46</span>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold tabular-nums">46</span>
               <div className="flex flex-col">
                 <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
-                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
                   IDLE
                 </span>
               </div>
@@ -196,32 +189,28 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Labs Card */}
-        <Card className="relative overflow-hidden p-6">
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-success/40 to-success/5" />
+        {/* Labs Card – Rating style with weekly bar chart */}
+        <Card className="p-6">
           <div className="flex items-start justify-between mb-6">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Lab Utilization
             </p>
-            <div className="rounded-xl bg-success/10 p-2.5">
-              <FlaskConical className="h-4 w-4 text-success" />
-            </div>
+            <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1 text-muted-foreground">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
           </div>
           <div className="flex items-baseline gap-2">
             <p className="text-5xl font-bold tracking-tight tabular-nums">
               4.6
             </p>
-            <span className="text-lg text-muted-foreground font-medium">/5</span>
+            <span className="text-lg text-muted-foreground">/5</span>
           </div>
-          <div className="mt-3 flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
-              <TrendingUp className="h-3 w-3" />
-              +0.3
-            </span>
-            <span className="text-xs text-muted-foreground">points from last week</span>
+          <div className="mt-2 flex items-center gap-1.5">
+            <span className="text-xs font-medium text-success">+0.3</span>
+            <span className="text-xs text-muted-foreground">points from last week.</span>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-border/50">
+          <div className="mt-6 pt-4 border-t border-border">
             <div className="h-16">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={weeklyData} barCategoryGap="20%">
@@ -233,9 +222,9 @@ export default function Dashboard() {
                   />
                   <Bar 
                     dataKey="value" 
-                    fill="hsl(var(--success))" 
+                    fill="hsl(var(--primary))" 
                     radius={[3, 3, 0, 0]}
-                    opacity={0.6}
+                    opacity={0.7}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -243,45 +232,44 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Batch Overview */}
-        <Card className="relative overflow-hidden p-6">
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-warning/40 to-warning/5" />
+        {/* Batch Status Card – Donut-style breakdown */}
+        <Card className="p-6">
           <div className="flex items-start justify-between mb-6">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Batch Overview
             </p>
-            <div className="rounded-xl bg-warning/10 p-2.5">
-              <Calendar className="h-4 w-4 text-warning" />
-            </div>
+            <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1 text-muted-foreground">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
           </div>
-          <div className="space-y-3.5">
-            <div className="flex items-center gap-3 rounded-xl bg-success/5 border border-success/10 p-3 transition-colors hover:bg-success/10">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/15">
-                <CheckCircle2 className="h-4 w-4 text-success" />
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/10">
+                <CheckCircle2 className="h-5 w-5 text-success" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">Active Batches</p>
-                <p className="text-[11px] text-muted-foreground">Currently running</p>
+                <p className="text-xs text-muted-foreground">Currently running</p>
               </div>
               <span className="text-2xl font-bold tabular-nums">12</span>
             </div>
-            <div className="flex items-center gap-3 rounded-xl bg-warning/5 border border-warning/10 p-3 transition-colors hover:bg-warning/10">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-warning/15">
-                <Calendar className="h-4 w-4 text-warning" />
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-warning/10">
+                <Calendar className="h-5 w-5 text-warning" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">Upcoming</p>
-                <p className="text-[11px] text-muted-foreground">Scheduled this month</p>
+                <p className="text-xs text-muted-foreground">Scheduled this month</p>
               </div>
               <span className="text-2xl font-bold tabular-nums">8</span>
             </div>
-            <div className="flex items-center gap-3 rounded-xl bg-muted/30 border border-border/50 p-3 transition-colors hover:bg-muted/50">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted/60">
-                <XCircle className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                <XCircle className="h-5 w-5 text-muted-foreground" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">Completed</p>
-                <p className="text-[11px] text-muted-foreground">Last 30 days</p>
+                <p className="text-xs text-muted-foreground">Last 30 days</p>
               </div>
               <span className="text-2xl font-bold tabular-nums">24</span>
             </div>
@@ -290,8 +278,7 @@ export default function Dashboard() {
       </div>
 
       {/* Activity Chart – Full width, prominent like reference */}
-      <Card className="relative overflow-hidden p-6">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-info/30 to-transparent" />
+      <Card className="p-6">
         <div className="flex items-start justify-between mb-2">
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -469,7 +456,7 @@ export default function Dashboard() {
             {alerts.map((alert) => (
               <div
                 key={alert.id}
-                className="flex items-start gap-3 rounded-xl border border-border/50 bg-muted/20 p-3 hover:bg-muted/40 transition-all duration-200 cursor-pointer"
+                className="flex items-start gap-3 rounded-lg border border-border p-3 hover:bg-muted/50 transition-colors cursor-pointer"
               >
                 <span
                   className={`mt-1.5 flex h-2 w-2 shrink-0 rounded-full ${
