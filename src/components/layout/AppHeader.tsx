@@ -14,33 +14,41 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 
 export function AppHeader() {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    // Default to light mode; respect saved preference
+    const saved = localStorage.getItem("theme");
+    return saved === "dark";
+  });
 
   useEffect(() => {
-    const isDarkMode = document.documentElement.classList.contains('dark');
-    setIsDark(isDarkMode);
-  }, []);
+    // Apply theme on mount
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDark]);
 
   const toggleTheme = () => {
-    document.documentElement.classList.toggle('dark');
-    setIsDark(!isDark);
+    const newDark = !isDark;
+    setIsDark(newDark);
+    localStorage.setItem("theme", newDark ? "dark" : "light");
+    if (newDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-[60px] items-center justify-between border-b border-border/40 px-6"
-      style={{
-        background: "hsl(var(--background) / 0.75)",
-        backdropFilter: "blur(16px) saturate(180%)",
-        WebkitBackdropFilter: "blur(16px) saturate(180%)",
-      }}
-    >
+    <header className="sticky top-0 z-30 flex h-[60px] items-center justify-between border-b border-border/40 bg-card/80 backdrop-blur-xl px-6">
       {/* Search */}
       <div className="relative w-full max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
         <Input
           type="search"
           placeholder="Search anything..."
-          className="pl-9 pr-14 h-9 bg-card/60 border-border/50 rounded-xl text-sm placeholder:text-muted-foreground/50 focus:bg-card focus:border-primary/30 transition-all duration-200"
+          className="pl-9 pr-14 h-9 bg-background/60 border-border/50 rounded-xl text-sm placeholder:text-muted-foreground/50 focus:bg-card focus:border-primary/30 transition-all duration-200"
         />
         <div className="absolute right-2.5 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-muted/60 border border-border/50">
           <Command className="h-3 w-3 text-muted-foreground/60" />
@@ -67,7 +75,7 @@ export function AppHeader() {
               className="relative h-9 w-9 text-muted-foreground/70 hover:text-foreground rounded-xl"
             >
               <Bell className="h-4 w-4" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-coral ring-2 ring-card" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80 rounded-xl">
