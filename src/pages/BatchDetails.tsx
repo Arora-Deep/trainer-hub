@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { StatCard } from "@/components/ui/StatCard";
@@ -50,17 +49,6 @@ import {
   Megaphone,
   Trash2,
   Plus,
-  Server,
-  DollarSign,
-  Eye,
-  Shield,
-  CheckCircle2,
-  Loader2,
-  Monitor,
-  Cpu,
-  HardDrive,
-  Zap,
-  ArrowUpRight,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -69,13 +57,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useBatchStore, type LabConfig } from "@/stores/batchStore";
+import { useBatchStore } from "@/stores/batchStore";
 import { useCourseStore } from "@/stores/courseStore";
 import { useLabStore } from "@/stores/labStore";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { LabConfigCard } from "@/components/labs/LabConfigCard";
-import { InstanceMonitorGrid } from "@/components/labs/InstanceMonitorGrid";
 
 const statusMap: Record<string, { status: "success" | "warning" | "primary" | "default"; label: string }> = {
   upcoming: { status: "primary", label: "Upcoming" },
@@ -86,9 +72,9 @@ const statusMap: Record<string, { status: "success" | "warning" | "primary" | "d
 export default function BatchDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getBatch, addStudent, removeStudent, assignLab, removeLab, addAnnouncement, setCourse, updateLabConfig, provisionLab } = useBatchStore();
+  const { getBatch, addStudent, removeStudent, assignLab, removeLab, addAnnouncement, setCourse } = useBatchStore();
   const { courses } = useCourseStore();
-  const { labs, templates } = useLabStore();
+  const { labs } = useLabStore();
 
   const batch = getBatch(id || "");
 
@@ -460,243 +446,100 @@ export default function BatchDetails() {
         </TabsContent>
 
         <TabsContent value="labs">
-          <div className="space-y-6">
-            {/* Lab Stats Overview */}
-            {batch.labConfigs.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="grid grid-cols-2 md:grid-cols-4 gap-4"
-              >
-                <div className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                  <div className="flex items-center gap-2 text-primary mb-1">
-                    <FlaskConical className="h-4 w-4" />
-                    <span className="text-xs font-semibold uppercase tracking-wide">Labs</span>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-base">Assigned Labs</CardTitle>
+                <CardDescription>Labs attached to this batch for hands-on practice</CardDescription>
+              </div>
+              <Dialog open={assignLabOpen} onOpenChange={setAssignLabOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="shadow-sm">
+                    <FlaskConical className="mr-2 h-4 w-4" />
+                    Attach Lab
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Assign Lab</DialogTitle>
+                    <DialogDescription>Select a lab to assign to this batch.</DialogDescription>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <Label>Select Lab</Label>
+                    <Select value={selectedLabId} onValueChange={setSelectedLabId}>
+                      <SelectTrigger className="mt-2">
+                        <SelectValue placeholder="Choose a lab..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {labs.map((lab) => (
+                          <SelectItem key={lab.id} value={lab.id}>
+                            {lab.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <p className="text-3xl font-bold text-primary">{batch.labConfigs.length}</p>
-                </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-success/10 to-success/5 border border-success/20">
-                  <div className="flex items-center gap-2 text-success mb-1">
-                    <Zap className="h-4 w-4" />
-                    <span className="text-xs font-semibold uppercase tracking-wide">Active</span>
-                  </div>
-                  <p className="text-3xl font-bold text-success">{batch.labConfigs.filter(l => l.status === "active").length}</p>
-                </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/50">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <Server className="h-4 w-4" />
-                    <span className="text-xs font-semibold uppercase tracking-wide">Total VMs</span>
-                  </div>
-                  <p className="text-3xl font-bold">
-                    {batch.labConfigs.reduce((sum, l) => {
-                      const vms = (l.vmType === "multi" ? l.vmTemplates.length : 1) * l.participantCount + l.adminCount;
-                      return sum + vms;
-                    }, 0)}
-                  </p>
-                </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-warning/10 to-warning/5 border border-warning/20">
-                  <div className="flex items-center gap-2 text-warning mb-1">
-                    <DollarSign className="h-4 w-4" />
-                    <span className="text-xs font-semibold uppercase tracking-wide">Total Cost</span>
-                  </div>
-                  <p className="text-3xl font-bold text-warning">
-                    ${batch.labConfigs.reduce((sum, l) => sum + l.pricing.total, 0).toFixed(0)}
-                  </p>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Lab Configurations */}
-            <Card className="glass-card border-white/10 overflow-hidden">
-              <div className="h-1 bg-gradient-to-r from-primary via-primary/60 to-transparent" />
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5">
-                      <FlaskConical className="h-5 w-5 text-primary" />
-                    </div>
-                    Lab Configurations
-                  </CardTitle>
-                  <CardDescription>Manage and provision lab environments for this batch</CardDescription>
-                </div>
-                <Button size="sm" className="shadow-sm bg-gradient-to-r from-primary to-primary/80" onClick={() => navigate(`/batches/create`)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Lab Config
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {batch.labConfigs.length === 0 ? (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex flex-col items-center justify-center py-16 text-center"
-                  >
-                    <div className="p-4 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 mb-4">
-                      <FlaskConical className="h-12 w-12 text-muted-foreground/40" />
-                    </div>
-                    <h3 className="text-lg font-semibold">No labs configured</h3>
-                    <p className="text-sm text-muted-foreground max-w-sm mt-1.5 mb-4">
-                      Create lab configurations when setting up the batch or add them later.
-                    </p>
-                    <Button variant="outline" onClick={() => navigate(`/batches/create`)}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Configure Labs
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setAssignLabOpen(false)}>
+                      Cancel
                     </Button>
-                  </motion.div>
-                ) : (
-                  <div className="space-y-4">
-                    <AnimatePresence mode="popLayout">
-                      {batch.labConfigs.map((labConfig) => (
-                        <LabConfigCard
-                          key={labConfig.id}
-                          labConfig={labConfig}
-                          templates={templates}
-                          onProvision={() => {
-                            provisionLab(batch.id, labConfig.id);
-                            toast({ title: "Provisioning Started", description: "Lab instances are being provisioned..." });
-                          }}
-                          onViewInstances={() => {
-                            // Could open a dialog with InstanceMonitorGrid
-                            toast({ title: "View Instances", description: `Viewing ${labConfig.instances.length} instances` });
-                          }}
-                          onDelete={() => {
-                            // Could add a remove function
-                            toast({ title: "Not Implemented", description: "Delete functionality coming soon" });
-                          }}
-                          variant="detailed"
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Active Lab Instances Monitor */}
-            {batch.labConfigs.some(l => l.status === "active" && l.instances.length > 0) && (
-              <Card className="glass-card border-white/10 overflow-hidden">
-                <div className="h-1 bg-gradient-to-r from-success via-success/60 to-transparent" />
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <div className="p-2 rounded-xl bg-gradient-to-br from-success/20 to-success/5">
-                      <Monitor className="h-5 w-5 text-success" />
-                    </div>
-                    Live Instance Monitor
-                  </CardTitle>
-                  <CardDescription>Real-time overview of all running lab instances</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {batch.labConfigs
-                    .filter(l => l.status === "active" && l.instances.length > 0)
-                    .map((labConfig) => (
-                      <div key={labConfig.id} className="mb-6 last:mb-0">
-                        <div className="flex items-center gap-2 mb-4">
-                          <FlaskConical className="h-4 w-4 text-primary" />
-                          <span className="font-semibold">{labConfig.name}</span>
-                          <StatusBadge status="success" label="Active" pulse />
-                        </div>
-                        <InstanceMonitorGrid
-                          instances={labConfig.instances}
-                          labName={labConfig.name}
-                          onStartInstance={(id) => toast({ title: "Starting", description: `Starting instance ${id}` })}
-                          onStopInstance={(id) => toast({ title: "Stopping", description: `Stopping instance ${id}` })}
-                          onRestartInstance={(id) => toast({ title: "Restarting", description: `Restarting instance ${id}` })}
-                          onConnectInstance={(id) => toast({ title: "Connecting", description: `Opening connection to ${id}` })}
-                        />
-                      </div>
-                    ))}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Legacy Assigned Labs (backward compatibility) */}
-            {batch.assignedLabs.length > 0 && (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base">Assigned Labs (Legacy)</CardTitle>
-                    <CardDescription>Previously attached lab templates</CardDescription>
-                  </div>
-                  <Dialog open={assignLabOpen} onOpenChange={setAssignLabOpen}>
-                    <DialogTrigger asChild>
-                      <Button size="sm" variant="outline">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Attach Lab
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Assign Lab</DialogTitle>
-                        <DialogDescription>Select a lab to assign to this batch.</DialogDescription>
-                      </DialogHeader>
-                      <div className="py-4">
-                        <Label>Select Lab</Label>
-                        <Select value={selectedLabId} onValueChange={setSelectedLabId}>
-                          <SelectTrigger className="mt-2">
-                            <SelectValue placeholder="Choose a lab..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {labs.map((lab) => (
-                              <SelectItem key={lab.id} value={lab.id}>
-                                {lab.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setAssignLabOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button onClick={handleAssignLab}>Assign Lab</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/30 hover:bg-muted/30">
-                        <TableHead className="font-medium">Lab Name</TableHead>
-                        <TableHead className="font-medium">Type</TableHead>
-                        <TableHead className="font-medium">Duration</TableHead>
-                        <TableHead className="font-medium text-center">Completions</TableHead>
-                        <TableHead className="w-12"></TableHead>
+                    <Button onClick={handleAssignLab}>Assign Lab</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent className="p-0">
+              {batch.assignedLabs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <FlaskConical className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                  <h3 className="text-lg font-semibold">No labs assigned</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mt-1.5">
+                    Attach labs to this batch for hands-on practice.
+                  </p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead className="font-medium">Lab Name</TableHead>
+                      <TableHead className="font-medium">Type</TableHead>
+                      <TableHead className="font-medium">Duration</TableHead>
+                      <TableHead className="font-medium text-center">Completions</TableHead>
+                      <TableHead className="w-12"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {batch.assignedLabs.map((lab) => (
+                      <TableRow key={lab.id} className="table-row-premium group">
+                        <TableCell className="font-medium">{lab.name}</TableCell>
+                        <TableCell>
+                          <StatusBadge status="info" label={lab.type} dot={false} />
+                        </TableCell>
+                        <TableCell className="tabular-nums text-muted-foreground">{lab.duration}</TableCell>
+                        <TableCell className="text-center">
+                          <span className="font-medium">{lab.completions}</span>
+                          <span className="text-muted-foreground">/{batch.students.length}</span>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive"
+                            onClick={() => {
+                              removeLab(batch.id, lab.id);
+                              toast({ title: "Removed", description: "Lab removed from batch" });
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {batch.assignedLabs.map((lab) => (
-                        <TableRow key={lab.id} className="table-row-premium group">
-                          <TableCell className="font-medium">{lab.name}</TableCell>
-                          <TableCell>
-                            <StatusBadge status="info" label={lab.type} dot={false} />
-                          </TableCell>
-                          <TableCell className="tabular-nums text-muted-foreground">{lab.duration}</TableCell>
-                          <TableCell className="text-center">
-                            <span className="font-medium">{lab.completions}</span>
-                            <span className="text-muted-foreground">/{batch.students.length}</span>
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive"
-                              onClick={() => {
-                                removeLab(batch.id, lab.id);
-                                toast({ title: "Removed", description: "Lab removed from batch" });
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="course">
