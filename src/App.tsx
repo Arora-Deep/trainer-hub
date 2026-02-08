@@ -12,6 +12,22 @@ import Labs from "./pages/Labs";
 import LabDetails from "./pages/LabDetails";
 import CreateLabTemplate from "./pages/CreateLabTemplate";
 import CreateLab from "./pages/CreateLab";
+import Courses from "./pages/Courses";
+import CourseDetails from "./pages/CourseDetails";
+import CreateCourse from "./pages/CreateCourse";
+import Programs from "./pages/Programs";
+import CreateProgram from "./pages/CreateProgram";
+import Certifications from "./pages/Certifications";
+import CreateCertification from "./pages/CreateCertification";
+import CertificationDetails from "./pages/CertificationDetails";
+import EditCertification from "./pages/EditCertification";
+import Quizzes from "./pages/Quizzes";
+import CreateQuiz from "./pages/CreateQuiz";
+import Assignments from "./pages/Assignments";
+import CreateAssignment from "./pages/CreateAssignment";
+import Exercises from "./pages/Exercises";
+import CreateExercise from "./pages/CreateExercise";
+import ExerciseDetails from "./pages/ExerciseDetails";
 import Support from "./pages/Support";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -34,6 +50,24 @@ const App = () => (
             <Route path="/labs/create" element={<CreateLab />} />
             <Route path="/labs/create-template" element={<CreateLabTemplate />} />
             <Route path="/labs/:id" element={<LabDetails />} />
+            <Route path="/courses" element={<Courses />} />
+            <Route path="/courses/create" element={<CreateCourse />} />
+            <Route path="/courses/:id" element={<CourseDetails />} />
+            <Route path="/programs" element={<Programs />} />
+            <Route path="/programs/create" element={<CreateProgram />} />
+            <Route path="/programs/:id" element={<Programs />} />
+            <Route path="/certifications" element={<Certifications />} />
+            <Route path="/certifications/create" element={<CreateCertification />} />
+            <Route path="/certifications/:id" element={<CertificationDetails />} />
+            <Route path="/certifications/:id/edit" element={<EditCertification />} />
+            <Route path="/quizzes" element={<Quizzes />} />
+            <Route path="/quizzes/create" element={<CreateQuiz />} />
+            <Route path="/assignments" element={<Assignments />} />
+            <Route path="/assignments/create" element={<CreateAssignment />} />
+            <Route path="/exercises" element={<Exercises />} />
+            <Route path="/exercises/create" element={<CreateExercise />} />
+            <Route path="/exercises/:id" element={<ExerciseDetails />} />
+            <Route path="/exercises/:id/edit" element={<CreateExercise />} />
             <Route path="/support" element={<Support />} />
             <Route path="/settings" element={<Settings />} />
           </Route>

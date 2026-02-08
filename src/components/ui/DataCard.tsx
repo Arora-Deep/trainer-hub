@@ -35,41 +35,41 @@ export const DataCard = React.forwardRef<HTMLDivElement, DataCardProps>(
     ref
   ) {
     return (
-      <Card ref={ref} className={cn("overflow-hidden", className)}>
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
-          <div className="flex items-center gap-2.5">
+      <Card ref={ref} className={cn("data-card-premium overflow-hidden", className)}>
+        <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-border/50">
+          <div className="flex items-center gap-3">
             {Icon && (
-              <div className="rounded-lg bg-muted p-2">
-                <Icon className="h-4 w-4 text-muted-foreground" />
+              <div className="rounded-xl p-2.5" style={{ background: "var(--gradient-primary-soft)" }}>
+                <Icon className="h-4 w-4 text-primary" />
               </div>
             )}
-            <CardTitle className="text-sm font-semibold">{title}</CardTitle>
+            <CardTitle className="text-base font-semibold">{title}</CardTitle>
             {badge}
           </div>
           {action && (
             <Button
               variant="ghost"
               size="sm"
-              className="text-muted-foreground hover:text-foreground gap-1 -mr-2 text-xs"
+              className="text-muted-foreground hover:text-primary gap-1.5 -mr-2 rounded-lg"
               asChild={!!action.href}
               onClick={action.onClick}
             >
               {action.href ? (
                 <Link to={action.href}>
                   {action.label}
-                  <ArrowRight className="h-3 w-3" />
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               ) : (
                 <>
                   {action.label}
-                  <ArrowRight className="h-3 w-3" />
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </>
               )}
             </Button>
           )}
         </CardHeader>
         <CardContent className={cn(
-          noPadding ? "p-0" : "pt-0",
+          noPadding ? "p-0" : "pt-4",
           contentClassName
         )}>
           {children}

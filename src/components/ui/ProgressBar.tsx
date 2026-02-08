@@ -41,7 +41,7 @@ export const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
           <div
             className={cn(
               "h-full rounded-full transition-all duration-700 ease-out relative",
-              variant === "primary" && "bg-primary",
+              variant === "primary" && "progress-gradient",
               variant === "success" && "bg-success",
               variant === "warning" && "bg-warning",
               variant === "info" && "bg-info",
