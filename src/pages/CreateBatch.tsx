@@ -334,26 +334,23 @@ export default function CreateBatch() {
 
         {/* Step 2: Schedule & Settings */}
         {currentStep === 2 && (
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-6">
+            {/* Calendar Section */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-primary" />
-                  Date and Time
-                </CardTitle>
-                <CardDescription>Set the batch schedule</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    {dateRange.from && dateRange.to
-                      ? `${format(dateRange.from, "MMM d, yyyy")} — ${format(dateRange.to, "MMM d, yyyy")} (${differenceInDays(dateRange.to, dateRange.from) + 1} days)`
-                      : "Click a start date, then click an end date"}
-                  </p>
-                  {dateRange.from && (
-                    <Button type="button" variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setDateRange({ from: undefined, to: undefined })}>
-                      Clear
-                    </Button>
+              <CardContent className="pt-8 pb-6 flex flex-col items-center">
+                <div className="text-center mb-6">
+                  <h2 className="text-lg font-semibold text-foreground">Choose start date and end date</h2>
+                  {dateRange.from && dateRange.to ? (
+                    <div className="flex items-center justify-center gap-2 mt-2">
+                      <p className="text-sm text-muted-foreground">
+                        {format(dateRange.from, "MMM d, yyyy")} — {format(dateRange.to, "MMM d, yyyy")} ({differenceInDays(dateRange.to, dateRange.from) + 1} days)
+                      </p>
+                      <Button type="button" variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto py-0.5 px-1.5" onClick={() => setDateRange({ from: undefined, to: undefined })}>
+                        Clear
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-1">Select a start date, then an end date on the calendar</p>
                   )}
                 </div>
                 <Calendar
@@ -361,72 +358,51 @@ export default function CreateBatch() {
                   selected={dateRange as DateRange}
                   onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
                   numberOfMonths={2}
-                  className="p-3 pointer-events-auto rounded-lg border border-border/50"
+                  className="p-4 pointer-events-auto"
                   disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                 />
-                <div className="space-y-2 pt-2 border-t border-border/50">
-                  <Label>Evaluation End Date</Label>
+              </CardContent>
+            </Card>
+
+            {/* Additional Options */}
+            <div className="grid gap-6 lg:grid-cols-3">
+              {/* Evaluation End Date */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <CalendarIcon className="h-4 w-4 text-primary" />
+                    Evaluation End Date
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !evaluationEndDate && "text-muted-foreground")}>
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {evaluationEndDate ? format(evaluationEndDate, "PPP") : "Select evaluation end date (optional)"}
+                        {evaluationEndDate ? format(evaluationEndDate, "PPP") : "Optional"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar mode="single" selected={evaluationEndDate} onSelect={setEvaluationEndDate} initialFocus className="p-3 pointer-events-auto" />
                     </PopoverContent>
                   </Popover>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Settings className="h-4 w-4 text-primary" />
-                    Settings
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
-                    <div className="space-y-0.5">
-                      <Label>Published</Label>
-                      <p className="text-xs text-muted-foreground">Make visible to students</p>
-                    </div>
-                    <Switch checked={published} onCheckedChange={setPublished} />
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
-                    <div className="space-y-0.5">
-                      <Label>Self Enrollment</Label>
-                      <p className="text-xs text-muted-foreground">Students can enroll</p>
-                    </div>
-                    <Switch checked={allowSelfEnrollment} onCheckedChange={setAllowSelfEnrollment} />
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
-                    <div className="space-y-0.5">
-                      <Label>Certification</Label>
-                      <p className="text-xs text-muted-foreground">Issue on completion</p>
-                    </div>
-                    <Switch checked={certification} onCheckedChange={setCertification} />
-                  </div>
                 </CardContent>
               </Card>
 
+              {/* Batch Details */}
               <Card>
-                <CardHeader>
+                <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Users className="h-4 w-4 text-primary" />
                     Batch Details
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
+                <CardContent className="space-y-3">
+                  <div className="space-y-1.5">
                     <Label htmlFor="seatCount">Seat Count</Label>
                     <Input id="seatCount" type="number" min={1} max={500} value={seatCount} onChange={(e) => setSeatCount(parseInt(e.target.value) || 20)} />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label>Medium</Label>
                     <Select value={medium} onValueChange={(v) => setMedium(v as typeof medium)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
@@ -436,6 +412,39 @@ export default function CreateBatch() {
                         <SelectItem value="hybrid"><div className="flex items-center gap-2"><Laptop className="h-4 w-4" />Hybrid</div></SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Settings */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Settings className="h-4 w-4 text-primary" />
+                    Settings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border border-border/50">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm">Published</Label>
+                      <p className="text-xs text-muted-foreground">Make visible</p>
+                    </div>
+                    <Switch checked={published} onCheckedChange={setPublished} />
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border border-border/50">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm">Self Enrollment</Label>
+                      <p className="text-xs text-muted-foreground">Students can enroll</p>
+                    </div>
+                    <Switch checked={allowSelfEnrollment} onCheckedChange={setAllowSelfEnrollment} />
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border border-border/50">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm">Certification</Label>
+                      <p className="text-xs text-muted-foreground">Issue on completion</p>
+                    </div>
+                    <Switch checked={certification} onCheckedChange={setCertification} />
                   </div>
                 </CardContent>
               </Card>
