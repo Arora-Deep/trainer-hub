@@ -27,7 +27,8 @@ import {
 import { useBatchStore, type VMConfig, type VMTemplateConfig } from "@/stores/batchStore";
 import { useLabStore } from "@/stores/labStore";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
+import type { DateRange } from "react-day-picker";
 import {
   CalendarIcon,
   Users,
@@ -81,8 +82,7 @@ export default function CreateBatch() {
   const [published, setPublished] = useState(false);
   const [allowSelfEnrollment, setAllowSelfEnrollment] = useState(false);
   const [certification, setCertification] = useState(true);
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const [evaluationEndDate, setEvaluationEndDate] = useState<Date>();
   const [additionalDetails, setAdditionalDetails] = useState("");
   const [seatCount, setSeatCount] = useState(20);
@@ -162,7 +162,7 @@ export default function CreateBatch() {
   const canProceed = () => {
     switch (currentStep) {
       case 1: return name.trim() && instructors.some(i => i.trim());
-      case 2: return startDate && endDate;
+      case 2: return dateRange.from && dateRange.to;
       case 3: return true;
       case 4: return !enableVMs || isApproved;
       default: return true;
@@ -206,9 +206,9 @@ export default function CreateBatch() {
         description: description.trim(),
         instructors: filteredInstructors,
         settings: { published, allowSelfEnrollment, certification },
-        startDate: startDate?.toISOString() || "",
-        endDate: endDate?.toISOString() || "",
-        evaluationEndDate: evaluationEndDate?.toISOString() || endDate?.toISOString() || "",
+        startDate: dateRange.from?.toISOString() || "",
+        endDate: dateRange.to?.toISOString() || "",
+        evaluationEndDate: evaluationEndDate?.toISOString() || dateRange.to?.toISOString() || "",
         additionalDetails: additionalDetails.trim(),
         seatCount,
         medium,
@@ -344,41 +344,33 @@ export default function CreateBatch() {
                 <CardDescription>Set the batch schedule</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Start Date *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {startDate ? format(startDate, "PPP") : "Select start date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus className="p-3 pointer-events-auto" />
-                    </PopoverContent>
-                  </Popover>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    {dateRange.from && dateRange.to
+                      ? `${format(dateRange.from, "MMM d, yyyy")} — ${format(dateRange.to, "MMM d, yyyy")} (${differenceInDays(dateRange.to, dateRange.from) + 1} days)`
+                      : "Click a start date, then click an end date"}
+                  </p>
+                  {dateRange.from && (
+                    <Button type="button" variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setDateRange({ from: undefined, to: undefined })}>
+                      Clear
+                    </Button>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <Label>End Date *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {endDate ? format(endDate, "PPP") : "Select end date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus className="p-3 pointer-events-auto" />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="space-y-2">
+                <Calendar
+                  mode="range"
+                  selected={dateRange as DateRange}
+                  onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
+                  numberOfMonths={2}
+                  className="p-3 pointer-events-auto rounded-lg border border-border/50"
+                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                />
+                <div className="space-y-2 pt-2 border-t border-border/50">
                   <Label>Evaluation End Date</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !evaluationEndDate && "text-muted-foreground")}>
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {evaluationEndDate ? format(evaluationEndDate, "PPP") : "Select evaluation end date"}
+                        {evaluationEndDate ? format(evaluationEndDate, "PPP") : "Select evaluation end date (optional)"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -702,7 +694,7 @@ export default function CreateBatch() {
                     </div>
                     <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
                       <p className="text-xs text-muted-foreground uppercase tracking-wide">Duration</p>
-                      <p className="font-semibold mt-1">{startDate && endDate ? `${format(startDate, "MMM d")} - ${format(endDate, "MMM d, yyyy")}` : "Not set"}</p>
+                      <p className="font-semibold mt-1">{dateRange.from && dateRange.to ? `${format(dateRange.from, "MMM d")} - ${format(dateRange.to, "MMM d, yyyy")}` : "Not set"}</p>
                     </div>
                     <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
                       <p className="text-xs text-muted-foreground uppercase tracking-wide">Seat Count</p>
