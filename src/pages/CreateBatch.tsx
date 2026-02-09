@@ -85,7 +85,7 @@ export default function CreateBatch() {
   const [allowSelfEnrollment, setAllowSelfEnrollment] = useState(false);
   const [certification, setCertification] = useState(true);
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
-  const [evaluationEndDate, setEvaluationEndDate] = useState<Date>();
+  
   const [additionalDetails, setAdditionalDetails] = useState("");
   const [seatCount, setSeatCount] = useState(20);
   const [medium, setMedium] = useState<"online" | "offline" | "hybrid">("online");
@@ -218,7 +218,7 @@ export default function CreateBatch() {
         settings: { published, allowSelfEnrollment, certification },
         startDate: dateRange.from?.toISOString() || "",
         endDate: dateRange.to?.toISOString() || "",
-        evaluationEndDate: evaluationEndDate?.toISOString() || dateRange.to?.toISOString() || "",
+        evaluationEndDate: dateRange.to?.toISOString() || "",
         additionalDetails: additionalDetails.trim(),
         seatCount,
         medium,
@@ -375,30 +375,7 @@ export default function CreateBatch() {
             </Card>
 
             {/* Additional Options */}
-            <div className="grid gap-6 lg:grid-cols-3">
-              {/* Evaluation End Date */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <CalendarIcon className="h-4 w-4 text-primary" />
-                    Evaluation End Date
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !evaluationEndDate && "text-muted-foreground")}>
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {evaluationEndDate ? format(evaluationEndDate, "PPP") : "Optional"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={evaluationEndDate} onSelect={setEvaluationEndDate} initialFocus className="p-3 pointer-events-auto" />
-                    </PopoverContent>
-                  </Popover>
-                </CardContent>
-              </Card>
-
+            <div className="grid gap-6 lg:grid-cols-2">
               {/* Batch Details */}
               <Card>
                 <CardHeader className="pb-3">
