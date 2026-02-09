@@ -4,7 +4,8 @@ export interface Student {
   id: string;
   name: string;
   email: string;
-  progress: number;
+  quizScore: number | null;
+  currentModule: string;
   lastActive: string;
   attendance: {
     present: number;
@@ -124,7 +125,7 @@ interface BatchStore {
   getBatch: (id: string) => Batch | undefined;
   updateBatch: (id: string, updates: Partial<Batch>) => void;
   deleteBatch: (id: string) => void;
-  addStudent: (batchId: string, student: Omit<Student, "id" | "progress" | "lastActive" | "attendance" | "vmStatus" | "vmIpAddress">) => void;
+  addStudent: (batchId: string, student: Omit<Student, "id" | "quizScore" | "currentModule" | "lastActive" | "attendance" | "vmStatus" | "vmIpAddress">) => void;
   removeStudent: (batchId: string, studentId: string) => void;
   assignLab: (batchId: string, lab: Omit<AssignedLab, "id" | "completions">) => void;
   removeLab: (batchId: string, labAssignmentId: string) => void;
@@ -169,11 +170,11 @@ const initialBatches: Batch[] = [
     status: "upcoming",
     createdAt: "Jan 1, 2024",
     students: [
-      { id: "s1", name: "Alice Johnson", email: "alice@example.com", progress: 75, lastActive: "2 hours ago", attendance: { present: 18, total: 20 }, vmStatus: "running", vmIpAddress: "10.0.1.1" },
-      { id: "s2", name: "Bob Williams", email: "bob@example.com", progress: 60, lastActive: "1 hour ago", attendance: { present: 15, total: 20 }, vmStatus: "running", vmIpAddress: "10.0.1.2" },
-      { id: "s3", name: "Carol Davis", email: "carol@example.com", progress: 90, lastActive: "30 min ago", attendance: { present: 20, total: 20 }, vmStatus: "running", vmIpAddress: "10.0.1.3" },
-      { id: "s4", name: "David Brown", email: "david@example.com", progress: 45, lastActive: "5 hours ago", attendance: { present: 12, total: 20 }, vmStatus: "stopped", vmIpAddress: "10.0.1.4" },
-      { id: "s5", name: "Eva Martinez", email: "eva@example.com", progress: 80, lastActive: "1 hour ago", attendance: { present: 17, total: 20 }, vmStatus: "error", vmIpAddress: "10.0.1.5" },
+      { id: "s1", name: "Alice Johnson", email: "alice@example.com", quizScore: 82, currentModule: "EC2 & Compute", lastActive: "2 hours ago", attendance: { present: 18, total: 20 }, vmStatus: "running", vmIpAddress: "10.0.1.1" },
+      { id: "s2", name: "Bob Williams", email: "bob@example.com", quizScore: 68, currentModule: "S3 & Storage", lastActive: "1 hour ago", attendance: { present: 15, total: 20 }, vmStatus: "running", vmIpAddress: "10.0.1.2" },
+      { id: "s3", name: "Carol Davis", email: "carol@example.com", quizScore: 95, currentModule: "VPC & Networking", lastActive: "30 min ago", attendance: { present: 20, total: 20 }, vmStatus: "running", vmIpAddress: "10.0.1.3" },
+      { id: "s4", name: "David Brown", email: "david@example.com", quizScore: 45, currentModule: "IAM & Security", lastActive: "5 hours ago", attendance: { present: 12, total: 20 }, vmStatus: "stopped", vmIpAddress: "10.0.1.4" },
+      { id: "s5", name: "Eva Martinez", email: "eva@example.com", quizScore: null, currentModule: "EC2 & Compute", lastActive: "1 hour ago", attendance: { present: 17, total: 20 }, vmStatus: "error", vmIpAddress: "10.0.1.5" },
     ],
     assignedLabs: [
       { id: "al1", labId: "lab-1", name: "EC2 Instance Setup", type: "Linux", duration: "60 min", completions: 20 },
@@ -346,7 +347,8 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     const newStudent: Student = {
       ...student,
       id: `s-${Date.now()}`,
-      progress: 0,
+      quizScore: null,
+      currentModule: "Not Started",
       lastActive: "Never",
       attendance: { present: 0, total: 0 },
       vmStatus: "not_assigned",
