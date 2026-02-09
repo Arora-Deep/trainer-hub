@@ -13,6 +13,16 @@ export interface VMTemplateConfig {
   instanceName: string;
 }
 
+export interface VMEntry {
+  id: string;
+  templateId: string;
+  instanceName: string;
+  vmType: "single" | "multi";
+  dateRange: { from: string; to: string };
+  startTime: string; // e.g., "09:00"
+  endTime: string;   // e.g., "17:30"
+}
+
 export interface VMInstance {
   id: string;
   assignedTo: string;
@@ -28,6 +38,7 @@ export interface VMConfig {
   dateRange: { from: string; to: string };
   vmType: "single" | "multi";
   vmTemplates: VMTemplateConfig[];
+  vmEntries: VMEntry[];
   trainerVM: {
     status: "not_provisioned" | "provisioning" | "running" | "configured" | "stopped";
     ipAddress: string;
@@ -164,6 +175,7 @@ const initialBatches: Batch[] = [
     vmConfig: {
       id: "vm-1",
       dateRange: { from: "2024-01-15", to: "2024-02-15" },
+      vmEntries: [],
       vmType: "single",
       vmTemplates: [{ templateId: "tpl-1", instanceName: "EC2 Instance" }],
       trainerVM: {
