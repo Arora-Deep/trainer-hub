@@ -13,14 +13,19 @@ export interface VMTemplateConfig {
   instanceName: string;
 }
 
+export interface VMDaySchedule {
+  date: string; // "yyyy-MM-dd"
+  startTime: string; // e.g., "09:00"
+  endTime: string;   // e.g., "17:30"
+}
+
 export interface VMEntry {
   id: string;
   templateId: string;
   instanceName: string;
   vmType: "single" | "multi";
   dateRange: { from: string; to: string };
-  startTime: string; // e.g., "09:00"
-  endTime: string;   // e.g., "17:30"
+  dailySchedules: VMDaySchedule[];
 }
 
 export interface VMInstance {

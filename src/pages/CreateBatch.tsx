@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { VMDaySchedule } from "@/components/batches/VMDaySchedule";
+import type { DaySchedule } from "@/components/batches/VMDaySchedule";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +29,7 @@ import {
 import { useBatchStore, type VMConfig, type VMTemplateConfig, type VMEntry } from "@/stores/batchStore";
 import { useLabStore } from "@/stores/labStore";
 import { cn } from "@/lib/utils";
-import { format, differenceInDays } from "date-fns";
+import { format, differenceInDays, eachDayOfInterval } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import {
   CalendarIcon,
@@ -93,8 +95,7 @@ export default function CreateBatch() {
   const [vmType, setVmType] = useState<"single" | "multi">("single");
   const [vmTemplates, setVmTemplates] = useState<VMTemplateConfig[]>([{ templateId: "", instanceName: "" }]);
   const [vmDateRange, setVmDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
-  const [vmStartTime, setVmStartTime] = useState("09:00");
-  const [vmEndTime, setVmEndTime] = useState("18:00");
+  const [vmDailySchedules, setVmDailySchedules] = useState<DaySchedule[]>([]);
   const [addedVMs, setAddedVMs] = useState<VMEntry[]>([]);
 
   // Step 4: Approval
@@ -506,7 +507,7 @@ export default function CreateBatch() {
                                 <div>
                                   <p className="font-semibold text-sm">{vm.instanceName || "Unnamed VM"}</p>
                                   <p className="text-xs text-muted-foreground">
-                                    {tpl?.name || "No template"} • {format(new Date(vm.dateRange.from), "MMM d")} – {format(new Date(vm.dateRange.to), "MMM d, yyyy")} • {vm.startTime} – {vm.endTime}
+                                    {tpl?.name || "No template"} • {format(new Date(vm.dateRange.from), "MMM d")} – {format(new Date(vm.dateRange.to), "MMM d, yyyy")} • {vm.dailySchedules.length} day(s) scheduled
                                   </p>
                                 </div>
                               </div>
@@ -625,54 +626,14 @@ export default function CreateBatch() {
                     </CardContent>
                   </Card>
 
-                  {/* Daily Timings */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-primary" />
-                        Daily Availability
-                      </CardTitle>
-                      <CardDescription>Set the daily time window when VMs are accessible</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <Label>Start Time</Label>
-                          <Select value={vmStartTime} onValueChange={setVmStartTime}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="max-h-60">
-                              {Array.from({ length: 48 }, (_, i) => {
-                                const hours = Math.floor(i / 2);
-                                const minutes = i % 2 === 0 ? "00" : "30";
-                                const time = `${hours.toString().padStart(2, "0")}:${minutes}`;
-                                const label = `${hours === 0 ? 12 : hours > 12 ? hours - 12 : hours}:${minutes} ${hours < 12 ? "AM" : "PM"}`;
-                                return <SelectItem key={time} value={time}>{label}</SelectItem>;
-                              })}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>End Time</Label>
-                          <Select value={vmEndTime} onValueChange={setVmEndTime}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="max-h-60">
-                              {Array.from({ length: 48 }, (_, i) => {
-                                const hours = Math.floor(i / 2);
-                                const minutes = i % 2 === 0 ? "00" : "30";
-                                const time = `${hours.toString().padStart(2, "0")}:${minutes}`;
-                                const label = `${hours === 0 ? 12 : hours > 12 ? hours - 12 : hours}:${minutes} ${hours < 12 ? "AM" : "PM"}`;
-                                return <SelectItem key={time} value={time}>{label}</SelectItem>;
-                              })}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  {/* Per-Day Timings */}
+                  {vmDateRange.from && vmDateRange.to && (
+                    <VMDaySchedule
+                      dateRange={{ from: vmDateRange.from, to: vmDateRange.to }}
+                      dailySchedules={vmDailySchedules}
+                      onChange={setVmDailySchedules}
+                    />
+                  )}
 
                   {/* Add VM Button */}
                   <Button
@@ -681,6 +642,14 @@ export default function CreateBatch() {
                     className="w-full"
                     disabled={!vmDateRange.from || !vmDateRange.to || !vmTemplates[0]?.templateId}
                     onClick={() => {
+                      // Build daily schedules – fill in defaults for days not explicitly set
+                      const days = eachDayOfInterval({ start: vmDateRange.from!, end: vmDateRange.to! });
+                      const finalSchedules = days.map((day: Date) => {
+                        const dateStr = format(day, "yyyy-MM-dd");
+                        const existing = vmDailySchedules.find(s => s.date === dateStr);
+                        return existing || { date: dateStr, startTime: "09:00", endTime: "18:00" };
+                      });
+
                       const newVM: VMEntry = {
                         id: `vme-${Date.now()}`,
                         templateId: vmTemplates[0]?.templateId || "",
@@ -690,15 +659,13 @@ export default function CreateBatch() {
                           from: vmDateRange.from!.toISOString(),
                           to: vmDateRange.to!.toISOString(),
                         },
-                        startTime: vmStartTime,
-                        endTime: vmEndTime,
+                        dailySchedules: finalSchedules,
                       };
                       setAddedVMs([...addedVMs, newVM]);
                       // Reset form for next VM
                       setVmTemplates([{ templateId: "", instanceName: "" }]);
                       setVmDateRange({ from: undefined, to: undefined });
-                      setVmStartTime("09:00");
-                      setVmEndTime("18:00");
+                      setVmDailySchedules([]);
                       toast({ title: "VM Added", description: `${newVM.instanceName || "VM"} added to the list.` });
                     }}
                   >
