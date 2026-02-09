@@ -2,7 +2,6 @@ import { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { StatCard } from "@/components/ui/StatCard";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -20,20 +19,19 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Users, Calendar, Play, UserPlus, RefreshCw, MoreHorizontal, Mail,
-  ClipboardList, Clock, BookOpen, Megaphone, Trash2, Plus, Server,
-  Monitor, Loader2, ExternalLink, Copy, CheckCircle2, Terminal,
+  Users, Calendar, Play, RefreshCw, Clock, BookOpen, Megaphone, Plus, Server,
+  Monitor, Loader2, ExternalLink, Copy, CheckCircle2, Terminal, Mail,
+  ClipboardList, Settings,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useBatchStore } from "@/stores/batchStore";
 import { useCourseStore } from "@/stores/courseStore";
 import { useLabStore } from "@/stores/labStore";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { StudentsTab } from "@/components/batches/StudentsTab";
+import { BatchSettingsTab } from "@/components/batches/BatchSettingsTab";
 
 const statusMap: Record<string, { status: "success" | "warning" | "primary" | "default"; label: string }> = {
   upcoming: { status: "primary", label: "Upcoming" },
@@ -44,15 +42,12 @@ const statusMap: Record<string, { status: "success" | "warning" | "primary" | "d
 export default function BatchDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getBatch, addStudent, removeStudent, addAnnouncement, setCourse, provisionTrainerVM, markTrainerVMConfigured, cloneTrainerVMForBatch } = useBatchStore();
+  const { getBatch, addAnnouncement, setCourse, provisionTrainerVM, markTrainerVMConfigured, cloneTrainerVMForBatch } = useBatchStore();
   const { courses } = useCourseStore();
   const { templates } = useLabStore();
 
   const batch = getBatch(id || "");
 
-  const [addStudentOpen, setAddStudentOpen] = useState(false);
-  const [newStudentName, setNewStudentName] = useState("");
-  const [newStudentEmail, setNewStudentEmail] = useState("");
   const [announcementOpen, setAnnouncementOpen] = useState(false);
   const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementContent, setAnnouncementContent] = useState("");
@@ -73,16 +68,6 @@ export default function BatchDetails() {
 
   const formatDate = (dateStr: string) => {
     try { return format(new Date(dateStr), "MMM d, yyyy"); } catch { return dateStr; }
-  };
-
-  const handleAddStudent = () => {
-    if (!newStudentName.trim() || !newStudentEmail.trim()) {
-      toast({ title: "Error", description: "Name and email are required", variant: "destructive" });
-      return;
-    }
-    addStudent(batch.id, { name: newStudentName.trim(), email: newStudentEmail.trim() });
-    toast({ title: "Success", description: "Student added successfully" });
-    setNewStudentName(""); setNewStudentEmail(""); setAddStudentOpen(false);
   };
 
   const handleAddAnnouncement = () => {
@@ -155,6 +140,10 @@ export default function BatchDetails() {
           <TabsTrigger value="announcements">Announcements</TabsTrigger>
           <TabsTrigger value="assessments">Assessments</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-1.5">
+            <Settings className="h-3.5 w-3.5" />
+            Settings
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -204,94 +193,7 @@ export default function BatchDetails() {
 
         {/* Students Tab */}
         <TabsContent value="students">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-base">Students ({batch.students.length}/{batch.seatCount})</CardTitle>
-                <CardDescription>Manage enrolled students</CardDescription>
-              </div>
-              <Dialog open={addStudentOpen} onOpenChange={setAddStudentOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm"><UserPlus className="mr-2 h-4 w-4" />Add Students</Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add Student</DialogTitle>
-                    <DialogDescription>Add a new student to this batch.</DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="studentName">Name</Label>
-                      <Input id="studentName" placeholder="Student name" value={newStudentName} onChange={(e) => setNewStudentName(e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="studentEmail">Email</Label>
-                      <Input id="studentEmail" type="email" placeholder="student@example.com" value={newStudentEmail} onChange={(e) => setNewStudentEmail(e.target.value)} />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setAddStudentOpen(false)}>Cancel</Button>
-                    <Button onClick={handleAddStudent}>Add Student</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </CardHeader>
-            <CardContent className="p-0">
-              {batch.students.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Users className="h-12 w-12 text-muted-foreground/40 mb-4" />
-                  <h3 className="text-lg font-semibold">No students enrolled</h3>
-                  <p className="text-sm text-muted-foreground max-w-sm mt-1.5">Add students to this batch to get started.</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/30 hover:bg-muted/30">
-                      <TableHead className="font-medium">Student</TableHead>
-                      <TableHead className="font-medium">Email</TableHead>
-                      <TableHead className="font-medium">Progress</TableHead>
-                      <TableHead className="font-medium">Last Active</TableHead>
-                      <TableHead className="w-12"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {batch.students.map((student) => (
-                      <TableRow key={student.id} className="group">
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-9 w-9 border-2 border-primary/10">
-                              <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.name}`} />
-                              <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">{student.name.split(" ").map((n) => n[0]).join("")}</AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{student.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">{student.email}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-3 min-w-[140px]">
-                            <ProgressBar value={student.progress} size="sm" variant={student.progress >= 75 ? "success" : student.progress >= 50 ? "primary" : "warning"} showValue />
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{student.lastActive}</TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"><MoreHorizontal className="h-4 w-4" /></Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>View Profile</DropdownMenuItem>
-                              <DropdownMenuItem>Send Message</DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive" onClick={() => { removeStudent(batch.id, student.id); toast({ title: "Removed", description: "Student removed" }); }}>Remove</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+          <StudentsTab batch={batch} />
         </TabsContent>
 
         {/* VMs Tab */}
@@ -686,6 +588,11 @@ export default function BatchDetails() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Settings Tab */}
+        <TabsContent value="settings">
+          <BatchSettingsTab batch={batch} />
         </TabsContent>
       </Tabs>
     </div>
