@@ -6,14 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { ProgressBar } from "@/components/ui/ProgressBar";
+
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Users, UserPlus, MoreHorizontal, ExternalLink, Monitor, CalendarCheck } from "lucide-react";
+import { Users, UserPlus, MoreHorizontal, ExternalLink, Monitor, CalendarCheck, BookOpen, GraduationCap } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { Batch } from "@/stores/batchStore";
 import { useBatchStore } from "@/stores/batchStore";
@@ -101,7 +101,18 @@ export function StudentsTab({ batch }: StudentsTabProps) {
             <TableHeader>
               <TableRow className="bg-muted/30 hover:bg-muted/30">
                 <TableHead className="font-medium">Student</TableHead>
-                <TableHead className="font-medium">Progress</TableHead>
+                 <TableHead className="font-medium">
+                   <div className="flex items-center gap-1.5">
+                     <GraduationCap className="h-3.5 w-3.5" />
+                     Quiz Score
+                   </div>
+                 </TableHead>
+                 <TableHead className="font-medium">
+                   <div className="flex items-center gap-1.5">
+                     <BookOpen className="h-3.5 w-3.5" />
+                     Current Module
+                   </div>
+                 </TableHead>
                 <TableHead className="font-medium">
                   <div className="flex items-center gap-1.5">
                     <CalendarCheck className="h-3.5 w-3.5" />
@@ -136,14 +147,18 @@ export function StudentsTab({ batch }: StudentsTabProps) {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="min-w-[120px]">
-                      <ProgressBar
-                        value={student.progress}
-                        size="sm"
-                        variant={student.progress >= 75 ? "success" : student.progress >= 50 ? "primary" : "warning"}
-                        showValue
-                      />
-                    </div>
+                    <span className={cn(
+                      "font-semibold text-sm tabular-nums",
+                      student.quizScore === null ? "text-muted-foreground" :
+                      student.quizScore >= 80 ? "text-green-600 dark:text-green-400" :
+                      student.quizScore >= 60 ? "text-yellow-600 dark:text-yellow-400" :
+                      "text-red-600 dark:text-red-400"
+                    )}>
+                      {student.quizScore !== null ? `${student.quizScore}%` : "—"}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm">{student.currentModule}</span>
                   </TableCell>
                   <TableCell>
                     <span className={cn("font-medium text-sm tabular-nums", getAttendanceColor(student.attendance.present, student.attendance.total))}>
