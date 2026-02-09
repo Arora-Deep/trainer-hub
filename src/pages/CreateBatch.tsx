@@ -24,7 +24,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useBatchStore, type VMConfig, type VMTemplateConfig } from "@/stores/batchStore";
+import { useBatchStore, type VMConfig, type VMTemplateConfig, type VMEntry } from "@/stores/batchStore";
 import { useLabStore } from "@/stores/labStore";
 import { cn } from "@/lib/utils";
 import { format, differenceInDays } from "date-fns";
@@ -90,10 +90,12 @@ export default function CreateBatch() {
 
   // Step 3: VM Configuration
   const [enableVMs, setEnableVMs] = useState(false);
-  const [vmStartDate, setVmStartDate] = useState<Date>();
-  const [vmEndDate, setVmEndDate] = useState<Date>();
   const [vmType, setVmType] = useState<"single" | "multi">("single");
   const [vmTemplates, setVmTemplates] = useState<VMTemplateConfig[]>([{ templateId: "", instanceName: "" }]);
+  const [vmDateRange, setVmDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [vmStartTime, setVmStartTime] = useState("09:00");
+  const [vmEndTime, setVmEndTime] = useState("18:00");
+  const [addedVMs, setAddedVMs] = useState<VMEntry[]>([]);
 
   // Step 4: Approval
   const [approvalRequested, setApprovalRequested] = useState(false);
@@ -131,15 +133,19 @@ export default function CreateBatch() {
 
   // Pricing calculation
   const calculatePricing = () => {
-    if (!enableVMs || !vmStartDate || !vmEndDate) return { compute: 0, storage: 0, network: 0, support: 0, total: 0, totalVMs: 0, days: 0 };
+    if (!enableVMs || addedVMs.length === 0) return { compute: 0, storage: 0, network: 0, support: 0, total: 0, totalVMs: 0, days: 0 };
     const basePrice = 50;
-    const totalVMs = (vmType === "multi" ? vmTemplates.length : 1) * seatCount + 1; // +1 for trainer
-    const days = Math.ceil((vmEndDate.getTime() - vmStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    const compute = totalVMs * basePrice * days;
-    const storage = totalVMs * 5 * days;
-    const network = totalVMs * 2 * days;
-    const support = days * 10;
-    return { compute, storage, network, support, total: compute + storage + network + support, totalVMs, days };
+    const totalVMs = addedVMs.length * seatCount + 1; // +1 for trainer
+    const totalDays = addedVMs.reduce((sum, vm) => {
+      const from = new Date(vm.dateRange.from);
+      const to = new Date(vm.dateRange.to);
+      return sum + Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    }, 0);
+    const compute = totalVMs * basePrice * totalDays;
+    const storage = totalVMs * 5 * totalDays;
+    const network = totalVMs * 2 * totalDays;
+    const support = totalDays * 10;
+    return { compute, storage, network, support, total: compute + storage + network + support, totalVMs, days: totalDays };
   };
 
   const pricing = calculatePricing();
@@ -179,12 +185,15 @@ export default function CreateBatch() {
     const filteredInstructors = instructors.filter((i) => i.trim());
 
     let vmConfig: VMConfig | undefined;
-    if (enableVMs && vmStartDate && vmEndDate) {
+    if (enableVMs && addedVMs.length > 0) {
+      const firstVM = addedVMs[0];
+      const lastVM = addedVMs[addedVMs.length - 1];
       vmConfig = {
         id: `vm-${Date.now()}`,
-        dateRange: { from: vmStartDate.toISOString(), to: vmEndDate.toISOString() },
-        vmType,
-        vmTemplates,
+        dateRange: { from: firstVM.dateRange.from, to: lastVM.dateRange.to },
+        vmType: firstVM.vmType,
+        vmTemplates: addedVMs.map(vm => ({ templateId: vm.templateId, instanceName: vm.instanceName })),
+        vmEntries: addedVMs,
         trainerVM: { status: "not_provisioned", ipAddress: "", provisionedAt: "" },
         studentVMs: [],
         cloneStatus: "not_cloned",
@@ -476,48 +485,46 @@ export default function CreateBatch() {
 
               {enableVMs && (
                 <>
-                  {/* VM Date Range */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <CalendarIcon className="h-4 w-4 text-primary" />
-                        VM Schedule
-                      </CardTitle>
-                      <CardDescription>Set when VMs should be available</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label>VM Start Date *</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button type="button" variant="outline" className={cn("w-full justify-start text-left font-normal", !vmStartDate && "text-muted-foreground")}>
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {vmStartDate ? format(vmStartDate, "PPP") : "Select date"}
+                  {/* Added VMs List */}
+                  {addedVMs.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Layers className="h-4 w-4 text-primary" />
+                          Added VMs ({addedVMs.length})
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {addedVMs.map((vm, index) => {
+                          const tpl = templates.find(t => t.id === vm.templateId);
+                          return (
+                            <div key={vm.id} className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/10">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                                  {index + 1}
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-sm">{vm.instanceName || "Unnamed VM"}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {tpl?.name || "No template"} • {format(new Date(vm.dateRange.from), "MMM d")} – {format(new Date(vm.dateRange.to), "MMM d, yyyy")} • {vm.startTime} – {vm.endTime}
+                                  </p>
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setAddedVMs(addedVMs.filter((_, i) => i !== index))}
+                                className="text-muted-foreground hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
                               </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar mode="single" selected={vmStartDate} onSelect={setVmStartDate} className="p-3 pointer-events-auto" />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>VM End Date *</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button type="button" variant="outline" className={cn("w-full justify-start text-left font-normal", !vmEndDate && "text-muted-foreground")}>
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {vmEndDate ? format(vmEndDate, "PPP") : "Select date"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar mode="single" selected={vmEndDate} onSelect={setVmEndDate} className="p-3 pointer-events-auto" />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                            </div>
+                          );
+                        })}
+                      </CardContent>
+                    </Card>
+                  )}
 
                   {/* VM Type Selection */}
                   <Card>
@@ -565,49 +572,139 @@ export default function CreateBatch() {
                         <div>
                           <CardTitle className="text-base flex items-center gap-2">
                             <Server className="h-4 w-4 text-primary" />
-                            VM Templates
+                            VM Template
                           </CardTitle>
-                          <CardDescription>Select template and name your instances</CardDescription>
+                          <CardDescription>Select template and name your instance</CardDescription>
                         </div>
-                        {vmType === "multi" && vmTemplates.length < 3 && (
-                          <Button type="button" variant="outline" size="sm" onClick={handleAddVMTemplate}>
-                            <Plus className="mr-1 h-3 w-3" /> Add VM
-                          </Button>
-                        )}
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {vmTemplates.map((vm, index) => (
-                        <div key={index} className="p-4 rounded-xl border border-border bg-muted/10 space-y-4">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-semibold flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                                {index + 1}
-                              </div>
-                              VM Configuration
-                            </span>
-                            {vmType === "multi" && vmTemplates.length > 1 && (
-                              <Button type="button" variant="ghost" size="sm" onClick={() => handleRemoveVMTemplate(index)} className="text-muted-foreground hover:text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                          <div className="space-y-3">
-                            <Label className="text-xs">Select Template</Label>
-                            <TemplatePickerGrid
-                              templates={templates}
-                              selectedId={vm.templateId}
-                              onSelect={(template) => handleVMTemplateChange(index, "templateId", template.id)}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-xs">Instance Name</Label>
-                            <Input placeholder="e.g., Web Server, Database, etc." value={vm.instanceName} onChange={(e) => handleVMTemplateChange(index, "instanceName", e.target.value)} />
-                          </div>
+                      <div className="p-4 rounded-xl border border-border bg-muted/10 space-y-4">
+                        <div className="space-y-3">
+                          <Label className="text-xs">Select Template</Label>
+                          <TemplatePickerGrid
+                            templates={templates}
+                            selectedId={vmTemplates[0]?.templateId || ""}
+                            onSelect={(template) => handleVMTemplateChange(0, "templateId", template.id)}
+                          />
                         </div>
-                      ))}
+                        <div className="space-y-2">
+                          <Label className="text-xs">Instance Name</Label>
+                          <Input placeholder="e.g., Web Server, Database, etc." value={vmTemplates[0]?.instanceName || ""} onChange={(e) => handleVMTemplateChange(0, "instanceName", e.target.value)} />
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
+
+                  {/* VM Date Range Calendar */}
+                  <Card>
+                    <CardContent className="pt-8 pb-6 flex flex-col items-center">
+                      <div className="text-center mb-6">
+                        <h2 className="text-lg font-semibold text-foreground">Choose VM availability dates</h2>
+                        {vmDateRange.from && vmDateRange.to ? (
+                          <div className="flex items-center justify-center gap-2 mt-2">
+                            <p className="text-sm text-muted-foreground">
+                              {format(vmDateRange.from, "MMM d, yyyy")} — {format(vmDateRange.to, "MMM d, yyyy")} ({differenceInDays(vmDateRange.to, vmDateRange.from) + 1} days)
+                            </p>
+                            <Button type="button" variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto py-0.5 px-1.5" onClick={() => setVmDateRange({ from: undefined, to: undefined })}>
+                              Clear
+                            </Button>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground mt-1">Select a start date, then an end date</p>
+                        )}
+                      </div>
+                      <Calendar
+                        mode="range"
+                        selected={vmDateRange as DateRange}
+                        onSelect={(range) => setVmDateRange({ from: range?.from, to: range?.to })}
+                        numberOfMonths={2}
+                        className="p-4 pointer-events-auto"
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {/* Daily Timings */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-primary" />
+                        Daily Availability
+                      </CardTitle>
+                      <CardDescription>Set the daily time window when VMs are accessible</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label>Start Time</Label>
+                          <Select value={vmStartTime} onValueChange={setVmStartTime}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60">
+                              {Array.from({ length: 48 }, (_, i) => {
+                                const hours = Math.floor(i / 2);
+                                const minutes = i % 2 === 0 ? "00" : "30";
+                                const time = `${hours.toString().padStart(2, "0")}:${minutes}`;
+                                const label = `${hours === 0 ? 12 : hours > 12 ? hours - 12 : hours}:${minutes} ${hours < 12 ? "AM" : "PM"}`;
+                                return <SelectItem key={time} value={time}>{label}</SelectItem>;
+                              })}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>End Time</Label>
+                          <Select value={vmEndTime} onValueChange={setVmEndTime}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60">
+                              {Array.from({ length: 48 }, (_, i) => {
+                                const hours = Math.floor(i / 2);
+                                const minutes = i % 2 === 0 ? "00" : "30";
+                                const time = `${hours.toString().padStart(2, "0")}:${minutes}`;
+                                const label = `${hours === 0 ? 12 : hours > 12 ? hours - 12 : hours}:${minutes} ${hours < 12 ? "AM" : "PM"}`;
+                                return <SelectItem key={time} value={time}>{label}</SelectItem>;
+                              })}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Add VM Button */}
+                  <Button
+                    type="button"
+                    size="lg"
+                    className="w-full"
+                    disabled={!vmDateRange.from || !vmDateRange.to || !vmTemplates[0]?.templateId}
+                    onClick={() => {
+                      const newVM: VMEntry = {
+                        id: `vme-${Date.now()}`,
+                        templateId: vmTemplates[0]?.templateId || "",
+                        instanceName: vmTemplates[0]?.instanceName || "",
+                        vmType,
+                        dateRange: {
+                          from: vmDateRange.from!.toISOString(),
+                          to: vmDateRange.to!.toISOString(),
+                        },
+                        startTime: vmStartTime,
+                        endTime: vmEndTime,
+                      };
+                      setAddedVMs([...addedVMs, newVM]);
+                      // Reset form for next VM
+                      setVmTemplates([{ templateId: "", instanceName: "" }]);
+                      setVmDateRange({ from: undefined, to: undefined });
+                      setVmStartTime("09:00");
+                      setVmEndTime("18:00");
+                      toast({ title: "VM Added", description: `${newVM.instanceName || "VM"} added to the list.` });
+                    }}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add VM
+                  </Button>
                 </>
               )}
             </div>
@@ -622,32 +719,30 @@ export default function CreateBatch() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {!enableVMs ? (
+                  {!enableVMs || addedVMs.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Monitor className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                      <p className="text-sm font-medium">No VMs configured</p>
-                      <p className="text-xs">Enable VMs to see pricing</p>
+                      <p className="text-sm font-medium">No VMs added</p>
+                      <p className="text-xs">Add VMs to see pricing</p>
                     </div>
                   ) : (
                     <>
-                      {vmStartDate && vmEndDate && (
-                        <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
-                          <div className="grid grid-cols-3 gap-3 text-center">
-                            <div>
-                              <p className="text-xs text-muted-foreground">VMs</p>
-                              <p className="text-lg font-bold">{pricing.totalVMs}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">Days</p>
-                              <p className="text-lg font-bold">{pricing.days}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">Type</p>
-                              <p className="text-lg font-bold capitalize">{vmType}</p>
-                            </div>
+                      <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+                        <div className="grid grid-cols-3 gap-3 text-center">
+                          <div>
+                            <p className="text-xs text-muted-foreground">VMs</p>
+                            <p className="text-lg font-bold">{addedVMs.length}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Days</p>
+                            <p className="text-lg font-bold">{pricing.days}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Type</p>
+                            <p className="text-lg font-bold capitalize">{vmType}</p>
                           </div>
                         </div>
-                      )}
+                      </div>
                       <div className="space-y-2">
                         <div className="flex justify-between items-center p-2.5 rounded-lg bg-muted/30 text-sm">
                           <span className="text-muted-foreground flex items-center gap-2"><Server className="h-3.5 w-3.5" /> Compute</span>
