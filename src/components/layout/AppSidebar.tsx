@@ -9,7 +9,11 @@ import {
   Settings,
   ChevronLeft,
   GraduationCap,
-  ExternalLink,
+  Award,
+  ClipboardList,
+  FileQuestion,
+  Code2,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -24,7 +28,12 @@ const navItems = [
   { title: "Dashboard", icon: Home, path: "/" },
   { title: "Batches", icon: Users, path: "/batches" },
   { title: "Labs", icon: FlaskConical, path: "/labs" },
-  { title: "LMS", icon: BookOpen, path: "https://lms.cloudadda.com", external: true },
+  { title: "Courses", icon: BookOpen, path: "/courses" },
+  { title: "Programs", icon: Layers, path: "/programs" },
+  { title: "Assignments", icon: ClipboardList, path: "/assignments" },
+  { title: "Quizzes", icon: FileQuestion, path: "/quizzes" },
+  { title: "Exercises", icon: Code2, path: "/exercises" },
+  { title: "Certifications", icon: Award, path: "/certifications" },
 ];
 
 const bottomNavItems = [
@@ -37,44 +46,8 @@ export function AppSidebar() {
   const location = useLocation();
 
   const NavItem = ({ item }: { item: typeof navItems[0] }) => {
-    const isExternal = 'external' in item && item.external;
-    const isActive = !isExternal && (location.pathname === item.path || 
-      (item.path !== "/" && location.pathname.startsWith(item.path)));
-    
-    if (isExternal) {
-      const link = (
-        <a
-          href={item.path}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn(
-            "group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors",
-            "text-muted-foreground hover:bg-muted hover:text-foreground",
-            collapsed && "justify-center px-2.5"
-          )}
-        >
-          <item.icon className="h-[18px] w-[18px] shrink-0" />
-          {!collapsed && (
-            <>
-              <span className="truncate flex-1">{item.title}</span>
-              <ExternalLink className="h-3 w-3 opacity-50" />
-            </>
-          )}
-        </a>
-      );
-
-      if (collapsed) {
-        return (
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>{link}</TooltipTrigger>
-            <TooltipContent side="right" className="font-medium">
-              {item.title}
-            </TooltipContent>
-          </Tooltip>
-        );
-      }
-      return link;
-    }
+    const isActive = location.pathname === item.path || 
+      (item.path !== "/" && location.pathname.startsWith(item.path));
 
     const link = (
       <NavLink
