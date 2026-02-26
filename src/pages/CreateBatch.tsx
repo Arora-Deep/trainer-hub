@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { VMDaySchedule } from "@/components/batches/VMDaySchedule";
 import type { DaySchedule } from "@/components/batches/VMDaySchedule";
+import { motion, AnimatePresence } from "framer-motion";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -251,27 +252,34 @@ export default function CreateBatch() {
 
       {/* Progress Steps */}
       <Card>
-        <div className="h-1 bg-primary/20">
-          <div className="h-full bg-primary transition-all duration-300" style={{ width: `${(currentStep / steps.length) * 100}%` }} />
+        <div className="h-1 bg-primary/10 overflow-hidden">
+          <motion.div
+            className="h-full bg-primary"
+            initial={{ width: 0 }}
+            animate={{ width: `${(currentStep / steps.length) * 100}%` }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          />
         </div>
         <CardContent className="py-6">
           <div className="flex items-center justify-between">
             {steps.map((step, index) => (
               <div key={step.id} className="flex items-center flex-1">
                 <div className="flex flex-col items-center">
-                  <button
+                  <motion.button
                     onClick={() => step.id <= currentStep && setCurrentStep(step.id)}
                     className={cn(
-                      "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
+                      "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
                       currentStep === step.id
-                        ? "bg-primary text-primary-foreground shadow-md"
+                        ? "bg-primary text-primary-foreground"
                         : currentStep > step.id
                         ? "bg-primary/10 text-primary"
                         : "bg-muted text-muted-foreground"
                     )}
+                    whileHover={step.id <= currentStep ? { scale: 1.05 } : {}}
+                    whileTap={step.id <= currentStep ? { scale: 0.95 } : {}}
                   >
                     {currentStep > step.id ? <CheckCircle2 className="h-5 w-5" /> : <step.icon className="h-5 w-5" />}
-                  </button>
+                  </motion.button>
                   <div className="text-center mt-2">
                     <span className={cn("text-sm font-medium block", currentStep === step.id ? "text-foreground" : "text-muted-foreground")}>
                       {step.name}
@@ -280,8 +288,15 @@ export default function CreateBatch() {
                   </div>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className="flex-1 h-px mx-6">
-                    <div className={cn("h-full transition-colors", currentStep > step.id ? "bg-primary" : "bg-border")} />
+                  <div className="flex-1 h-px mx-6 overflow-hidden">
+                    <motion.div
+                      className="h-full bg-primary"
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: currentStep > step.id ? 1 : 0 }}
+                      transition={{ duration: 0.3 }}
+                      style={{ transformOrigin: "left" }}
+                    />
+                    <div className={cn("h-full -mt-px", currentStep > step.id ? "bg-primary" : "bg-border")} />
                   </div>
                 )}
               </div>
@@ -291,8 +306,10 @@ export default function CreateBatch() {
       </Card>
 
       <form onSubmit={handleSubmit}>
+        <AnimatePresence mode="wait">
         {/* Step 1: Basic Info */}
         {currentStep === 1 && (
+          <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
@@ -340,10 +357,12 @@ export default function CreateBatch() {
               </CardContent>
             </Card>
           </div>
+          </motion.div>
         )}
 
         {/* Step 2: Schedule & Settings */}
         {currentStep === 2 && (
+          <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
           <div className="space-y-6">
             {/* Calendar Section */}
             <Card>
@@ -437,10 +456,12 @@ export default function CreateBatch() {
               </Card>
             </div>
           </div>
+          </motion.div>
         )}
 
         {/* Step 3: VM Configuration */}
         {currentStep === 3 && (
+          <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">
               {/* Enable VMs Toggle */}
@@ -717,10 +738,12 @@ export default function CreateBatch() {
               </Card>
             </div>
           </div>
+          </motion.div>
         )}
 
         {/* Step 4: Review & Create */}
         {currentStep === 4 && (
+          <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">
               <Card>
@@ -881,7 +904,9 @@ export default function CreateBatch() {
               )}
             </div>
           </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         {/* Navigation */}
         <div className="flex justify-between mt-8">
