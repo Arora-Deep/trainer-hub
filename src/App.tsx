@@ -34,6 +34,25 @@ import Support from "./pages/Support";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
+// Admin pages
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminCustomers from "./pages/admin/Customers";
+import CreateCustomer from "./pages/admin/CreateCustomer";
+import AdminTemplates from "./pages/admin/Templates";
+import AdminVMManagement from "./pages/admin/VMManagement";
+import AdminApprovals from "./pages/admin/Approvals";
+import AdminBilling from "./pages/admin/Billing";
+import AdminUsersRoles from "./pages/admin/UsersRoles";
+import AdminAnalytics from "./pages/admin/Analytics";
+import AdminSettings from "./pages/admin/Settings";
+
+// Student pages
+import StudentDashboard from "./pages/student/Dashboard";
+import StudentLabs from "./pages/student/Labs";
+import StudentCourses from "./pages/student/Courses";
+import StudentAssessments from "./pages/student/Assessments";
+import StudentCertificates from "./pages/student/Certificates";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -44,6 +63,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route element={<AppLayout />}>
+            {/* Trainer routes */}
             <Route path="/" element={<Dashboard />} />
             <Route path="/batches" element={<Batches />} />
             <Route path="/batches/create" element={<CreateBatch />} />
@@ -72,6 +92,25 @@ const App = () => (
             <Route path="/certifications/:id/edit" element={<EditCertification />} />
             <Route path="/support" element={<Support />} />
             <Route path="/settings" element={<Settings />} />
+
+            {/* CloudAdda Admin routes */}
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/customers" element={<AdminCustomers />} />
+            <Route path="/admin/customers/create" element={<CreateCustomer />} />
+            <Route path="/admin/templates" element={<AdminTemplates />} />
+            <Route path="/admin/vms" element={<AdminVMManagement />} />
+            <Route path="/admin/approvals" element={<AdminApprovals />} />
+            <Route path="/admin/billing" element={<AdminBilling />} />
+            <Route path="/admin/users" element={<AdminUsersRoles />} />
+            <Route path="/admin/analytics" element={<AdminAnalytics />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
+
+            {/* Student routes */}
+            <Route path="/student/dashboard" element={<StudentDashboard />} />
+            <Route path="/student/labs" element={<StudentLabs />} />
+            <Route path="/student/courses" element={<StudentCourses />} />
+            <Route path="/student/assessments" element={<StudentAssessments />} />
+            <Route path="/student/certificates" element={<StudentCertificates />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
