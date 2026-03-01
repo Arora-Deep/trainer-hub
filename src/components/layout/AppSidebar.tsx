@@ -41,10 +41,10 @@ const adminNav: NavConfig = {
     { label: "Overview", icon: Home, items: [
       { title: "Dashboard", icon: Gauge, path: "/admin/dashboard" },
     ]},
-    { label: "Tenants", icon: Building2, items: [
-      { title: "Tenant Directory", icon: Building2, path: "/admin/tenants" },
-      { title: "Tenant Health", icon: Activity, path: "/admin/tenants/health" },
-      { title: "Tenant Requests", icon: ClipboardList, path: "/admin/tenants/requests" },
+    { label: "Customers", icon: Building2, items: [
+      { title: "Customer Directory", icon: Building2, path: "/admin/customers" },
+      { title: "Customer Health", icon: Activity, path: "/admin/customers/health" },
+      { title: "Customer Requests", icon: ClipboardList, path: "/admin/customers/requests" },
     ]},
     { label: "Catalog", icon: Boxes, items: [
       { title: "Golden Images", icon: Image, path: "/admin/catalog/images" },

@@ -79,8 +79,8 @@ export function AppHeader() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem onClick={() => navigate("/admin/tenants")} className="gap-2 cursor-pointer text-sm">
-                <Building2 className="h-4 w-4" /> Create Tenant
+              <DropdownMenuItem onClick={() => navigate("/admin/customers/create")} className="gap-2 cursor-pointer text-sm">
+                <Building2 className="h-4 w-4" /> Create Customer
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/admin/catalog/blueprints")} className="gap-2 cursor-pointer text-sm">
                 <FlaskConical className="h-4 w-4" /> Create Blueprint
