@@ -36,7 +36,7 @@ export default function AdminBilling() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {customers.filter(c => c.status !== "inactive").map((c) => (
+              {customers.filter(c => c.status !== "suspended").map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-medium text-sm">{c.name}</TableCell>
                   <TableCell><Badge variant="outline" className="text-xs capitalize">{c.plan}</Badge></TableCell>
