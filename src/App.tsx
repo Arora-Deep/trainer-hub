@@ -85,6 +85,9 @@ import StudentLabs from "./pages/student/Labs";
 import StudentCourses from "./pages/student/Courses";
 import StudentAssessments from "./pages/student/Assessments";
 import StudentCertificates from "./pages/student/Certificates";
+import StudentSchedule from "./pages/student/Schedule";
+import StudentLiveClass from "./pages/student/LiveClass";
+import StudentSupport from "./pages/student/Support";
 
 const queryClient = new QueryClient();
 
@@ -177,6 +180,9 @@ const App = () => (
             <Route path="/student/courses" element={<StudentCourses />} />
             <Route path="/student/assessments" element={<StudentAssessments />} />
             <Route path="/student/certificates" element={<StudentCertificates />} />
+            <Route path="/student/schedule" element={<StudentSchedule />} />
+            <Route path="/student/live-class" element={<StudentLiveClass />} />
+            <Route path="/student/support" element={<StudentSupport />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -8,6 +8,7 @@ import {
   Cpu, HardDrive, Network, Activity, LifeBuoy, Receipt, Lock, FileBarChart,
   Gauge, AlertTriangle, Clock, Wrench, BookMarked, Zap, Globe, Eye,
   DollarSign, Scale, Key, Database, Send, Flag, Workflow, Container,
+  Video, Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -134,14 +135,16 @@ const studentNav: NavConfig = {
   groups: [
     { label: "Main", icon: Home, items: [
       { title: "My Dashboard", icon: Home, path: "/student/dashboard" },
+      { title: "Live Class", icon: Video, path: "/student/live-class" },
       { title: "My Labs", icon: Monitor, path: "/student/labs" },
       { title: "My Courses", icon: BookOpen, path: "/student/courses" },
+      { title: "Schedule", icon: Calendar, path: "/student/schedule" },
       { title: "Assessments", icon: FileText, path: "/student/assessments" },
       { title: "Certificates", icon: Trophy, path: "/student/certificates" },
     ]},
   ],
   bottom: [
-    { title: "Support", icon: HelpCircle, path: "/support" },
+    { title: "Support", icon: HelpCircle, path: "/student/support" },
   ],
 };
 
