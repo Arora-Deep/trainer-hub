@@ -39,72 +39,67 @@ const adminNav: NavConfig = {
   label: "CloudAdda",
   icon: Shield,
   groups: [
-    { label: "Overview", icon: Home, items: [
-      { title: "Dashboard", icon: Gauge, path: "/admin/dashboard" },
+    { label: "Dashboard", icon: Home, items: [
+      { title: "Overview", icon: Gauge, path: "/admin/dashboard" },
+      { title: "Activity Feed", icon: Activity, path: "/admin/activity" },
+      { title: "Alerts", icon: AlertTriangle, path: "/admin/monitoring/alerts" },
     ]},
     { label: "Customers", icon: Building2, items: [
-      { title: "Customer Directory", icon: Building2, path: "/admin/customers" },
+      { title: "Customer List", icon: Building2, path: "/admin/customers" },
+      { title: "Add Customer", icon: Users, path: "/admin/customers/create" },
       { title: "Customer Health", icon: Activity, path: "/admin/customers/health" },
-      { title: "Customer Requests", icon: ClipboardList, path: "/admin/customers/requests" },
+      { title: "Customer Usage", icon: BarChart3, path: "/admin/reports/usage" },
     ]},
-    { label: "Catalog", icon: Boxes, items: [
-      { title: "Golden Images", icon: Image, path: "/admin/catalog/images" },
-      { title: "Lab Blueprints", icon: FlaskConical, path: "/admin/catalog/blueprints" },
-      { title: "Validation Runs", icon: CheckCircle, path: "/admin/catalog/validations" },
+    { label: "Batches", icon: Layers, items: [
+      { title: "All Batches", icon: Layers, path: "/admin/provisioning/batch" },
+      { title: "Create Batch", icon: Container, path: "/admin/provisioning/batch/create" },
+      { title: "Modify Batch", icon: Wrench, path: "/admin/provisioning/batch/modify" },
+      { title: "Completed Batches", icon: CheckCircle, path: "/admin/provisioning/batch/completed" },
+      { title: "Batch Requests", icon: ClipboardList, path: "/admin/customers/requests" },
     ]},
-    { label: "Provisioning", icon: Workflow, items: [
-      { title: "Provisioning Queue", icon: ListOrdered, path: "/admin/provisioning/queue" },
-      { title: "Batch Provisioning", icon: Container, path: "/admin/provisioning/batch" },
-      { title: "Lifecycle Policies", icon: Clock, path: "/admin/provisioning/lifecycle" },
-      { title: "Job History", icon: FileText, path: "/admin/provisioning/history" },
+    { label: "Labs", icon: FlaskConical, items: [
+      { title: "Assign VM", icon: Monitor, path: "/admin/labs/assign-vm" },
+      { title: "Lab Instances", icon: Server, path: "/admin/labs/instances" },
+      { title: "Replace VM", icon: Workflow, path: "/admin/labs/replace-vm" },
+      { title: "Reset Lab", icon: Zap, path: "/admin/labs/reset" },
+      { title: "Lab Templates", icon: Boxes, path: "/admin/catalog/blueprints" },
+      { title: "ISO Library", icon: Image, path: "/admin/catalog/images" },
+    ]},
+    { label: "Users", icon: Users, items: [
+      { title: "Platform Users", icon: UserCog, path: "/admin/security/rbac" },
+      { title: "Customer Users", icon: Building2, path: "/admin/users/customer-users" },
+      { title: "Students", icon: GraduationCap, path: "/admin/users/students" },
+      { title: "Roles", icon: Key, path: "/admin/users/roles" },
+      { title: "Reset Password", icon: Lock, path: "/admin/users/reset-password" },
     ]},
     { label: "Infrastructure", icon: Server, items: [
-      { title: "Regions & Clusters", icon: Globe, path: "/admin/infra/regions" },
-      { title: "Hosts / Nodes", icon: Cpu, path: "/admin/infra/hosts" },
-      { title: "Resource Pools", icon: Boxes, path: "/admin/infra/resources" },
-      { title: "Storage Pools", icon: HardDrive, path: "/admin/infra/storage" },
-      { title: "GPU Pools", icon: Cpu, path: "/admin/infra/gpu" },
-    ]},
-    { label: "Networking", icon: Network, items: [
-      { title: "IP Pools", icon: Network, path: "/admin/network/ip-pools" },
-      { title: "Firewall Policies", icon: Shield, path: "/admin/network/firewall" },
-      { title: "Internet Policies", icon: Globe, path: "/admin/network/internet" },
-      { title: "Session Access Logs", icon: Eye, path: "/admin/network/sessions" },
-    ]},
-    { label: "Monitoring", icon: Activity, items: [
-      { title: "Platform Health", icon: Activity, path: "/admin/monitoring/health" },
-      { title: "Alerts & Rules", icon: AlertTriangle, path: "/admin/monitoring/alerts" },
-      { title: "Incidents", icon: AlertTriangle, path: "/admin/monitoring/incidents" },
-      { title: "Maintenance Windows", icon: Wrench, path: "/admin/monitoring/maintenance" },
+      { title: "Nodes", icon: Cpu, path: "/admin/infra/hosts" },
+      { title: "Resource Usage", icon: Boxes, path: "/admin/infra/resources" },
+      { title: "Capacity Planning", icon: BarChart3, path: "/admin/infra/capacity" },
+      { title: "Maintenance Mode", icon: Wrench, path: "/admin/monitoring/maintenance" },
     ]},
     { label: "Support", icon: LifeBuoy, items: [
-      { title: "Ticket Inbox", icon: LifeBuoy, path: "/admin/support/tickets" },
-      { title: "Runbooks", icon: BookMarked, path: "/admin/support/runbooks" },
-      { title: "Macros", icon: Zap, path: "/admin/support/macros" },
+      { title: "Tickets", icon: LifeBuoy, path: "/admin/support/tickets" },
+      { title: "Support Logs", icon: FileText, path: "/admin/support/logs" },
     ]},
-    { label: "Billing & Finance", icon: CreditCard, items: [
-      { title: "Plans & Pricing", icon: CreditCard, path: "/admin/billing/plans" },
+    { label: "Billing", icon: CreditCard, items: [
       { title: "Invoices", icon: Receipt, path: "/admin/billing/invoices" },
       { title: "Payments", icon: DollarSign, path: "/admin/billing/payments" },
       { title: "Credits", icon: Scale, path: "/admin/billing/credits" },
-      { title: "Cost & Margin", icon: BarChart3, path: "/admin/billing/cost" },
-    ]},
-    { label: "Security", icon: Lock, items: [
-      { title: "Staff RBAC", icon: UserCog, path: "/admin/security/rbac" },
-      { title: "Audit Logs", icon: FileBarChart, path: "/admin/security/audit" },
-      { title: "SSO / MFA", icon: Key, path: "/admin/security/sso" },
-      { title: "Data Retention", icon: Database, path: "/admin/security/retention" },
+      { title: "Usage Reports", icon: BarChart3, path: "/admin/billing/usage" },
     ]},
     { label: "Reports", icon: BarChart3, items: [
-      { title: "Daily Ops Report", icon: FileText, path: "/admin/reports/daily" },
       { title: "Usage Reports", icon: BarChart3, path: "/admin/reports/usage" },
       { title: "Revenue Reports", icon: DollarSign, path: "/admin/reports/revenue" },
-      { title: "Export Center", icon: Send, path: "/admin/reports/exports" },
+      { title: "Batch Reports", icon: FileText, path: "/admin/reports/batch" },
+    ]},
+    { label: "System", icon: Settings, items: [
+      { title: "Logs", icon: FileText, path: "/admin/system/logs" },
+      { title: "Audit Logs", icon: FileBarChart, path: "/admin/security/audit" },
+      { title: "Settings", icon: Settings, path: "/admin/settings" },
     ]},
   ],
-  bottom: [
-    { title: "Settings", icon: Settings, path: "/admin/settings" },
-  ],
+  bottom: [],
 };
 
 const trainerNav: NavConfig = {
