@@ -3,47 +3,62 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCustomerStore } from "@/stores/customerStore";
-import { Plus, Download, Send } from "lucide-react";
+import { Bell, CheckCircle } from "lucide-react";
 
 const statusColors: Record<string, string> = {
-  paid: "bg-success/10 text-success", due: "bg-warning/10 text-warning",
-  overdue: "bg-destructive/10 text-destructive", draft: "bg-muted text-muted-foreground",
+  paid: "bg-success/10 text-success",
+  due: "bg-warning/10 text-warning",
+  overdue: "bg-destructive/10 text-destructive",
+  draft: "bg-muted text-muted-foreground",
 };
 
-export default function InvoicesPage() {
+export default function AdminInvoices() {
   const { invoices } = useCustomerStore();
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold tracking-tight">Invoices</h1><p className="text-muted-foreground text-sm mt-1">{invoices.length} invoices</p></div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs"><Download className="h-3.5 w-3.5" /> Export</Button>
-          <Button size="sm" className="gap-1.5 text-xs"><Plus className="h-3.5 w-3.5" /> Create Invoice</Button>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Invoices</h1>
+        <p className="text-muted-foreground text-sm mt-1">Invoice management</p>
       </div>
-      <Card><CardContent className="p-0">
-        <Table>
-          <TableHeader><TableRow>
-            <TableHead className="text-xs">Invoice</TableHead><TableHead className="text-xs">Tenant</TableHead>
-            <TableHead className="text-xs text-right">Amount</TableHead><TableHead className="text-xs">Status</TableHead>
-            <TableHead className="text-xs">Due Date</TableHead><TableHead className="text-xs text-right">Overdue Days</TableHead>
-            <TableHead className="text-xs w-10"></TableHead>
-          </TableRow></TableHeader>
-          <TableBody>
-            {invoices.map(inv => (
-              <TableRow key={inv.id}>
-                <TableCell className="text-xs font-mono">{inv.id}</TableCell>
-                <TableCell className="text-sm">{inv.tenant}</TableCell>
-                <TableCell className="text-sm font-medium text-right">₹{inv.amount.toLocaleString()}</TableCell>
-                <TableCell><Badge variant="secondary" className={`text-[10px] capitalize ${statusColors[inv.status]}`}>{inv.status}</Badge></TableCell>
-                <TableCell className="text-xs">{inv.dueDate}</TableCell>
-                <TableCell className="text-xs text-right">{inv.overdueDays > 0 ? <span className="text-destructive">{inv.overdueDays}</span> : "—"}</TableCell>
-                <TableCell>{inv.status === "overdue" && <Button variant="ghost" size="icon" className="h-7 w-7" title="Send Reminder"><Send className="h-3.5 w-3.5" /></Button>}</TableCell>
+
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Invoice</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead>Due Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent></Card>
+            </TableHeader>
+            <TableBody>
+              {invoices.map((inv) => (
+                <TableRow key={inv.id}>
+                  <TableCell className="text-sm font-mono">{inv.id}</TableCell>
+                  <TableCell className="text-sm">{inv.tenant}</TableCell>
+                  <TableCell className="text-sm text-right font-medium">${inv.amount.toLocaleString()}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{inv.dueDate}</TableCell>
+                  <TableCell><Badge variant="secondary" className={`text-xs capitalize ${statusColors[inv.status]}`}>{inv.status}</Badge></TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      {(inv.status === "due" || inv.status === "overdue") && (
+                        <Button variant="outline" size="sm" className="gap-1 text-xs"><Bell className="h-3 w-3" /> Remind</Button>
+                      )}
+                      {inv.status !== "paid" && (
+                        <Button variant="outline" size="sm" className="gap-1 text-xs"><CheckCircle className="h-3 w-3" /> Mark Paid</Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
