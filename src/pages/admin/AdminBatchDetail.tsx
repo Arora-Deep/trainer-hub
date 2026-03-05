@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, Users, Server, Settings, Calendar, Plus, Upload, Trash2, RefreshCw, Play, Square, Eye } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Switch } from "@/components/ui/switch";
+import { useLabStore } from "@/stores/labStore";
+import { TemplatePickerGrid } from "@/components/labs/TemplatePickerGrid";
+import { VMDaySchedule } from "@/components/batches/VMDaySchedule";
+import type { DaySchedule } from "@/components/batches/VMDaySchedule";
+import { cn } from "@/lib/utils";
+import { format, differenceInDays, eachDayOfInterval } from "date-fns";
+import type { DateRange } from "react-day-picker";
+import { toast } from "@/hooks/use-toast";
+import {
+  ArrowLeft, Users, Server, Settings, Calendar as CalendarIcon, Plus, Upload, Trash2,
+  RefreshCw, Play, Square, Eye, Monitor, Layers, DollarSign, HardDrive, Zap, Shield,
+} from "lucide-react";
+
+interface VMEntry {
+  id: string;
+  templateId: string;
+  instanceName: string;
+  vmType: "single" | "multi";
+  dateRange: { from: string; to: string };
+  dailySchedules: DaySchedule[];
+}
 
 const batchData: Record<string, any> = {
   "B-001": {
@@ -83,9 +105,44 @@ const statusColor: Record<string, string> = {
 export default function AdminBatchDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { templates } = useLabStore();
   const [addStudentOpen, setAddStudentOpen] = useState(false);
 
+  // VM Configuration state for Labs tab
+  const [showVMConfig, setShowVMConfig] = useState(false);
+  const [vmType, setVmType] = useState<"single" | "multi">("single");
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [instanceName, setInstanceName] = useState("");
+  const [vmDateRange, setVmDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [vmDailySchedules, setVmDailySchedules] = useState<DaySchedule[]>([]);
+  const [addedVMs, setAddedVMs] = useState<VMEntry[]>([]);
+
   const batch = batchData[id || ""] || batchData["B-001"];
+
+  const handleAddVM = () => {
+    if (!vmDateRange.from || !vmDateRange.to || !selectedTemplateId) return;
+    const days = eachDayOfInterval({ start: vmDateRange.from, end: vmDateRange.to });
+    const finalSchedules = days.map((day: Date) => {
+      const dateStr = format(day, "yyyy-MM-dd");
+      const existing = vmDailySchedules.find(s => s.date === dateStr);
+      return existing || { date: dateStr, startTime: "09:00", endTime: "18:00" };
+    });
+    const newVM: VMEntry = {
+      id: `vme-${Date.now()}`,
+      templateId: selectedTemplateId,
+      instanceName: instanceName || "Unnamed VM",
+      vmType,
+      dateRange: { from: vmDateRange.from.toISOString(), to: vmDateRange.to.toISOString() },
+      dailySchedules: finalSchedules,
+    };
+    setAddedVMs([...addedVMs, newVM]);
+    setSelectedTemplateId("");
+    setInstanceName("");
+    setVmDateRange({ from: undefined, to: undefined });
+    setVmDailySchedules([]);
+    setShowVMConfig(false);
+    toast({ title: "VM Added", description: `${newVM.instanceName} has been configured.` });
+  };
 
   return (
     <div className="space-y-6">
@@ -171,10 +228,7 @@ export default function AdminBatchDetail() {
                       <span className="text-muted-foreground">{r.used} / {r.total} {r.unit}</span>
                     </div>
                     <div className="h-2 rounded-full bg-muted">
-                      <div
-                        className="h-2 rounded-full bg-primary transition-all"
-                        style={{ width: `${(r.used / r.total) * 100}%` }}
-                      />
+                      <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${(r.used / r.total) * 100}%` }} />
                     </div>
                   </div>
                 ))}
@@ -246,15 +300,20 @@ export default function AdminBatchDetail() {
           </Card>
         </TabsContent>
 
-        {/* Labs Tab */}
+        {/* Labs & VMs Tab - with VM Configuration */}
         <TabsContent value="labs" className="space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">{labInstances.length} lab instances</p>
             <div className="flex gap-2">
               <Button variant="outline" size="sm"><RefreshCw className="h-3 w-3 mr-1" /> Refresh</Button>
+              <Button variant="outline" size="sm" onClick={() => setShowVMConfig(!showVMConfig)}>
+                <Plus className="h-3 w-3 mr-1" /> Configure VM
+              </Button>
               <Button size="sm">Auto Assign All</Button>
             </div>
           </div>
+
+          {/* Active Lab Instances Table */}
           <Card>
             <CardContent className="p-0">
               <Table>
@@ -295,6 +354,183 @@ export default function AdminBatchDetail() {
               </Table>
             </CardContent>
           </Card>
+
+          {/* Added VMs List */}
+          {addedVMs.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-primary" />
+                  Configured VMs ({addedVMs.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {addedVMs.map((vm, index) => {
+                  const tpl = templates.find(t => t.id === vm.templateId);
+                  return (
+                    <div key={vm.id} className="flex items-center justify-between p-4 rounded-xl border bg-muted/10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm">{vm.instanceName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {tpl?.name || "No template"} · {format(new Date(vm.dateRange.from), "MMM d")} – {format(new Date(vm.dateRange.to), "MMM d, yyyy")} · {vm.dailySchedules.length} day(s) · {vm.vmType}
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon" onClick={() => setAddedVMs(addedVMs.filter((_, i) => i !== index))} className="text-muted-foreground hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  );
+                })}
+                <Button size="sm" className="w-full">
+                  <Play className="h-3 w-3 mr-1" /> Provision All VMs
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* VM Configuration Panel */}
+          {showVMConfig && (
+            <div className="space-y-6 border-t pt-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2.5 rounded-xl bg-primary/10">
+                  <Monitor className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">Add VM Configuration</h3>
+                  <p className="text-sm text-muted-foreground">Configure a new VM environment for this batch</p>
+                </div>
+              </div>
+
+              {/* VM Type Selection */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-primary" />
+                    VM Type
+                  </CardTitle>
+                  <CardDescription>Choose how many VMs each participant gets</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setVmType("single")}
+                      className={cn(
+                        "p-5 rounded-xl border-2 text-left transition-all",
+                        vmType === "single" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                      )}
+                    >
+                      <Monitor className="h-6 w-6 mb-2 text-primary" />
+                      <h4 className="font-semibold">Single VM</h4>
+                      <p className="text-xs text-muted-foreground mt-1">One VM per participant</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVmType("multi")}
+                      className={cn(
+                        "p-5 rounded-xl border-2 text-left transition-all",
+                        vmType === "multi" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                      )}
+                    >
+                      <Layers className="h-6 w-6 mb-2 text-primary" />
+                      <h4 className="font-semibold">Multi VM</h4>
+                      <p className="text-xs text-muted-foreground mt-1">2-3 VMs per participant</p>
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Template Selection */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Server className="h-4 w-4 text-primary" />
+                    VM Template
+                  </CardTitle>
+                  <CardDescription>Select template and name your instance</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-4 rounded-xl border bg-muted/10 space-y-4">
+                    <div className="space-y-3">
+                      <Label className="text-xs">Select Template</Label>
+                      <TemplatePickerGrid
+                        templates={templates}
+                        selectedId={selectedTemplateId}
+                        onSelect={(template) => setSelectedTemplateId(template.id)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Instance Name</Label>
+                      <Input
+                        placeholder="e.g., Web Server, Database, etc."
+                        value={instanceName}
+                        onChange={(e) => setInstanceName(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* VM Date Range Calendar */}
+              <Card>
+                <CardContent className="pt-8 pb-6 flex flex-col items-center">
+                  <div className="text-center mb-6">
+                    <h2 className="text-lg font-semibold">Choose VM availability dates</h2>
+                    {vmDateRange.from && vmDateRange.to ? (
+                      <div className="flex items-center justify-center gap-2 mt-2">
+                        <p className="text-sm text-muted-foreground">
+                          {format(vmDateRange.from, "MMM d, yyyy")} — {format(vmDateRange.to, "MMM d, yyyy")} ({differenceInDays(vmDateRange.to, vmDateRange.from) + 1} days)
+                        </p>
+                        <Button type="button" variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto py-0.5 px-1.5" onClick={() => setVmDateRange({ from: undefined, to: undefined })}>
+                          Clear
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground mt-1">Select a start date, then an end date</p>
+                    )}
+                  </div>
+                  <Calendar
+                    mode="range"
+                    selected={vmDateRange as DateRange}
+                    onSelect={(range) => setVmDateRange({ from: range?.from, to: range?.to })}
+                    numberOfMonths={2}
+                    className="p-4 pointer-events-auto"
+                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Per-Day Timings */}
+              {vmDateRange.from && vmDateRange.to && (
+                <VMDaySchedule
+                  dateRange={{ from: vmDateRange.from, to: vmDateRange.to }}
+                  dailySchedules={vmDailySchedules}
+                  onChange={setVmDailySchedules}
+                />
+              )}
+
+              {/* Add VM Button */}
+              <div className="flex gap-3">
+                <Button
+                  size="lg"
+                  className="flex-1"
+                  disabled={!vmDateRange.from || !vmDateRange.to || !selectedTemplateId}
+                  onClick={handleAddVM}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add VM
+                </Button>
+                <Button variant="outline" size="lg" onClick={() => setShowVMConfig(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         {/* Schedule Tab */}
