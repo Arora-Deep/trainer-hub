@@ -36,47 +36,43 @@ import NotFound from "./pages/NotFound";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminActivityFeed from "./pages/admin/ActivityFeed";
+import AdminAlerts from "./pages/admin/Alerts";
 import AdminCustomers from "./pages/admin/Customers";
 import CreateCustomer from "./pages/admin/CreateCustomer";
 import CustomerDetail from "./pages/admin/CustomerDetail";
-import AdminTenantHealth from "./pages/admin/TenantHealth";
-import AdminTenantRequests from "./pages/admin/TenantRequests";
-import AdminGoldenImages from "./pages/admin/GoldenImages";
-import AdminLabBlueprints from "./pages/admin/LabBlueprints";
-import AdminValidationRuns from "./pages/admin/ValidationRuns";
-import AdminProvisioningQueue from "./pages/admin/ProvisioningQueue";
-import AdminBatchProvisioning from "./pages/admin/BatchProvisioning";
-import AdminLifecyclePolicies from "./pages/admin/LifecyclePolicies";
-import AdminJobHistory from "./pages/admin/JobHistory";
-import AdminRegionsClusters from "./pages/admin/RegionsClusters";
-import AdminHostsNodes from "./pages/admin/HostsNodes";
-import AdminResourcePools from "./pages/admin/ResourcePools";
-import AdminStoragePools from "./pages/admin/StoragePools";
-import AdminGPUPools from "./pages/admin/GPUPools";
-import AdminIPPools from "./pages/admin/IPPools";
-import AdminFirewallPolicies from "./pages/admin/FirewallPolicies";
-import AdminInternetPolicies from "./pages/admin/InternetPolicies";
-import AdminSessionAccessLogs from "./pages/admin/SessionAccessLogs";
-import AdminPlatformHealth from "./pages/admin/PlatformHealth";
-import AdminAlertsRules from "./pages/admin/AlertsRules";
-import AdminIncidents from "./pages/admin/Incidents";
-import AdminMaintenanceWindows from "./pages/admin/MaintenanceWindows";
-import AdminTicketInbox from "./pages/admin/TicketInbox";
-import AdminRunbooks from "./pages/admin/Runbooks";
-import AdminMacros from "./pages/admin/Macros";
-import AdminPlansAndPricing from "./pages/admin/PlansAndPricing";
+import CustomerHealth from "./pages/admin/CustomerHealth";
+import CustomerUsage from "./pages/admin/CustomerUsage";
+import AllBatches from "./pages/admin/AllBatches";
+import AdminCreateBatch from "./pages/admin/AdminCreateBatch";
+import ModifyBatch from "./pages/admin/ModifyBatch";
+import CompletedBatches from "./pages/admin/CompletedBatches";
+import BatchRequests from "./pages/admin/BatchRequests";
+import LabInstances from "./pages/admin/LabInstances";
+import AssignVM from "./pages/admin/AssignVM";
+import ReplaceVM from "./pages/admin/ReplaceVM";
+import ResetLab from "./pages/admin/ResetLab";
+import AdminTemplates from "./pages/admin/Templates";
+import ISOLibrary from "./pages/admin/ISOLibrary";
+import PlatformUsers from "./pages/admin/PlatformUsers";
+import CustomerUsers from "./pages/admin/CustomerUsers";
+import AdminStudents from "./pages/admin/Students";
+import AdminRoles from "./pages/admin/Roles";
+import ResetPassword from "./pages/admin/ResetPassword";
+import AdminNodes from "./pages/admin/Nodes";
+import ResourceUsage from "./pages/admin/ResourceUsage";
+import CapacityPlanning from "./pages/admin/CapacityPlanning";
+import MaintenanceMode from "./pages/admin/MaintenanceMode";
+import AdminTickets from "./pages/admin/Tickets";
+import SupportLogs from "./pages/admin/SupportLogs";
 import AdminInvoices from "./pages/admin/Invoices";
 import AdminPayments from "./pages/admin/Payments";
 import AdminCredits from "./pages/admin/Credits";
-import AdminCostMargin from "./pages/admin/CostMargin";
-import AdminStaffRBAC from "./pages/admin/StaffRBAC";
-import AdminAuditLogs from "./pages/admin/AuditLogs";
-import AdminSSOSettings from "./pages/admin/SSOSettings";
-import AdminDataRetention from "./pages/admin/DataRetention";
-import AdminDailyOpsReport from "./pages/admin/DailyOpsReport";
 import AdminUsageReports from "./pages/admin/UsageReports";
 import AdminRevenueReports from "./pages/admin/RevenueReports";
-import AdminExportCenter from "./pages/admin/ExportCenter";
+import BatchReports from "./pages/admin/BatchReports";
+import SystemLogs from "./pages/admin/SystemLogs";
+import AdminAuditLogs from "./pages/admin/AuditLogs";
 import AdminSettings from "./pages/admin/Settings";
 
 // Student pages
@@ -129,49 +125,46 @@ const App = () => (
             <Route path="/support" element={<Support />} />
             <Route path="/settings" element={<Settings />} />
 
-            {/* CloudAdda Admin routes */}
+            {/* Admin routes */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/activity-feed" element={<AdminActivityFeed />} />
+            <Route path="/admin/alerts" element={<AdminAlerts />} />
             <Route path="/admin/customers" element={<AdminCustomers />} />
             <Route path="/admin/customers/create" element={<CreateCustomer />} />
             <Route path="/admin/customers/:id" element={<CustomerDetail />} />
-            <Route path="/admin/customers/health" element={<AdminTenantHealth />} />
-            <Route path="/admin/customers/requests" element={<AdminTenantRequests />} />
-            <Route path="/admin/catalog/images" element={<AdminGoldenImages />} />
-            <Route path="/admin/catalog/blueprints" element={<AdminLabBlueprints />} />
-            <Route path="/admin/catalog/validations" element={<AdminValidationRuns />} />
-            <Route path="/admin/provisioning/queue" element={<AdminProvisioningQueue />} />
-            <Route path="/admin/provisioning/batch" element={<AdminBatchProvisioning />} />
-            <Route path="/admin/provisioning/lifecycle" element={<AdminLifecyclePolicies />} />
-            <Route path="/admin/provisioning/history" element={<AdminJobHistory />} />
-            <Route path="/admin/infra/regions" element={<AdminRegionsClusters />} />
-            <Route path="/admin/infra/hosts" element={<AdminHostsNodes />} />
-            <Route path="/admin/infra/resources" element={<AdminResourcePools />} />
-            <Route path="/admin/infra/storage" element={<AdminStoragePools />} />
-            <Route path="/admin/infra/gpu" element={<AdminGPUPools />} />
-            <Route path="/admin/network/ip-pools" element={<AdminIPPools />} />
-            <Route path="/admin/network/firewall" element={<AdminFirewallPolicies />} />
-            <Route path="/admin/network/internet" element={<AdminInternetPolicies />} />
-            <Route path="/admin/network/sessions" element={<AdminSessionAccessLogs />} />
-            <Route path="/admin/monitoring/health" element={<AdminPlatformHealth />} />
-            <Route path="/admin/monitoring/alerts" element={<AdminAlertsRules />} />
-            <Route path="/admin/monitoring/incidents" element={<AdminIncidents />} />
-            <Route path="/admin/monitoring/maintenance" element={<AdminMaintenanceWindows />} />
-            <Route path="/admin/support/tickets" element={<AdminTicketInbox />} />
-            <Route path="/admin/support/runbooks" element={<AdminRunbooks />} />
-            <Route path="/admin/support/macros" element={<AdminMacros />} />
-            <Route path="/admin/billing/plans" element={<AdminPlansAndPricing />} />
+            <Route path="/admin/customers/health" element={<CustomerHealth />} />
+            <Route path="/admin/customers/usage" element={<CustomerUsage />} />
+            <Route path="/admin/batches" element={<AllBatches />} />
+            <Route path="/admin/batches/create" element={<AdminCreateBatch />} />
+            <Route path="/admin/batches/modify" element={<ModifyBatch />} />
+            <Route path="/admin/batches/completed" element={<CompletedBatches />} />
+            <Route path="/admin/batches/requests" element={<BatchRequests />} />
+            <Route path="/admin/labs/instances" element={<LabInstances />} />
+            <Route path="/admin/labs/assign" element={<AssignVM />} />
+            <Route path="/admin/labs/replace" element={<ReplaceVM />} />
+            <Route path="/admin/labs/reset" element={<ResetLab />} />
+            <Route path="/admin/labs/templates" element={<AdminTemplates />} />
+            <Route path="/admin/labs/iso" element={<ISOLibrary />} />
+            <Route path="/admin/users/platform" element={<PlatformUsers />} />
+            <Route path="/admin/users/customer" element={<CustomerUsers />} />
+            <Route path="/admin/users/students" element={<AdminStudents />} />
+            <Route path="/admin/users/roles" element={<AdminRoles />} />
+            <Route path="/admin/users/reset-password" element={<ResetPassword />} />
+            <Route path="/admin/infra/nodes" element={<AdminNodes />} />
+            <Route path="/admin/infra/resource-usage" element={<ResourceUsage />} />
+            <Route path="/admin/infra/capacity" element={<CapacityPlanning />} />
+            <Route path="/admin/infra/maintenance" element={<MaintenanceMode />} />
+            <Route path="/admin/support/tickets" element={<AdminTickets />} />
+            <Route path="/admin/support/logs" element={<SupportLogs />} />
             <Route path="/admin/billing/invoices" element={<AdminInvoices />} />
             <Route path="/admin/billing/payments" element={<AdminPayments />} />
             <Route path="/admin/billing/credits" element={<AdminCredits />} />
-            <Route path="/admin/billing/cost" element={<AdminCostMargin />} />
-            <Route path="/admin/security/rbac" element={<AdminStaffRBAC />} />
-            <Route path="/admin/security/audit" element={<AdminAuditLogs />} />
-            <Route path="/admin/security/sso" element={<AdminSSOSettings />} />
-            <Route path="/admin/security/retention" element={<AdminDataRetention />} />
-            <Route path="/admin/reports/daily" element={<AdminDailyOpsReport />} />
+            <Route path="/admin/billing/usage" element={<AdminUsageReports />} />
             <Route path="/admin/reports/usage" element={<AdminUsageReports />} />
             <Route path="/admin/reports/revenue" element={<AdminRevenueReports />} />
-            <Route path="/admin/reports/exports" element={<AdminExportCenter />} />
+            <Route path="/admin/reports/batches" element={<BatchReports />} />
+            <Route path="/admin/system/logs" element={<SystemLogs />} />
+            <Route path="/admin/system/audit" element={<AdminAuditLogs />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
 
             {/* Student routes */}
