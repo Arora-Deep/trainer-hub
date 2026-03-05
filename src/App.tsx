@@ -45,6 +45,7 @@ import CustomerHealth from "./pages/admin/CustomerHealth";
 import CustomerUsage from "./pages/admin/CustomerUsage";
 import AllBatches from "./pages/admin/AllBatches";
 import AdminCreateBatch from "./pages/admin/AdminCreateBatch";
+import AdminBatchDetail from "./pages/admin/AdminBatchDetail";
 import ModifyBatch from "./pages/admin/ModifyBatch";
 import CompletedBatches from "./pages/admin/CompletedBatches";
 import BatchRequests from "./pages/admin/BatchRequests";
@@ -136,6 +137,7 @@ const App = () => (
             <Route path="/admin/customers/usage" element={<CustomerUsage />} />
             <Route path="/admin/batches" element={<AllBatches />} />
             <Route path="/admin/batches/create" element={<AdminCreateBatch />} />
+            <Route path="/admin/batches/:id" element={<AdminBatchDetail />} />
             <Route path="/admin/batches/modify" element={<ModifyBatch />} />
             <Route path="/admin/batches/completed" element={<CompletedBatches />} />
             <Route path="/admin/batches/requests" element={<BatchRequests />} />
