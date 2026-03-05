@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AllBatches() {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
 
@@ -74,8 +76,8 @@ export default function AllBatches() {
             </TableHeader>
             <TableBody>
               {filtered.map((b) => (
-                <TableRow key={b.id}>
-                  <TableCell className="text-sm font-medium">{b.batch}</TableCell>
+                <TableRow key={b.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/admin/batches/${b.id}`)}>
+                  <TableCell className="text-sm font-medium text-primary">{b.batch}</TableCell>
                   <TableCell className="text-sm">{b.customer}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{b.template}</TableCell>
                   <TableCell className="text-sm text-right">{b.seats}</TableCell>
