@@ -151,8 +151,8 @@ export default function AdminCreateBatch() {
                   <div className="p-4 rounded-xl border bg-muted/30 space-y-2 text-sm">
                     <p className="font-semibold">{selectedCustomer.name}</p>
                     <div className="grid grid-cols-3 gap-3 text-xs">
-                      <div><span className="text-muted-foreground">Region:</span> <span className="font-medium">{selectedCustomer.region}</span></div>
-                      <div><span className="text-muted-foreground">SLA:</span> <span className="font-medium">{selectedCustomer.sla}</span></div>
+                      <div><span className="text-muted-foreground">Region:</span> <span className="font-medium">{selectedCustomer.regions?.[0] || "—"}</span></div>
+                      <div><span className="text-muted-foreground">SLA:</span> <span className="font-medium capitalize">{selectedCustomer.slaTier}</span></div>
                       <div><span className="text-muted-foreground">Quota CPU:</span> <span className="font-medium">{selectedCustomer.quota.cpu} vCPU</span></div>
                     </div>
                   </div>
