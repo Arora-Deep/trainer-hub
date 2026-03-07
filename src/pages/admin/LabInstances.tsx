@@ -5,29 +5,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, RotateCcw, ArrowLeftRight, Key, FileText } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
+import { Search, RotateCcw, ArrowLeftRight, Key, FileText, Cpu, MemoryStick, Globe, HardDrive } from "lucide-react";
 
 const vmInstances = [
-  { vmId: "VM-2001", customer: "DevOps Academy", batch: "K8s Batch #14", student: "Alice Johnson", node: "compute-mumbai-1", status: "running", cpu: "45%", ram: "62%", lastSeen: "1 min ago" },
-  { vmId: "VM-2002", customer: "DevOps Academy", batch: "K8s Batch #14", student: "Bob Williams", node: "compute-mumbai-2", status: "running", cpu: "32%", ram: "48%", lastSeen: "2 min ago" },
-  { vmId: "VM-2003", customer: "Corporate L&D Co", batch: "Linux Fund. #8", student: "Carol Davis", node: "compute-virginia-1", status: "running", cpu: "78%", ram: "85%", lastSeen: "30 sec ago" },
-  { vmId: "VM-2004", customer: "SkillBridge Labs", batch: "K8s Batch #2", student: "David Brown", node: "compute-mumbai-3", status: "stopped", cpu: "0%", ram: "0%", lastSeen: "2 hours ago" },
-  { vmId: "VM-2005", customer: "DataScience Bootcamp", batch: "ML Cohort #5", student: "Eva Martinez", node: "gpu-mumbai-1", status: "failed", cpu: "0%", ram: "0%", lastSeen: "1 hour ago" },
-  { vmId: "VM-2006", customer: "Corporate L&D Co", batch: "Linux Fund. #8", student: "Frank Lee", node: "compute-virginia-2", status: "running", cpu: "55%", ram: "70%", lastSeen: "45 sec ago" },
+  { vmId: "VM-2001", customer: "DevOps Academy", batch: "K8s Batch #14", student: "Alice Johnson", node: "node-mum-01", status: "running", cpu: 45, ram: 62, lastSeen: "1 min ago", ip: "10.0.1.21", os: "Ubuntu 22.04", disk: 38 },
+  { vmId: "VM-2002", customer: "DevOps Academy", batch: "K8s Batch #14", student: "Bob Williams", node: "node-mum-02", status: "running", cpu: 32, ram: 48, lastSeen: "2 min ago", ip: "10.0.1.22", os: "Ubuntu 22.04", disk: 25 },
+  { vmId: "VM-2003", customer: "Corporate L&D Co", batch: "Linux Fund. #8", student: "Carol Davis", node: "node-vir-01", status: "running", cpu: 78, ram: 85, lastSeen: "30 sec ago", ip: "10.0.2.11", os: "CentOS 9", disk: 65 },
+  { vmId: "VM-2004", customer: "SkillBridge Labs", batch: "K8s Batch #2", student: "David Brown", node: "node-mum-03", status: "stopped", cpu: 0, ram: 0, lastSeen: "2 hours ago", ip: "10.0.1.24", os: "Ubuntu 22.04", disk: 20 },
+  { vmId: "VM-2005", customer: "DataScience Bootcamp", batch: "ML Cohort #5", student: "Eva Martinez", node: "gpu-mum-01", status: "failed", cpu: 0, ram: 0, lastSeen: "1 hour ago", ip: "10.0.3.15", os: "Ubuntu 22.04", disk: 42 },
+  { vmId: "VM-2006", customer: "Corporate L&D Co", batch: "Linux Fund. #8", student: "Frank Lee", node: "node-vir-02", status: "running", cpu: 55, ram: 70, lastSeen: "45 sec ago", ip: "10.0.2.12", os: "CentOS 9", disk: 48 },
+  { vmId: "VM-2007", customer: "DevOps Academy", batch: "AWS Batch #6", student: "Grace Kim", node: "node-vir-01", status: "running", cpu: 22, ram: 40, lastSeen: "3 min ago", ip: "10.0.2.21", os: "Amazon Linux", disk: 30 },
 ];
 
-const statusColors: Record<string, string> = {
-  running: "bg-success/10 text-success",
-  stopped: "bg-muted text-muted-foreground",
-  failed: "bg-destructive/10 text-destructive",
+const statusConfig: Record<string, { dot: string; bg: string; text: string; label: string }> = {
+  running: { dot: "bg-green-500", bg: "bg-green-500/10", text: "text-green-600", label: "Running" },
+  stopped: { dot: "bg-amber-500", bg: "bg-amber-500/10", text: "text-amber-600", label: "Stopped" },
+  failed: { dot: "bg-red-500", bg: "bg-red-500/10", text: "text-red-600", label: "Failed" },
 };
 
+const customers = [...new Set(vmInstances.map(v => v.customer))];
+const batches = [...new Set(vmInstances.map(v => v.batch))];
+const nodes = [...new Set(vmInstances.map(v => v.node))];
+
 export default function LabInstances() {
-  const [filter, setFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [customerFilter, setCustomerFilter] = useState("all");
+  const [batchFilter, setBatchFilter] = useState("all");
+  const [nodeFilter, setNodeFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [selectedVM, setSelectedVM] = useState<typeof vmInstances[0] | null>(null);
 
   const filtered = vmInstances.filter(v => {
-    if (filter !== "all" && v.status !== filter) return false;
+    if (statusFilter !== "all" && v.status !== statusFilter) return false;
+    if (customerFilter !== "all" && v.customer !== customerFilter) return false;
+    if (batchFilter !== "all" && v.batch !== batchFilter) return false;
+    if (nodeFilter !== "all" && v.node !== nodeFilter) return false;
     if (search && !v.vmId.toLowerCase().includes(search.toLowerCase()) && !v.student.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -36,69 +51,193 @@ export default function LabInstances() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Lab Instances</h1>
-        <p className="text-muted-foreground text-sm mt-1">VM monitoring and management</p>
+        <p className="text-muted-foreground text-sm mt-1">Real-time VM monitoring and management</p>
       </div>
 
+      {/* Filters */}
       <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1 max-w-sm">
+        <CardContent className="py-3 px-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search VM ID or student..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+              <Input placeholder="Search VM ID / Student..." className="pl-9 h-9" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
-            <Select value={filter} onValueChange={setFilter}>
-              <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="running">Running</SelectItem>
-                <SelectItem value="stopped">Stopped</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="running">🟢 Running</SelectItem>
+                <SelectItem value="stopped">🟡 Stopped</SelectItem>
+                <SelectItem value="failed">🔴 Failed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={customerFilter} onValueChange={setCustomerFilter}>
+              <SelectTrigger className="w-[150px] h-9"><SelectValue placeholder="Customer" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Customers</SelectItem>
+                {customers.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={batchFilter} onValueChange={setBatchFilter}>
+              <SelectTrigger className="w-[150px] h-9"><SelectValue placeholder="Batch" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Batches</SelectItem>
+                {batches.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={nodeFilter} onValueChange={setNodeFilter}>
+              <SelectTrigger className="w-[150px] h-9"><SelectValue placeholder="Node" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Nodes</SelectItem>
+                {nodes.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-        </CardHeader>
+        </CardContent>
+      </Card>
+
+      {/* Table */}
+      <Card>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>VM ID</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Batch</TableHead>
                 <TableHead>Student</TableHead>
+                <TableHead>Batch</TableHead>
+                <TableHead>Customer</TableHead>
                 <TableHead>Node</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead className="text-right">CPU</TableHead>
                 <TableHead className="text-right">RAM</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Last Seen</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((v) => (
-                <TableRow key={v.vmId}>
-                  <TableCell className="text-sm font-mono">{v.vmId}</TableCell>
-                  <TableCell className="text-sm">{v.customer}</TableCell>
-                  <TableCell className="text-sm">{v.batch}</TableCell>
-                  <TableCell className="text-sm">{v.student}</TableCell>
-                  <TableCell className="text-sm font-mono text-muted-foreground">{v.node}</TableCell>
-                  <TableCell><Badge variant="secondary" className={`text-xs capitalize ${statusColors[v.status]}`}>{v.status}</Badge></TableCell>
-                  <TableCell className="text-sm text-right">{v.cpu}</TableCell>
-                  <TableCell className="text-sm text-right">{v.ram}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{v.lastSeen}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="sm" title="Restart"><RotateCcw className="h-3 w-3" /></Button>
-                      <Button variant="ghost" size="sm" title="Replace"><ArrowLeftRight className="h-3 w-3" /></Button>
-                      <Button variant="ghost" size="sm" title="Reset Credentials"><Key className="h-3 w-3" /></Button>
-                      <Button variant="ghost" size="sm" title="View Logs"><FileText className="h-3 w-3" /></Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filtered.length === 0 && (
+                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-12">No VMs match your filters</TableCell></TableRow>
+              )}
+              {filtered.map(v => {
+                const sc = statusConfig[v.status];
+                return (
+                  <TableRow key={v.vmId} className="group">
+                    <TableCell>
+                      <button className="text-sm font-mono text-primary hover:underline" onClick={() => setSelectedVM(v)}>{v.vmId}</button>
+                    </TableCell>
+                    <TableCell className="text-sm">{v.student}</TableCell>
+                    <TableCell className="text-sm">{v.batch}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{v.customer}</TableCell>
+                    <TableCell className="text-sm font-mono text-muted-foreground">{v.node}</TableCell>
+                    <TableCell className="text-sm text-right">{v.cpu}%</TableCell>
+                    <TableCell className="text-sm text-right">{v.ram}%</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className={cn("text-xs gap-1.5", sc.bg, sc.text)}>
+                        <span className={cn("h-1.5 w-1.5 rounded-full", sc.dot)} />
+                        {sc.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{v.lastSeen}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="sm" title="Restart"><RotateCcw className="h-3 w-3" /></Button>
+                        <Button variant="ghost" size="sm" title="Replace"><ArrowLeftRight className="h-3 w-3" /></Button>
+                        <Button variant="ghost" size="sm" title="Reset Credentials"><Key className="h-3 w-3" /></Button>
+                        <Button variant="ghost" size="sm" title="View Logs"><FileText className="h-3 w-3" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      {/* VM Detail Drawer */}
+      <Sheet open={!!selectedVM} onOpenChange={() => setSelectedVM(null)}>
+        <SheetContent className="sm:max-w-lg overflow-y-auto">
+          {selectedVM && (() => {
+            const v = selectedVM;
+            const sc = statusConfig[v.status];
+            return (
+              <>
+                <SheetHeader className="pb-4">
+                  <div className="flex items-center gap-2">
+                    <SheetTitle className="font-mono">{v.vmId}</SheetTitle>
+                    <Badge variant="secondary" className={cn("text-xs gap-1.5", sc.bg, sc.text)}>
+                      <span className={cn("h-1.5 w-1.5 rounded-full", sc.dot)} />
+                      {sc.label}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{v.student} · {v.batch}</p>
+                </SheetHeader>
+
+                <div className="space-y-5">
+                  {/* Info Grid */}
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-xs text-muted-foreground">Node</p>
+                      <p className="font-mono font-medium">{v.node}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-xs text-muted-foreground">IP Address</p>
+                      <p className="font-mono font-medium">{v.ip}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-xs text-muted-foreground">OS</p>
+                      <p className="font-medium">{v.os}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-xs text-muted-foreground">Last Seen</p>
+                      <p className="font-medium">{v.lastSeen}</p>
+                    </div>
+                  </div>
+
+                  {/* Resource Charts */}
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Resources</h3>
+                    <div className="space-y-3">
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center gap-1.5"><Cpu className="h-3.5 w-3.5 text-primary" /> CPU Usage</span>
+                          <span className="font-medium">{v.cpu}%</span>
+                        </div>
+                        <Progress value={v.cpu} className="h-2" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center gap-1.5"><MemoryStick className="h-3.5 w-3.5 text-primary" /> RAM Usage</span>
+                          <span className="font-medium">{v.ram}%</span>
+                        </div>
+                        <Progress value={v.ram} className="h-2" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center gap-1.5"><HardDrive className="h-3.5 w-3.5 text-primary" /> Disk Usage</span>
+                          <span className="font-medium">{v.disk}%</span>
+                        </div>
+                        <Progress value={v.disk} className="h-2" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</h3>
+                    <div className="grid grid-cols-1 gap-2">
+                      <Button variant="outline" className="w-full justify-start gap-2"><RotateCcw className="h-4 w-4" /> Restart VM</Button>
+                      <Button variant="outline" className="w-full justify-start gap-2"><ArrowLeftRight className="h-4 w-4" /> Replace VM</Button>
+                      <Button variant="outline" className="w-full justify-start gap-2"><Key className="h-4 w-4" /> Reset Credentials</Button>
+                      <Button variant="outline" className="w-full justify-start gap-2"><FileText className="h-4 w-4" /> View Logs</Button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
