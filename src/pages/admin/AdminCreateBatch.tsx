@@ -4,537 +4,477 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { useCustomerStore } from "@/stores/customerStore";
 import { useLabStore } from "@/stores/labStore";
-import { TemplatePickerGrid } from "@/components/labs/TemplatePickerGrid";
-import { VMDaySchedule } from "@/components/batches/VMDaySchedule";
-import type { DaySchedule } from "@/components/batches/VMDaySchedule";
 import { cn } from "@/lib/utils";
-import { format, differenceInDays, eachDayOfInterval } from "date-fns";
+import { format } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import { toast } from "@/hooks/use-toast";
 import {
-  CalendarDays, Users, Server, Info, Monitor, Layers, Plus, Trash2,
-  DollarSign, HardDrive, Zap, Shield, Clock,
+  Check, ChevronRight, Building2, FileText, Server, ClipboardList,
+  Users, CalendarDays, Monitor, Cpu, HardDrive, MemoryStick,
 } from "lucide-react";
 
-interface VMEntry {
-  id: string;
-  templateId: string;
-  instanceName: string;
-  vmType: "single" | "multi";
-  dateRange: { from: string; to: string };
-  dailySchedules: DaySchedule[];
-}
+const steps = [
+  { id: 1, label: "Customer", icon: Building2 },
+  { id: 2, label: "Batch Info", icon: FileText },
+  { id: 3, label: "Lab Environment", icon: Server },
+  { id: 4, label: "Review", icon: ClipboardList },
+];
+
+const labTemplates = [
+  { id: "tpl-1", name: "Linux DevOps Lab", os: "Ubuntu 22.04", cpu: 4, ram: 8, disk: 50 },
+  { id: "tpl-2", name: "Kubernetes Lab v2", os: "Ubuntu 22.04", cpu: 8, ram: 16, disk: 100 },
+  { id: "tpl-3", name: "ML GPU Lab v1", os: "Ubuntu 22.04", cpu: 16, ram: 64, disk: 200 },
+  { id: "tpl-4", name: "Docker Compose", os: "Ubuntu 22.04", cpu: 4, ram: 8, disk: 40 },
+  { id: "tpl-5", name: "AWS Simulation", os: "Amazon Linux", cpu: 8, ram: 16, disk: 80 },
+  { id: "tpl-6", name: "Linux + Networking", os: "CentOS 9", cpu: 4, ram: 4, disk: 30 },
+];
+
+const isos = [
+  { id: "iso-1", name: "Ubuntu 22.04 LTS" },
+  { id: "iso-2", name: "CentOS 9 Stream" },
+  { id: "iso-3", name: "Windows Server 2022" },
+  { id: "iso-4", name: "Rocky Linux 9" },
+];
+
+const regions = [
+  { value: "ap-south-1", label: "ap-south-1 (Mumbai)" },
+  { value: "us-east-1", label: "us-east-1 (Virginia)" },
+  { value: "eu-west-1", label: "eu-west-1 (Ireland)" },
+  { value: "ap-southeast-1", label: "ap-southeast-1 (Singapore)" },
+];
 
 export default function AdminCreateBatch() {
   const navigate = useNavigate();
-  const { customers, blueprints } = useCustomerStore();
-  const { templates } = useLabStore();
+  const { customers } = useCustomerStore();
 
+  const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     customerId: "",
     batchName: "",
     description: "",
     seatCount: "20",
+    envType: "template" as "template" | "iso",
+    templateId: "",
+    isoId: "",
     region: "ap-south-1",
-    medium: "online",
+    vmCpu: "4",
+    vmRam: "8",
+    vmDisk: "50",
   });
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
-  // VM Configuration
-  const [enableVMs, setEnableVMs] = useState(false);
-  const [vmType, setVmType] = useState<"single" | "multi">("single");
-  const [selectedTemplateId, setSelectedTemplateId] = useState("");
-  const [instanceName, setInstanceName] = useState("");
-  const [vmDateRange, setVmDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
-  const [vmDailySchedules, setVmDailySchedules] = useState<DaySchedule[]>([]);
-  const [addedVMs, setAddedVMs] = useState<VMEntry[]>([]);
-
   const update = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }));
   const selectedCustomer = customers.find(c => c.id === form.customerId);
-  const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
+  const selectedTemplate = labTemplates.find(t => t.id === form.templateId);
 
-  const canCreate = form.customerId && form.batchName && dateRange?.from && dateRange?.to;
-
-  // Pricing calculation
-  const calculatePricing = () => {
-    if (!enableVMs || addedVMs.length === 0) return { compute: 0, storage: 0, network: 0, support: 0, total: 0, totalVMs: 0, days: 0 };
-    const seatCount = parseInt(form.seatCount) || 20;
-    const basePrice = 50;
-    const totalVMs = addedVMs.length * seatCount + 1;
-    const totalDays = addedVMs.reduce((sum, vm) => {
-      const from = new Date(vm.dateRange.from);
-      const to = new Date(vm.dateRange.to);
-      return sum + Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    }, 0);
-    const compute = totalVMs * basePrice * totalDays;
-    const storage = totalVMs * 5 * totalDays;
-    const network = totalVMs * 2 * totalDays;
-    const support = totalDays * 10;
-    return { compute, storage, network, support, total: compute + storage + network + support, totalVMs, days: totalDays };
+  const canNext = () => {
+    if (step === 1) return !!form.customerId;
+    if (step === 2) return !!form.batchName && !!dateRange?.from && !!dateRange?.to;
+    if (step === 3) return form.envType === "template" ? !!form.templateId : !!form.isoId;
+    return true;
   };
-  const pricing = calculatePricing();
 
-  const handleAddVM = () => {
-    if (!vmDateRange.from || !vmDateRange.to || !selectedTemplateId) return;
-    const days = eachDayOfInterval({ start: vmDateRange.from, end: vmDateRange.to });
-    const finalSchedules = days.map((day: Date) => {
-      const dateStr = format(day, "yyyy-MM-dd");
-      const existing = vmDailySchedules.find(s => s.date === dateStr);
-      return existing || { date: dateStr, startTime: "09:00", endTime: "18:00" };
-    });
-    const newVM: VMEntry = {
-      id: `vme-${Date.now()}`,
-      templateId: selectedTemplateId,
-      instanceName: instanceName || "Unnamed VM",
-      vmType,
-      dateRange: { from: vmDateRange.from.toISOString(), to: vmDateRange.to.toISOString() },
-      dailySchedules: finalSchedules,
-    };
-    setAddedVMs([...addedVMs, newVM]);
-    setSelectedTemplateId("");
-    setInstanceName("");
-    setVmDateRange({ from: undefined, to: undefined });
-    setVmDailySchedules([]);
-    toast({ title: "VM Added", description: `${newVM.instanceName} added to the batch.` });
+  const handleCreate = () => {
+    toast({ title: "Batch Created", description: `${form.batchName} has been created successfully.` });
+    navigate("/admin/batches");
   };
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Create Batch</h1>
-        <p className="text-muted-foreground text-sm mt-1">Configure and provision a new training batch</p>
+        <p className="text-muted-foreground text-sm mt-1">Set up a new training batch step by step</p>
+      </div>
+
+      {/* Stepper */}
+      <div className="flex items-center gap-2">
+        {steps.map((s, i) => {
+          const Icon = s.icon;
+          const isActive = step === s.id;
+          const isDone = step > s.id;
+          return (
+            <div key={s.id} className="flex items-center gap-2">
+              <button
+                onClick={() => isDone && setStep(s.id)}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all",
+                  isActive && "bg-primary text-primary-foreground",
+                  isDone && "bg-primary/10 text-primary cursor-pointer hover:bg-primary/20",
+                  !isActive && !isDone && "text-muted-foreground"
+                )}
+              >
+                {isDone ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                {s.label}
+              </button>
+              {i < steps.length - 1 && <ChevronRight className="h-4 w-4 text-muted-foreground/40" />}
+            </div>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Form */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Customer & Basic Info */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base flex items-center gap-2"><Info className="h-4 w-4" /> Batch Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Main Content */}
+        <div className="lg:col-span-2">
+          {/* Step 1: Customer */}
+          {step === 1 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2"><Building2 className="h-4 w-4" /> Select Customer</CardTitle>
+                <CardDescription>Choose the customer for this training batch</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Customer</Label>
                   <Select value={form.customerId} onValueChange={v => update("customerId", v)}>
-                    <SelectTrigger><SelectValue placeholder="Select customer..." /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Search and select customer..." /></SelectTrigger>
                     <SelectContent>
                       {customers.filter(c => c.status === "active" || c.status === "trial").map(c => (
-                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        <SelectItem key={c.id} value={c.id}>
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                            {c.name}
+                            <Badge variant="secondary" className="text-[10px] ml-1 capitalize">{c.status}</Badge>
+                          </div>
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Batch Name</Label>
-                  <Input value={form.batchName} onChange={e => update("batchName", e.target.value)} placeholder="e.g. K8s Batch #15" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea value={form.description} onChange={e => update("description", e.target.value)} placeholder="Batch description..." rows={2} />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Seat Count</Label>
-                  <Input type="number" value={form.seatCount} onChange={e => update("seatCount", e.target.value)} min={1} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Delivery Medium</Label>
-                  <Select value={form.medium} onValueChange={v => update("medium", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="online">Online</SelectItem>
-                      <SelectItem value="offline">Offline</SelectItem>
-                      <SelectItem value="hybrid">Hybrid</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Region</Label>
-                  <Select value={form.region} onValueChange={v => update("region", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ap-south-1">ap-south-1 (Mumbai)</SelectItem>
-                      <SelectItem value="us-east-1">us-east-1 (Virginia)</SelectItem>
-                      <SelectItem value="eu-west-1">eu-west-1 (Ireland)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Date Range Calendar */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base flex items-center gap-2"><CalendarDays className="h-4 w-4" /> Batch Schedule</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-center">
-                <div className="flex items-center gap-4 mb-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-primary" />
-                    <span className="text-muted-foreground">
-                      Start: {dateRange?.from ? format(dateRange.from, "MMM dd, yyyy") : "Select start date"}
-                    </span>
+                {selectedCustomer && (
+                  <div className="p-4 rounded-xl border bg-muted/30 space-y-2 text-sm">
+                    <p className="font-semibold">{selectedCustomer.name}</p>
+                    <div className="grid grid-cols-3 gap-3 text-xs">
+                      <div><span className="text-muted-foreground">Region:</span> <span className="font-medium">{selectedCustomer.regions?.[0] || "—"}</span></div>
+                      <div><span className="text-muted-foreground">SLA:</span> <span className="font-medium capitalize">{selectedCustomer.slaTier}</span></div>
+                      <div><span className="text-muted-foreground">Quota CPU:</span> <span className="font-medium">{selectedCustomer.quota.cpu} vCPU</span></div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-primary/50" />
-                    <span className="text-muted-foreground">
-                      End: {dateRange?.to ? format(dateRange.to, "MMM dd, yyyy") : "Select end date"}
-                    </span>
-                  </div>
-                  {dateRange?.from && dateRange?.to && (
-                    <Badge variant="secondary">
-                      {Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24))} days
-                    </Badge>
-                  )}
-                </div>
-                <Calendar
-                  mode="range"
-                  selected={dateRange}
-                  onSelect={setDateRange}
-                  numberOfMonths={2}
-                  className="pointer-events-auto rounded-md border"
-                  disabled={(date) => date < new Date()}
-                />
-              </div>
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-          {/* VM Configuration Section */}
-          <Card>
-            <CardContent className="py-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-primary/10">
-                    <Monitor className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">Virtual Machines</h3>
-                    <p className="text-sm text-muted-foreground">Enable VM environments for this batch</p>
-                  </div>
-                </div>
-                <Switch checked={enableVMs} onCheckedChange={setEnableVMs} />
-              </div>
-            </CardContent>
-          </Card>
-
-          {enableVMs && (
-            <>
-              {/* Added VMs List */}
-              {addedVMs.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Layers className="h-4 w-4 text-primary" />
-                      Added VMs ({addedVMs.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {addedVMs.map((vm, index) => {
-                      const tpl = templates.find(t => t.id === vm.templateId);
-                      return (
-                        <div key={vm.id} className="flex items-center justify-between p-4 rounded-xl border bg-muted/10">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
-                              {index + 1}
-                            </div>
-                            <div>
-                              <p className="font-semibold text-sm">{vm.instanceName}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {tpl?.name || "No template"} · {format(new Date(vm.dateRange.from), "MMM d")} – {format(new Date(vm.dateRange.to), "MMM d, yyyy")} · {vm.dailySchedules.length} day(s) · {vm.vmType}
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setAddedVMs(addedVMs.filter((_, i) => i !== index))}
-                            className="text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* VM Type Selection */}
+          {/* Step 2: Batch Info */}
+          {step === 2 && (
+            <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Layers className="h-4 w-4 text-primary" />
-                    VM Type
-                  </CardTitle>
-                  <CardDescription>Choose how many VMs each participant gets</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setVmType("single")}
-                      className={cn(
-                        "p-5 rounded-xl border-2 text-left transition-all",
-                        vmType === "single" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-                      )}
-                    >
-                      <Monitor className="h-6 w-6 mb-2 text-primary" />
-                      <h4 className="font-semibold">Single VM</h4>
-                      <p className="text-xs text-muted-foreground mt-1">One VM per participant</p>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setVmType("multi")}
-                      className={cn(
-                        "p-5 rounded-xl border-2 text-left transition-all",
-                        vmType === "multi" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-                      )}
-                    >
-                      <Layers className="h-6 w-6 mb-2 text-primary" />
-                      <h4 className="font-semibold">Multi VM</h4>
-                      <p className="text-xs text-muted-foreground mt-1">2-3 VMs per participant</p>
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Template Selection */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Server className="h-4 w-4 text-primary" />
-                    VM Template
-                  </CardTitle>
-                  <CardDescription>Select template and name your instance</CardDescription>
+                  <CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4" /> Batch Information</CardTitle>
+                  <CardDescription>Configure batch name, seats, and schedule</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="p-4 rounded-xl border bg-muted/10 space-y-4">
-                    <div className="space-y-3">
-                      <Label className="text-xs">Select Template</Label>
-                      <TemplatePickerGrid
-                        templates={templates}
-                        selectedId={selectedTemplateId}
-                        onSelect={(template) => setSelectedTemplateId(template.id)}
-                      />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Batch Name *</Label>
+                      <Input value={form.batchName} onChange={e => update("batchName", e.target.value)} placeholder="e.g. K8s Batch #15" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs">Instance Name</Label>
-                      <Input
-                        placeholder="e.g., Web Server, Database, etc."
-                        value={instanceName}
-                        onChange={(e) => setInstanceName(e.target.value)}
-                      />
+                      <Label>Seat Count *</Label>
+                      <Input type="number" value={form.seatCount} onChange={e => update("seatCount", e.target.value)} min={1} />
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* VM Date Range Calendar */}
-              <Card>
-                <CardContent className="pt-8 pb-6 flex flex-col items-center">
-                  <div className="text-center mb-6">
-                    <h2 className="text-lg font-semibold">Choose VM availability dates</h2>
-                    {vmDateRange.from && vmDateRange.to ? (
-                      <div className="flex items-center justify-center gap-2 mt-2">
-                        <p className="text-sm text-muted-foreground">
-                          {format(vmDateRange.from, "MMM d, yyyy")} — {format(vmDateRange.to, "MMM d, yyyy")} ({differenceInDays(vmDateRange.to, vmDateRange.from) + 1} days)
-                        </p>
-                        <Button type="button" variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto py-0.5 px-1.5" onClick={() => setVmDateRange({ from: undefined, to: undefined })}>
-                          Clear
-                        </Button>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground mt-1">Select a start date, then an end date</p>
-                    )}
+                  <div className="space-y-2">
+                    <Label>Description (optional)</Label>
+                    <Textarea value={form.description} onChange={e => update("description", e.target.value)} placeholder="Brief description of this batch..." rows={2} />
                   </div>
-                  <Calendar
-                    mode="range"
-                    selected={vmDateRange as DateRange}
-                    onSelect={(range) => setVmDateRange({ from: range?.from, to: range?.to })}
-                    numberOfMonths={2}
-                    className="p-4 pointer-events-auto"
-                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                  />
                 </CardContent>
               </Card>
 
-              {/* Per-Day Timings */}
-              {vmDateRange.from && vmDateRange.to && (
-                <VMDaySchedule
-                  dateRange={{ from: vmDateRange.from, to: vmDateRange.to }}
-                  dailySchedules={vmDailySchedules}
-                  onChange={setVmDailySchedules}
-                />
-              )}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2"><CalendarDays className="h-4 w-4" /> Schedule</CardTitle>
+                  <CardDescription>Select start and end dates</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-4 mb-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="h-3 w-3 rounded-full bg-primary" />
+                        <span className="text-muted-foreground">
+                          Start: {dateRange?.from ? format(dateRange.from, "MMM dd, yyyy") : "Select"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-3 w-3 rounded-full bg-primary/50" />
+                        <span className="text-muted-foreground">
+                          End: {dateRange?.to ? format(dateRange.to, "MMM dd, yyyy") : "Select"}
+                        </span>
+                      </div>
+                      {dateRange?.from && dateRange?.to && (
+                        <Badge variant="secondary">
+                          {Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24))} days
+                        </Badge>
+                      )}
+                    </div>
+                    <Calendar
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={setDateRange}
+                      numberOfMonths={2}
+                      className="pointer-events-auto rounded-md border"
+                      disabled={(date) => date < new Date()}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-              {/* Add VM Button */}
-              <Button
-                type="button"
-                size="lg"
-                className="w-full"
-                disabled={!vmDateRange.from || !vmDateRange.to || !selectedTemplateId}
-                onClick={handleAddVM}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add VM
-              </Button>
-            </>
+          {/* Step 3: Lab Environment */}
+          {step === 3 && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2"><Server className="h-4 w-4" /> Lab Environment</CardTitle>
+                  <CardDescription>Select template or ISO for lab environments</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  {/* Template vs ISO toggle */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => update("envType", "template")}
+                      className={cn(
+                        "p-4 rounded-xl border-2 text-left transition-all",
+                        form.envType === "template" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                      )}
+                    >
+                      <Monitor className="h-5 w-5 mb-2 text-primary" />
+                      <h4 className="font-semibold text-sm">Lab Template</h4>
+                      <p className="text-xs text-muted-foreground mt-0.5">Pre-configured environment</p>
+                    </button>
+                    <button
+                      onClick={() => update("envType", "iso")}
+                      className={cn(
+                        "p-4 rounded-xl border-2 text-left transition-all",
+                        form.envType === "iso" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                      )}
+                    >
+                      <HardDrive className="h-5 w-5 mb-2 text-primary" />
+                      <h4 className="font-semibold text-sm">ISO Image</h4>
+                      <p className="text-xs text-muted-foreground mt-0.5">Boot from custom ISO</p>
+                    </button>
+                  </div>
+
+                  {/* Template Selection */}
+                  {form.envType === "template" && (
+                    <div className="space-y-3">
+                      <Label>Select Template</Label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {labTemplates.map(t => (
+                          <button
+                            key={t.id}
+                            onClick={() => {
+                              update("templateId", t.id);
+                              update("vmCpu", String(t.cpu));
+                              update("vmRam", String(t.ram));
+                              update("vmDisk", String(t.disk));
+                            }}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left transition-all",
+                              form.templateId === t.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                            )}
+                          >
+                            <p className="font-semibold text-sm">{t.name}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{t.os}</p>
+                            <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
+                              <span>{t.cpu} vCPU</span>
+                              <span>{t.ram} GB RAM</span>
+                              <span>{t.disk} GB</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ISO Selection */}
+                  {form.envType === "iso" && (
+                    <div className="space-y-2">
+                      <Label>Select ISO</Label>
+                      <Select value={form.isoId} onValueChange={v => update("isoId", v)}>
+                        <SelectTrigger><SelectValue placeholder="Choose an ISO..." /></SelectTrigger>
+                        <SelectContent>
+                          {isos.map(iso => <SelectItem key={iso.id} value={iso.id}>{iso.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* Region & VM Specs */}
+                  <div className="border-t pt-4 space-y-4">
+                    <div className="space-y-2">
+                      <Label>Region</Label>
+                      <Select value={form.region} onValueChange={v => update("region", v)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {regions.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-2 block">Default VM Specs</Label>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">CPU (vCPU)</Label>
+                          <Input type="number" value={form.vmCpu} onChange={e => update("vmCpu", e.target.value)} min={1} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">RAM (GB)</Label>
+                          <Input type="number" value={form.vmRam} onChange={e => update("vmRam", e.target.value)} min={1} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Disk (GB)</Label>
+                          <Input type="number" value={form.vmDisk} onChange={e => update("vmDisk", e.target.value)} min={10} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Preview Card */}
+                  {(selectedTemplate || form.envType === "iso") && (
+                    <div className="rounded-xl border bg-muted/30 p-4">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">VM Preview</p>
+                      <div className="grid grid-cols-4 gap-3">
+                        <div className="text-center p-3 rounded-lg bg-background border">
+                          <Cpu className="h-4 w-4 mx-auto mb-1 text-primary" />
+                          <p className="text-lg font-bold">{form.vmCpu}</p>
+                          <p className="text-xs text-muted-foreground">vCPU</p>
+                        </div>
+                        <div className="text-center p-3 rounded-lg bg-background border">
+                          <MemoryStick className="h-4 w-4 mx-auto mb-1 text-primary" />
+                          <p className="text-lg font-bold">{form.vmRam}</p>
+                          <p className="text-xs text-muted-foreground">GB RAM</p>
+                        </div>
+                        <div className="text-center p-3 rounded-lg bg-background border">
+                          <HardDrive className="h-4 w-4 mx-auto mb-1 text-primary" />
+                          <p className="text-lg font-bold">{form.vmDisk}</p>
+                          <p className="text-xs text-muted-foreground">GB Disk</p>
+                        </div>
+                        <div className="text-center p-3 rounded-lg bg-background border">
+                          <Monitor className="h-4 w-4 mx-auto mb-1 text-primary" />
+                          <p className="text-sm font-bold">{selectedTemplate?.os || "Custom"}</p>
+                          <p className="text-xs text-muted-foreground">OS</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Step 4: Review */}
+          {step === 4 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2"><ClipboardList className="h-4 w-4" /> Review & Create</CardTitle>
+                <CardDescription>Confirm all details before creating the batch</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                {/* Customer */}
+                <div className="rounded-xl border p-4 space-y-2">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Customer</h4>
+                  <p className="font-semibold">{selectedCustomer?.name || "—"}</p>
+                  <p className="text-xs text-muted-foreground">{selectedCustomer?.regions?.[0] || "—"} · {selectedCustomer?.slaTier}</p>
+                </div>
+
+                {/* Batch */}
+                <div className="rounded-xl border p-4 space-y-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Batch Details</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div><span className="text-muted-foreground">Name:</span> <span className="font-medium">{form.batchName}</span></div>
+                    <div className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-muted-foreground" /><span className="font-medium">{form.seatCount} seats</span></div>
+                    <div><span className="text-muted-foreground">Start:</span> <span className="font-medium">{dateRange?.from ? format(dateRange.from, "MMM dd, yyyy") : "—"}</span></div>
+                    <div><span className="text-muted-foreground">End:</span> <span className="font-medium">{dateRange?.to ? format(dateRange.to, "MMM dd, yyyy") : "—"}</span></div>
+                  </div>
+                  {form.description && <p className="text-xs text-muted-foreground">{form.description}</p>}
+                </div>
+
+                {/* Environment */}
+                <div className="rounded-xl border p-4 space-y-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Environment</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div><span className="text-muted-foreground">Template:</span> <span className="font-medium">{selectedTemplate?.name || isos.find(i => i.id === form.isoId)?.name || "—"}</span></div>
+                    <div><span className="text-muted-foreground">Region:</span> <span className="font-medium">{form.region}</span></div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 text-sm mt-2">
+                    <div className="p-2 rounded-lg bg-muted/50 text-center">
+                      <p className="text-lg font-bold">{form.vmCpu}</p>
+                      <p className="text-xs text-muted-foreground">vCPU</p>
+                    </div>
+                    <div className="p-2 rounded-lg bg-muted/50 text-center">
+                      <p className="text-lg font-bold">{form.vmRam}</p>
+                      <p className="text-xs text-muted-foreground">GB RAM</p>
+                    </div>
+                    <div className="p-2 rounded-lg bg-muted/50 text-center">
+                      <p className="text-lg font-bold">{form.vmDisk}</p>
+                      <p className="text-xs text-muted-foreground">GB Disk</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Resource Estimate */}
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-2">
+                  <h4 className="text-xs font-semibold text-primary uppercase tracking-wider">Resource Estimate</h4>
+                  <div className="grid grid-cols-3 gap-3 text-sm">
+                    <div>
+                      <p className="text-muted-foreground text-xs">Total CPU</p>
+                      <p className="font-bold">{parseInt(form.vmCpu) * parseInt(form.seatCount)} vCPU</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">Total RAM</p>
+                      <p className="font-bold">{parseInt(form.vmRam) * parseInt(form.seatCount)} GB</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">Total Disk</p>
+                      <p className="font-bold">{parseInt(form.vmDisk) * parseInt(form.seatCount)} GB</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
 
-        {/* Right: Summary & Cost Sidebar */}
-        <div className="space-y-6">
+        {/* Right Sidebar Summary */}
+        <div>
           <Card className="sticky top-6">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base">Batch Summary</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Batch Summary</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Customer</span>
-                  <span className="font-medium">{selectedCustomer?.name || "—"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Batch</span>
-                  <span className="font-medium">{form.batchName || "—"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Seats</span>
-                  <span className="font-medium">{form.seatCount}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Medium</span>
-                  <span className="font-medium capitalize">{form.medium}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Region</span>
-                  <span className="font-medium">{form.region}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Start</span>
-                  <span className="font-medium">{dateRange?.from ? format(dateRange.from, "MMM dd, yyyy") : "—"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">End</span>
-                  <span className="font-medium">{dateRange?.to ? format(dateRange.to, "MMM dd, yyyy") : "—"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">VMs</span>
-                  <span className="font-medium">{enableVMs ? `${addedVMs.length} configured` : "Disabled"}</span>
-                </div>
-              </div>
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">Customer</span><span className="font-medium">{selectedCustomer?.name || "—"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Batch</span><span className="font-medium">{form.batchName || "—"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Seats</span><span className="font-medium">{form.seatCount}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Start</span><span className="font-medium">{dateRange?.from ? format(dateRange.from, "MMM dd") : "—"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">End</span><span className="font-medium">{dateRange?.to ? format(dateRange.to, "MMM dd") : "—"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Template</span><span className="font-medium">{selectedTemplate?.name || "—"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Region</span><span className="font-medium">{form.region}</span></div>
 
-              {/* Cost Estimate */}
-              {enableVMs && addedVMs.length > 0 && (
-                <>
-                  <div className="border-t pt-3">
-                    <p className="text-xs font-medium text-muted-foreground mb-3 flex items-center gap-1.5">
-                      <DollarSign className="h-3.5 w-3.5" /> Cost Estimate
-                    </p>
-                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 mb-3">
-                      <div className="grid grid-cols-3 gap-3 text-center">
-                        <div>
-                          <p className="text-xs text-muted-foreground">VMs</p>
-                          <p className="text-lg font-bold">{addedVMs.length}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Days</p>
-                          <p className="text-lg font-bold">{pricing.days}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Type</p>
-                          <p className="text-lg font-bold capitalize">{vmType}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center p-2.5 rounded-lg bg-muted/30 text-sm">
-                        <span className="text-muted-foreground flex items-center gap-2"><Server className="h-3.5 w-3.5" /> Compute</span>
-                        <span className="font-medium">${pricing.compute.toFixed(0)}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-2.5 rounded-lg bg-muted/30 text-sm">
-                        <span className="text-muted-foreground flex items-center gap-2"><HardDrive className="h-3.5 w-3.5" /> Storage</span>
-                        <span className="font-medium">${pricing.storage.toFixed(0)}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-2.5 rounded-lg bg-muted/30 text-sm">
-                        <span className="text-muted-foreground flex items-center gap-2"><Zap className="h-3.5 w-3.5" /> Network</span>
-                        <span className="font-medium">${pricing.network.toFixed(0)}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-2.5 rounded-lg bg-muted/30 text-sm">
-                        <span className="text-muted-foreground flex items-center gap-2"><Shield className="h-3.5 w-3.5" /> Support</span>
-                        <span className="font-medium">${pricing.support.toFixed(0)}</span>
-                      </div>
-                    </div>
-                    <div className="border-t pt-3 mt-3">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold">Total</span>
-                        <span className="text-2xl font-bold text-primary">${pricing.total.toFixed(0)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Quota Check */}
-              {enableVMs && addedVMs.length > 0 && selectedCustomer && (
-                <div className="border-t pt-3">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Customer Quota Check</p>
-                  <div className="space-y-1.5 text-sm">
-                    {(() => {
-                      const totalCpu = addedVMs.reduce((s, vm) => {
-                        const t = templates.find(tpl => tpl.id === vm.templateId);
-                        return s + (t?.vcpus || 0) * parseInt(form.seatCount);
-                      }, 0);
-                      const totalRam = addedVMs.reduce((s, vm) => {
-                        const t = templates.find(tpl => tpl.id === vm.templateId);
-                        return s + (t?.memory || 0) * parseInt(form.seatCount);
-                      }, 0);
-                      return (
-                        <>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">CPU</span>
-                            <span className={`font-medium ${totalCpu > selectedCustomer.quota.cpu ? "text-destructive" : "text-green-600"}`}>
-                              {selectedCustomer.quota.cpu - totalCpu} / {selectedCustomer.quota.cpu} vCPU
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">RAM</span>
-                            <span className={`font-medium ${totalRam > selectedCustomer.quota.ram ? "text-destructive" : "text-green-600"}`}>
-                              {selectedCustomer.quota.ram - totalRam} / {selectedCustomer.quota.ram} GB
-                            </span>
-                          </div>
-                        </>
-                      );
-                    })()}
-                  </div>
+              <div className="border-t pt-3 space-y-2">
+                {/* Navigation */}
+                <div className="flex gap-2">
+                  {step > 1 && (
+                    <Button variant="outline" className="flex-1" onClick={() => setStep(step - 1)}>Back</Button>
+                  )}
+                  {step < 4 ? (
+                    <Button className="flex-1" disabled={!canNext()} onClick={() => setStep(step + 1)}>
+                      Next <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  ) : (
+                    <Button className="flex-1" onClick={handleCreate}>
+                      Create Batch
+                    </Button>
+                  )}
                 </div>
-              )}
-
-              <div className="flex flex-col gap-2 pt-2">
-                <Button
-                  onClick={() => {
-                    toast({ title: "Batch Created", description: `${form.batchName} has been created successfully.` });
-                    navigate("/admin/batches");
-                  }}
-                  disabled={!canCreate}
-                  className="w-full"
-                >
-                  Create Batch
-                </Button>
-                <Button variant="outline" onClick={() => navigate("/admin/batches")} className="w-full">
+                <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => navigate("/admin/batches")}>
                   Cancel
                 </Button>
               </div>
