@@ -382,7 +382,7 @@ export default function AdminCreateBatch() {
                 <div className="rounded-xl border p-4 space-y-2">
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Customer</h4>
                   <p className="font-semibold">{selectedCustomer?.name || "—"}</p>
-                  <p className="text-xs text-muted-foreground">{selectedCustomer?.region} · {selectedCustomer?.sla}</p>
+                  <p className="text-xs text-muted-foreground">{selectedCustomer?.regions?.[0] || "—"} · {selectedCustomer?.slaTier}</p>
                 </div>
 
                 {/* Batch */}
