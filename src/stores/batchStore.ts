@@ -564,6 +564,156 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     }, 4000);
   },
 
+  createSnapshot: (batchId, name, description) => {
+    const snapshotId = `snap-${Date.now()}`;
+    const newSnapshot: VMSnapshot = {
+      id: snapshotId,
+      name,
+      description,
+      createdAt: new Date().toISOString(),
+      size: "Creating...",
+      status: "creating",
+      isGolden: false,
+    };
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? { ...b, vmConfig: { ...b.vmConfig, snapshots: [...b.vmConfig.snapshots, newSnapshot] } }
+          : b
+      ),
+    }));
+    // Simulate snapshot creation
+    setTimeout(() => {
+      const sizeGB = (Math.random() * 6 + 2).toFixed(1);
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? {
+                ...b,
+                vmConfig: {
+                  ...b.vmConfig,
+                  snapshots: b.vmConfig.snapshots.map((s) =>
+                    s.id === snapshotId ? { ...s, status: "ready" as const, size: `${sizeGB} GB` } : s
+                  ),
+                },
+              }
+            : b
+        ),
+      }));
+    }, 3000);
+  },
+
+  setGoldenSnapshot: (batchId, snapshotId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b,
+              vmConfig: {
+                ...b.vmConfig,
+                goldenSnapshotId: snapshotId,
+                snapshots: b.vmConfig.snapshots.map((s) => ({
+                  ...s,
+                  isGolden: s.id === snapshotId,
+                })),
+              },
+            }
+          : b
+      ),
+    }));
+  },
+
+  deleteSnapshot: (batchId, snapshotId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b,
+              vmConfig: {
+                ...b.vmConfig,
+                snapshots: b.vmConfig.snapshots.filter((s) => s.id !== snapshotId),
+                goldenSnapshotId: b.vmConfig.goldenSnapshotId === snapshotId ? undefined : b.vmConfig.goldenSnapshotId,
+              },
+            }
+          : b
+      ),
+    }));
+  },
+
+  resetStudentVM: (batchId, vmId, snapshotId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b,
+              vmConfig: {
+                ...b.vmConfig,
+                studentVMs: b.vmConfig.studentVMs.map((vm) =>
+                  vm.id === vmId ? { ...vm, status: "provisioning" as const, currentSnapshotId: snapshotId } : vm
+                ),
+              },
+            }
+          : b
+      ),
+    }));
+    // Simulate reset
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? {
+                ...b,
+                vmConfig: {
+                  ...b.vmConfig,
+                  studentVMs: b.vmConfig.studentVMs.map((vm) =>
+                    vm.id === vmId ? { ...vm, status: "running" as const } : vm
+                  ),
+                },
+              }
+            : b
+        ),
+      }));
+    }, 3000);
+  },
+
+  resetAllVMs: (batchId, snapshotId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b,
+              vmConfig: {
+                ...b.vmConfig,
+                studentVMs: b.vmConfig.studentVMs.map((vm) => ({
+                  ...vm,
+                  status: "provisioning" as const,
+                  currentSnapshotId: snapshotId,
+                })),
+              },
+            }
+          : b
+      ),
+    }));
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? {
+                ...b,
+                vmConfig: {
+                  ...b.vmConfig,
+                  studentVMs: b.vmConfig.studentVMs.map((vm) => ({
+                    ...vm,
+                    status: "running" as const,
+                  })),
+                },
+              }
+            : b
+        ),
+      }));
+    }, 5000);
+  },
+
   // Legacy compatibility stubs
   addLabConfig: () => {},
   updateLabConfig: () => {},
