@@ -67,6 +67,8 @@ export interface VMConfig {
     ipAddress: string;
     provisionedAt: string;
   };
+  snapshots: VMSnapshot[];
+  goldenSnapshotId?: string; // the snapshot used for cloning
   studentVMs: VMInstance[];
   cloneStatus: "not_cloned" | "cloning" | "cloned";
   pricing: {
