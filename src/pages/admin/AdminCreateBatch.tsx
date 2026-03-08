@@ -335,6 +335,19 @@ export default function AdminCreateBatch() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Prep Period Note */}
+                    {dateRange?.from && (
+                      <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-start gap-2.5">
+                        <Clock className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-xs font-medium text-amber-700">Admin VM Prep Period</p>
+                          <p className="text-xs text-amber-600 mt-0.5">
+                            The Admin/Trainer VM can be provisioned from <strong>{format(subDays(dateRange.from, 2), "MMM dd, yyyy")}</strong> — 2 days before batch start. Use this time to configure the environment before cloning to students.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Preview Card */}
