@@ -8,10 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { useLabStore } from "@/stores/labStore";
+import { useBatchStore, type VMSnapshot } from "@/stores/batchStore";
 import { TemplatePickerGrid } from "@/components/labs/TemplatePickerGrid";
 import { VMDaySchedule } from "@/components/batches/VMDaySchedule";
 import type { DaySchedule } from "@/components/batches/VMDaySchedule";
@@ -21,7 +23,8 @@ import type { DateRange } from "react-day-picker";
 import { toast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Users, Server, Settings, Calendar as CalendarIcon, Plus, Upload, Trash2,
-  RefreshCw, Play, Square, Eye, Monitor, Layers, DollarSign, HardDrive, Zap, Shield,
+  RefreshCw, Play, Square, Eye, Monitor, Layers, HardDrive, Zap, Shield,
+  Camera, Copy, RotateCcw, Star, AlertTriangle, CheckCircle2, Loader2,
 } from "lucide-react";
 
 interface VMEntry {
@@ -39,36 +42,42 @@ const batchData: Record<string, any> = {
     seats: 30, runningLabs: 28, start: "2026-02-15", end: "2026-03-15", status: "running",
     description: "Advanced Kubernetes training for DevOps engineers", region: "ap-south-1", medium: "online",
     resources: { cpu: 120, ram: 240, disk: 1500 },
+    storeBatchId: "1",
   },
   "B-002": {
     id: "B-002", batch: "ML Cohort #5", customer: "DataScience Bootcamp", template: "ML GPU Lab v1",
     seats: 25, runningLabs: 0, start: "2026-02-20", end: "2026-03-20", status: "scheduled",
     description: "Machine learning with GPU-accelerated labs", region: "ap-south-1", medium: "online",
     resources: { cpu: 200, ram: 800, disk: 2500 },
+    storeBatchId: "2",
   },
   "B-003": {
     id: "B-003", batch: "Linux Fundamentals #8", customer: "Corporate L&D Co", template: "Linux + Networking",
     seats: 40, runningLabs: 38, start: "2026-02-10", end: "2026-03-10", status: "running",
     description: "Linux and networking fundamentals for corporate teams", region: "us-east-1", medium: "hybrid",
     resources: { cpu: 80, ram: 160, disk: 1200 },
+    storeBatchId: "3",
   },
   "B-004": {
     id: "B-004", batch: "Docker Batch #3", customer: "SkillBridge Labs", template: "Docker Compose",
     seats: 20, runningLabs: 0, start: "2026-01-05", end: "2026-02-05", status: "completed",
     description: "Docker containerization workshop", region: "ap-south-1", medium: "online",
     resources: { cpu: 40, ram: 80, disk: 800 },
+    storeBatchId: "4",
   },
   "B-005": {
     id: "B-005", batch: "AWS Batch #6", customer: "DevOps Academy", template: "AWS Simulation",
     seats: 35, runningLabs: 32, start: "2026-02-25", end: "2026-03-25", status: "running",
     description: "AWS cloud simulation with hands-on labs", region: "us-east-1", medium: "online",
     resources: { cpu: 140, ram: 560, disk: 2800 },
+    storeBatchId: "5",
   },
   "B-006": {
     id: "B-006", batch: "Terraform Batch #2", customer: "SkillBridge Labs", template: "Linux + Networking",
     seats: 15, runningLabs: 0, start: "2026-03-10", end: "2026-04-10", status: "scheduled",
     description: "Infrastructure as Code with Terraform", region: "ap-south-1", medium: "offline",
     resources: { cpu: 30, ram: 60, disk: 450 },
+    storeBatchId: "6",
   },
 };
 
@@ -100,13 +109,29 @@ const statusColor: Record<string, string> = {
   stopped: "bg-yellow-500/10 text-yellow-600",
   failed: "bg-destructive/10 text-destructive",
   unassigned: "bg-muted text-muted-foreground",
+  provisioning: "bg-blue-500/10 text-blue-600",
+  configured: "bg-green-500/10 text-green-600",
+  not_provisioned: "bg-muted text-muted-foreground",
+};
+
+const snapshotStatusIcon: Record<string, React.ReactNode> = {
+  creating: <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />,
+  ready: <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />,
+  failed: <AlertTriangle className="h-3.5 w-3.5 text-destructive" />,
 };
 
 export default function AdminBatchDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { templates } = useLabStore();
+  const { batches, provisionTrainerVM, markTrainerVMConfigured, cloneTrainerVMForBatch, createSnapshot, setGoldenSnapshot, deleteSnapshot, resetStudentVM, resetAllVMs } = useBatchStore();
   const [addStudentOpen, setAddStudentOpen] = useState(false);
+  const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
+  const [snapshotName, setSnapshotName] = useState("");
+  const [snapshotDesc, setSnapshotDesc] = useState("");
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetTarget, setResetTarget] = useState<{ type: "single" | "all"; vmId?: string; studentName?: string }>({ type: "all" });
+  const [selectedSnapshotForReset, setSelectedSnapshotForReset] = useState("");
 
   // VM Configuration state for Labs tab
   const [showVMConfig, setShowVMConfig] = useState(false);
@@ -118,6 +143,11 @@ export default function AdminBatchDetail() {
   const [addedVMs, setAddedVMs] = useState<VMEntry[]>([]);
 
   const batch = batchData[id || ""] || batchData["B-001"];
+  const storeBatch = batches.find(b => b.id === batch.storeBatchId);
+  const vmConfig = storeBatch?.vmConfig;
+  const snapshots = vmConfig?.snapshots || [];
+  const goldenSnapshotId = vmConfig?.goldenSnapshotId;
+  const trainerVMStatus = vmConfig?.trainerVM.status || "not_provisioned";
 
   const handleAddVM = () => {
     if (!vmDateRange.from || !vmDateRange.to || !selectedTemplateId) return;
@@ -142,6 +172,29 @@ export default function AdminBatchDetail() {
     setVmDailySchedules([]);
     setShowVMConfig(false);
     toast({ title: "VM Added", description: `${newVM.instanceName} has been configured.` });
+  };
+
+  const handleCreateSnapshot = () => {
+    if (!snapshotName || !batch.storeBatchId) return;
+    createSnapshot(batch.storeBatchId, snapshotName, snapshotDesc);
+    toast({ title: "Creating Snapshot", description: `"${snapshotName}" is being created from the Admin VM...` });
+    setSnapshotName("");
+    setSnapshotDesc("");
+    setSnapshotDialogOpen(false);
+  };
+
+  const handleResetVM = () => {
+    if (!selectedSnapshotForReset || !batch.storeBatchId) return;
+    const snap = snapshots.find(s => s.id === selectedSnapshotForReset);
+    if (resetTarget.type === "all") {
+      resetAllVMs(batch.storeBatchId, selectedSnapshotForReset);
+      toast({ title: "Resetting All VMs", description: `All student VMs are being reset to "${snap?.name}"...` });
+    } else if (resetTarget.vmId) {
+      resetStudentVM(batch.storeBatchId, resetTarget.vmId, selectedSnapshotForReset);
+      toast({ title: "Resetting VM", description: `${resetTarget.studentName}'s VM is being reset to "${snap?.name}"...` });
+    }
+    setResetDialogOpen(false);
+    setSelectedSnapshotForReset("");
   };
 
   return (
@@ -197,6 +250,7 @@ export default function AdminBatchDetail() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
           <TabsTrigger value="labs">Labs & VMs</TabsTrigger>
+          <TabsTrigger value="snapshots">Snapshots</TabsTrigger>
           <TabsTrigger value="schedule">Schedule</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
@@ -235,6 +289,78 @@ export default function AdminBatchDetail() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Admin VM Status Card */}
+          <Card className="border-primary/30">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                Admin VM (Golden Image)
+              </CardTitle>
+              <CardDescription>The admin VM is your master environment. Configure it, snapshot it, then clone to all students.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3">
+                  <div className={cn("h-3 w-3 rounded-full", trainerVMStatus === "running" || trainerVMStatus === "configured" ? "bg-green-500" : trainerVMStatus === "provisioning" ? "bg-blue-500 animate-pulse" : "bg-muted-foreground")} />
+                  <div>
+                    <p className="text-sm font-medium capitalize">{trainerVMStatus.replace("_", " ")}</p>
+                    {vmConfig?.trainerVM.ipAddress && <p className="text-xs text-muted-foreground font-mono">{vmConfig.trainerVM.ipAddress}</p>}
+                  </div>
+                </div>
+                <div className="flex gap-2 ml-auto">
+                  {trainerVMStatus === "not_provisioned" && (
+                    <Button size="sm" onClick={() => provisionTrainerVM(batch.storeBatchId)}>
+                      <Play className="h-3 w-3 mr-1" /> Provision Admin VM
+                    </Button>
+                  )}
+                  {trainerVMStatus === "provisioning" && (
+                    <Button size="sm" disabled><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Provisioning...</Button>
+                  )}
+                  {trainerVMStatus === "running" && (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => window.open("#", "_blank")}>
+                        <Monitor className="h-3 w-3 mr-1" /> Open Console
+                      </Button>
+                      <Button size="sm" onClick={() => markTrainerVMConfigured(batch.storeBatchId)}>
+                        <CheckCircle2 className="h-3 w-3 mr-1" /> Mark as Configured
+                      </Button>
+                    </>
+                  )}
+                  {trainerVMStatus === "configured" && (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => setSnapshotDialogOpen(true)}>
+                        <Camera className="h-3 w-3 mr-1" /> Take Snapshot
+                      </Button>
+                      <Button size="sm" disabled={!goldenSnapshotId} onClick={() => cloneTrainerVMForBatch(batch.storeBatchId)}>
+                        <Copy className="h-3 w-3 mr-1" /> Clone to Students
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+              {/* Workflow Steps */}
+              <div className="mt-4 flex items-center gap-2 text-xs">
+                {[
+                  { label: "Provision", done: trainerVMStatus !== "not_provisioned" },
+                  { label: "Configure", done: trainerVMStatus === "configured" },
+                  { label: "Snapshot", done: snapshots.some(s => s.isGolden && s.status === "ready") },
+                  { label: "Clone", done: vmConfig?.cloneStatus === "cloned" },
+                ].map((step, i) => (
+                  <div key={step.label} className="flex items-center gap-2">
+                    <div className={cn(
+                      "flex items-center gap-1.5 px-2.5 py-1 rounded-full border",
+                      step.done ? "bg-green-500/10 border-green-500/30 text-green-600" : "bg-muted border-border text-muted-foreground"
+                    )}>
+                      {step.done ? <CheckCircle2 className="h-3 w-3" /> : <span className="h-3 w-3 rounded-full border border-current inline-block" />}
+                      {step.label}
+                    </div>
+                    {i < 3 && <span className="text-muted-foreground">→</span>}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Students Tab */}
@@ -288,6 +414,19 @@ export default function AdminBatchDetail() {
                         <div className="flex justify-end gap-1">
                           {s.vmStatus === "unassigned" && <Button variant="outline" size="sm" className="text-xs">Assign VM</Button>}
                           {s.vmStatus === "failed" && <Button variant="outline" size="sm" className="text-xs"><RefreshCw className="h-3 w-3 mr-1" />Replace</Button>}
+                          {s.vmStatus !== "unassigned" && s.vm !== "—" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs"
+                              onClick={() => {
+                                setResetTarget({ type: "single", vmId: s.vm, studentName: s.name });
+                                setResetDialogOpen(true);
+                              }}
+                            >
+                              <RotateCcw className="h-3 w-3 mr-1" /> Reset
+                            </Button>
+                          )}
                           {s.vmStatus === "running" && <Button variant="ghost" size="sm"><Eye className="h-3 w-3" /></Button>}
                           <Button variant="ghost" size="sm"><Trash2 className="h-3 w-3" /></Button>
                         </div>
@@ -300,11 +439,22 @@ export default function AdminBatchDetail() {
           </Card>
         </TabsContent>
 
-        {/* Labs & VMs Tab - with VM Configuration */}
+        {/* Labs & VMs Tab */}
         <TabsContent value="labs" className="space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">{labInstances.length} lab instances</p>
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setResetTarget({ type: "all" });
+                  setResetDialogOpen(true);
+                }}
+                disabled={snapshots.filter(s => s.status === "ready").length === 0}
+              >
+                <RotateCcw className="h-3 w-3 mr-1" /> Reset All to Snapshot
+              </Button>
               <Button variant="outline" size="sm"><RefreshCw className="h-3 w-3 mr-1" /> Refresh</Button>
               <Button variant="outline" size="sm" onClick={() => setShowVMConfig(!showVMConfig)}>
                 <Plus className="h-3 w-3 mr-1" /> Configure VM
@@ -344,6 +494,16 @@ export default function AdminBatchDetail() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="sm"><Eye className="h-3 w-3" /></Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setResetTarget({ type: "single", vmId: l.id, studentName: l.student });
+                              setResetDialogOpen(true);
+                            }}
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                          </Button>
                           <Button variant="ghost" size="sm"><RefreshCw className="h-3 w-3" /></Button>
                           {l.status === "failed" && <Button variant="outline" size="sm" className="text-xs">Replace</Button>}
                         </div>
@@ -406,37 +566,18 @@ export default function AdminBatchDetail() {
                 </div>
               </div>
 
-              {/* VM Type Selection */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Layers className="h-4 w-4 text-primary" />
-                    VM Type
-                  </CardTitle>
-                  <CardDescription>Choose how many VMs each participant gets</CardDescription>
+                  <CardTitle className="text-base flex items-center gap-2"><Layers className="h-4 w-4 text-primary" /> VM Type</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setVmType("single")}
-                      className={cn(
-                        "p-5 rounded-xl border-2 text-left transition-all",
-                        vmType === "single" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-                      )}
-                    >
+                    <button type="button" onClick={() => setVmType("single")} className={cn("p-5 rounded-xl border-2 text-left transition-all", vmType === "single" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40")}>
                       <Monitor className="h-6 w-6 mb-2 text-primary" />
                       <h4 className="font-semibold">Single VM</h4>
                       <p className="text-xs text-muted-foreground mt-1">One VM per participant</p>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setVmType("multi")}
-                      className={cn(
-                        "p-5 rounded-xl border-2 text-left transition-all",
-                        vmType === "multi" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-                      )}
-                    >
+                    <button type="button" onClick={() => setVmType("multi")} className={cn("p-5 rounded-xl border-2 text-left transition-all", vmType === "multi" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40")}>
                       <Layers className="h-6 w-6 mb-2 text-primary" />
                       <h4 className="font-semibold">Multi VM</h4>
                       <p className="text-xs text-muted-foreground mt-1">2-3 VMs per participant</p>
@@ -445,38 +586,19 @@ export default function AdminBatchDetail() {
                 </CardContent>
               </Card>
 
-              {/* Template Selection */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Server className="h-4 w-4 text-primary" />
-                    VM Template
-                  </CardTitle>
-                  <CardDescription>Select template and name your instance</CardDescription>
+                  <CardTitle className="text-base flex items-center gap-2"><Server className="h-4 w-4 text-primary" /> VM Template</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="p-4 rounded-xl border bg-muted/10 space-y-4">
-                    <div className="space-y-3">
-                      <Label className="text-xs">Select Template</Label>
-                      <TemplatePickerGrid
-                        templates={templates}
-                        selectedId={selectedTemplateId}
-                        onSelect={(template) => setSelectedTemplateId(template.id)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">Instance Name</Label>
-                      <Input
-                        placeholder="e.g., Web Server, Database, etc."
-                        value={instanceName}
-                        onChange={(e) => setInstanceName(e.target.value)}
-                      />
-                    </div>
+                  <TemplatePickerGrid templates={templates} selectedId={selectedTemplateId} onSelect={(t) => setSelectedTemplateId(t.id)} />
+                  <div className="space-y-2">
+                    <Label className="text-xs">Instance Name</Label>
+                    <Input placeholder="e.g., Web Server, Database, etc." value={instanceName} onChange={(e) => setInstanceName(e.target.value)} />
                   </div>
                 </CardContent>
               </Card>
 
-              {/* VM Date Range Calendar */}
               <Card>
                 <CardContent className="pt-8 pb-6 flex flex-col items-center">
                   <div className="text-center mb-6">
@@ -486,49 +608,152 @@ export default function AdminBatchDetail() {
                         <p className="text-sm text-muted-foreground">
                           {format(vmDateRange.from, "MMM d, yyyy")} — {format(vmDateRange.to, "MMM d, yyyy")} ({differenceInDays(vmDateRange.to, vmDateRange.from) + 1} days)
                         </p>
-                        <Button type="button" variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto py-0.5 px-1.5" onClick={() => setVmDateRange({ from: undefined, to: undefined })}>
-                          Clear
-                        </Button>
+                        <Button type="button" variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto py-0.5 px-1.5" onClick={() => setVmDateRange({ from: undefined, to: undefined })}>Clear</Button>
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground mt-1">Select a start date, then an end date</p>
                     )}
                   </div>
-                  <Calendar
-                    mode="range"
-                    selected={vmDateRange as DateRange}
-                    onSelect={(range) => setVmDateRange({ from: range?.from, to: range?.to })}
-                    numberOfMonths={2}
-                    className="p-4 pointer-events-auto"
-                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                  />
+                  <Calendar mode="range" selected={vmDateRange as DateRange} onSelect={(range) => setVmDateRange({ from: range?.from, to: range?.to })} numberOfMonths={2} className="p-4 pointer-events-auto" disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))} />
                 </CardContent>
               </Card>
 
-              {/* Per-Day Timings */}
               {vmDateRange.from && vmDateRange.to && (
-                <VMDaySchedule
-                  dateRange={{ from: vmDateRange.from, to: vmDateRange.to }}
-                  dailySchedules={vmDailySchedules}
-                  onChange={setVmDailySchedules}
-                />
+                <VMDaySchedule dateRange={{ from: vmDateRange.from, to: vmDateRange.to }} dailySchedules={vmDailySchedules} onChange={setVmDailySchedules} />
               )}
 
-              {/* Add VM Button */}
               <div className="flex gap-3">
-                <Button
-                  size="lg"
-                  className="flex-1"
-                  disabled={!vmDateRange.from || !vmDateRange.to || !selectedTemplateId}
-                  onClick={handleAddVM}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add VM
+                <Button size="lg" className="flex-1" disabled={!vmDateRange.from || !vmDateRange.to || !selectedTemplateId} onClick={handleAddVM}>
+                  <Plus className="mr-2 h-4 w-4" /> Add VM
                 </Button>
-                <Button variant="outline" size="lg" onClick={() => setShowVMConfig(false)}>
-                  Cancel
-                </Button>
+                <Button variant="outline" size="lg" onClick={() => setShowVMConfig(false)}>Cancel</Button>
               </div>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Snapshots Tab */}
+        <TabsContent value="snapshots" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">{snapshots.length} snapshots</p>
+              <p className="text-xs text-muted-foreground">Snapshots capture the Admin VM state for cloning and resetting</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                disabled={trainerVMStatus !== "configured" && trainerVMStatus !== "running"}
+                onClick={() => setSnapshotDialogOpen(true)}
+              >
+                <Camera className="h-3 w-3 mr-1" /> Take Snapshot
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={snapshots.filter(s => s.status === "ready").length === 0}
+                onClick={() => {
+                  setResetTarget({ type: "all" });
+                  setResetDialogOpen(true);
+                }}
+              >
+                <RotateCcw className="h-3 w-3 mr-1" /> Reset All VMs
+              </Button>
+            </div>
+          </div>
+
+          {/* Workflow Explainer */}
+          <Card className="bg-muted/30 border-dashed">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <Zap className="h-5 w-5 text-primary mt-0.5" />
+                <div className="space-y-1 text-sm">
+                  <p className="font-medium">Snapshot & Clone Workflow</p>
+                  <ol className="list-decimal list-inside text-muted-foreground space-y-0.5 text-xs">
+                    <li>Provision the <strong>Admin VM</strong> from the Overview tab</li>
+                    <li>Open the console, install software, configure the environment</li>
+                    <li>Mark as configured, then <strong>take a snapshot</strong></li>
+                    <li>Set the snapshot as the <strong>Golden Image</strong> (⭐)</li>
+                    <li><strong>Clone</strong> the golden image to all student VMs</li>
+                    <li>Use snapshots to <strong>reset</strong> individual or all student VMs at any time</li>
+                  </ol>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Snapshots List */}
+          {snapshots.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Camera className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+                <p className="text-sm font-medium text-muted-foreground">No snapshots yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Configure the Admin VM and take your first snapshot</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {snapshots.map(snap => (
+                <Card key={snap.id} className={cn(snap.isGolden && "border-primary/40 bg-primary/5")}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {snapshotStatusIcon[snap.status]}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold">{snap.name}</p>
+                            {snap.isGolden && (
+                              <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary gap-1">
+                                <Star className="h-2.5 w-2.5" /> Golden Image
+                              </Badge>
+                            )}
+                            <Badge variant="secondary" className="text-[10px] capitalize">{snap.status}</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">{snap.description}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {format(new Date(snap.createdAt), "MMM d, yyyy HH:mm")} · {snap.size}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {snap.status === "ready" && !snap.isGolden && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs gap-1"
+                            onClick={() => setGoldenSnapshot(batch.storeBatchId, snap.id)}
+                          >
+                            <Star className="h-3 w-3" /> Set as Golden
+                          </Button>
+                        )}
+                        {snap.status === "ready" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs gap-1"
+                            onClick={() => {
+                              setResetTarget({ type: "all" });
+                              setSelectedSnapshotForReset(snap.id);
+                              setResetDialogOpen(true);
+                            }}
+                          >
+                            <RotateCcw className="h-3 w-3" /> Reset All
+                          </Button>
+                        )}
+                        {!snap.isGolden && snap.status !== "creating" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground hover:text-destructive"
+                            onClick={() => deleteSnapshot(batch.storeBatchId, snap.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           )}
         </TabsContent>
@@ -550,12 +775,7 @@ export default function AdminBatchDetail() {
               </div>
               <div className="pt-3 border-t">
                 <div className="h-3 rounded-full bg-muted relative">
-                  <div
-                    className="h-3 rounded-full bg-primary"
-                    style={{
-                      width: `${Math.min(100, Math.max(0, ((Date.now() - new Date(batch.start).getTime()) / (new Date(batch.end).getTime() - new Date(batch.start).getTime())) * 100))}%`
-                    }}
-                  />
+                  <div className="h-3 rounded-full bg-primary" style={{ width: `${Math.min(100, Math.max(0, ((Date.now() - new Date(batch.start).getTime()) / (new Date(batch.end).getTime() - new Date(batch.start).getTime())) * 100))}%` }} />
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground mt-1">
                   <span>{batch.start}</span>
@@ -579,9 +799,7 @@ export default function AdminBatchDetail() {
                   <Label>Template</Label>
                   <Select defaultValue={batch.template}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={batch.template}>{batch.template}</SelectItem>
-                    </SelectContent>
+                    <SelectContent><SelectItem value={batch.template}>{batch.template}</SelectItem></SelectContent>
                   </Select>
                 </div>
               </div>
@@ -601,6 +819,83 @@ export default function AdminBatchDetail() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Create Snapshot Dialog */}
+      <Dialog open={snapshotDialogOpen} onOpenChange={setSnapshotDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Camera className="h-4 w-4" /> Create Snapshot</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              This will capture the current state of the Admin VM. You can use this snapshot to clone student VMs or reset them later.
+            </p>
+            <div className="space-y-2">
+              <Label>Snapshot Name *</Label>
+              <Input value={snapshotName} onChange={e => setSnapshotName(e.target.value)} placeholder="e.g., Initial Setup, Post Lab 1..." />
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea value={snapshotDesc} onChange={e => setSnapshotDesc(e.target.value)} placeholder="Describe what's configured in this snapshot..." rows={2} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSnapshotDialogOpen(false)}>Cancel</Button>
+            <Button disabled={!snapshotName} onClick={handleCreateSnapshot}>
+              <Camera className="h-3 w-3 mr-1" /> Create Snapshot
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset VM Dialog */}
+      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RotateCcw className="h-4 w-4" />
+              {resetTarget.type === "all" ? "Reset All Student VMs" : `Reset ${resetTarget.studentName}'s VM`}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {resetTarget.type === "all"
+                ? "This will reset ALL student VMs to the selected snapshot state. Students will lose any unsaved work."
+                : `This will reset ${resetTarget.studentName}'s VM to the selected snapshot state.`
+              }
+            </p>
+            <div className="space-y-2">
+              <Label>Select Snapshot to Restore</Label>
+              <Select value={selectedSnapshotForReset} onValueChange={setSelectedSnapshotForReset}>
+                <SelectTrigger><SelectValue placeholder="Choose a snapshot..." /></SelectTrigger>
+                <SelectContent>
+                  {snapshots.filter(s => s.status === "ready").map(snap => (
+                    <SelectItem key={snap.id} value={snap.id}>
+                      <div className="flex items-center gap-2">
+                        {snap.isGolden && <Star className="h-3 w-3 text-primary" />}
+                        {snap.name}
+                        <span className="text-muted-foreground text-xs">({snap.size})</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {resetTarget.type === "all" && (
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                <p>This action will affect all student VMs in this batch. Make sure students have saved their progress.</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" disabled={!selectedSnapshotForReset} onClick={handleResetVM}>
+              <RotateCcw className="h-3 w-3 mr-1" /> Reset {resetTarget.type === "all" ? "All VMs" : "VM"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
