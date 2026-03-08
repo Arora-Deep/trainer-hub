@@ -105,61 +105,138 @@ export default function LabInstances() {
         </CardContent>
       </Card>
 
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>VM ID</TableHead>
-                <TableHead>Student</TableHead>
-                <TableHead>Batch</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Node</TableHead>
-                <TableHead className="text-right">CPU</TableHead>
-                <TableHead className="text-right">RAM</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Seen</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.length === 0 && (
-                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-12">No VMs match your filters</TableCell></TableRow>
-              )}
-              {filtered.map(v => {
-                const sc = statusConfig[v.status];
-                return (
-                  <TableRow key={v.vmId} className="group">
-                    <TableCell>
-                      <button className="text-sm font-mono text-primary hover:underline" onClick={() => setSelectedVM(v)}>{v.vmId}</button>
-                    </TableCell>
-                    <TableCell className="text-sm">{v.student}</TableCell>
-                    <TableCell className="text-sm">{v.batch}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{v.customer}</TableCell>
-                    <TableCell className="text-sm font-mono text-muted-foreground">{v.node}</TableCell>
-                    <TableCell className="text-sm text-right">{v.cpu}%</TableCell>
-                    <TableCell className="text-sm text-right">{v.ram}%</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className={cn("text-xs gap-1.5", sc.bg, sc.text)}>
-                        <span className={cn("h-1.5 w-1.5 rounded-full", sc.dot)} />
-                        {sc.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{v.lastSeen}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="sm" title="Restart"><RotateCcw className="h-3 w-3" /></Button>
-                        <Button variant="ghost" size="sm" title="Replace"><ArrowLeftRight className="h-3 w-3" /></Button>
-                        <Button variant="ghost" size="sm" title="Reset Credentials"><Key className="h-3 w-3" /></Button>
-                        <Button variant="ghost" size="sm" title="View Logs"><FileText className="h-3 w-3" /></Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+      {/* Admin VMs Section */}
+      {filteredAdmin.length > 0 && (
+        <Card className="border-primary/30 bg-primary/[0.02]">
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              Admin VMs
+              <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-primary/20">{filteredAdmin.length} Master</Badge>
+            </CardTitle>
+            <CardDescription className="text-xs">Golden image VMs used for snapshotting and cloning to students</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-primary/[0.03]">
+                  <TableHead>VM ID</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Batch</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Node</TableHead>
+                  <TableHead className="text-right">CPU</TableHead>
+                  <TableHead className="text-right">RAM</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last Seen</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAdmin.map(v => {
+                  const sc = statusConfig[v.status] || statusConfig.stopped;
+                  return (
+                    <TableRow key={v.vmId} className="group bg-primary/[0.02]">
+                      <TableCell>
+                        <button className="text-sm font-mono font-semibold text-primary hover:underline" onClick={() => setSelectedVM(v)}>{v.vmId}</button>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-[10px] gap-1 border-primary/30 text-primary">
+                          <Shield className="h-2.5 w-2.5" /> Admin
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">{v.batch}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{v.customer}</TableCell>
+                      <TableCell className="text-sm font-mono text-muted-foreground">{v.node}</TableCell>
+                      <TableCell className="text-sm text-right">{v.cpu}%</TableCell>
+                      <TableCell className="text-sm text-right">{v.ram}%</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={cn("text-xs gap-1.5", sc.bg, sc.text)}>
+                          <span className={cn("h-1.5 w-1.5 rounded-full", sc.dot)} />
+                          {sc.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{v.lastSeen}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="sm" title="Open Console"><Monitor className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="sm" title="Take Snapshot"><Camera className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="sm" title="Restart"><RotateCcw className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="sm" title="View Logs"><FileText className="h-3 w-3" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Student VMs Section */}
+      <div className="space-y-2">
+        <h3 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
+          <Users className="h-4 w-4" />
+          Student VMs ({filtered.length})
+        </h3>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>VM ID</TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Batch</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Node</TableHead>
+                  <TableHead className="text-right">CPU</TableHead>
+                  <TableHead className="text-right">RAM</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last Seen</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.length === 0 && (
+                  <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-12">No VMs match your filters</TableCell></TableRow>
+                )}
+                {filtered.map(v => {
+                  const sc = statusConfig[v.status];
+                  return (
+                    <TableRow key={v.vmId} className="group">
+                      <TableCell>
+                        <button className="text-sm font-mono text-primary hover:underline" onClick={() => setSelectedVM(v)}>{v.vmId}</button>
+                      </TableCell>
+                      <TableCell className="text-sm">{v.student}</TableCell>
+                      <TableCell className="text-sm">{v.batch}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{v.customer}</TableCell>
+                      <TableCell className="text-sm font-mono text-muted-foreground">{v.node}</TableCell>
+                      <TableCell className="text-sm text-right">{v.cpu}%</TableCell>
+                      <TableCell className="text-sm text-right">{v.ram}%</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={cn("text-xs gap-1.5", sc.bg, sc.text)}>
+                          <span className={cn("h-1.5 w-1.5 rounded-full", sc.dot)} />
+                          {sc.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{v.lastSeen}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="sm" title="Restart"><RotateCcw className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="sm" title="Replace"><ArrowLeftRight className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="sm" title="Reset Credentials"><Key className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="sm" title="View Logs"><FileText className="h-3 w-3" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
         </CardContent>
       </Card>
 
