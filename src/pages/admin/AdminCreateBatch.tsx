@@ -11,12 +11,12 @@ import { useNavigate } from "react-router-dom";
 import { useCustomerStore } from "@/stores/customerStore";
 import { useLabStore } from "@/stores/labStore";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import { toast } from "@/hooks/use-toast";
 import {
   Check, ChevronRight, Building2, FileText, Server, ClipboardList,
-  Users, CalendarDays, Monitor, Cpu, HardDrive, MemoryStick,
+  Users, CalendarDays, Monitor, Cpu, HardDrive, MemoryStick, Shield, Clock,
 } from "lucide-react";
 
 const steps = [
