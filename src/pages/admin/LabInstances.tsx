@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { Search, RotateCcw, ArrowLeftRight, Key, FileText, Cpu, MemoryStick, Globe, HardDrive } from "lucide-react";
+import { Search, RotateCcw, ArrowLeftRight, Key, FileText, Cpu, MemoryStick, Globe, HardDrive, Shield, Monitor, Camera, Users } from "lucide-react";
 
 const adminVMs = [
   { vmId: "VM-ADM-01", customer: "DevOps Academy", batch: "K8s Batch #14", student: "— Admin", node: "node-mum-01", status: "running", cpu: 12, ram: 28, lastSeen: "just now", ip: "10.0.1.10", os: "Ubuntu 22.04", disk: 22, role: "admin" as const },
