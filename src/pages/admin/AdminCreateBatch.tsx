@@ -11,12 +11,12 @@ import { useNavigate } from "react-router-dom";
 import { useCustomerStore } from "@/stores/customerStore";
 import { useLabStore } from "@/stores/labStore";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import { toast } from "@/hooks/use-toast";
 import {
   Check, ChevronRight, Building2, FileText, Server, ClipboardList,
-  Users, CalendarDays, Monitor, Cpu, HardDrive, MemoryStick,
+  Users, CalendarDays, Monitor, Cpu, HardDrive, MemoryStick, Shield, Clock,
 } from "lucide-react";
 
 const steps = [
@@ -335,6 +335,19 @@ export default function AdminCreateBatch() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Prep Period Note */}
+                    {dateRange?.from && (
+                      <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-start gap-2.5">
+                        <Clock className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-xs font-medium text-amber-700">Admin VM Prep Period</p>
+                          <p className="text-xs text-amber-600 mt-0.5">
+                            The Admin/Trainer VM can be provisioned from <strong>{format(subDays(dateRange.from, 2), "MMM dd, yyyy")}</strong> — 2 days before batch start. Use this time to configure the environment before cloning to students.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Preview Card */}
@@ -438,6 +451,28 @@ export default function AdminCreateBatch() {
                     </div>
                   </div>
                 </div>
+
+                {/* Prep Period Info */}
+                {dateRange?.from && (
+                  <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-2">
+                    <h4 className="text-xs font-semibold text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Shield className="h-3.5 w-3.5" /> Admin VM Prep Window
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground text-xs">Prep Starts</p>
+                        <p className="font-bold">{format(subDays(dateRange.from, 2), "MMM dd, yyyy")}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Batch Starts</p>
+                        <p className="font-bold">{format(dateRange.from, "MMM dd, yyyy")}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-amber-600 mt-1">
+                      You'll have 2 days to provision and configure the Admin VM before the batch begins. The golden image will be cloned to all {form.seatCount} student VMs.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

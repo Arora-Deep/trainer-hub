@@ -63,9 +63,15 @@ export interface VMConfig {
   vmTemplates: VMTemplateConfig[];
   vmEntries: VMEntry[];
   trainerVM: {
-    status: "not_provisioned" | "provisioning" | "running" | "configured" | "stopped";
+    status: "not_provisioned" | "provisioning" | "running" | "configured" | "snapshotted" | "stopped";
     ipAddress: string;
     provisionedAt: string;
+    consoleUrl: string; // noVNC-style URL
+    credentials: {
+      username: string;
+      password: string;
+      sshPort: number;
+    };
   };
   snapshots: VMSnapshot[];
   goldenSnapshotId?: string; // the snapshot used for cloning
@@ -212,6 +218,8 @@ const initialBatches: Batch[] = [
         status: "configured",
         ipAddress: "10.0.1.100",
         provisionedAt: "2024-01-14T10:00:00Z",
+        consoleUrl: "https://console.cloudadda.io/vm/vm-adm-1",
+        credentials: { username: "root", password: "Tr@in3r!2024", sshPort: 22 },
       },
       snapshots: [
         { id: "snap-1", name: "Initial Setup", description: "Base configuration with all tools installed", createdAt: "2024-01-14T12:00:00Z", size: "4.2 GB", status: "ready", isGolden: true },
@@ -470,8 +478,14 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
                   ...b.vmConfig,
                   trainerVM: {
                     status: "running" as const,
-                    ipAddress: "10.0.1.100",
+                    ipAddress: `10.0.1.${100 + Math.floor(Math.random() * 50)}`,
                     provisionedAt: new Date().toISOString(),
+                    consoleUrl: `https://console.cloudadda.io/vm/vm-adm-${batchId}`,
+                    credentials: {
+                      username: "root",
+                      password: `Tr@in${Math.random().toString(36).slice(2, 8)}!`,
+                      sshPort: 22,
+                    },
                   },
                 },
               }

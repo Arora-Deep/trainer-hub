@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Calendar } from "@/components/ui/calendar";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,13 +19,14 @@ import { TemplatePickerGrid } from "@/components/labs/TemplatePickerGrid";
 import { VMDaySchedule } from "@/components/batches/VMDaySchedule";
 import type { DaySchedule } from "@/components/batches/VMDaySchedule";
 import { cn } from "@/lib/utils";
-import { format, differenceInDays, eachDayOfInterval } from "date-fns";
+import { format, differenceInDays, eachDayOfInterval, subDays, isAfter, isBefore, isEqual, formatDistanceToNow } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import { toast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Users, Server, Settings, Calendar as CalendarIcon, Plus, Upload, Trash2,
   RefreshCw, Play, Square, Eye, Monitor, Layers, HardDrive, Zap, Shield,
   Camera, Copy, RotateCcw, Star, AlertTriangle, CheckCircle2, Loader2,
+  Terminal, ExternalLink, EyeOff, Clock, Lock, Clipboard,
 } from "lucide-react";
 
 interface VMEntry {
@@ -111,6 +113,7 @@ const statusColor: Record<string, string> = {
   unassigned: "bg-muted text-muted-foreground",
   provisioning: "bg-blue-500/10 text-blue-600",
   configured: "bg-green-500/10 text-green-600",
+  snapshotted: "bg-primary/10 text-primary",
   not_provisioned: "bg-muted text-muted-foreground",
 };
 
@@ -132,6 +135,9 @@ export default function AdminBatchDetail() {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [resetTarget, setResetTarget] = useState<{ type: "single" | "all"; vmId?: string; studentName?: string }>({ type: "all" });
   const [selectedSnapshotForReset, setSelectedSnapshotForReset] = useState("");
+  const [consoleOpen, setConsoleOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [cloneConfirmOpen, setCloneConfirmOpen] = useState(false);
 
   // VM Configuration state for Labs tab
   const [showVMConfig, setShowVMConfig] = useState(false);
@@ -148,6 +154,19 @@ export default function AdminBatchDetail() {
   const snapshots = vmConfig?.snapshots || [];
   const goldenSnapshotId = vmConfig?.goldenSnapshotId;
   const trainerVMStatus = vmConfig?.trainerVM.status || "not_provisioned";
+  const trainerVM = vmConfig?.trainerVM;
+
+  // Prep period logic: Admin VM can be provisioned 2 days before batch start
+  const batchStartDate = new Date(batch.start);
+  const prepDate = subDays(batchStartDate, 2);
+  const now = new Date();
+  const canProvision = isAfter(now, prepDate) || isEqual(now, prepDate);
+  const daysUntilPrep = Math.max(0, Math.ceil((prepDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied!", description: "Copied to clipboard" });
+  };
 
   const handleAddVM = () => {
     if (!vmDateRange.from || !vmDateRange.to || !selectedTemplateId) return;
@@ -196,6 +215,20 @@ export default function AdminBatchDetail() {
     setResetDialogOpen(false);
     setSelectedSnapshotForReset("");
   };
+
+  const handleCloneConfirm = () => {
+    cloneTrainerVMForBatch(batch.storeBatchId);
+    setCloneConfirmOpen(false);
+    toast({ title: "Cloning Started", description: `Cloning golden image to ${batch.seats} student VMs...` });
+  };
+
+  // Workflow step statuses
+  const workflowSteps = [
+    { label: "Provision", done: trainerVMStatus !== "not_provisioned", active: trainerVMStatus === "provisioning" },
+    { label: "Configure", done: trainerVMStatus === "configured" || trainerVMStatus === "snapshotted", active: trainerVMStatus === "running" },
+    { label: "Snapshot", done: snapshots.some(s => s.isGolden && s.status === "ready"), active: trainerVMStatus === "configured" },
+    { label: "Clone", done: vmConfig?.cloneStatus === "cloned", active: vmConfig?.cloneStatus === "cloning" },
+  ];
 
   return (
     <div className="space-y-6">
@@ -290,27 +323,63 @@ export default function AdminBatchDetail() {
             </Card>
           </div>
 
-          {/* Admin VM Status Card */}
+          {/* Admin VM Lifecycle Card */}
           <Card className="border-primary/30">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Shield className="h-4 w-4 text-primary" />
-                Admin VM (Golden Image)
-              </CardTitle>
-              <CardDescription>The admin VM is your master environment. Configure it, snapshot it, then clone to all students.</CardDescription>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-primary" />
+                  Admin VM — Trainer Environment
+                </CardTitle>
+                <Badge variant="secondary" className={cn("text-xs capitalize", statusColor[trainerVMStatus])}>
+                  {trainerVMStatus.replace("_", " ")}
+                </Badge>
+              </div>
+              <CardDescription>Provision → Console → Configure → Snapshot → Clone to all students</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-3">
-                  <div className={cn("h-3 w-3 rounded-full", trainerVMStatus === "running" || trainerVMStatus === "configured" ? "bg-green-500" : trainerVMStatus === "provisioning" ? "bg-blue-500 animate-pulse" : "bg-muted-foreground")} />
+            <CardContent className="space-y-4">
+              {/* Prep Period Banner */}
+              {!canProvision && trainerVMStatus === "not_provisioned" && (
+                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
+                  <Clock className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-sm font-medium capitalize">{trainerVMStatus.replace("_", " ")}</p>
-                    {vmConfig?.trainerVM.ipAddress && <p className="text-xs text-muted-foreground font-mono">{vmConfig.trainerVM.ipAddress}</p>}
+                    <p className="text-sm font-medium text-amber-700">Prep Period Not Started</p>
+                    <p className="text-xs text-amber-600 mt-0.5">
+                      Admin VM can be provisioned from <strong>{format(prepDate, "MMM dd, yyyy")}</strong> (2 days before batch start).
+                      {daysUntilPrep > 0 && <span> {daysUntilPrep} day{daysUntilPrep !== 1 ? "s" : ""} remaining.</span>}
+                    </p>
                   </div>
                 </div>
-                <div className="flex gap-2 ml-auto">
+              )}
+
+              {canProvision && trainerVMStatus === "not_provisioned" && (
+                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 flex items-start gap-3">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-green-700">Prep Period Active</p>
+                    <p className="text-xs text-green-600 mt-0.5">
+                      You can now provision the Admin VM. Batch starts on {format(batchStartDate, "MMM dd, yyyy")}.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* VM Info + Actions */}
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "h-3 w-3 rounded-full",
+                    (trainerVMStatus === "running" || trainerVMStatus === "configured" || trainerVMStatus === "snapshotted") ? "bg-green-500" :
+                    trainerVMStatus === "provisioning" ? "bg-blue-500 animate-pulse" : "bg-muted-foreground"
+                  )} />
+                  <div>
+                    <p className="text-sm font-medium capitalize">{trainerVMStatus.replace("_", " ")}</p>
+                    {trainerVM?.ipAddress && <p className="text-xs text-muted-foreground font-mono">{trainerVM.ipAddress}:{trainerVM.credentials.sshPort}</p>}
+                  </div>
+                </div>
+                <div className="flex gap-2 ml-auto flex-wrap">
                   {trainerVMStatus === "not_provisioned" && (
-                    <Button size="sm" onClick={() => provisionTrainerVM(batch.storeBatchId)}>
+                    <Button size="sm" disabled={!canProvision} onClick={() => provisionTrainerVM(batch.storeBatchId)}>
                       <Play className="h-3 w-3 mr-1" /> Provision Admin VM
                     </Button>
                   )}
@@ -319,40 +388,51 @@ export default function AdminBatchDetail() {
                   )}
                   {trainerVMStatus === "running" && (
                     <>
-                      <Button variant="outline" size="sm" onClick={() => window.open("#", "_blank")}>
-                        <Monitor className="h-3 w-3 mr-1" /> Open Console
+                      <Button variant="outline" size="sm" onClick={() => setConsoleOpen(true)}>
+                        <Terminal className="h-3 w-3 mr-1" /> Open Console
                       </Button>
                       <Button size="sm" onClick={() => markTrainerVMConfigured(batch.storeBatchId)}>
                         <CheckCircle2 className="h-3 w-3 mr-1" /> Mark as Configured
                       </Button>
                     </>
                   )}
-                  {trainerVMStatus === "configured" && (
+                  {(trainerVMStatus === "configured" || trainerVMStatus === "snapshotted") && (
                     <>
+                      <Button variant="outline" size="sm" onClick={() => setConsoleOpen(true)}>
+                        <Terminal className="h-3 w-3 mr-1" /> Console
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => setSnapshotDialogOpen(true)}>
                         <Camera className="h-3 w-3 mr-1" /> Take Snapshot
                       </Button>
-                      <Button size="sm" disabled={!goldenSnapshotId} onClick={() => cloneTrainerVMForBatch(batch.storeBatchId)}>
-                        <Copy className="h-3 w-3 mr-1" /> Clone to Students
+                      <Button
+                        size="sm"
+                        disabled={!goldenSnapshotId || vmConfig?.cloneStatus === "cloning"}
+                        onClick={() => setCloneConfirmOpen(true)}
+                      >
+                        {vmConfig?.cloneStatus === "cloning" ? (
+                          <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Cloning...</>
+                        ) : (
+                          <><Copy className="h-3 w-3 mr-1" /> Clone to Students</>
+                        )}
                       </Button>
                     </>
                   )}
                 </div>
               </div>
+
               {/* Workflow Steps */}
-              <div className="mt-4 flex items-center gap-2 text-xs">
-                {[
-                  { label: "Provision", done: trainerVMStatus !== "not_provisioned" },
-                  { label: "Configure", done: trainerVMStatus === "configured" },
-                  { label: "Snapshot", done: snapshots.some(s => s.isGolden && s.status === "ready") },
-                  { label: "Clone", done: vmConfig?.cloneStatus === "cloned" },
-                ].map((step, i) => (
+              <div className="flex items-center gap-2 text-xs">
+                {workflowSteps.map((step, i) => (
                   <div key={step.label} className="flex items-center gap-2">
                     <div className={cn(
                       "flex items-center gap-1.5 px-2.5 py-1 rounded-full border",
-                      step.done ? "bg-green-500/10 border-green-500/30 text-green-600" : "bg-muted border-border text-muted-foreground"
+                      step.done ? "bg-green-500/10 border-green-500/30 text-green-600" :
+                      step.active ? "bg-blue-500/10 border-blue-500/30 text-blue-600" :
+                      "bg-muted border-border text-muted-foreground"
                     )}>
-                      {step.done ? <CheckCircle2 className="h-3 w-3" /> : <span className="h-3 w-3 rounded-full border border-current inline-block" />}
+                      {step.done ? <CheckCircle2 className="h-3 w-3" /> :
+                       step.active ? <Loader2 className="h-3 w-3 animate-spin" /> :
+                       <span className="h-3 w-3 rounded-full border border-current inline-block" />}
                       {step.label}
                     </div>
                     {i < 3 && <span className="text-muted-foreground">→</span>}
@@ -479,6 +559,13 @@ export default function AdminBatchDetail() {
               <CardDescription className="text-xs">The master environment used as the golden image for all student VMs</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
+              {/* Prep period warning in Labs tab too */}
+              {!canProvision && trainerVMStatus === "not_provisioned" && (
+                <div className="mx-4 mb-3 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center gap-2 text-xs text-amber-600">
+                  <Clock className="h-3.5 w-3.5 shrink-0" />
+                  Provisioning opens {format(prepDate, "MMM dd, yyyy")} ({daysUntilPrep}d away)
+                </div>
+              )}
               <Table>
                 <TableHeader>
                   <TableRow className="bg-primary/[0.03]">
@@ -494,25 +581,25 @@ export default function AdminBatchDetail() {
                 </TableHeader>
                 <TableBody>
                   <TableRow className="bg-primary/[0.02]">
-                    <TableCell className="text-sm font-mono font-semibold text-primary">{vmConfig?.trainerVM.ipAddress ? `VM-ADM-${batch.id.replace("B-", "")}` : "VM-ADMIN"}</TableCell>
+                    <TableCell className="text-sm font-mono font-semibold text-primary">{trainerVM?.ipAddress ? `VM-ADM-${batch.id.replace("B-", "")}` : "VM-ADMIN"}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-[10px] gap-1 border-primary/30 text-primary">
                         <Shield className="h-2.5 w-2.5" /> Admin
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">node-mum-01</TableCell>
-                    <TableCell className="text-sm">{trainerVMStatus === "running" || trainerVMStatus === "configured" ? "12%" : "—"}</TableCell>
-                    <TableCell className="text-sm">{trainerVMStatus === "running" || trainerVMStatus === "configured" ? "28%" : "—"}</TableCell>
+                    <TableCell className="text-sm">{trainerVMStatus === "running" || trainerVMStatus === "configured" || trainerVMStatus === "snapshotted" ? "12%" : "—"}</TableCell>
+                    <TableCell className="text-sm">{trainerVMStatus === "running" || trainerVMStatus === "configured" || trainerVMStatus === "snapshotted" ? "28%" : "—"}</TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={cn("text-xs capitalize", statusColor[trainerVMStatus])}>
                         {trainerVMStatus.replace("_", " ")}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{trainerVMStatus === "running" || trainerVMStatus === "configured" ? "5d 2h" : "—"}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{trainerVMStatus === "running" || trainerVMStatus === "configured" || trainerVMStatus === "snapshotted" ? "5d 2h" : "—"}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         {trainerVMStatus === "not_provisioned" && (
-                          <Button size="sm" className="text-xs" onClick={() => provisionTrainerVM(batch.storeBatchId)}>
+                          <Button size="sm" className="text-xs" disabled={!canProvision} onClick={() => provisionTrainerVM(batch.storeBatchId)}>
                             <Play className="h-3 w-3 mr-1" /> Provision
                           </Button>
                         )}
@@ -521,20 +608,23 @@ export default function AdminBatchDetail() {
                         )}
                         {trainerVMStatus === "running" && (
                           <>
-                            <Button variant="outline" size="sm" className="text-xs" onClick={() => window.open("#", "_blank")}>
-                              <Monitor className="h-3 w-3 mr-1" /> Console
+                            <Button variant="outline" size="sm" className="text-xs" onClick={() => setConsoleOpen(true)}>
+                              <Terminal className="h-3 w-3 mr-1" /> Console
                             </Button>
                             <Button size="sm" className="text-xs" onClick={() => markTrainerVMConfigured(batch.storeBatchId)}>
                               <CheckCircle2 className="h-3 w-3 mr-1" /> Mark Configured
                             </Button>
                           </>
                         )}
-                        {trainerVMStatus === "configured" && (
+                        {(trainerVMStatus === "configured" || trainerVMStatus === "snapshotted") && (
                           <>
+                            <Button variant="outline" size="sm" className="text-xs" onClick={() => setConsoleOpen(true)}>
+                              <Terminal className="h-3 w-3 mr-1" /> Console
+                            </Button>
                             <Button variant="outline" size="sm" className="text-xs" onClick={() => setSnapshotDialogOpen(true)}>
                               <Camera className="h-3 w-3 mr-1" /> Snapshot
                             </Button>
-                            <Button size="sm" className="text-xs" disabled={!goldenSnapshotId} onClick={() => cloneTrainerVMForBatch(batch.storeBatchId)}>
+                            <Button size="sm" className="text-xs" disabled={!goldenSnapshotId} onClick={() => setCloneConfirmOpen(true)}>
                               <Copy className="h-3 w-3 mr-1" /> Clone All
                             </Button>
                           </>
@@ -732,7 +822,7 @@ export default function AdminBatchDetail() {
             <div className="flex gap-2">
               <Button
                 size="sm"
-                disabled={trainerVMStatus !== "configured" && trainerVMStatus !== "running"}
+                disabled={trainerVMStatus !== "configured" && trainerVMStatus !== "running" && trainerVMStatus !== "snapshotted"}
                 onClick={() => setSnapshotDialogOpen(true)}
               >
                 <Camera className="h-3 w-3 mr-1" /> Take Snapshot
@@ -759,7 +849,7 @@ export default function AdminBatchDetail() {
                 <div className="space-y-1 text-sm">
                   <p className="font-medium">Snapshot & Clone Workflow</p>
                   <ol className="list-decimal list-inside text-muted-foreground space-y-0.5 text-xs">
-                    <li>Provision the <strong>Admin VM</strong> from the Overview tab</li>
+                    <li>Provision the <strong>Admin VM</strong> (available 2 days before batch start)</li>
                     <li>Open the console, install software, configure the environment</li>
                     <li>Mark as configured, then <strong>take a snapshot</strong></li>
                     <li>Set the snapshot as the <strong>Golden Image</strong> (⭐)</li>
@@ -850,6 +940,47 @@ export default function AdminBatchDetail() {
 
         {/* Schedule Tab */}
         <TabsContent value="schedule" className="space-y-4">
+          {/* Prep Period Timeline */}
+          <Card className="border-primary/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                Admin VM Prep Period
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-amber-500" />
+                  <span className="text-muted-foreground">Prep: {format(prepDate, "MMM dd")}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-primary" />
+                  <span className="text-muted-foreground">Batch: {batch.start}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-muted-foreground" />
+                  <span className="text-muted-foreground">End: {batch.end}</span>
+                </div>
+              </div>
+              <div className="relative h-8 rounded-full bg-muted overflow-hidden">
+                {/* Prep segment */}
+                <div className="absolute left-0 top-0 h-full bg-amber-500/20 border-r-2 border-amber-500" style={{ width: "6%" }} />
+                {/* Batch segment */}
+                <div className="absolute top-0 h-full bg-primary/20" style={{ left: "6%", width: "94%" }}>
+                  <div className="h-full bg-primary/40" style={{
+                    width: `${Math.min(100, Math.max(0, ((Date.now() - new Date(batch.start).getTime()) / (new Date(batch.end).getTime() - new Date(batch.start).getTime())) * 100))}%`
+                  }} />
+                </div>
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{format(prepDate, "MMM dd")} (Prep)</span>
+                <span>{batch.start} (Start)</span>
+                <span>{batch.end} (End)</span>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader className="pb-3"><CardTitle className="text-sm">Batch Timeline</CardTitle></CardHeader>
             <CardContent className="space-y-3 text-sm">
@@ -909,6 +1040,138 @@ export default function AdminBatchDetail() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Console Sheet */}
+      <Sheet open={consoleOpen} onOpenChange={setConsoleOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-xl p-0 flex flex-col">
+          <SheetHeader className="p-4 border-b bg-card">
+            <SheetTitle className="flex items-center gap-2">
+              <Terminal className="h-4 w-4 text-primary" />
+              Admin VM Console
+              <Badge variant="secondary" className="text-[10px] bg-green-500/10 text-green-600 gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-green-500" /> Connected
+              </Badge>
+            </SheetTitle>
+          </SheetHeader>
+
+          {/* Connection Details */}
+          <div className="p-4 border-b bg-muted/30 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">IP Address</p>
+                <div className="flex items-center gap-2">
+                  <code className="text-sm font-mono font-semibold">{trainerVM?.ipAddress || "—"}</code>
+                  {trainerVM?.ipAddress && (
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyToClipboard(trainerVM.ipAddress)}>
+                      <Clipboard className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">SSH Port</p>
+                <code className="text-sm font-mono font-semibold">{trainerVM?.credentials.sshPort || 22}</code>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Username</p>
+                <code className="text-sm font-mono font-semibold">{trainerVM?.credentials.username || "root"}</code>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Password</p>
+                <div className="flex items-center gap-2">
+                  <code className="text-sm font-mono font-semibold">
+                    {showPassword ? (trainerVM?.credentials.password || "—") : "••••••••"}
+                  </code>
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                  </Button>
+                  {trainerVM?.credentials.password && (
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyToClipboard(trainerVM.credentials.password)}>
+                      <Clipboard className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* SSH Command */}
+            <div className="space-y-1">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">SSH Command</p>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-background border">
+                <code className="text-xs font-mono flex-1 text-foreground">
+                  ssh {trainerVM?.credentials.username || "root"}@{trainerVM?.ipAddress || "10.0.1.100"} -p {trainerVM?.credentials.sshPort || 22}
+                </code>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 shrink-0"
+                  onClick={() => copyToClipboard(`ssh ${trainerVM?.credentials.username || "root"}@${trainerVM?.ipAddress || "10.0.1.100"} -p ${trainerVM?.credentials.sshPort || 22}`)}
+                >
+                  <Clipboard className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Console Simulation Area */}
+          <div className="flex-1 bg-[#1a1b26] p-4 font-mono text-sm overflow-auto">
+            <div className="text-green-400 space-y-1">
+              <p className="text-muted-foreground/50 text-xs">--- CloudAdda Console ---</p>
+              <p className="text-green-400/70">Connected to {trainerVM?.ipAddress || "10.0.1.100"}</p>
+              <p className="text-green-400/70">Last login: {new Date().toLocaleString()}</p>
+              <p className="mt-2">&nbsp;</p>
+              <p><span className="text-blue-400">{trainerVM?.credentials.username || "root"}@admin-vm</span>:<span className="text-cyan-400">~</span>$ <span className="animate-pulse">▌</span></p>
+            </div>
+          </div>
+
+          {/* Console Footer */}
+          <div className="p-3 border-t bg-card flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">Use the SSH command above or open the full console in a new tab</p>
+            <Button
+              size="sm"
+              onClick={() => window.open(trainerVM?.consoleUrl || "#", "_blank")}
+            >
+              <ExternalLink className="h-3 w-3 mr-1" /> Open Full Console
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Clone Confirmation Dialog */}
+      <Dialog open={cloneConfirmOpen} onOpenChange={setCloneConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Copy className="h-4 w-4" /> Clone Golden Image to Students
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              This will clone the golden snapshot to all student VMs in this batch.
+            </p>
+            <div className="rounded-xl border p-4 space-y-2 bg-muted/30">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Golden Snapshot</span>
+                <span className="font-medium">{snapshots.find(s => s.id === goldenSnapshotId)?.name || "—"}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Target VMs</span>
+                <span className="font-medium">{batch.seats} seats</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Estimated Time</span>
+                <span className="font-medium">~{Math.ceil(batch.seats * 0.5)} minutes</span>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCloneConfirmOpen(false)}>Cancel</Button>
+            <Button onClick={handleCloneConfirm}>
+              <Copy className="h-3 w-3 mr-1" /> Clone to All Students
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Snapshot Dialog */}
       <Dialog open={snapshotDialogOpen} onOpenChange={setSnapshotDialogOpen}>
@@ -974,7 +1237,7 @@ export default function AdminBatchDetail() {
             {resetTarget.type === "all" && (
               <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive flex items-start gap-2">
                 <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-                <p>This action will affect all student VMs in this batch. Make sure students have saved their progress.</p>
+                <p>This action will affect {batch.seats} student VMs. Make sure students have saved their progress.</p>
               </div>
             )}
           </div>

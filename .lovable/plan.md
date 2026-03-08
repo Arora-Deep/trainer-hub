@@ -1,68 +1,77 @@
 
 
-## Plan: Admin VM Lifecycle — Provision → Console → Snapshot → Clone
+## Understanding
 
-### Problem
-The current Admin VM workflow has no timing logic (it can be provisioned anytime) and the console interaction is just a dead link. The user wants:
-1. Admin VM provisioning only allowed **2 days before** batch start date (free prep period)
-2. A working console experience (embedded or simulated) to set up the environment
-3. Clear flow: Provision → Open Console → Configure → Snapshot → Set Golden → Clone to all students
-4. Reset any student VM (or all) to any snapshot state
+You're CloudAdda, a cloud company providing training lab infrastructure. The hierarchy is:
 
-### Changes
+1. **CloudAdda Admin Portal** (your internal team) — provision labs, manage client companies, manage templates, billing, platform analytics, roles
+2. **Trainer Portal** (your clients — training companies) — the current portal, runs batches/LMS, roles within their org
+3. **Student Portal** — students consume training content, access labs, take assessments
 
-#### 1. Batch Store — Add prep period logic
-**File: `src/stores/batchStore.ts`**
-- Add a `prepStartDate` computed field (batch start - 2 days) to the `VMConfig` or derive it in UI
-- Update `provisionTrainerVM` to store prep window metadata
-- Add a `trainerVM.consoleUrl` field (simulated as `noVNC`-style URL like `https://console.cloudadda.io/vm/{id}`)
-- Ensure `trainerVM` status flow: `not_provisioned` → `provisioning` → `running` → `configured` → `snapshotted`
+This is a UI/UX MVP — no backend yet, just flows.
 
-#### 2. AdminBatchDetail — Rewrite Admin VM card with prep period enforcement
-**File: `src/pages/admin/AdminBatchDetail.tsx`**
-- Calculate `prepDate = subDays(batchStartDate, 2)` and `today = new Date()`
-- Show a countdown/info banner: "Admin VM can be provisioned from {prepDate}" when too early
-- Disable "Provision" button if `today < prepDate`, show when it becomes available
-- When provisioned and running, show a prominent **"Open Console"** button that opens a dialog/drawer simulating a terminal/console session (a dark-themed panel with connection info: IP, credentials, SSH command, and an iframe placeholder for noVNC)
-- Console panel shows: VM IP, root password (masked with reveal), SSH command copyable, and a large "Open in New Tab" button
-- After console work, user clicks **"Mark as Configured"** → status moves forward
-- After configured, **"Take Snapshot"** dialog captures name + description
-- Once a golden snapshot exists, **"Clone to All Students"** becomes active with a confirmation dialog showing seat count and estimated time
-- Add visual timeline showing the prep period on the Schedule tab
+## Architecture: Single Project, Role-Based Routing
 
-#### 3. AdminCreateBatch — Show prep period info
-**File: `src/pages/admin/AdminCreateBatch.tsx`**
-- In the Review step (step 4), show the calculated prep window: "Admin VM available from {startDate - 2 days}"
-- Add a note in the environment step explaining the 2-day prep period
+All three portals live in this project with a role switcher in the header for demo purposes.
 
-#### 4. Console Dialog Component
-**Built inline in AdminBatchDetail.tsx** (or extracted if large)
-- A `Dialog` or `Sheet` that renders:
-  - Dark background panel simulating a console
-  - Connection details: IP address, SSH port, credentials
-  - Copy-to-clipboard buttons for SSH command
-  - "Open Full Console" button (opens `#` in new tab, representing noVNC)
-  - Status indicators (connected/disconnected)
-
-#### 5. Reset flow improvements
-- In the Snapshots tab and Reset dialog, show snapshot timestamps and which state each represents
-- "Reset to Snapshot" dropdown clearly shows golden vs regular snapshots
-- Bulk reset confirms with "This will restart X VMs"
-
-### Technical Details
-
-**Prep period calculation:**
-```typescript
-import { subDays, isAfter, isBefore } from "date-fns";
-const batchStart = new Date(batch.startDate);
-const prepDate = subDays(batchStart, 2);
-const canProvision = isAfter(new Date(), prepDate) || isEqual(new Date(), prepDate);
+```text
+┌─────────────────────────────────────────────────┐
+│  AppHeader  [Role Switcher ▾]  [Theme] [Notif]  │
+├──────────┬──────────────────────────────────────┤
+│          │                                      │
+│ Sidebar  │   Pages (change per role)            │
+│ (adapts  │                                      │
+│  per     │                                      │
+│  role)   │                                      │
+│          │                                      │
+└──────────┴──────────────────────────────────────┘
 ```
 
-**Console dialog state:** New `consoleOpen` boolean state. The dialog shows connection info pulled from `vmConfig.trainerVM.ipAddress` and a generated password.
+## Implementation Plan
 
-**Files modified:**
-- `src/stores/batchStore.ts` — Add `consoleUrl`, `credentials` to trainerVM, prep period awareness
-- `src/pages/admin/AdminBatchDetail.tsx` — Rewrite Admin VM card, add console dialog, prep period enforcement, improved snapshot/clone flow
-- `src/pages/admin/AdminCreateBatch.tsx` — Show prep period info in review step
+### Step 1: Create Role Store
+- `src/stores/roleStore.ts` — Zustand store with `role: "cloudadda" | "trainer" | "student"` and a `setRole()` action
+- Default role: `trainer` (current portal)
+
+### Step 2: Role Switcher in Header
+- Add a styled dropdown in `AppHeader` to switch between "CloudAdda Admin", "Trainer", "Student"
+- Shows current role with a colored badge indicator
+- Switching role changes sidebar nav and available routes
+
+### Step 3: Make AppSidebar Role-Aware
+- Move `navItems` into a config keyed by role
+- **CloudAdda Admin nav**: Dashboard, Customers, Lab Templates, VM Management, Approvals, Billing, Users & Roles, Platform Analytics, Settings
+- **Trainer nav**: current nav items (unchanged)
+- **Student nav**: My Dashboard, My Labs, My Courses, Assessments, Certificates, Support
+
+### Step 4: Build CloudAdda Admin Pages
+- **`/admin/dashboard`** — Platform-wide stats: total customers, active VMs, revenue, VM health
+- **`/admin/customers`** — List of training company clients with status, plan, active batches count; click into detail
+- **`/admin/customers/create`** — Onboard a new client company
+- **`/admin/templates`** — Global lab template library (promote existing template management here)
+- **`/admin/vms`** — All VMs across all customers, filterable by customer/status/region
+- **`/admin/approvals`** — Pending VM provisioning requests from trainers needing CloudAdda approval
+- **`/admin/billing`** — Usage and billing per customer
+- **`/admin/users`** — Internal user management with role assignment (admin, support, ops)
+- **`/admin/analytics`** — Platform usage charts, customer growth, VM utilization trends
+- **`/admin/settings`** — Platform-level settings
+
+### Step 5: Build Student Pages
+- **`/student/dashboard`** — Welcome screen with enrolled batches, upcoming sessions, progress summary
+- **`/student/labs`** — Active lab VMs with "Launch Console" buttons, time remaining, status
+- **`/student/courses`** — Enrolled courses with module-by-module progress, video/content viewer
+- **`/student/assessments`** — Quizzes, assignments, exercises with scores and deadlines
+- **`/student/certificates`** — Earned certificates with download option
+
+### Step 6: Wire Routes in App.tsx
+- Wrap role-specific routes in the same `AppLayout`
+- Admin routes under `/admin/*`
+- Student routes under `/student/*`
+- Trainer routes stay at current paths
+- Role switcher navigates to the corresponding dashboard on switch
+
+### Step 7: Create Supporting Stores
+- `src/stores/customerStore.ts` — mock customer/client data for CloudAdda admin
+- `src/stores/roleStore.ts` — role state (from step 1)
+- Reuse existing stores (labStore, batchStore, courseStore) where relevant
 
