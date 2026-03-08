@@ -42,7 +42,7 @@ export default function LabInstances() {
   const [batchFilter, setBatchFilter] = useState("all");
   const [nodeFilter, setNodeFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [selectedVM, setSelectedVM] = useState<typeof vmInstances[0] | null>(null);
+  const [selectedVM, setSelectedVM] = useState<(typeof vmInstances[0] | typeof adminVMs[0]) | null>(null);
 
   const filtered = vmInstances.filter(v => {
     if (statusFilter !== "all" && v.status !== statusFilter) return false;
