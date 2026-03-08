@@ -148,6 +148,11 @@ interface BatchStore {
   provisionTrainerVM: (batchId: string) => void;
   markTrainerVMConfigured: (batchId: string) => void;
   cloneTrainerVMForBatch: (batchId: string) => void;
+  createSnapshot: (batchId: string, name: string, description: string) => void;
+  setGoldenSnapshot: (batchId: string, snapshotId: string) => void;
+  deleteSnapshot: (batchId: string, snapshotId: string) => void;
+  resetStudentVM: (batchId: string, vmId: string, snapshotId: string) => void;
+  resetAllVMs: (batchId: string, snapshotId: string) => void;
   // Legacy compat
   addLabConfig: (batchId: string, labConfig: any) => void;
   updateLabConfig: (batchId: string, labConfigId: string, updates: any) => void;
