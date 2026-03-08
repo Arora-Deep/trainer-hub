@@ -494,7 +494,7 @@ export default function AdminBatchDetail() {
                 </TableHeader>
                 <TableBody>
                   <TableRow className="bg-primary/[0.02]">
-                    <TableCell className="text-sm font-mono font-semibold text-primary">{vmConfig?.trainerVM.vmId || "VM-ADMIN"}</TableCell>
+                    <TableCell className="text-sm font-mono font-semibold text-primary">{vmConfig?.trainerVM.ipAddress ? `VM-ADM-${batch.id.replace("B-", "")}` : "VM-ADMIN"}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-[10px] gap-1 border-primary/30 text-primary">
                         <Shield className="h-2.5 w-2.5" /> Admin
