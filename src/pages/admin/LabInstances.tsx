@@ -237,8 +237,6 @@ export default function LabInstances() {
           </CardContent>
         </Card>
       </div>
-        </CardContent>
-      </Card>
 
       {/* VM Detail Drawer */}
       <Sheet open={!!selectedVM} onOpenChange={() => setSelectedVM(null)}>
