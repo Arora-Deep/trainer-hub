@@ -463,14 +463,27 @@ export default function AdminBatchDetail() {
             </div>
           </div>
 
-          {/* Active Lab Instances Table */}
-          <Card>
+          {/* Admin VM Section */}
+          <Card className="border-primary/30 bg-primary/[0.02]">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-primary" />
+                  Admin VM
+                  <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-primary/20">Master</Badge>
+                </CardTitle>
+                <Badge variant="secondary" className={cn("text-xs capitalize", statusColor[trainerVMStatus])}>
+                  {trainerVMStatus.replace("_", " ")}
+                </Badge>
+              </div>
+              <CardDescription className="text-xs">The master environment used as the golden image for all student VMs</CardDescription>
+            </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="bg-primary/[0.03]">
                     <TableHead>VM ID</TableHead>
-                    <TableHead>Student</TableHead>
+                    <TableHead>Role</TableHead>
                     <TableHead>Node</TableHead>
                     <TableHead>CPU</TableHead>
                     <TableHead>RAM</TableHead>
@@ -480,40 +493,117 @@ export default function AdminBatchDetail() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {labInstances.map(l => (
-                    <TableRow key={l.id}>
-                      <TableCell className="text-sm font-mono">{l.id}</TableCell>
-                      <TableCell className="text-sm">{l.student}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{l.node}</TableCell>
-                      <TableCell className="text-sm">{l.cpu}</TableCell>
-                      <TableCell className="text-sm">{l.ram}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className={`text-xs capitalize ${statusColor[l.status]}`}>{l.status}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{l.uptime}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="sm"><Eye className="h-3 w-3" /></Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setResetTarget({ type: "single", vmId: l.id, studentName: l.student });
-                              setResetDialogOpen(true);
-                            }}
-                          >
-                            <RotateCcw className="h-3 w-3" />
+                  <TableRow className="bg-primary/[0.02]">
+                    <TableCell className="text-sm font-mono font-semibold text-primary">{vmConfig?.trainerVM.ipAddress ? `VM-ADM-${batch.id.replace("B-", "")}` : "VM-ADMIN"}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[10px] gap-1 border-primary/30 text-primary">
+                        <Shield className="h-2.5 w-2.5" /> Admin
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">node-mum-01</TableCell>
+                    <TableCell className="text-sm">{trainerVMStatus === "running" || trainerVMStatus === "configured" ? "12%" : "—"}</TableCell>
+                    <TableCell className="text-sm">{trainerVMStatus === "running" || trainerVMStatus === "configured" ? "28%" : "—"}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className={cn("text-xs capitalize", statusColor[trainerVMStatus])}>
+                        {trainerVMStatus.replace("_", " ")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{trainerVMStatus === "running" || trainerVMStatus === "configured" ? "5d 2h" : "—"}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        {trainerVMStatus === "not_provisioned" && (
+                          <Button size="sm" className="text-xs" onClick={() => provisionTrainerVM(batch.storeBatchId)}>
+                            <Play className="h-3 w-3 mr-1" /> Provision
                           </Button>
-                          <Button variant="ghost" size="sm"><RefreshCw className="h-3 w-3" /></Button>
-                          {l.status === "failed" && <Button variant="outline" size="sm" className="text-xs">Replace</Button>}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        )}
+                        {trainerVMStatus === "provisioning" && (
+                          <Button size="sm" className="text-xs" disabled><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Provisioning</Button>
+                        )}
+                        {trainerVMStatus === "running" && (
+                          <>
+                            <Button variant="outline" size="sm" className="text-xs" onClick={() => window.open("#", "_blank")}>
+                              <Monitor className="h-3 w-3 mr-1" /> Console
+                            </Button>
+                            <Button size="sm" className="text-xs" onClick={() => markTrainerVMConfigured(batch.storeBatchId)}>
+                              <CheckCircle2 className="h-3 w-3 mr-1" /> Mark Configured
+                            </Button>
+                          </>
+                        )}
+                        {trainerVMStatus === "configured" && (
+                          <>
+                            <Button variant="outline" size="sm" className="text-xs" onClick={() => setSnapshotDialogOpen(true)}>
+                              <Camera className="h-3 w-3 mr-1" /> Snapshot
+                            </Button>
+                            <Button size="sm" className="text-xs" disabled={!goldenSnapshotId} onClick={() => cloneTrainerVMForBatch(batch.storeBatchId)}>
+                              <Copy className="h-3 w-3 mr-1" /> Clone All
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
+
+          {/* Student VMs Section */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
+              <Users className="h-4 w-4" />
+              Student VMs ({labInstances.length})
+            </h3>
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>VM ID</TableHead>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Node</TableHead>
+                      <TableHead>CPU</TableHead>
+                      <TableHead>RAM</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Uptime</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {labInstances.map(l => (
+                      <TableRow key={l.id}>
+                        <TableCell className="text-sm font-mono">{l.id}</TableCell>
+                        <TableCell className="text-sm">{l.student}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{l.node}</TableCell>
+                        <TableCell className="text-sm">{l.cpu}</TableCell>
+                        <TableCell className="text-sm">{l.ram}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className={`text-xs capitalize ${statusColor[l.status]}`}>{l.status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{l.uptime}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="sm"><Eye className="h-3 w-3" /></Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setResetTarget({ type: "single", vmId: l.id, studentName: l.student });
+                                setResetDialogOpen(true);
+                              }}
+                            >
+                              <RotateCcw className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="sm"><RefreshCw className="h-3 w-3" /></Button>
+                            {l.status === "failed" && <Button variant="outline" size="sm" className="text-xs">Replace</Button>}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Added VMs List */}
           {addedVMs.length > 0 && (

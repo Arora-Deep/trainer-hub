@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,16 +8,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { Search, RotateCcw, ArrowLeftRight, Key, FileText, Cpu, MemoryStick, Globe, HardDrive } from "lucide-react";
+import { Search, RotateCcw, ArrowLeftRight, Key, FileText, Cpu, MemoryStick, Globe, HardDrive, Shield, Monitor, Camera, Users } from "lucide-react";
+
+const adminVMs = [
+  { vmId: "VM-ADM-01", customer: "DevOps Academy", batch: "K8s Batch #14", student: "— Admin", node: "node-mum-01", status: "running", cpu: 12, ram: 28, lastSeen: "just now", ip: "10.0.1.10", os: "Ubuntu 22.04", disk: 22, role: "admin" as const },
+  { vmId: "VM-ADM-02", customer: "Corporate L&D Co", batch: "Linux Fund. #8", student: "— Admin", node: "node-vir-01", status: "running", cpu: 8, ram: 18, lastSeen: "1 min ago", ip: "10.0.2.10", os: "CentOS 9", disk: 15, role: "admin" as const },
+  { vmId: "VM-ADM-03", customer: "DevOps Academy", batch: "AWS Batch #6", student: "— Admin", node: "node-vir-01", status: "stopped", cpu: 0, ram: 0, lastSeen: "3 hours ago", ip: "10.0.2.20", os: "Amazon Linux", disk: 18, role: "admin" as const },
+];
 
 const vmInstances = [
-  { vmId: "VM-2001", customer: "DevOps Academy", batch: "K8s Batch #14", student: "Alice Johnson", node: "node-mum-01", status: "running", cpu: 45, ram: 62, lastSeen: "1 min ago", ip: "10.0.1.21", os: "Ubuntu 22.04", disk: 38 },
-  { vmId: "VM-2002", customer: "DevOps Academy", batch: "K8s Batch #14", student: "Bob Williams", node: "node-mum-02", status: "running", cpu: 32, ram: 48, lastSeen: "2 min ago", ip: "10.0.1.22", os: "Ubuntu 22.04", disk: 25 },
-  { vmId: "VM-2003", customer: "Corporate L&D Co", batch: "Linux Fund. #8", student: "Carol Davis", node: "node-vir-01", status: "running", cpu: 78, ram: 85, lastSeen: "30 sec ago", ip: "10.0.2.11", os: "CentOS 9", disk: 65 },
-  { vmId: "VM-2004", customer: "SkillBridge Labs", batch: "K8s Batch #2", student: "David Brown", node: "node-mum-03", status: "stopped", cpu: 0, ram: 0, lastSeen: "2 hours ago", ip: "10.0.1.24", os: "Ubuntu 22.04", disk: 20 },
-  { vmId: "VM-2005", customer: "DataScience Bootcamp", batch: "ML Cohort #5", student: "Eva Martinez", node: "gpu-mum-01", status: "failed", cpu: 0, ram: 0, lastSeen: "1 hour ago", ip: "10.0.3.15", os: "Ubuntu 22.04", disk: 42 },
-  { vmId: "VM-2006", customer: "Corporate L&D Co", batch: "Linux Fund. #8", student: "Frank Lee", node: "node-vir-02", status: "running", cpu: 55, ram: 70, lastSeen: "45 sec ago", ip: "10.0.2.12", os: "CentOS 9", disk: 48 },
-  { vmId: "VM-2007", customer: "DevOps Academy", batch: "AWS Batch #6", student: "Grace Kim", node: "node-vir-01", status: "running", cpu: 22, ram: 40, lastSeen: "3 min ago", ip: "10.0.2.21", os: "Amazon Linux", disk: 30 },
+  { vmId: "VM-2001", customer: "DevOps Academy", batch: "K8s Batch #14", student: "Alice Johnson", node: "node-mum-01", status: "running", cpu: 45, ram: 62, lastSeen: "1 min ago", ip: "10.0.1.21", os: "Ubuntu 22.04", disk: 38, role: "student" as const },
+  { vmId: "VM-2002", customer: "DevOps Academy", batch: "K8s Batch #14", student: "Bob Williams", node: "node-mum-02", status: "running", cpu: 32, ram: 48, lastSeen: "2 min ago", ip: "10.0.1.22", os: "Ubuntu 22.04", disk: 25, role: "student" as const },
+  { vmId: "VM-2003", customer: "Corporate L&D Co", batch: "Linux Fund. #8", student: "Carol Davis", node: "node-vir-01", status: "running", cpu: 78, ram: 85, lastSeen: "30 sec ago", ip: "10.0.2.11", os: "CentOS 9", disk: 65, role: "student" as const },
+  { vmId: "VM-2004", customer: "SkillBridge Labs", batch: "K8s Batch #2", student: "David Brown", node: "node-mum-03", status: "stopped", cpu: 0, ram: 0, lastSeen: "2 hours ago", ip: "10.0.1.24", os: "Ubuntu 22.04", disk: 20, role: "student" as const },
+  { vmId: "VM-2005", customer: "DataScience Bootcamp", batch: "ML Cohort #5", student: "Eva Martinez", node: "gpu-mum-01", status: "failed", cpu: 0, ram: 0, lastSeen: "1 hour ago", ip: "10.0.3.15", os: "Ubuntu 22.04", disk: 42, role: "student" as const },
+  { vmId: "VM-2006", customer: "Corporate L&D Co", batch: "Linux Fund. #8", student: "Frank Lee", node: "node-vir-02", status: "running", cpu: 55, ram: 70, lastSeen: "45 sec ago", ip: "10.0.2.12", os: "CentOS 9", disk: 48, role: "student" as const },
+  { vmId: "VM-2007", customer: "DevOps Academy", batch: "AWS Batch #6", student: "Grace Kim", node: "node-vir-01", status: "running", cpu: 22, ram: 40, lastSeen: "3 min ago", ip: "10.0.2.21", os: "Amazon Linux", disk: 30, role: "student" as const },
 ];
 
 const statusConfig: Record<string, { dot: string; bg: string; text: string; label: string }> = {
@@ -36,16 +42,19 @@ export default function LabInstances() {
   const [batchFilter, setBatchFilter] = useState("all");
   const [nodeFilter, setNodeFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [selectedVM, setSelectedVM] = useState<typeof vmInstances[0] | null>(null);
+  const [selectedVM, setSelectedVM] = useState<(typeof vmInstances[0] | typeof adminVMs[0]) | null>(null);
 
-  const filtered = vmInstances.filter(v => {
+  const applyFilters = (v: { vmId: string; customer: string; batch: string; student: string; node: string; status: string }) => {
     if (statusFilter !== "all" && v.status !== statusFilter) return false;
     if (customerFilter !== "all" && v.customer !== customerFilter) return false;
     if (batchFilter !== "all" && v.batch !== batchFilter) return false;
     if (nodeFilter !== "all" && v.node !== nodeFilter) return false;
     if (search && !v.vmId.toLowerCase().includes(search.toLowerCase()) && !v.student.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
-  });
+  };
+
+  const filteredAdmin = adminVMs.filter(applyFilters);
+  const filtered = vmInstances.filter(applyFilters);
 
   return (
     <div className="space-y-6">
@@ -96,63 +105,138 @@ export default function LabInstances() {
         </CardContent>
       </Card>
 
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>VM ID</TableHead>
-                <TableHead>Student</TableHead>
-                <TableHead>Batch</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Node</TableHead>
-                <TableHead className="text-right">CPU</TableHead>
-                <TableHead className="text-right">RAM</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Seen</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.length === 0 && (
-                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-12">No VMs match your filters</TableCell></TableRow>
-              )}
-              {filtered.map(v => {
-                const sc = statusConfig[v.status];
-                return (
-                  <TableRow key={v.vmId} className="group">
-                    <TableCell>
-                      <button className="text-sm font-mono text-primary hover:underline" onClick={() => setSelectedVM(v)}>{v.vmId}</button>
-                    </TableCell>
-                    <TableCell className="text-sm">{v.student}</TableCell>
-                    <TableCell className="text-sm">{v.batch}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{v.customer}</TableCell>
-                    <TableCell className="text-sm font-mono text-muted-foreground">{v.node}</TableCell>
-                    <TableCell className="text-sm text-right">{v.cpu}%</TableCell>
-                    <TableCell className="text-sm text-right">{v.ram}%</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className={cn("text-xs gap-1.5", sc.bg, sc.text)}>
-                        <span className={cn("h-1.5 w-1.5 rounded-full", sc.dot)} />
-                        {sc.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{v.lastSeen}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="sm" title="Restart"><RotateCcw className="h-3 w-3" /></Button>
-                        <Button variant="ghost" size="sm" title="Replace"><ArrowLeftRight className="h-3 w-3" /></Button>
-                        <Button variant="ghost" size="sm" title="Reset Credentials"><Key className="h-3 w-3" /></Button>
-                        <Button variant="ghost" size="sm" title="View Logs"><FileText className="h-3 w-3" /></Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Admin VMs Section */}
+      {filteredAdmin.length > 0 && (
+        <Card className="border-primary/30 bg-primary/[0.02]">
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              Admin VMs
+              <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-primary/20">{filteredAdmin.length} Master</Badge>
+            </CardTitle>
+            <CardDescription className="text-xs">Golden image VMs used for snapshotting and cloning to students</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-primary/[0.03]">
+                  <TableHead>VM ID</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Batch</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Node</TableHead>
+                  <TableHead className="text-right">CPU</TableHead>
+                  <TableHead className="text-right">RAM</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last Seen</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAdmin.map(v => {
+                  const sc = statusConfig[v.status] || statusConfig.stopped;
+                  return (
+                    <TableRow key={v.vmId} className="group bg-primary/[0.02]">
+                      <TableCell>
+                        <button className="text-sm font-mono font-semibold text-primary hover:underline" onClick={() => setSelectedVM(v)}>{v.vmId}</button>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-[10px] gap-1 border-primary/30 text-primary">
+                          <Shield className="h-2.5 w-2.5" /> Admin
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">{v.batch}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{v.customer}</TableCell>
+                      <TableCell className="text-sm font-mono text-muted-foreground">{v.node}</TableCell>
+                      <TableCell className="text-sm text-right">{v.cpu}%</TableCell>
+                      <TableCell className="text-sm text-right">{v.ram}%</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={cn("text-xs gap-1.5", sc.bg, sc.text)}>
+                          <span className={cn("h-1.5 w-1.5 rounded-full", sc.dot)} />
+                          {sc.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{v.lastSeen}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="sm" title="Open Console"><Monitor className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="sm" title="Take Snapshot"><Camera className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="sm" title="Restart"><RotateCcw className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="sm" title="View Logs"><FileText className="h-3 w-3" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Student VMs Section */}
+      <div className="space-y-2">
+        <h3 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
+          <Users className="h-4 w-4" />
+          Student VMs ({filtered.length})
+        </h3>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>VM ID</TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Batch</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Node</TableHead>
+                  <TableHead className="text-right">CPU</TableHead>
+                  <TableHead className="text-right">RAM</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last Seen</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.length === 0 && (
+                  <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-12">No VMs match your filters</TableCell></TableRow>
+                )}
+                {filtered.map(v => {
+                  const sc = statusConfig[v.status];
+                  return (
+                    <TableRow key={v.vmId} className="group">
+                      <TableCell>
+                        <button className="text-sm font-mono text-primary hover:underline" onClick={() => setSelectedVM(v)}>{v.vmId}</button>
+                      </TableCell>
+                      <TableCell className="text-sm">{v.student}</TableCell>
+                      <TableCell className="text-sm">{v.batch}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{v.customer}</TableCell>
+                      <TableCell className="text-sm font-mono text-muted-foreground">{v.node}</TableCell>
+                      <TableCell className="text-sm text-right">{v.cpu}%</TableCell>
+                      <TableCell className="text-sm text-right">{v.ram}%</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={cn("text-xs gap-1.5", sc.bg, sc.text)}>
+                          <span className={cn("h-1.5 w-1.5 rounded-full", sc.dot)} />
+                          {sc.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{v.lastSeen}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="sm" title="Restart"><RotateCcw className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="sm" title="Replace"><ArrowLeftRight className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="sm" title="Reset Credentials"><Key className="h-3 w-3" /></Button>
+                          <Button variant="ghost" size="sm" title="View Logs"><FileText className="h-3 w-3" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* VM Detail Drawer */}
       <Sheet open={!!selectedVM} onOpenChange={() => setSelectedVM(null)}>
