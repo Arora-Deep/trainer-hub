@@ -208,6 +208,11 @@ const initialBatches: Batch[] = [
         ipAddress: "10.0.1.100",
         provisionedAt: "2024-01-14T10:00:00Z",
       },
+      snapshots: [
+        { id: "snap-1", name: "Initial Setup", description: "Base configuration with all tools installed", createdAt: "2024-01-14T12:00:00Z", size: "4.2 GB", status: "ready", isGolden: true },
+        { id: "snap-2", name: "Post Lab 1", description: "After EC2 setup lab completion", createdAt: "2024-01-16T15:00:00Z", size: "5.1 GB", status: "ready", isGolden: false },
+      ],
+      goldenSnapshotId: "snap-1",
       studentVMs: [],
       cloneStatus: "not_cloned",
       pricing: { compute: 3125, storage: 312.5, network: 125, support: 60, total: 3622.5 },
