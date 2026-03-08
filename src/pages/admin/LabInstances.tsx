@@ -44,7 +44,7 @@ export default function LabInstances() {
   const [search, setSearch] = useState("");
   const [selectedVM, setSelectedVM] = useState<(typeof vmInstances[0] | typeof adminVMs[0]) | null>(null);
 
-  const applyFilters = (v: typeof vmInstances[0]) => {
+  const applyFilters = (v: { vmId: string; customer: string; batch: string; student: string; node: string; status: string }) => {
     if (statusFilter !== "all" && v.status !== statusFilter) return false;
     if (customerFilter !== "all" && v.customer !== customerFilter) return false;
     if (batchFilter !== "all" && v.batch !== batchFilter) return false;
