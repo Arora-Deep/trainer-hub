@@ -44,14 +44,17 @@ export default function LabInstances() {
   const [search, setSearch] = useState("");
   const [selectedVM, setSelectedVM] = useState<(typeof vmInstances[0] | typeof adminVMs[0]) | null>(null);
 
-  const filtered = vmInstances.filter(v => {
+  const applyFilters = (v: typeof vmInstances[0]) => {
     if (statusFilter !== "all" && v.status !== statusFilter) return false;
     if (customerFilter !== "all" && v.customer !== customerFilter) return false;
     if (batchFilter !== "all" && v.batch !== batchFilter) return false;
     if (nodeFilter !== "all" && v.node !== nodeFilter) return false;
     if (search && !v.vmId.toLowerCase().includes(search.toLowerCase()) && !v.student.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
-  });
+  };
+
+  const filteredAdmin = adminVMs.filter(applyFilters);
+  const filtered = vmInstances.filter(applyFilters);
 
   return (
     <div className="space-y-6">
