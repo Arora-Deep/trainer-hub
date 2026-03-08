@@ -35,6 +35,16 @@ export interface VMEntry {
   dailySchedules: VMDaySchedule[];
 }
 
+export interface VMSnapshot {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
+  size: string; // e.g. "4.2 GB"
+  status: "creating" | "ready" | "failed";
+  isGolden: boolean; // golden = the one used for cloning
+}
+
 export interface VMInstance {
   id: string;
   assignedTo: string;
@@ -43,6 +53,7 @@ export interface VMInstance {
   status: "running" | "stopped" | "error" | "provisioning";
   ipAddress: string;
   startedAt: string;
+  currentSnapshotId?: string; // which snapshot state this VM is on
 }
 
 export interface VMConfig {
@@ -56,6 +67,8 @@ export interface VMConfig {
     ipAddress: string;
     provisionedAt: string;
   };
+  snapshots: VMSnapshot[];
+  goldenSnapshotId?: string; // the snapshot used for cloning
   studentVMs: VMInstance[];
   cloneStatus: "not_cloned" | "cloning" | "cloned";
   pricing: {
@@ -135,6 +148,11 @@ interface BatchStore {
   provisionTrainerVM: (batchId: string) => void;
   markTrainerVMConfigured: (batchId: string) => void;
   cloneTrainerVMForBatch: (batchId: string) => void;
+  createSnapshot: (batchId: string, name: string, description: string) => void;
+  setGoldenSnapshot: (batchId: string, snapshotId: string) => void;
+  deleteSnapshot: (batchId: string, snapshotId: string) => void;
+  resetStudentVM: (batchId: string, vmId: string, snapshotId: string) => void;
+  resetAllVMs: (batchId: string, snapshotId: string) => void;
   // Legacy compat
   addLabConfig: (batchId: string, labConfig: any) => void;
   updateLabConfig: (batchId: string, labConfigId: string, updates: any) => void;
@@ -195,6 +213,11 @@ const initialBatches: Batch[] = [
         ipAddress: "10.0.1.100",
         provisionedAt: "2024-01-14T10:00:00Z",
       },
+      snapshots: [
+        { id: "snap-1", name: "Initial Setup", description: "Base configuration with all tools installed", createdAt: "2024-01-14T12:00:00Z", size: "4.2 GB", status: "ready", isGolden: true },
+        { id: "snap-2", name: "Post Lab 1", description: "After EC2 setup lab completion", createdAt: "2024-01-16T15:00:00Z", size: "5.1 GB", status: "ready", isGolden: false },
+      ],
+      goldenSnapshotId: "snap-1",
       studentVMs: [],
       cloneStatus: "not_cloned",
       pricing: { compute: 3125, storage: 312.5, network: 125, support: 60, total: 3622.5 },
@@ -539,6 +562,156 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
         ),
       }));
     }, 4000);
+  },
+
+  createSnapshot: (batchId, name, description) => {
+    const snapshotId = `snap-${Date.now()}`;
+    const newSnapshot: VMSnapshot = {
+      id: snapshotId,
+      name,
+      description,
+      createdAt: new Date().toISOString(),
+      size: "Creating...",
+      status: "creating",
+      isGolden: false,
+    };
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? { ...b, vmConfig: { ...b.vmConfig, snapshots: [...b.vmConfig.snapshots, newSnapshot] } }
+          : b
+      ),
+    }));
+    // Simulate snapshot creation
+    setTimeout(() => {
+      const sizeGB = (Math.random() * 6 + 2).toFixed(1);
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? {
+                ...b,
+                vmConfig: {
+                  ...b.vmConfig,
+                  snapshots: b.vmConfig.snapshots.map((s) =>
+                    s.id === snapshotId ? { ...s, status: "ready" as const, size: `${sizeGB} GB` } : s
+                  ),
+                },
+              }
+            : b
+        ),
+      }));
+    }, 3000);
+  },
+
+  setGoldenSnapshot: (batchId, snapshotId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b,
+              vmConfig: {
+                ...b.vmConfig,
+                goldenSnapshotId: snapshotId,
+                snapshots: b.vmConfig.snapshots.map((s) => ({
+                  ...s,
+                  isGolden: s.id === snapshotId,
+                })),
+              },
+            }
+          : b
+      ),
+    }));
+  },
+
+  deleteSnapshot: (batchId, snapshotId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b,
+              vmConfig: {
+                ...b.vmConfig,
+                snapshots: b.vmConfig.snapshots.filter((s) => s.id !== snapshotId),
+                goldenSnapshotId: b.vmConfig.goldenSnapshotId === snapshotId ? undefined : b.vmConfig.goldenSnapshotId,
+              },
+            }
+          : b
+      ),
+    }));
+  },
+
+  resetStudentVM: (batchId, vmId, snapshotId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b,
+              vmConfig: {
+                ...b.vmConfig,
+                studentVMs: b.vmConfig.studentVMs.map((vm) =>
+                  vm.id === vmId ? { ...vm, status: "provisioning" as const, currentSnapshotId: snapshotId } : vm
+                ),
+              },
+            }
+          : b
+      ),
+    }));
+    // Simulate reset
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? {
+                ...b,
+                vmConfig: {
+                  ...b.vmConfig,
+                  studentVMs: b.vmConfig.studentVMs.map((vm) =>
+                    vm.id === vmId ? { ...vm, status: "running" as const } : vm
+                  ),
+                },
+              }
+            : b
+        ),
+      }));
+    }, 3000);
+  },
+
+  resetAllVMs: (batchId, snapshotId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b,
+              vmConfig: {
+                ...b.vmConfig,
+                studentVMs: b.vmConfig.studentVMs.map((vm) => ({
+                  ...vm,
+                  status: "provisioning" as const,
+                  currentSnapshotId: snapshotId,
+                })),
+              },
+            }
+          : b
+      ),
+    }));
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? {
+                ...b,
+                vmConfig: {
+                  ...b.vmConfig,
+                  studentVMs: b.vmConfig.studentVMs.map((vm) => ({
+                    ...vm,
+                    status: "running" as const,
+                  })),
+                },
+              }
+            : b
+        ),
+      }));
+    }, 5000);
   },
 
   // Legacy compatibility stubs

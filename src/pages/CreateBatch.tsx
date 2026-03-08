@@ -198,6 +198,7 @@ export default function CreateBatch() {
         vmEntries: addedVMs,
         trainerVM: { status: "not_provisioned", ipAddress: "", provisionedAt: "" },
         studentVMs: [],
+        snapshots: [],
         cloneStatus: "not_cloned",
         pricing: {
           compute: pricing.compute,
