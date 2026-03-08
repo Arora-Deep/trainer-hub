@@ -35,6 +35,16 @@ export interface VMEntry {
   dailySchedules: VMDaySchedule[];
 }
 
+export interface VMSnapshot {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
+  size: string; // e.g. "4.2 GB"
+  status: "creating" | "ready" | "failed";
+  isGolden: boolean; // golden = the one used for cloning
+}
+
 export interface VMInstance {
   id: string;
   assignedTo: string;
@@ -43,6 +53,7 @@ export interface VMInstance {
   status: "running" | "stopped" | "error" | "provisioning";
   ipAddress: string;
   startedAt: string;
+  currentSnapshotId?: string; // which snapshot state this VM is on
 }
 
 export interface VMConfig {
