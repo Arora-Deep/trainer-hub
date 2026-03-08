@@ -63,9 +63,15 @@ export interface VMConfig {
   vmTemplates: VMTemplateConfig[];
   vmEntries: VMEntry[];
   trainerVM: {
-    status: "not_provisioned" | "provisioning" | "running" | "configured" | "stopped";
+    status: "not_provisioned" | "provisioning" | "running" | "configured" | "snapshotted" | "stopped";
     ipAddress: string;
     provisionedAt: string;
+    consoleUrl: string; // noVNC-style URL
+    credentials: {
+      username: string;
+      password: string;
+      sshPort: number;
+    };
   };
   snapshots: VMSnapshot[];
   goldenSnapshotId?: string; // the snapshot used for cloning
