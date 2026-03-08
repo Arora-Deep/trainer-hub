@@ -10,14 +10,20 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { Search, RotateCcw, ArrowLeftRight, Key, FileText, Cpu, MemoryStick, Globe, HardDrive } from "lucide-react";
 
+const adminVMs = [
+  { vmId: "VM-ADM-01", customer: "DevOps Academy", batch: "K8s Batch #14", student: "— Admin", node: "node-mum-01", status: "running", cpu: 12, ram: 28, lastSeen: "just now", ip: "10.0.1.10", os: "Ubuntu 22.04", disk: 22, role: "admin" as const },
+  { vmId: "VM-ADM-02", customer: "Corporate L&D Co", batch: "Linux Fund. #8", student: "— Admin", node: "node-vir-01", status: "running", cpu: 8, ram: 18, lastSeen: "1 min ago", ip: "10.0.2.10", os: "CentOS 9", disk: 15, role: "admin" as const },
+  { vmId: "VM-ADM-03", customer: "DevOps Academy", batch: "AWS Batch #6", student: "— Admin", node: "node-vir-01", status: "stopped", cpu: 0, ram: 0, lastSeen: "3 hours ago", ip: "10.0.2.20", os: "Amazon Linux", disk: 18, role: "admin" as const },
+];
+
 const vmInstances = [
-  { vmId: "VM-2001", customer: "DevOps Academy", batch: "K8s Batch #14", student: "Alice Johnson", node: "node-mum-01", status: "running", cpu: 45, ram: 62, lastSeen: "1 min ago", ip: "10.0.1.21", os: "Ubuntu 22.04", disk: 38 },
-  { vmId: "VM-2002", customer: "DevOps Academy", batch: "K8s Batch #14", student: "Bob Williams", node: "node-mum-02", status: "running", cpu: 32, ram: 48, lastSeen: "2 min ago", ip: "10.0.1.22", os: "Ubuntu 22.04", disk: 25 },
-  { vmId: "VM-2003", customer: "Corporate L&D Co", batch: "Linux Fund. #8", student: "Carol Davis", node: "node-vir-01", status: "running", cpu: 78, ram: 85, lastSeen: "30 sec ago", ip: "10.0.2.11", os: "CentOS 9", disk: 65 },
-  { vmId: "VM-2004", customer: "SkillBridge Labs", batch: "K8s Batch #2", student: "David Brown", node: "node-mum-03", status: "stopped", cpu: 0, ram: 0, lastSeen: "2 hours ago", ip: "10.0.1.24", os: "Ubuntu 22.04", disk: 20 },
-  { vmId: "VM-2005", customer: "DataScience Bootcamp", batch: "ML Cohort #5", student: "Eva Martinez", node: "gpu-mum-01", status: "failed", cpu: 0, ram: 0, lastSeen: "1 hour ago", ip: "10.0.3.15", os: "Ubuntu 22.04", disk: 42 },
-  { vmId: "VM-2006", customer: "Corporate L&D Co", batch: "Linux Fund. #8", student: "Frank Lee", node: "node-vir-02", status: "running", cpu: 55, ram: 70, lastSeen: "45 sec ago", ip: "10.0.2.12", os: "CentOS 9", disk: 48 },
-  { vmId: "VM-2007", customer: "DevOps Academy", batch: "AWS Batch #6", student: "Grace Kim", node: "node-vir-01", status: "running", cpu: 22, ram: 40, lastSeen: "3 min ago", ip: "10.0.2.21", os: "Amazon Linux", disk: 30 },
+  { vmId: "VM-2001", customer: "DevOps Academy", batch: "K8s Batch #14", student: "Alice Johnson", node: "node-mum-01", status: "running", cpu: 45, ram: 62, lastSeen: "1 min ago", ip: "10.0.1.21", os: "Ubuntu 22.04", disk: 38, role: "student" as const },
+  { vmId: "VM-2002", customer: "DevOps Academy", batch: "K8s Batch #14", student: "Bob Williams", node: "node-mum-02", status: "running", cpu: 32, ram: 48, lastSeen: "2 min ago", ip: "10.0.1.22", os: "Ubuntu 22.04", disk: 25, role: "student" as const },
+  { vmId: "VM-2003", customer: "Corporate L&D Co", batch: "Linux Fund. #8", student: "Carol Davis", node: "node-vir-01", status: "running", cpu: 78, ram: 85, lastSeen: "30 sec ago", ip: "10.0.2.11", os: "CentOS 9", disk: 65, role: "student" as const },
+  { vmId: "VM-2004", customer: "SkillBridge Labs", batch: "K8s Batch #2", student: "David Brown", node: "node-mum-03", status: "stopped", cpu: 0, ram: 0, lastSeen: "2 hours ago", ip: "10.0.1.24", os: "Ubuntu 22.04", disk: 20, role: "student" as const },
+  { vmId: "VM-2005", customer: "DataScience Bootcamp", batch: "ML Cohort #5", student: "Eva Martinez", node: "gpu-mum-01", status: "failed", cpu: 0, ram: 0, lastSeen: "1 hour ago", ip: "10.0.3.15", os: "Ubuntu 22.04", disk: 42, role: "student" as const },
+  { vmId: "VM-2006", customer: "Corporate L&D Co", batch: "Linux Fund. #8", student: "Frank Lee", node: "node-vir-02", status: "running", cpu: 55, ram: 70, lastSeen: "45 sec ago", ip: "10.0.2.12", os: "CentOS 9", disk: 48, role: "student" as const },
+  { vmId: "VM-2007", customer: "DevOps Academy", batch: "AWS Batch #6", student: "Grace Kim", node: "node-vir-01", status: "running", cpu: 22, ram: 40, lastSeen: "3 min ago", ip: "10.0.2.21", os: "Amazon Linux", disk: 30, role: "student" as const },
 ];
 
 const statusConfig: Record<string, { dot: string; bg: string; text: string; label: string }> = {
