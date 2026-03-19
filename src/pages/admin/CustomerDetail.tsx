@@ -294,44 +294,131 @@ export default function CustomerDetail() {
 
         {/* Tab E: Settings */}
         <TabsContent value="settings" className="space-y-4 mt-4">
-          {/* Branding */}
+          {/* Branding & White-Label */}
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Branding (White-label)</CardTitle></CardHeader>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Branding & White-Label</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-3"><Switch /><Label className="text-xs">Enable white-label</Label></div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5"><Label className="text-xs">Logo</Label><Input type="file" accept="image/*" className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Theme Color</Label><Input type="color" defaultValue="#3b82f6" className="h-9" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Custom Domain</Label><Input placeholder="labs.company.com" className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Login Page Text</Label><Input placeholder="Welcome to Company Labs" className="h-9 text-sm" /></div>
-              </div>
-            </CardContent>
-          </Card>
-          {/* Commercial */}
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Commercial</CardTitle></CardHeader>
-            <CardContent>
+              <div className="flex items-center gap-3"><Switch defaultChecked /><Label className="text-xs">Enable white-label portal</Label></div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-1.5"><Label className="text-xs">Pricing Model</Label>
-                  <Select defaultValue="per-seat-month"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="per-seat-month">Per seat/month</SelectItem><SelectItem value="per-seat-hour">Per seat/hour</SelectItem><SelectItem value="batch-bundle">Batch bundle</SelectItem></SelectContent></Select>
-                </div>
-                <div className="space-y-1.5"><Label className="text-xs">Default Rate (₹)</Label><Input type="number" defaultValue={500} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Minimum Commitment (₹)</Label><Input type="number" defaultValue={10000} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Company Logo</Label><Input type="file" accept="image/*" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Favicon</Label><Input type="file" accept="image/*" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Portal Name</Label><Input placeholder="DevOps Academy" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Primary Color</Label><Input type="color" defaultValue="#3b82f6" className="h-9 w-20" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Secondary Color</Label><Input type="color" defaultValue="#8b5cf6" className="h-9 w-20" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Accent Color</Label><Input type="color" defaultValue="#06b6d4" className="h-9 w-20" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Custom Domain</Label><Input placeholder="labs.company.com" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Login Page Heading</Label><Input placeholder="Welcome to Company Labs" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Login Page Subtext</Label><Input placeholder="Sign in to access your labs" className="h-9 text-sm" /></div>
               </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5"><Label className="text-xs">Footer Text</Label><Input placeholder="© 2026 Company. All rights reserved." className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Support Email (shown in portal)</Label><Input placeholder="support@company.com" className="h-9 text-sm" /></div>
+              </div>
+              <div className="flex items-center gap-3"><Switch defaultChecked={false} /><Label className="text-xs">Hide "Powered by CloudAdda" branding</Label></div>
+              <div className="flex items-center gap-3"><Switch defaultChecked /><Label className="text-xs">Use custom email templates with company branding</Label></div>
             </CardContent>
           </Card>
-          {/* Feature Toggles */}
+
+          {/* Portal Navigation & Layout */}
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Feature Toggles</CardTitle></CardHeader>
-            <CardContent>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Portal Navigation & Layout</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-xs text-muted-foreground">Control which sections are visible in the trainer portal sidebar.</p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {[
-                  { label: "Student self-reset", defaultOn: true },
-                  { label: "Batch cloning", defaultOn: true },
-                  { label: "Exam mode", defaultOn: false },
-                  { label: "Internet allowlist mode", defaultOn: true },
-                  { label: "Usage exports", defaultOn: true },
-                  { label: "SSO enablement", defaultOn: customer.ssoEnabled },
+                  { label: "Dashboard", defaultOn: true },
+                  { label: "Courses & Content", defaultOn: true },
+                  { label: "Batches", defaultOn: true },
+                  { label: "Labs Management", defaultOn: true },
+                  { label: "Assignments", defaultOn: true },
+                  { label: "Quizzes", defaultOn: true },
+                  { label: "Exercises", defaultOn: true },
+                  { label: "Certifications", defaultOn: true },
+                  { label: "Programs / Learning Paths", defaultOn: false },
+                  { label: "Student Analytics", defaultOn: true },
+                  { label: "Reports & Exports", defaultOn: true },
+                  { label: "Support Tickets", defaultOn: true },
+                ].map(f => (
+                  <div key={f.label} className="flex items-center gap-3">
+                    <Switch defaultChecked={f.defaultOn} />
+                    <Label className="text-xs">{f.label}</Label>
+                  </div>
+                ))}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 mt-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Default Landing Page</Label>
+                  <Select defaultValue="dashboard"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="dashboard">Dashboard</SelectItem><SelectItem value="batches">Batches</SelectItem><SelectItem value="courses">Courses</SelectItem><SelectItem value="labs">Labs</SelectItem></SelectContent></Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Dashboard Layout</Label>
+                  <Select defaultValue="default"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="default">Default (Stats + Activity)</SelectItem><SelectItem value="compact">Compact (Stats only)</SelectItem><SelectItem value="detailed">Detailed (Charts + Tables)</SelectItem></SelectContent></Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Course & Content Settings */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Course & Content Settings</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {[
+                  { label: "Allow trainers to create courses", defaultOn: true },
+                  { label: "Allow trainers to upload videos", defaultOn: true },
+                  { label: "Allow trainers to upload documents", defaultOn: true },
+                  { label: "Enable SCORM package import", defaultOn: false },
+                  { label: "Enable course marketplace access", defaultOn: false },
+                  { label: "Allow course cloning from templates", defaultOn: true },
+                ].map(f => (
+                  <div key={f.label} className="flex items-center gap-3">
+                    <Switch defaultChecked={f.defaultOn} />
+                    <Label className="text-xs">{f.label}</Label>
+                  </div>
+                ))}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-1.5"><Label className="text-xs">Max Upload Size (MB)</Label><Input type="number" defaultValue={500} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Allowed File Formats</Label><Input defaultValue="pdf,mp4,pptx,docx,zip" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Storage Quota (GB)</Label><Input type="number" defaultValue={50} className="h-9 text-sm" /></div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Lab Environment Defaults */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Lab Environment Defaults</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="space-y-1.5"><Label className="text-xs">Default vCPU</Label><Input type="number" defaultValue={2} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Default RAM (GB)</Label><Input type="number" defaultValue={4} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Default Disk (GB)</Label><Input type="number" defaultValue={30} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Max vCPU Allowed</Label><Input type="number" defaultValue={8} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Max RAM Allowed (GB)</Label><Input type="number" defaultValue={16} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Max Disk Allowed (GB)</Label><Input type="number" defaultValue={100} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Max Concurrent Labs</Label><Input type="number" defaultValue={50} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Lab Expiry (hours)</Label><Input type="number" defaultValue={24} className="h-9 text-sm" /></div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Auto-Shutdown Policy</Label>
+                  <Select defaultValue="idle-30"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="never">Never</SelectItem><SelectItem value="idle-15">After 15 min idle</SelectItem><SelectItem value="idle-30">After 30 min idle</SelectItem><SelectItem value="idle-60">After 60 min idle</SelectItem><SelectItem value="scheduled">Scheduled (end of day)</SelectItem></SelectContent></Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Snapshot Policy</Label>
+                  <Select defaultValue="manual"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="disabled">Disabled</SelectItem><SelectItem value="manual">Manual only</SelectItem><SelectItem value="daily">Daily auto-snapshot</SelectItem><SelectItem value="on-shutdown">On shutdown</SelectItem></SelectContent></Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Default Region</Label>
+                  <Select defaultValue="ap-south-1"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ap-south-1">ap-south-1 (Mumbai)</SelectItem><SelectItem value="us-east-1">us-east-1 (Virginia)</SelectItem><SelectItem value="eu-west-1">eu-west-1 (Ireland)</SelectItem><SelectItem value="us-west-2">us-west-2 (Oregon)</SelectItem></SelectContent></Select>
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  { label: "Allow GPU-enabled labs", defaultOn: false },
+                  { label: "Allow nested virtualization", defaultOn: false },
+                  { label: "Enable lab warm pool (pre-provisioned VMs)", defaultOn: true },
+                  { label: "Allow trainers to select custom templates", defaultOn: true },
                 ].map(f => (
                   <div key={f.label} className="flex items-center gap-3">
                     <Switch defaultChecked={f.defaultOn} />
@@ -341,24 +428,267 @@ export default function CustomerDetail() {
               </div>
             </CardContent>
           </Card>
-          {/* Policies */}
+
+          {/* Student Experience Controls */}
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Policies</CardTitle></CardHeader>
-            <CardContent>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-1.5"><Label className="text-xs">Idle Timeout (min)</Label><Input type="number" defaultValue={30} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Max Hours/Day per Student</Label><Input type="number" defaultValue={8} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Default Lab Expiry (days)</Label><Input type="number" defaultValue={14} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Internet Policy</Label>
-                  <Select defaultValue="allowlist"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="open">Open</SelectItem><SelectItem value="allowlist">Allowlist</SelectItem><SelectItem value="blocked">Blocked</SelectItem></SelectContent></Select>
-                </div>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Student Experience Controls</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {[
+                  { label: "Student self-registration", defaultOn: false },
+                  { label: "Student self-reset labs", defaultOn: true },
+                  { label: "Allow clipboard copy/paste in labs", defaultOn: true },
+                  { label: "Allow file upload to lab VMs", defaultOn: false },
+                  { label: "Allow file download from lab VMs", defaultOn: false },
+                  { label: "Enable session recording", defaultOn: false },
+                  { label: "Show resource usage to students", defaultOn: true },
+                  { label: "Allow students to request lab extensions", defaultOn: true },
+                  { label: "Enable in-lab chat support", defaultOn: false },
+                ].map(f => (
+                  <div key={f.label} className="flex items-center gap-3">
+                    <Switch defaultChecked={f.defaultOn} />
+                    <Label className="text-xs">{f.label}</Label>
+                  </div>
+                ))}
               </div>
-              <div className="flex gap-2 mt-4">
-                <Button size="sm" className="text-xs">Save & Apply Now</Button>
-                <Button size="sm" variant="outline" className="text-xs">Apply Next Batch</Button>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-1.5"><Label className="text-xs">Max Self-Resets per Day</Label><Input type="number" defaultValue={3} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Max Extension Requests per Lab</Label><Input type="number" defaultValue={2} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Student Password Policy</Label>
+                  <Select defaultValue="strong"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="basic">Basic (6+ chars)</SelectItem><SelectItem value="moderate">Moderate (8+ mixed)</SelectItem><SelectItem value="strong">Strong (10+ mixed + symbol)</SelectItem></SelectContent></Select>
+                </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* Assessment & Certification */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Assessment & Certification</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {[
+                  { label: "Enable exam / proctored mode", defaultOn: false },
+                  { label: "Lock browser during exams", defaultOn: false },
+                  { label: "Allow retakes on failed assessments", defaultOn: true },
+                  { label: "Auto-issue certificates on completion", defaultOn: true },
+                  { label: "Show leaderboard to students", defaultOn: false },
+                  { label: "Enable peer review assignments", defaultOn: false },
+                ].map(f => (
+                  <div key={f.label} className="flex items-center gap-3">
+                    <Switch defaultChecked={f.defaultOn} />
+                    <Label className="text-xs">{f.label}</Label>
+                  </div>
+                ))}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-1.5"><Label className="text-xs">Default Pass Percentage</Label><Input type="number" defaultValue={70} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Max Retakes Allowed</Label><Input type="number" defaultValue={3} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Certificate Template</Label>
+                  <Select defaultValue="default"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="default">Default Template</SelectItem><SelectItem value="modern">Modern</SelectItem><SelectItem value="classic">Classic</SelectItem><SelectItem value="custom">Custom Upload</SelectItem></SelectContent></Select>
+                </div>
+                <div className="space-y-1.5"><Label className="text-xs">Certificate Signatory Name</Label><Input placeholder="John Doe, CTO" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Certificate Signatory Title</Label><Input placeholder="Chief Technology Officer" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Certificate Logo</Label><Input type="file" accept="image/*" className="h-9 text-sm" /></div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Communication & Notifications */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Communication & Notifications</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {[
+                  { label: "Email notifications to trainers", defaultOn: true },
+                  { label: "Email notifications to students", defaultOn: true },
+                  { label: "Slack integration", defaultOn: false },
+                  { label: "Microsoft Teams integration", defaultOn: false },
+                  { label: "In-portal announcement banners", defaultOn: true },
+                  { label: "SMS notifications (if configured)", defaultOn: false },
+                ].map(f => (
+                  <div key={f.label} className="flex items-center gap-3">
+                    <Switch defaultChecked={f.defaultOn} />
+                    <Label className="text-xs">{f.label}</Label>
+                  </div>
+                ))}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-1.5"><Label className="text-xs">Slack Webhook URL</Label><Input placeholder="https://hooks.slack.com/..." className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Teams Webhook URL</Label><Input placeholder="https://outlook.office.com/..." className="h-9 text-sm" /></div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Digest Email Frequency</Label>
+                  <Select defaultValue="daily"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="realtime">Real-time</SelectItem><SelectItem value="hourly">Hourly</SelectItem><SelectItem value="daily">Daily</SelectItem><SelectItem value="weekly">Weekly</SelectItem></SelectContent></Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Security & Access Control */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Security & Access Control</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {[
+                  { label: "Enforce SSO login", defaultOn: customer.ssoEnabled },
+                  { label: "Enforce MFA for trainers", defaultOn: customer.mfaEnabled },
+                  { label: "Enforce MFA for students", defaultOn: false },
+                  { label: "Enable IP whitelisting", defaultOn: false },
+                  { label: "Allow API access", defaultOn: false },
+                  { label: "Restrict portal access to office hours", defaultOn: false },
+                ].map(f => (
+                  <div key={f.label} className="flex items-center gap-3">
+                    <Switch defaultChecked={f.defaultOn} />
+                    <Label className="text-xs">{f.label}</Label>
+                  </div>
+                ))}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-1.5"><Label className="text-xs">Session Timeout (min)</Label><Input type="number" defaultValue={60} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Max Concurrent Sessions per User</Label><Input type="number" defaultValue={2} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">SSO Provider</Label>
+                  <Select defaultValue="none"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem><SelectItem value="google">Google Workspace</SelectItem><SelectItem value="azure">Azure AD / Entra ID</SelectItem><SelectItem value="okta">Okta</SelectItem><SelectItem value="saml">Custom SAML</SelectItem></SelectContent></Select>
+                </div>
+                <div className="space-y-1.5"><Label className="text-xs">SSO Entity ID / Tenant</Label><Input placeholder="tenant-id or entity-id" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Whitelisted IP Ranges</Label><Input placeholder="192.168.1.0/24, 10.0.0.0/8" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Internet Policy</Label>
+                  <Select defaultValue="allowlist"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="open">Open</SelectItem><SelectItem value="allowlist">Allowlist</SelectItem><SelectItem value="blocked">Blocked</SelectItem></SelectContent></Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Scheduling & Calendar */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Scheduling & Calendar</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Portal Timezone</Label>
+                  <Select defaultValue="asia-kolkata"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="asia-kolkata">Asia/Kolkata (IST)</SelectItem><SelectItem value="us-eastern">US/Eastern (EST)</SelectItem><SelectItem value="us-pacific">US/Pacific (PST)</SelectItem><SelectItem value="europe-london">Europe/London (GMT)</SelectItem><SelectItem value="utc">UTC</SelectItem></SelectContent></Select>
+                </div>
+                <div className="space-y-1.5"><Label className="text-xs">Business Hours Start</Label><Input type="time" defaultValue="09:00" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Business Hours End</Label><Input type="time" defaultValue="18:00" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Max Hours/Day per Student</Label><Input type="number" defaultValue={8} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Idle Timeout (min)</Label><Input type="number" defaultValue={30} className="h-9 text-sm" /></div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  { label: "Enable Google Calendar sync", defaultOn: false },
+                  { label: "Enable iCal export for students", defaultOn: true },
+                  { label: "Auto-schedule labs for batch start", defaultOn: true },
+                  { label: "Allow trainers to set custom schedules", defaultOn: true },
+                ].map(f => (
+                  <div key={f.label} className="flex items-center gap-3">
+                    <Switch defaultChecked={f.defaultOn} />
+                    <Label className="text-xs">{f.label}</Label>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Commercial & Billing */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Commercial & Billing</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Pricing Model</Label>
+                  <Select defaultValue="per-seat-month"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="per-seat-month">Per seat/month</SelectItem><SelectItem value="per-seat-hour">Per seat/hour</SelectItem><SelectItem value="batch-bundle">Batch bundle</SelectItem><SelectItem value="unlimited">Unlimited (flat fee)</SelectItem></SelectContent></Select>
+                </div>
+                <div className="space-y-1.5"><Label className="text-xs">Default Rate (₹)</Label><Input type="number" defaultValue={500} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Minimum Commitment (₹)</Label><Input type="number" defaultValue={10000} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Payment Terms (days)</Label><Input type="number" defaultValue={30} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Billing Currency</Label>
+                  <Select defaultValue="INR"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="INR">INR (₹)</SelectItem><SelectItem value="USD">USD ($)</SelectItem><SelectItem value="EUR">EUR (€)</SelectItem><SelectItem value="GBP">GBP (£)</SelectItem></SelectContent></Select>
+                </div>
+                <div className="space-y-1.5"><Label className="text-xs">Invoice Prefix</Label><Input defaultValue="INV" className="h-9 text-sm" /></div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  { label: "Auto-generate invoices on billing cycle", defaultOn: true },
+                  { label: "Lock provisioning if payment overdue", defaultOn: false },
+                  { label: "Send invoice reminders", defaultOn: true },
+                  { label: "Allow prepaid credit top-up", defaultOn: true },
+                ].map(f => (
+                  <div key={f.label} className="flex items-center gap-3">
+                    <Switch defaultChecked={f.defaultOn} />
+                    <Label className="text-xs">{f.label}</Label>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Data & Compliance */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Data & Compliance</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Data Retention Policy</Label>
+                  <Select defaultValue="1-year"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="90-days">90 Days</SelectItem><SelectItem value="6-months">6 Months</SelectItem><SelectItem value="1-year">1 Year</SelectItem><SelectItem value="3-years">3 Years</SelectItem><SelectItem value="indefinite">Indefinite</SelectItem></SelectContent></Select>
+                </div>
+                <div className="space-y-1.5"><Label className="text-xs">Audit Log Retention (days)</Label><Input type="number" defaultValue={365} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Data Residency</Label>
+                  <Select defaultValue="india"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="india">India</SelectItem><SelectItem value="us">United States</SelectItem><SelectItem value="eu">European Union</SelectItem><SelectItem value="any">No Preference</SelectItem></SelectContent></Select>
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  { label: "Enable GDPR compliance mode", defaultOn: false },
+                  { label: "Allow trainers to export student data", defaultOn: true },
+                  { label: "Allow trainers to bulk delete student data", defaultOn: false },
+                  { label: "Enable anonymized analytics sharing", defaultOn: true },
+                ].map(f => (
+                  <div key={f.label} className="flex items-center gap-3">
+                    <Switch defaultChecked={f.defaultOn} />
+                    <Label className="text-xs">{f.label}</Label>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* API & Integrations */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">API & Integrations</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {[
+                  { label: "Enable REST API access", defaultOn: false },
+                  { label: "Enable Webhook notifications", defaultOn: false },
+                  { label: "Enable LTI integration (LMS)", defaultOn: false },
+                  { label: "Enable CRM sync (Salesforce/HubSpot)", defaultOn: false },
+                  { label: "Enable Zoom integration for live classes", defaultOn: true },
+                  { label: "Enable Google Meet integration", defaultOn: false },
+                ].map(f => (
+                  <div key={f.label} className="flex items-center gap-3">
+                    <Switch defaultChecked={f.defaultOn} />
+                    <Label className="text-xs">{f.label}</Label>
+                  </div>
+                ))}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5"><Label className="text-xs">Webhook Endpoint URL</Label><Input placeholder="https://company.com/webhooks/cloudadda" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Webhook Secret Key</Label><Input placeholder="whsec_..." type="password" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">LTI Consumer Key</Label><Input placeholder="lti-consumer-key" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">LTI Shared Secret</Label><Input placeholder="lti-shared-secret" type="password" className="h-9 text-sm" /></div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Save Actions */}
+          <div className="flex gap-3 pt-2">
+            <Button size="sm" className="text-xs gap-1.5" onClick={() => action("Settings saved and applied")}><Shield className="h-3.5 w-3.5" /> Save & Apply Now</Button>
+            <Button size="sm" variant="outline" className="text-xs" onClick={() => action("Settings saved for next batch")}>Apply to Next Batch</Button>
+            <Button size="sm" variant="outline" className="text-xs text-destructive" onClick={() => action("Settings reset to defaults")}>Reset to Defaults</Button>
+          </div>
         </TabsContent>
 
         {/* Tab F: Analytics */}
