@@ -32,6 +32,7 @@ import CreateCertification from "./pages/CreateCertification";
 import EditCertification from "./pages/EditCertification";
 import Support from "./pages/Support";
 import Settings from "./pages/Settings";
+import LiveTraining from "./pages/LiveTraining";
 import NotFound from "./pages/NotFound";
 
 // Admin pages

@@ -108,6 +108,7 @@ const trainerNav: NavConfig = {
   groups: [
     { label: "Main", icon: Home, items: [
       { title: "Dashboard", icon: Home, path: "/" },
+      { title: "Live Training", icon: Radio, path: "/live-training" },
       { title: "Batches", icon: Users, path: "/batches" },
       { title: "Labs", icon: FlaskConical, path: "/labs" },
       { title: "Courses", icon: BookOpen, path: "/courses" },
