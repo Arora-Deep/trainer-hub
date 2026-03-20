@@ -8,7 +8,7 @@ import {
   Cpu, HardDrive, Network, Activity, LifeBuoy, Receipt, Lock, FileBarChart,
   Gauge, AlertTriangle, Clock, Wrench, BookMarked, Zap, Globe, Eye,
   DollarSign, Scale, Key, Database, Send, Flag, Workflow, Container,
-  Video, Calendar,
+  Video, Calendar, Radio,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -108,6 +108,7 @@ const trainerNav: NavConfig = {
   groups: [
     { label: "Main", icon: Home, items: [
       { title: "Dashboard", icon: Home, path: "/" },
+      { title: "Live Training", icon: Radio, path: "/live-training" },
       { title: "Batches", icon: Users, path: "/batches" },
       { title: "Labs", icon: FlaskConical, path: "/labs" },
       { title: "Courses", icon: BookOpen, path: "/courses" },

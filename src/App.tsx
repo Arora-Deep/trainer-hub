@@ -32,6 +32,7 @@ import CreateCertification from "./pages/CreateCertification";
 import EditCertification from "./pages/EditCertification";
 import Support from "./pages/Support";
 import Settings from "./pages/Settings";
+import LiveTraining from "./pages/LiveTraining";
 import NotFound from "./pages/NotFound";
 
 // Admin pages
@@ -124,6 +125,7 @@ const App = () => (
             <Route path="/certifications/:id" element={<CertificationDetails />} />
             <Route path="/certifications/:id/edit" element={<EditCertification />} />
             <Route path="/support" element={<Support />} />
+            <Route path="/live-training" element={<LiveTraining />} />
             <Route path="/settings" element={<Settings />} />
 
             {/* Admin routes */}
