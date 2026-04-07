@@ -484,7 +484,7 @@ export default function Meetings() {
   // ─── MEETING LIST VIEW ──────────────────────────────────────
   return (
     <div className="space-y-6">
-      <PageHeader title="Meetings" subtitle="Schedule, join, and manage training meetings">
+      <PageHeader title="Meetings" description="Schedule, join, and manage training meetings" actions={
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
