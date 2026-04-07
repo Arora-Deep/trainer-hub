@@ -490,90 +490,90 @@ export default function Meetings() {
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search meetings..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-8 w-64" />
           </div>
-          <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
-            <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" /> Schedule Meeting</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Schedule a Meeting</DialogTitle>
-                <DialogDescription>Set up a new training meeting for a batch</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-2">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Meeting Title</Label>
-                  <Input placeholder="e.g. Kubernetes Day 4 - Deployments" value={scheduleForm.title} onChange={(e) => setScheduleForm({...scheduleForm, title: e.target.value})} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Batch</Label>
-                  <Select value={scheduleForm.batch} onValueChange={(v) => setScheduleForm({...scheduleForm, batch: v})}>
-                    <SelectTrigger><SelectValue placeholder="Select batch" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="k8s">K8s Advanced - DevOps Academy</SelectItem>
-                      <SelectItem value="ml">ML GPU Lab - DataScience Bootcamp</SelectItem>
-                      <SelectItem value="linux">Linux Fundamentals - Corporate L&D</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Date</Label>
-                    <Input type="date" value={scheduleForm.date} onChange={(e) => setScheduleForm({...scheduleForm, date: e.target.value})} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Start</Label>
-                    <Input type="time" value={scheduleForm.startTime} onChange={(e) => setScheduleForm({...scheduleForm, startTime: e.target.value})} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">End</Label>
-                    <Input type="time" value={scheduleForm.endTime} onChange={(e) => setScheduleForm({...scheduleForm, endTime: e.target.value})} />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Platform</Label>
-                  <Select value={scheduleForm.platform} onValueChange={(v) => setScheduleForm({...scheduleForm, platform: v})}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="built-in">⚡ Built-in (CloudAdda Meet)</SelectItem>
-                      <SelectItem value="google-meet">🟢 Google Meet</SelectItem>
-                      <SelectItem value="zoom">🔵 Zoom</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {scheduleForm.platform !== "built-in" && (
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Meeting Link</Label>
-                    <Input placeholder="Paste meeting URL..." value={scheduleForm.link} onChange={(e) => setScheduleForm({...scheduleForm, link: e.target.value})} />
-                  </div>
-                )}
-                <Separator />
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Enable Recording</Label>
-                    <Switch checked={scheduleForm.enableRecording} onCheckedChange={(v) => setScheduleForm({...scheduleForm, enableRecording: v})} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Enable Chat</Label>
-                    <Switch checked={scheduleForm.enableChat} onCheckedChange={(v) => setScheduleForm({...scheduleForm, enableChat: v})} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Waiting Room</Label>
-                    <Switch checked={scheduleForm.waitingRoom} onCheckedChange={(v) => setScheduleForm({...scheduleForm, waitingRoom: v})} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Mute on Entry</Label>
-                    <Switch checked={scheduleForm.muteOnEntry} onCheckedChange={(v) => setScheduleForm({...scheduleForm, muteOnEntry: v})} />
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setScheduleOpen(false)}>Cancel</Button>
-                <Button onClick={scheduleMeeting}>Schedule</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setScheduleOpen(true)}><Plus className="h-4 w-4 mr-2" /> Schedule Meeting</Button>
         </div>
-      </PageHeader>
+      } />
+
+      {/* Schedule Dialog */}
+      <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Schedule a Meeting</DialogTitle>
+            <DialogDescription>Set up a new training meeting for a batch</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Meeting Title</Label>
+              <Input placeholder="e.g. Kubernetes Day 4 - Deployments" value={scheduleForm.title} onChange={(e) => setScheduleForm({...scheduleForm, title: e.target.value})} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Batch</Label>
+              <Select value={scheduleForm.batch} onValueChange={(v) => setScheduleForm({...scheduleForm, batch: v})}>
+                <SelectTrigger><SelectValue placeholder="Select batch" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="k8s">K8s Advanced - DevOps Academy</SelectItem>
+                  <SelectItem value="ml">ML GPU Lab - DataScience Bootcamp</SelectItem>
+                  <SelectItem value="linux">Linux Fundamentals - Corporate L&D</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Date</Label>
+                <Input type="date" value={scheduleForm.date} onChange={(e) => setScheduleForm({...scheduleForm, date: e.target.value})} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Start</Label>
+                <Input type="time" value={scheduleForm.startTime} onChange={(e) => setScheduleForm({...scheduleForm, startTime: e.target.value})} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">End</Label>
+                <Input type="time" value={scheduleForm.endTime} onChange={(e) => setScheduleForm({...scheduleForm, endTime: e.target.value})} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Platform</Label>
+              <Select value={scheduleForm.platform} onValueChange={(v) => setScheduleForm({...scheduleForm, platform: v})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="built-in">⚡ Built-in (CloudAdda Meet)</SelectItem>
+                  <SelectItem value="google-meet">🟢 Google Meet</SelectItem>
+                  <SelectItem value="zoom">🔵 Zoom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {scheduleForm.platform !== "built-in" && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">Meeting Link</Label>
+                <Input placeholder="Paste meeting URL..." value={scheduleForm.link} onChange={(e) => setScheduleForm({...scheduleForm, link: e.target.value})} />
+              </div>
+            )}
+            <Separator />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Enable Recording</Label>
+                <Switch checked={scheduleForm.enableRecording} onCheckedChange={(v) => setScheduleForm({...scheduleForm, enableRecording: v})} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Enable Chat</Label>
+                <Switch checked={scheduleForm.enableChat} onCheckedChange={(v) => setScheduleForm({...scheduleForm, enableChat: v})} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Waiting Room</Label>
+                <Switch checked={scheduleForm.waitingRoom} onCheckedChange={(v) => setScheduleForm({...scheduleForm, waitingRoom: v})} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Mute on Entry</Label>
+                <Switch checked={scheduleForm.muteOnEntry} onCheckedChange={(v) => setScheduleForm({...scheduleForm, muteOnEntry: v})} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setScheduleOpen(false)}>Cancel</Button>
+            <Button onClick={scheduleMeeting}>Schedule</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
