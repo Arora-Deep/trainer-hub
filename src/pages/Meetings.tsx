@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -21,12 +20,11 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Video, VideoOff, Mic, MicOff, Monitor, MonitorOff, Phone, PhoneOff,
+  Video, VideoOff, Mic, MicOff, Monitor, MonitorOff, PhoneOff,
   Users, MessageSquare, Hand, Settings, Copy, ExternalLink, Plus,
-  Calendar, Clock, Link2, MoreVertical, Search, Play, Square,
-  Volume2, VolumeX, Maximize2, Minimize2, Grid3X3, LayoutGrid,
-  Share2, Download, Upload, Camera, CircleDot, Send, Smile,
-  ChevronRight, AlertCircle, CheckCircle2, XCircle, Loader2,
+  Calendar, Clock, Link2, MoreVertical, Search, Play,
+  VolumeX, Maximize2, Minimize2, LayoutGrid,
+  Share2, Download, CircleDot, Send, XCircle,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
