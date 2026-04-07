@@ -33,6 +33,7 @@ import EditCertification from "./pages/EditCertification";
 import Support from "./pages/Support";
 import Settings from "./pages/Settings";
 import LiveTraining from "./pages/LiveTraining";
+import Meetings from "./pages/Meetings";
 import NotFound from "./pages/NotFound";
 
 // Admin pages
