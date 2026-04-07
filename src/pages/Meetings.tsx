@@ -728,7 +728,7 @@ export default function Meetings() {
                           )}
                           {meeting.status === "scheduled" && (
                             <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => joinMeeting(meeting)}>
-                              {meeting.platform === "built-in" ? "Start" : "Open"}
+                              {(meeting.platform as string) === "built-in" ? "Start" : "Open"}
                             </Button>
                           )}
                           {meeting.status === "ended" && meeting.recording && (

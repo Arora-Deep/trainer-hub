@@ -127,6 +127,7 @@ const App = () => (
             <Route path="/certifications/:id/edit" element={<EditCertification />} />
             <Route path="/support" element={<Support />} />
             <Route path="/live-training" element={<LiveTraining />} />
+            <Route path="/meetings" element={<Meetings />} />
             <Route path="/settings" element={<Settings />} />
 
             {/* Admin routes */}
