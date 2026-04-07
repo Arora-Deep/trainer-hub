@@ -101,7 +101,6 @@ export default function Meetings() {
   const [chatInput, setChatInput] = useState("");
   const [gridView, setGridView] = useState(true);
   const [handRaised, setHandRaised] = useState(false);
-  const [meetingTimer, setMeetingTimer] = useState(0);
 
   // Schedule form
   const [scheduleForm, setScheduleForm] = useState({
