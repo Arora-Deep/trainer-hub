@@ -293,6 +293,29 @@ export default function LiveTraining() {
         </motion.div>
       </div>
 
+      {/* Quick Meeting Widget */}
+      <Card className="border-primary/20">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Monitor className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">Meeting Room</p>
+              <p className="text-xs text-muted-foreground">Start or join a video meeting with your batch</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => { window.location.href = "/meetings"; }}>
+              <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> All Meetings
+            </Button>
+            <Button size="sm" onClick={() => toast({ title: "Meeting Started", description: "CloudAdda Meet room is now live for this batch" })}>
+              <Monitor className="h-3.5 w-3.5 mr-1.5" /> Start Meeting
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Main Content: 3-column layout */}
       <div className="grid grid-cols-12 gap-4" style={{ height: "calc(100vh - 260px)" }}>
         {/* Left: Trainer VM + Controls */}
