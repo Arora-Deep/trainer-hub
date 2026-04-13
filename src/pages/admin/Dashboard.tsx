@@ -2,13 +2,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Building2, Server, AlertTriangle, DollarSign, FlaskConical, TicketCheck, FileText, RotateCcw } from "lucide-react";
+import { Building2, Server, AlertTriangle, DollarSign, FlaskConical, TicketCheck, RotateCcw, ChevronRight, Clock, XCircle, ClipboardList, Timer } from "lucide-react";
 import { useCustomerStore } from "@/stores/customerStore";
 import { useBatchStore } from "@/stores/batchStore";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
   const { customers, provisionJobs, incidents, invoices, tickets } = useCustomerStore();
   const { batches } = useBatchStore();
+  const navigate = useNavigate();
 
   const activeCustomers = customers.filter(c => c.status === "active").length;
   const activeBatches = customers.reduce((s, c) => s + c.activeBatches, 0);
@@ -17,14 +19,21 @@ export default function AdminDashboard() {
   const successRate = provisionJobs.length > 0 ? Math.round((completedJobs / provisionJobs.length) * 100) : 0;
   const openTickets = tickets.filter(t => t.status === "open" || t.status === "in_progress").length;
   const overdueInvoices = invoices.filter(i => i.status === "overdue");
+  const failedJobs = provisionJobs.filter(j => j.status === "failed");
+  const criticalTickets = tickets.filter(t => t.priority === "critical" && (t.status === "open" || t.status === "in_progress"));
+  const pendingRequests = 4; // from batch requests
+  const slaBreachedTickets = tickets.filter(t => {
+    const elapsed = (Date.now() - new Date(t.createdAt).getTime()) / 60000;
+    return elapsed > t.slaMinutes && t.status !== "resolved" && t.status !== "closed";
+  });
 
   const kpis = [
     { label: "Active Customers", value: activeCustomers, icon: Building2, color: "text-primary" },
     { label: "Active Batches", value: activeBatches, icon: Server, color: "text-info" },
     { label: "Running Labs", value: runningLabs, icon: FlaskConical, color: "text-success" },
-    { label: "Provision Success (24h)", value: `${successRate}%`, icon: Server, color: successRate >= 80 ? "text-success" : "text-warning" },
-    { label: "Open Tickets", value: openTickets, icon: TicketCheck, color: openTickets > 0 ? "text-warning" : "text-success" },
-    { label: "Outstanding Invoices", value: overdueInvoices.length, icon: DollarSign, color: overdueInvoices.length > 0 ? "text-destructive" : "text-success" },
+    { label: "Provision Success", value: `${successRate}%`, icon: Server, color: successRate >= 80 ? "text-success" : "text-warning", pulse: successRate < 80 },
+    { label: "Open Tickets", value: openTickets, icon: TicketCheck, color: openTickets > 0 ? "text-warning" : "text-success", pulse: criticalTickets.length > 0 },
+    { label: "Overdue Invoices", value: overdueInvoices.length, icon: DollarSign, color: overdueInvoices.length > 0 ? "text-destructive" : "text-success", pulse: overdueInvoices.length > 0 },
   ];
 
   const clusterData = [
@@ -35,26 +44,36 @@ export default function AdminDashboard() {
   ];
 
   const recentBatches = batches.slice(0, 5);
-  const failedJobs = provisionJobs.filter(j => j.status === "failed");
-
-  const alerts = [
-    { alert: "GPU capacity exhausted in ap-south-1", severity: "critical", source: "Infrastructure", time: "15 min ago" },
-    { alert: "High latency on storage pool EU-WEST-1", severity: "major", source: "Storage", time: "2 hours ago" },
-    { alert: "Invoice INV-3003 overdue by 14 days", severity: "warning", source: "Billing", time: "1 day ago" },
-    { alert: "Node maintenance scheduled", severity: "info", source: "Ops", time: "3 hours ago" },
-  ];
-
-  const severityColor: Record<string, string> = {
-    critical: "bg-destructive/10 text-destructive",
-    major: "bg-warning/10 text-warning",
-    warning: "bg-warning/10 text-warning",
-    info: "bg-info/10 text-info",
-  };
 
   const statusColor: Record<string, string> = {
     healthy: "bg-success/10 text-success",
     warning: "bg-warning/10 text-warning",
     critical: "bg-destructive/10 text-destructive",
+  };
+
+  // Needs Attention items
+  const attentionItems = [
+    ...criticalTickets.map(t => ({ type: "ticket", label: `Critical: ${t.subject}`, sublabel: t.tenant, action: () => navigate("/admin/support/tickets") })),
+    ...slaBreachedTickets.map(t => ({ type: "sla", label: `SLA Breached: ${t.subject}`, sublabel: t.tenant, action: () => navigate("/admin/support/tickets") })),
+    ...failedJobs.map(j => ({ type: "job", label: `Failed: ${j.id} — ${j.failureReason?.slice(0, 50)}`, sublabel: j.tenant, action: () => navigate("/admin/labs/queue") })),
+    ...(pendingRequests > 0 ? [{ type: "request", label: `${pendingRequests} pending batch requests`, sublabel: "Awaiting review", action: () => navigate("/admin/batches/requests") }] : []),
+    ...overdueInvoices.map(i => ({ type: "invoice", label: `Overdue: ${i.id} — ₹${i.amount.toLocaleString()}`, sublabel: i.tenant, action: () => navigate("/admin/billing/invoices") })),
+  ];
+
+  const attentionIcons: Record<string, typeof AlertTriangle> = {
+    ticket: AlertTriangle,
+    sla: Timer,
+    job: XCircle,
+    request: ClipboardList,
+    invoice: DollarSign,
+  };
+
+  const attentionColors: Record<string, string> = {
+    ticket: "text-destructive bg-destructive/10",
+    sla: "text-destructive bg-destructive/10",
+    job: "text-destructive bg-destructive/10",
+    request: "text-warning bg-warning/10",
+    invoice: "text-warning bg-warning/10",
   };
 
   return (
@@ -67,15 +86,48 @@ export default function AdminDashboard() {
       {/* KPI Cards */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
         {kpis.map((k) => (
-          <Card key={k.label}>
+          <Card key={k.label} className="relative">
             <CardContent className="pt-4 pb-3 px-4">
               <k.icon className={`h-4 w-4 ${k.color} mb-2`} />
               <p className="text-2xl font-bold">{k.value}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">{k.label}</p>
             </CardContent>
+            {k.pulse && <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-destructive animate-pulse" />}
           </Card>
         ))}
       </div>
+
+      {/* Needs Attention */}
+      {attentionItems.length > 0 && (
+        <Card className="border-destructive/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              Needs Attention ({attentionItems.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {attentionItems.slice(0, 8).map((item, i) => {
+              const Icon = attentionIcons[item.type] || AlertTriangle;
+              const color = attentionColors[item.type] || "text-muted-foreground bg-muted";
+              return (
+                <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer" onClick={item.action}>
+                  <div className={`p-1.5 rounded-md ${color}`}>
+                    <Icon className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{item.label}</p>
+                    <p className="text-xs text-muted-foreground">{item.sublabel}</p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-xs gap-1 shrink-0">
+                    Review <ChevronRight className="h-3 w-3" />
+                  </Button>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Infrastructure Snapshot */}
       <Card>
@@ -167,33 +219,6 @@ export default function AdminDashboard() {
                   <TableCell className="text-right">
                     <Button variant="outline" size="sm" className="gap-1 text-xs"><RotateCcw className="h-3 w-3" /> Retry</Button>
                   </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* System Alerts */}
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">System Alerts</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Alert</TableHead>
-                <TableHead>Severity</TableHead>
-                <TableHead>Source</TableHead>
-                <TableHead>Time</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {alerts.map((a, i) => (
-                <TableRow key={i}>
-                  <TableCell className="text-sm">{a.alert}</TableCell>
-                  <TableCell><Badge variant="secondary" className={`text-xs capitalize ${severityColor[a.severity]}`}>{a.severity}</Badge></TableCell>
-                  <TableCell className="text-sm">{a.source}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{a.time}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

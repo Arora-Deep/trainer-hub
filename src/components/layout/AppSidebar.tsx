@@ -11,9 +11,11 @@ import {
   Video, Calendar, Radio,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useRoleStore, type Role } from "@/stores/roleStore";
+import { useNotificationCounts } from "@/stores/notificationStore";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface NavItemDef {
