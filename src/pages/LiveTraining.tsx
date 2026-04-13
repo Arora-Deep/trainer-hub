@@ -1216,6 +1216,32 @@ export default function LiveTraining() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Trainer Snapshot Dialog */}
+      <Dialog open={trainerSnapshotDialogOpen} onOpenChange={setTrainerSnapshotDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Take Named Snapshot</DialogTitle>
+            <DialogDescription>Create a snapshot of your trainer VM's current state</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Snapshot Name *</label>
+              <Input placeholder="e.g., After Lab 3 Setup" value={trainerSnapshotName} onChange={e => setTrainerSnapshotName(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setTrainerSnapshotDialogOpen(false); setTrainerSnapshotName(""); }}>Cancel</Button>
+            <Button disabled={!trainerSnapshotName.trim()} onClick={() => {
+              createSnapshot(batch.id, trainerSnapshotName.trim(), "Trainer snapshot");
+              toast({ title: "Snapshot Creating", description: `"${trainerSnapshotName}" is being created...` });
+              setTrainerSnapshotName("");
+              setTrainerSnapshotDialogOpen(false);
+            }}>
+              <Camera className="mr-1.5 h-3.5 w-3.5" />Create Snapshot
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
