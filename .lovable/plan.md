@@ -1,58 +1,118 @@
 
 
-## Plan: Overhaul VM Management in Batches + Upgrade Live Training + Resolve Labs Page Role
+## Plan: Supercharge the CloudAdda Admin Portal
 
-### The Problem
+### What This Plan Covers
 
-1. **Batch Details VMs tab** — Has the Provision → Configure → Clone workflow but the Student VMs table is bare (no per-student actions like reclone, reset to snapshot, open console, restart).
-2. **Labs page** (`/labs`) — Currently a separate page showing lab instances and templates from `labStore`. It overlaps with the VMs tab in Batches and the Live Training page. It has no clear purpose for trainers since VMs are managed per-batch.
-3. **Live Training page** — Has student VM grid with hover actions (console, view screen, restart, reset) but missing: reclone a single student's VM, snapshot management (choose which snapshot to reset to), trainer console Sheet (currently opens external link), and proper snapshot listing.
+The admin portal already has strong foundations. This plan fills the operational gaps so it can truly handle everything end-to-end: managed provisioning on behalf of customers, a real-time notification system, enhanced batch requests with approval workflows, enriched support tickets with threaded conversations, and several new missing pages/features.
 
-### What Changes
+### Changes Overview
 
-#### 1. Remove standalone Labs page from trainer nav
-The Labs page (`/labs`) duplicates functionality. Replace the sidebar entry with a redirect or repurpose it as a "Lab Templates" browser (read-only catalog of available templates). The actual VM management lives in Batches and Live Training.
+#### 1. Managed Provisioning for Customers (Admin provisions VMs on behalf of trainer)
+**File**: `src/pages/admin/AdminBatchDetail.tsx`
 
-#### 2. Batch Details — VMs Tab Upgrade
-Enhance the existing VMs tab with comprehensive per-student VM actions:
+Add a "Provision on Behalf" workflow to the Labs & VMs tab:
+- A prominent "Provision for Customer" button that lets an admin run the full Provision → Configure → Snapshot → Clone workflow on behalf of a customer who doesn't want to do it themselves
+- When the admin provisions, it sets a flag `provisionedBy: "admin"` so it's visible in the trainer portal as "Provisioned by CloudAdda"
+- The trainer portal's BatchDetails page will show a read-only "Managed by CloudAdda" badge on the VMs tab when this flag is set, with a "Request Changes" button instead of direct VM controls
 
-- **Snapshot Management Panel**: Below the trainer workflow, add a card listing all snapshots (from `vmConfig.snapshots`) with name, date, size, status, and a "Set as Golden" button. Include a "Create Snapshot" dialog.
-- **Student VMs Table — Rich Actions Column**: Replace the single ghost button with a dropdown menu per student VM containing:
-  - Open Console (opens Sheet with terminal preview + connection info)
-  - Copy SSH command
-  - Restart VM
-  - Stop / Start VM
-  - Reset to Snapshot (sub-menu listing available snapshots)
-  - Reclone from Golden (destroys current VM, creates fresh clone)
-- **Bulk Actions Bar**: When checkboxes are selected, show a sticky bar with "Reset All Selected", "Restart All Selected", "Reclone All Selected"
-- **Status indicators**: Add CPU/RAM progress bars inline in the table
+**File**: `src/stores/batchStore.ts`
+- Add `provisionedBy` field to `vmConfig` (either `"admin"` or `"trainer"`)
 
-#### 3. Live Training — Full VM Command Center
-Upgrade the existing page to be the trainer's complete operational hub:
+#### 2. Real-Time Notification Center
+**File**: `src/components/layout/AppHeader.tsx`
 
-- **Trainer Console Sheet**: Instead of `window.open`, clicking "Console" opens a `Sheet` with a full simulated terminal (dark bg, monospace, scrollable command history), connection details (IP, SSH command, credentials with show/hide), and action buttons (Restart, Snapshot, Stop).
-- **Per-Student VM Actions Enhancement**: The student detail `Sheet` (already exists) gets additional actions:
-  - **Reclone VM**: Button that triggers a confirmation dialog, then reclones from the golden snapshot
-  - **Reset to Snapshot Selector**: Replace the single "Reset to Snapshot" button with a `Select` dropdown listing all available snapshots by name, with a "Reset" button
-  - **Take Snapshot of Student VM**: Save current state of a specific student's VM
-  - **View Logs**: Expandable section showing last 20 lines of VM logs
-- **Snapshot Quick Panel**: Add a collapsible card in the left column showing all batch snapshots with one-click "Reset All to This" per snapshot
-- **Mass Actions Enhancement**: Add "Reclone All" button to the session control bar alongside existing Lock/Snapshot/Restart buttons
+Upgrade the notification bell from hardcoded 3 items to a dynamic system:
+- Pull counts from stores: pending batch requests, open tickets, active alerts, failed provision jobs, overdue invoices
+- Group notifications by category with tabs: All, Requests, Tickets, Alerts, Billing
+- Each notification is clickable and navigates to the relevant page
+- Show a red badge with total unread count
+- Add a "Mark all read" action and per-item dismiss
 
-#### 4. Sidebar Navigation Update
-- Rename "Labs" to "Lab Templates" in trainer sidebar, pointing to a simplified template browser
-- Or remove it entirely if templates are only relevant during batch creation
+**File**: `src/stores/notificationStore.ts` (new)
+- Centralized notification state that aggregates from customerStore data
+- Types: `batch_request`, `ticket`, `alert`, `provision_failure`, `billing`, `system`
+- Each notification has: id, type, title, description, timestamp, read status, link
 
-### Files Modified
-- `src/pages/BatchDetails.tsx` — Rewrite VMs tab with snapshot panel, rich per-student actions, bulk actions
-- `src/pages/LiveTraining.tsx` — Add trainer console Sheet, enhance student Sheet with reclone/snapshot selector/logs, add snapshot quick panel
-- `src/components/layout/AppSidebar.tsx` — Update or remove Labs nav item for trainer role
-- `src/stores/batchStore.ts` — Add `recloneStudentVM` and `snapshotStudentVM` actions
-- `src/pages/Labs.tsx` — Simplify to template browser or remove
+#### 3. Enhanced Batch Requests Page
+**File**: `src/pages/admin/BatchRequests.tsx`
 
-### Technical Details
-- Snapshot selector uses existing `vmConfig.snapshots` array from batchStore
-- Reclone action calls a new `recloneStudentVM(batchId, vmId)` store method that resets the VM entry and marks it as "provisioning" then transitions to "running"
-- Console Sheet reuses the existing terminal mock lines pattern from LiveTraining
-- No new dependencies needed
+Major upgrade from the current basic table:
+- **KPI cards** at top: Pending, Approved This Month, Rejected This Month, Avg Response Time
+- **Filters**: By customer, request type, status, date range
+- **Approval workflow in Sheet**: When reviewing a request, show the full context — customer health score, current resource usage vs quota, batch details, and impact analysis (e.g., "Approving this will use 75% of their CPU quota")
+- **Admin notes & internal comments**: Text area for adding resolution notes before approving/rejecting
+- **Auto-provision option**: For "Extend Batch" or "Extra VM" requests, an "Approve & Provision" button that immediately triggers provisioning
+- **Request types expansion**: Add `vm_provisioning` (customer wants CloudAdda to provision), `batch_extension`, `seat_increase`, `lab_reset`, `resource_upgrade`
+
+**File**: `src/stores/customerStore.ts`
+- Expand `TenantRequest` type with new request types and add `adminNotes`, `resolvedAt`, `resolvedBy` fields
+
+#### 4. Enhanced Support Tickets Page
+**File**: `src/pages/admin/Tickets.tsx`
+
+Transform from a flat table into a proper help desk:
+- **KPI row**: Open, In Progress, Avg Resolution Time, SLA Breached count
+- **Ticket Detail Sheet** (right-side drawer): Full conversation thread with messages from customer and admin, internal notes (visible only to staff), attachments list
+- **SLA timer**: Visual countdown showing time remaining before SLA breach, with color changes (green → yellow → red)
+- **Quick actions**: Assign to team member, escalate, merge with another ticket, link to incident
+- **Reply composer**: Rich text area with canned responses dropdown and "Send & Close" / "Send & Keep Open" buttons
+- **Status workflow**: open → in_progress → waiting → resolved → closed with clear transitions
+
+#### 5. Enhanced Alerts Page with Error Tracking
+**File**: `src/pages/admin/Alerts.tsx`
+
+Upgrade from a basic table:
+- **Severity summary cards**: Critical (red pulse), Major, Warning, Info counts
+- **Alert detail Sheet**: Full context — impacted customers, impacted batches, related incidents, suggested runbook, timeline of status changes
+- **Auto-link to incidents**: Group related alerts into incidents automatically
+- **Acknowledge & Assign**: Assign alerts to team members, add investigation notes
+- **Error log viewer**: Expandable section showing related system logs for infrastructure alerts
+
+#### 6. New: Provisioning Queue Page (Enhanced)
+**File**: `src/pages/admin/ProvisioningQueue.tsx`
+
+The existing page likely needs enhancement:
+- Real-time job status with progress indicators
+- Group by customer/batch for easier monitoring
+- Retry failed jobs with one click
+- Cancel queued jobs
+- Show resource allocation preview before provisioning starts
+- "Provision for Customer" shortcut that opens the managed provisioning flow
+
+#### 7. Admin Dashboard — Live Notification Indicators
+**File**: `src/pages/admin/Dashboard.tsx`
+
+- Add pulsing indicators on KPI cards that have actionable items (e.g., red pulse on "Open Tickets" if any are critical)
+- Add a "Needs Attention" section below KPIs showing: pending batch requests, SLA-breaching tickets, failed provision jobs needing retry
+- Quick action buttons inline: "Review" → navigates to the item
+
+#### 8. Sidebar Notification Badges
+**File**: `src/components/layout/AppSidebar.tsx`
+
+- Show count badges on nav items: Batch Requests (pending count), Tickets (open count), Alerts (active critical count)
+- Red dot indicator for sections with critical items
+
+### Files to Create/Modify
+
+| File | Action |
+|------|--------|
+| `src/stores/notificationStore.ts` | Create — centralized notification aggregation |
+| `src/pages/admin/BatchRequests.tsx` | Major rewrite — KPIs, filters, approval workflow Sheet, auto-provision |
+| `src/pages/admin/Tickets.tsx` | Major rewrite — ticket threads, SLA timers, reply composer |
+| `src/pages/admin/Alerts.tsx` | Major rewrite — severity cards, detail Sheet, acknowledge flow |
+| `src/pages/admin/Dashboard.tsx` | Enhance — pulse indicators, "Needs Attention" section |
+| `src/pages/admin/AdminBatchDetail.tsx` | Add "Provision on Behalf" workflow |
+| `src/components/layout/AppHeader.tsx` | Upgrade notification dropdown with categories and dynamic counts |
+| `src/components/layout/AppSidebar.tsx` | Add notification count badges on nav items |
+| `src/stores/customerStore.ts` | Expand TenantRequest type, add ticket thread data |
+| `src/stores/batchStore.ts` | Add `provisionedBy` field |
+
+### Implementation Order
+1. Notification store + Header upgrade + Sidebar badges (foundation)
+2. Batch Requests page rewrite + customerStore expansion
+3. Tickets page rewrite with threads and SLA
+4. Alerts page rewrite with detail sheets
+5. Dashboard "Needs Attention" section
+6. AdminBatchDetail "Provision on Behalf" workflow + batchStore update
 
