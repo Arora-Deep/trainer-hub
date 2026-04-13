@@ -164,6 +164,10 @@ interface BatchStore {
   stopStudentVM: (batchId: string, vmId: string) => void;
   startStudentVM: (batchId: string, vmId: string) => void;
   restartStudentVM: (batchId: string, vmId: string) => void;
+  recloneTrainerVM: (batchId: string, snapshotId: string) => void;
+  resetTrainerVM: (batchId: string, snapshotId: string) => void;
+  stopTrainerVM: (batchId: string) => void;
+  startTrainerVM: (batchId: string) => void;
   // Legacy compat
   addLabConfig: (batchId: string, labConfig: any) => void;
   updateLabConfig: (batchId: string, labConfigId: string, updates: any) => void;
