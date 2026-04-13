@@ -792,6 +792,73 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     }, 2000);
   },
 
+  recloneTrainerVM: (batchId, snapshotId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "provisioning" as const } } }
+          : b
+      ),
+    }));
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "running" as const } } }
+            : b
+        ),
+      }));
+    }, 4000);
+  },
+
+  resetTrainerVM: (batchId, snapshotId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "provisioning" as const } } }
+          : b
+      ),
+    }));
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "running" as const } } }
+            : b
+        ),
+      }));
+    }, 3000);
+  },
+
+  stopTrainerVM: (batchId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "stopped" as const } } }
+          : b
+      ),
+    }));
+  },
+
+  startTrainerVM: (batchId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "provisioning" as const } } }
+          : b
+      ),
+    }));
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "running" as const } } }
+            : b
+        ),
+      }));
+    }, 2000);
+  },
+
   // Legacy compatibility stubs
   addLabConfig: () => {},
   updateLabConfig: () => {},
