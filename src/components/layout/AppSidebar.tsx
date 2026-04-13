@@ -11,9 +11,11 @@ import {
   Video, Calendar, Radio,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useRoleStore, type Role } from "@/stores/roleStore";
+import { useNotificationCounts } from "@/stores/notificationStore";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface NavItemDef {
@@ -151,11 +153,28 @@ const navConfigs: Record<Role, NavConfig> = {
   student: studentNav,
 };
 
+// Badge counts for specific nav items
+const badgeCountMap: Record<string, number> = {
+  "/admin/batches/requests": 4,
+  "/admin/support/tickets": 3,
+  "/admin/alerts": 2,
+};
+
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { role } = useRoleStore();
   const config = navConfigs[role];
+  const notifCounts = useNotificationCounts();
+
+  // Dynamic badge counts from notification store for admin
+  const getBadgeCount = (path: string): number => {
+    if (role !== "cloudadda") return 0;
+    if (path === "/admin/batches/requests") return notifCounts.requests;
+    if (path === "/admin/support/tickets") return notifCounts.tickets;
+    if (path === "/admin/alerts") return notifCounts.alerts;
+    return 0;
+  };
 
   const isItemActive = (path: string) => {
     if (path === "/" || path === "/admin/dashboard" || path === "/student/dashboard") {
@@ -168,6 +187,7 @@ export function AppSidebar() {
 
   const NavItem = ({ item }: { item: NavItemDef }) => {
     const active = isItemActive(item.path);
+    const badgeCount = getBadgeCount(item.path);
     const link = (
       <NavLink
         to={item.path}
@@ -180,15 +200,29 @@ export function AppSidebar() {
         )}
       >
         <item.icon className="h-4 w-4 shrink-0" />
-        {!collapsed && <span className="truncate">{item.title}</span>}
+        {!collapsed && (
+          <>
+            <span className="truncate flex-1">{item.title}</span>
+            {badgeCount > 0 && (
+              <Badge variant="secondary" className="h-4 min-w-[16px] px-1 text-[9px] font-bold bg-destructive text-destructive-foreground rounded-full">
+                {badgeCount}
+              </Badge>
+            )}
+          </>
+        )}
+        {collapsed && badgeCount > 0 && (
+          <span className="absolute right-1 top-0.5 h-2 w-2 rounded-full bg-destructive" />
+        )}
       </NavLink>
     );
 
     if (collapsed) {
       return (
         <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>{link}</TooltipTrigger>
-          <TooltipContent side="right" className="font-medium text-xs">{item.title}</TooltipContent>
+          <TooltipTrigger asChild><div className="relative">{link}</div></TooltipTrigger>
+          <TooltipContent side="right" className="font-medium text-xs">
+            {item.title} {badgeCount > 0 && `(${badgeCount})`}
+          </TooltipContent>
         </Tooltip>
       );
     }

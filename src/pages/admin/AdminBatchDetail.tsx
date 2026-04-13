@@ -552,11 +552,21 @@ export default function AdminBatchDetail() {
                   Admin VM
                   <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-primary/20">Master</Badge>
                 </CardTitle>
-                <Badge variant="secondary" className={cn("text-xs capitalize", statusColor[trainerVMStatus])}>
-                  {trainerVMStatus.replace("_", " ")}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  {vmConfig?.cloneStatus === "cloned" && (
+                    <Badge variant="secondary" className="text-[10px] bg-info/10 text-info border-info/20 gap-1">
+                      <Shield className="h-2.5 w-2.5" /> Provisioned by CloudAdda
+                    </Badge>
+                  )}
+                  <Badge variant="secondary" className={cn("text-xs capitalize", statusColor[trainerVMStatus])}>
+                    {trainerVMStatus.replace("_", " ")}
+                  </Badge>
+                </div>
               </div>
-              <CardDescription className="text-xs">The master environment used as the golden image for all student VMs</CardDescription>
+              <CardDescription className="text-xs">
+                The master environment used as the golden image for all student VMs.
+                {" "}<span className="text-primary font-medium">Use "Provision for Customer" to manage the full lifecycle on behalf of the trainer.</span>
+              </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               {/* Prep period warning in Labs tab too */}
