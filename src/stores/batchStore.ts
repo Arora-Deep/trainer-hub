@@ -21,9 +21,9 @@ export interface VMTemplateConfig {
 }
 
 export interface VMDaySchedule {
-  date: string; // "yyyy-MM-dd"
-  startTime: string; // e.g., "09:00"
-  endTime: string;   // e.g., "17:30"
+  date: string;
+  startTime: string;
+  endTime: string;
 }
 
 export interface VMEntry {
@@ -40,9 +40,9 @@ export interface VMSnapshot {
   name: string;
   description: string;
   createdAt: string;
-  size: string; // e.g. "4.2 GB"
+  size: string;
   status: "creating" | "ready" | "failed";
-  isGolden: boolean; // golden = the one used for cloning
+  isGolden: boolean;
 }
 
 export interface VMInstance {
@@ -53,7 +53,7 @@ export interface VMInstance {
   status: "running" | "stopped" | "error" | "provisioning";
   ipAddress: string;
   startedAt: string;
-  currentSnapshotId?: string; // which snapshot state this VM is on
+  currentSnapshotId?: string;
 }
 
 export interface VMConfig {
@@ -66,7 +66,7 @@ export interface VMConfig {
     status: "not_provisioned" | "provisioning" | "running" | "configured" | "snapshotted" | "stopped";
     ipAddress: string;
     provisionedAt: string;
-    consoleUrl: string; // noVNC-style URL
+    consoleUrl: string;
     credentials: {
       username: string;
       password: string;
@@ -74,7 +74,7 @@ export interface VMConfig {
     };
   };
   snapshots: VMSnapshot[];
-  goldenSnapshotId?: string; // the snapshot used for cloning
+  goldenSnapshotId?: string;
   studentVMs: VMInstance[];
   cloneStatus: "not_cloned" | "cloning" | "cloned";
   pricing: {
@@ -92,7 +92,6 @@ export interface VMConfig {
   createdAt: string;
 }
 
-// Keep backward compat exports
 export interface LabConfig extends VMConfig {}
 
 export interface AssignedLab {
@@ -135,7 +134,7 @@ export interface Batch {
   assignedLabs: AssignedLab[];
   announcements: Announcement[];
   vmConfig?: VMConfig;
-  labConfigs: VMConfig[]; // kept for backward compat
+  labConfigs: VMConfig[];
 }
 
 interface BatchStore {
@@ -159,6 +158,12 @@ interface BatchStore {
   deleteSnapshot: (batchId: string, snapshotId: string) => void;
   resetStudentVM: (batchId: string, vmId: string, snapshotId: string) => void;
   resetAllVMs: (batchId: string, snapshotId: string) => void;
+  recloneStudentVM: (batchId: string, vmId: string) => void;
+  recloneAllVMs: (batchId: string) => void;
+  snapshotStudentVM: (batchId: string, vmId: string, name: string) => void;
+  stopStudentVM: (batchId: string, vmId: string) => void;
+  startStudentVM: (batchId: string, vmId: string) => void;
+  restartStudentVM: (batchId: string, vmId: string) => void;
   // Legacy compat
   addLabConfig: (batchId: string, labConfig: any) => void;
   updateLabConfig: (batchId: string, labConfigId: string, updates: any) => void;
@@ -170,7 +175,6 @@ const determineStatus = (startDate: string, endDate: string): "upcoming" | "live
   const now = new Date();
   const start = new Date(startDate);
   const end = new Date(endDate);
-  
   if (now < start) return "upcoming";
   if (now > end) return "completed";
   return "live";
@@ -224,10 +228,17 @@ const initialBatches: Batch[] = [
       snapshots: [
         { id: "snap-1", name: "Initial Setup", description: "Base configuration with all tools installed", createdAt: "2024-01-14T12:00:00Z", size: "4.2 GB", status: "ready", isGolden: true },
         { id: "snap-2", name: "Post Lab 1", description: "After EC2 setup lab completion", createdAt: "2024-01-16T15:00:00Z", size: "5.1 GB", status: "ready", isGolden: false },
+        { id: "snap-3", name: "Post Lab 2", description: "After S3 bucket configuration lab", createdAt: "2024-01-18T10:00:00Z", size: "5.4 GB", status: "ready", isGolden: false },
       ],
       goldenSnapshotId: "snap-1",
-      studentVMs: [],
-      cloneStatus: "not_cloned",
+      studentVMs: [
+        { id: "svm-1", assignedTo: "Alice Johnson", assignedEmail: "alice@example.com", vmName: "EC2 Instance", status: "running", ipAddress: "10.0.1.1", startedAt: "2024-01-15T09:00:00Z", currentSnapshotId: "snap-2" },
+        { id: "svm-2", assignedTo: "Bob Williams", assignedEmail: "bob@example.com", vmName: "EC2 Instance", status: "running", ipAddress: "10.0.1.2", startedAt: "2024-01-15T09:00:00Z", currentSnapshotId: "snap-1" },
+        { id: "svm-3", assignedTo: "Carol Davis", assignedEmail: "carol@example.com", vmName: "EC2 Instance", status: "running", ipAddress: "10.0.1.3", startedAt: "2024-01-15T09:00:00Z", currentSnapshotId: "snap-2" },
+        { id: "svm-4", assignedTo: "David Brown", assignedEmail: "david@example.com", vmName: "EC2 Instance", status: "stopped", ipAddress: "10.0.1.4", startedAt: "2024-01-15T09:00:00Z", currentSnapshotId: "snap-1" },
+        { id: "svm-5", assignedTo: "Eva Martinez", assignedEmail: "eva@example.com", vmName: "EC2 Instance", status: "error", ipAddress: "10.0.1.5", startedAt: "2024-01-15T09:00:00Z" },
+      ],
+      cloneStatus: "cloned",
       pricing: { compute: 3125, storage: 312.5, network: 125, support: 60, total: 3622.5 },
       approval: { cloudAdda: "approved", companyAdmin: "approved", requested: true },
       createdAt: "Jan 10, 2024",
@@ -348,15 +359,9 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     const id = Date.now().toString();
     const status = determineStatus(batch.startDate, batch.endDate);
     const newBatch: Batch = {
-      ...batch,
-      id,
-      status,
+      ...batch, id, status,
       createdAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-      students: [],
-      assignedLabs: [],
-      announcements: [],
-      vmConfig,
-      labConfigs: [],
+      students: [], assignedLabs: [], announcements: [], vmConfig, labConfigs: [],
     };
     set((state) => ({ batches: [...state.batches, newBatch] }));
     return id;
@@ -365,9 +370,7 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
   getBatch: (id) => get().batches.find((b) => b.id === id),
 
   updateBatch: (id, updates) => {
-    set((state) => ({
-      batches: state.batches.map((b) => (b.id === id ? { ...b, ...updates } : b)),
-    }));
+    set((state) => ({ batches: state.batches.map((b) => (b.id === id ? { ...b, ...updates } : b)) }));
   },
 
   deleteBatch: (id) => {
@@ -376,116 +379,71 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
 
   addStudent: (batchId, student) => {
     const newStudent: Student = {
-      ...student,
-      id: `s-${Date.now()}`,
-      quizScore: null,
-      currentModule: "Not Started",
-      lastActive: "Never",
-      attendance: { present: 0, total: 0 },
-      vmStatus: "not_assigned",
+      ...student, id: `s-${Date.now()}`, quizScore: null, currentModule: "Not Started",
+      lastActive: "Never", attendance: { present: 0, total: 0 }, vmStatus: "not_assigned",
     };
     set((state) => ({
-      batches: state.batches.map((b) =>
-        b.id === batchId ? { ...b, students: [...b.students, newStudent] } : b
-      ),
+      batches: state.batches.map((b) => b.id === batchId ? { ...b, students: [...b.students, newStudent] } : b),
     }));
   },
 
   removeStudent: (batchId, studentId) => {
     set((state) => ({
-      batches: state.batches.map((b) =>
-        b.id === batchId ? { ...b, students: b.students.filter((s) => s.id !== studentId) } : b
-      ),
+      batches: state.batches.map((b) => b.id === batchId ? { ...b, students: b.students.filter((s) => s.id !== studentId) } : b),
     }));
   },
 
   assignLab: (batchId, lab) => {
-    const newAssignment: AssignedLab = {
-      ...lab,
-      id: `al-${Date.now()}`,
-      completions: 0,
-    };
+    const newAssignment: AssignedLab = { ...lab, id: `al-${Date.now()}`, completions: 0 };
     set((state) => ({
-      batches: state.batches.map((b) =>
-        b.id === batchId ? { ...b, assignedLabs: [...b.assignedLabs, newAssignment] } : b
-      ),
+      batches: state.batches.map((b) => b.id === batchId ? { ...b, assignedLabs: [...b.assignedLabs, newAssignment] } : b),
     }));
   },
 
   removeLab: (batchId, labAssignmentId) => {
     set((state) => ({
-      batches: state.batches.map((b) =>
-        b.id === batchId ? { ...b, assignedLabs: b.assignedLabs.filter((l) => l.id !== labAssignmentId) } : b
-      ),
+      batches: state.batches.map((b) => b.id === batchId ? { ...b, assignedLabs: b.assignedLabs.filter((l) => l.id !== labAssignmentId) } : b),
     }));
   },
 
   addAnnouncement: (batchId, announcement) => {
     const newAnnouncement: Announcement = {
-      ...announcement,
-      id: `ann-${Date.now()}`,
+      ...announcement, id: `ann-${Date.now()}`,
       date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
     };
     set((state) => ({
-      batches: state.batches.map((b) =>
-        b.id === batchId ? { ...b, announcements: [newAnnouncement, ...b.announcements] } : b
-      ),
+      batches: state.batches.map((b) => b.id === batchId ? { ...b, announcements: [newAnnouncement, ...b.announcements] } : b),
     }));
   },
 
   setCourse: (batchId, courseId, courseName) => {
-    set((state) => ({
-      batches: state.batches.map((b) =>
-        b.id === batchId ? { ...b, courseId, courseName } : b
-      ),
-    }));
+    set((state) => ({ batches: state.batches.map((b) => b.id === batchId ? { ...b, courseId, courseName } : b) }));
   },
 
   setVMConfig: (batchId, vmConfig) => {
-    set((state) => ({
-      batches: state.batches.map((b) =>
-        b.id === batchId ? { ...b, vmConfig } : b
-      ),
-    }));
+    set((state) => ({ batches: state.batches.map((b) => b.id === batchId ? { ...b, vmConfig } : b) }));
   },
 
   provisionTrainerVM: (batchId) => {
     set((state) => ({
       batches: state.batches.map((b) =>
         b.id === batchId && b.vmConfig
-          ? {
-              ...b,
-              vmConfig: {
-                ...b.vmConfig,
-                trainerVM: {
-                  ...b.vmConfig.trainerVM,
-                  status: "provisioning" as const,
-                },
-              },
-            }
+          ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "provisioning" as const } } }
           : b
       ),
     }));
-
-    // Simulate provisioning
     setTimeout(() => {
       set((state) => ({
         batches: state.batches.map((b) =>
           b.id === batchId && b.vmConfig
             ? {
-                ...b,
-                vmConfig: {
-                  ...b.vmConfig,
-                  trainerVM: {
+                ...b, vmConfig: {
+                  ...b.vmConfig, trainerVM: {
                     status: "running" as const,
                     ipAddress: `10.0.1.${100 + Math.floor(Math.random() * 50)}`,
                     provisionedAt: new Date().toISOString(),
                     consoleUrl: `https://console.cloudadda.io/vm/vm-adm-${batchId}`,
-                    credentials: {
-                      username: "root",
-                      password: `Tr@in${Math.random().toString(36).slice(2, 8)}!`,
-                      sshPort: 22,
-                    },
+                    credentials: { username: "root", password: `Tr@in${Math.random().toString(36).slice(2, 8)}!`, sshPort: 22 },
                   },
                 },
               }
@@ -499,16 +457,7 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     set((state) => ({
       batches: state.batches.map((b) =>
         b.id === batchId && b.vmConfig
-          ? {
-              ...b,
-              vmConfig: {
-                ...b.vmConfig,
-                trainerVM: {
-                  ...b.vmConfig.trainerVM,
-                  status: "configured" as const,
-                },
-              },
-            }
+          ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "configured" as const } } }
           : b
       ),
     }));
@@ -517,62 +466,36 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
   cloneTrainerVMForBatch: (batchId) => {
     const batch = get().batches.find((b) => b.id === batchId);
     if (!batch?.vmConfig) return;
-
     set((state) => ({
       batches: state.batches.map((b) =>
-        b.id === batchId && b.vmConfig
-          ? {
-              ...b,
-              vmConfig: {
-                ...b.vmConfig,
-                cloneStatus: "cloning" as const,
-              },
-            }
-          : b
+        b.id === batchId && b.vmConfig ? { ...b, vmConfig: { ...b.vmConfig, cloneStatus: "cloning" as const } } : b
       ),
     }));
-
-    // Simulate cloning
     setTimeout(() => {
       const currentBatch = get().batches.find((b) => b.id === batchId);
       if (!currentBatch?.vmConfig) return;
-
       const studentVMs: VMInstance[] = currentBatch.students.map((student, idx) => ({
         id: `vm-student-${Date.now()}-${idx}`,
-        assignedTo: student.name,
-        assignedEmail: student.email,
+        assignedTo: student.name, assignedEmail: student.email,
         vmName: currentBatch.vmConfig!.vmTemplates[0]?.instanceName || "Student VM",
         status: "running" as const,
         ipAddress: `10.0.${Math.floor((idx + 1) / 255)}.${((idx + 1) % 255) + 1}`,
         startedAt: new Date().toISOString(),
       }));
-
-      // Add VMs for unassigned seats too
       const remaining = currentBatch.seatCount - currentBatch.students.length;
       for (let i = 0; i < Math.min(remaining, 5); i++) {
         studentVMs.push({
           id: `vm-unassigned-${Date.now()}-${i}`,
-          assignedTo: `Seat ${currentBatch.students.length + i + 1}`,
-          assignedEmail: "unassigned",
+          assignedTo: `Seat ${currentBatch.students.length + i + 1}`, assignedEmail: "unassigned",
           vmName: currentBatch.vmConfig!.vmTemplates[0]?.instanceName || "Student VM",
           status: "running" as const,
           ipAddress: `10.0.${Math.floor((currentBatch.students.length + i + 1) / 255)}.${((currentBatch.students.length + i + 1) % 255) + 1}`,
           startedAt: new Date().toISOString(),
         });
       }
-
       set((state) => ({
         batches: state.batches.map((b) =>
-          b.id === batchId && b.vmConfig
-            ? {
-                ...b,
-                vmConfig: {
-                  ...b.vmConfig,
-                  cloneStatus: "cloned" as const,
-                  studentVMs,
-                },
-              }
-            : b
+          b.id === batchId && b.vmConfig ? { ...b, vmConfig: { ...b.vmConfig, cloneStatus: "cloned" as const, studentVMs } } : b
         ),
       }));
     }, 4000);
@@ -581,13 +504,8 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
   createSnapshot: (batchId, name, description) => {
     const snapshotId = `snap-${Date.now()}`;
     const newSnapshot: VMSnapshot = {
-      id: snapshotId,
-      name,
-      description,
-      createdAt: new Date().toISOString(),
-      size: "Creating...",
-      status: "creating",
-      isGolden: false,
+      id: snapshotId, name, description, createdAt: new Date().toISOString(),
+      size: "Creating...", status: "creating", isGolden: false,
     };
     set((state) => ({
       batches: state.batches.map((b) =>
@@ -596,17 +514,14 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
           : b
       ),
     }));
-    // Simulate snapshot creation
     setTimeout(() => {
       const sizeGB = (Math.random() * 6 + 2).toFixed(1);
       set((state) => ({
         batches: state.batches.map((b) =>
           b.id === batchId && b.vmConfig
             ? {
-                ...b,
-                vmConfig: {
-                  ...b.vmConfig,
-                  snapshots: b.vmConfig.snapshots.map((s) =>
+                ...b, vmConfig: {
+                  ...b.vmConfig, snapshots: b.vmConfig.snapshots.map((s) =>
                     s.id === snapshotId ? { ...s, status: "ready" as const, size: `${sizeGB} GB` } : s
                   ),
                 },
@@ -622,14 +537,9 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
       batches: state.batches.map((b) =>
         b.id === batchId && b.vmConfig
           ? {
-              ...b,
-              vmConfig: {
-                ...b.vmConfig,
-                goldenSnapshotId: snapshotId,
-                snapshots: b.vmConfig.snapshots.map((s) => ({
-                  ...s,
-                  isGolden: s.id === snapshotId,
-                })),
+              ...b, vmConfig: {
+                ...b.vmConfig, goldenSnapshotId: snapshotId,
+                snapshots: b.vmConfig.snapshots.map((s) => ({ ...s, isGolden: s.id === snapshotId })),
               },
             }
           : b
@@ -642,8 +552,7 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
       batches: state.batches.map((b) =>
         b.id === batchId && b.vmConfig
           ? {
-              ...b,
-              vmConfig: {
+              ...b, vmConfig: {
                 ...b.vmConfig,
                 snapshots: b.vmConfig.snapshots.filter((s) => s.id !== snapshotId),
                 goldenSnapshotId: b.vmConfig.goldenSnapshotId === snapshotId ? undefined : b.vmConfig.goldenSnapshotId,
@@ -659,10 +568,8 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
       batches: state.batches.map((b) =>
         b.id === batchId && b.vmConfig
           ? {
-              ...b,
-              vmConfig: {
-                ...b.vmConfig,
-                studentVMs: b.vmConfig.studentVMs.map((vm) =>
+              ...b, vmConfig: {
+                ...b.vmConfig, studentVMs: b.vmConfig.studentVMs.map((vm) =>
                   vm.id === vmId ? { ...vm, status: "provisioning" as const, currentSnapshotId: snapshotId } : vm
                 ),
               },
@@ -670,16 +577,13 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
           : b
       ),
     }));
-    // Simulate reset
     setTimeout(() => {
       set((state) => ({
         batches: state.batches.map((b) =>
           b.id === batchId && b.vmConfig
             ? {
-                ...b,
-                vmConfig: {
-                  ...b.vmConfig,
-                  studentVMs: b.vmConfig.studentVMs.map((vm) =>
+                ...b, vmConfig: {
+                  ...b.vmConfig, studentVMs: b.vmConfig.studentVMs.map((vm) =>
                     vm.id === vmId ? { ...vm, status: "running" as const } : vm
                   ),
                 },
@@ -695,13 +599,9 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
       batches: state.batches.map((b) =>
         b.id === batchId && b.vmConfig
           ? {
-              ...b,
-              vmConfig: {
-                ...b.vmConfig,
-                studentVMs: b.vmConfig.studentVMs.map((vm) => ({
-                  ...vm,
-                  status: "provisioning" as const,
-                  currentSnapshotId: snapshotId,
+              ...b, vmConfig: {
+                ...b.vmConfig, studentVMs: b.vmConfig.studentVMs.map((vm) => ({
+                  ...vm, status: "provisioning" as const, currentSnapshotId: snapshotId,
                 })),
               },
             }
@@ -713,19 +613,183 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
         batches: state.batches.map((b) =>
           b.id === batchId && b.vmConfig
             ? {
-                ...b,
-                vmConfig: {
-                  ...b.vmConfig,
-                  studentVMs: b.vmConfig.studentVMs.map((vm) => ({
-                    ...vm,
-                    status: "running" as const,
-                  })),
+                ...b, vmConfig: {
+                  ...b.vmConfig, studentVMs: b.vmConfig.studentVMs.map((vm) => ({ ...vm, status: "running" as const })),
                 },
               }
             : b
         ),
       }));
     }, 5000);
+  },
+
+  recloneStudentVM: (batchId, vmId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b, vmConfig: {
+                ...b.vmConfig, studentVMs: b.vmConfig.studentVMs.map((vm) =>
+                  vm.id === vmId ? { ...vm, status: "provisioning" as const, currentSnapshotId: b.vmConfig!.goldenSnapshotId } : vm
+                ),
+              },
+            }
+          : b
+      ),
+    }));
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? {
+                ...b, vmConfig: {
+                  ...b.vmConfig, studentVMs: b.vmConfig.studentVMs.map((vm) =>
+                    vm.id === vmId ? { ...vm, status: "running" as const } : vm
+                  ),
+                },
+              }
+            : b
+        ),
+      }));
+    }, 4000);
+  },
+
+  recloneAllVMs: (batchId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b, vmConfig: {
+                ...b.vmConfig, studentVMs: b.vmConfig.studentVMs.map((vm) => ({
+                  ...vm, status: "provisioning" as const, currentSnapshotId: b.vmConfig!.goldenSnapshotId,
+                })),
+              },
+            }
+          : b
+      ),
+    }));
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? {
+                ...b, vmConfig: {
+                  ...b.vmConfig, studentVMs: b.vmConfig.studentVMs.map((vm) => ({ ...vm, status: "running" as const })),
+                },
+              }
+            : b
+        ),
+      }));
+    }, 6000);
+  },
+
+  snapshotStudentVM: (batchId, vmId, name) => {
+    const snapshotId = `snap-s-${Date.now()}`;
+    const newSnapshot: VMSnapshot = {
+      id: snapshotId, name, description: `Snapshot of student VM ${vmId}`,
+      createdAt: new Date().toISOString(), size: "Creating...", status: "creating", isGolden: false,
+    };
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? { ...b, vmConfig: { ...b.vmConfig, snapshots: [...b.vmConfig.snapshots, newSnapshot] } }
+          : b
+      ),
+    }));
+    setTimeout(() => {
+      const sizeGB = (Math.random() * 4 + 1).toFixed(1);
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? {
+                ...b, vmConfig: {
+                  ...b.vmConfig, snapshots: b.vmConfig.snapshots.map((s) =>
+                    s.id === snapshotId ? { ...s, status: "ready" as const, size: `${sizeGB} GB` } : s
+                  ),
+                },
+              }
+            : b
+        ),
+      }));
+    }, 2000);
+  },
+
+  stopStudentVM: (batchId, vmId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b, vmConfig: {
+                ...b.vmConfig, studentVMs: b.vmConfig.studentVMs.map((vm) =>
+                  vm.id === vmId ? { ...vm, status: "stopped" as const } : vm
+                ),
+              },
+            }
+          : b
+      ),
+    }));
+  },
+
+  startStudentVM: (batchId, vmId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b, vmConfig: {
+                ...b.vmConfig, studentVMs: b.vmConfig.studentVMs.map((vm) =>
+                  vm.id === vmId ? { ...vm, status: "provisioning" as const } : vm
+                ),
+              },
+            }
+          : b
+      ),
+    }));
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? {
+                ...b, vmConfig: {
+                  ...b.vmConfig, studentVMs: b.vmConfig.studentVMs.map((vm) =>
+                    vm.id === vmId ? { ...vm, status: "running" as const } : vm
+                  ),
+                },
+              }
+            : b
+        ),
+      }));
+    }, 2000);
+  },
+
+  restartStudentVM: (batchId, vmId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b, vmConfig: {
+                ...b.vmConfig, studentVMs: b.vmConfig.studentVMs.map((vm) =>
+                  vm.id === vmId ? { ...vm, status: "provisioning" as const } : vm
+                ),
+              },
+            }
+          : b
+      ),
+    }));
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? {
+                ...b, vmConfig: {
+                  ...b.vmConfig, studentVMs: b.vmConfig.studentVMs.map((vm) =>
+                    vm.id === vmId ? { ...vm, status: "running" as const } : vm
+                  ),
+                },
+              }
+            : b
+        ),
+      }));
+    }, 2000);
   },
 
   // Legacy compatibility stubs

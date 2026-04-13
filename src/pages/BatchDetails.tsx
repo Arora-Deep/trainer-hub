@@ -9,6 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -16,10 +19,18 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+} from "@/components/ui/sheet";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub,
+  DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Users, Calendar, Play, RefreshCw, Clock, BookOpen, Megaphone, Plus, Server,
   Monitor, Loader2, ExternalLink, Copy, CheckCircle2, Terminal, Mail,
   ClipboardList, Settings, GraduationCap, TrendingUp, Zap, BarChart3,
-  AlertCircle, Globe, Building2,
+  AlertCircle, Globe, Building2, MoreVertical, RotateCcw, Power, PowerOff,
+  Camera, Trash2, Star, Eye, EyeOff, Clipboard,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBatchStore } from "@/stores/batchStore";
@@ -45,10 +56,24 @@ const mediumConfig: Record<string, { icon: React.ElementType; label: string }> =
   hybrid: { icon: Zap, label: "Hybrid" },
 };
 
+const terminalLines = [
+  "root@trainer-vm:~# kubectl get pods -n production",
+  "NAME                          READY   STATUS    RESTARTS   AGE",
+  "nginx-dep-7f44fc4d4-2k8x9    1/1     Running   0          2h",
+  "nginx-dep-7f44fc4d4-9j3bc    1/1     Running   0          2h",
+  "redis-master-0                1/1     Running   0          5h",
+  "root@trainer-vm:~# _",
+];
+
 export default function BatchDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getBatch, addAnnouncement, setCourse, provisionTrainerVM, markTrainerVMConfigured, cloneTrainerVMForBatch } = useBatchStore();
+  const {
+    getBatch, addAnnouncement, setCourse, provisionTrainerVM, markTrainerVMConfigured,
+    cloneTrainerVMForBatch, createSnapshot, setGoldenSnapshot, deleteSnapshot,
+    resetStudentVM, recloneStudentVM, restartStudentVM, stopStudentVM, startStudentVM,
+    resetAllVMs, recloneAllVMs,
+  } = useBatchStore();
   const { courses } = useCourseStore();
   const { templates } = useLabStore();
 
@@ -59,6 +84,12 @@ export default function BatchDetails() {
   const [announcementContent, setAnnouncementContent] = useState("");
   const [assignCourseOpen, setAssignCourseOpen] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [createSnapshotOpen, setCreateSnapshotOpen] = useState(false);
+  const [snapName, setSnapName] = useState("");
+  const [snapDesc, setSnapDesc] = useState("");
+  const [selectedVMIds, setSelectedVMIds] = useState<string[]>([]);
+  const [consoleSheetVM, setConsoleSheetVM] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   if (!batch) {
     return (
@@ -97,6 +128,13 @@ export default function BatchDetails() {
     setSelectedCourseId(""); setAssignCourseOpen(false);
   };
 
+  const handleCreateSnapshot = () => {
+    if (!snapName.trim()) return;
+    createSnapshot(batch.id, snapName.trim(), snapDesc.trim());
+    toast({ title: "Snapshot Creating", description: `"${snapName}" is being created...` });
+    setSnapName(""); setSnapDesc(""); setCreateSnapshotOpen(false);
+  };
+
   const daysRemaining = () => {
     try {
       const end = new Date(batch.endDate);
@@ -108,6 +146,22 @@ export default function BatchDetails() {
   const vm = batch.vmConfig;
   const trainerStatus = vm?.trainerVM.status || "not_provisioned";
   const MediumIcon = mediumConfig[batch.medium]?.icon || Globe;
+  const snapshots = vm?.snapshots || [];
+  const goldenSnapshot = snapshots.find(s => s.isGolden);
+
+  const toggleVMSelection = (vmId: string) => {
+    setSelectedVMIds(prev => prev.includes(vmId) ? prev.filter(id => id !== vmId) : [...prev, vmId]);
+  };
+  const selectAllVMs = () => {
+    if (!vm) return;
+    if (selectedVMIds.length === vm.studentVMs.length) {
+      setSelectedVMIds([]);
+    } else {
+      setSelectedVMIds(vm.studentVMs.map(v => v.id));
+    }
+  };
+
+  const consoleVM = vm?.studentVMs.find(v => v.id === consoleSheetVM);
 
   return (
     <div className="space-y-6">
@@ -126,7 +180,7 @@ export default function BatchDetails() {
           />
           <Button variant="outline" size="sm"><RefreshCw className="mr-1.5 h-3.5 w-3.5" />Refresh</Button>
           {batch.status === "live" && (
-            <Button size="sm"><Play className="mr-1.5 h-3.5 w-3.5" />Start Session</Button>
+            <Button size="sm" onClick={() => navigate("/live-training")}><Play className="mr-1.5 h-3.5 w-3.5" />Start Session</Button>
           )}
         </div>
       </div>
@@ -136,9 +190,9 @@ export default function BatchDetails() {
         {[
           { label: "Students", value: `${batch.students.length}/${batch.seatCount}`, icon: Users, desc: "enrolled" },
           { label: "Days Left", value: daysRemaining(), icon: Calendar, desc: `ends ${formatDate(batch.endDate)}` },
-          { label: "VMs Active", value: vm ? (vm.studentVMs.filter(v => v.status === "running").length || (vm.trainerVM.status !== "not_provisioned" ? 1 : 0)) : 0, icon: Monitor, desc: "running" },
+          { label: "VMs Active", value: vm ? vm.studentVMs.filter(v => v.status === "running").length : 0, icon: Monitor, desc: "running" },
           { label: "Medium", value: mediumConfig[batch.medium]?.label || batch.medium, icon: MediumIcon, desc: "delivery" },
-          { label: "Announcements", value: batch.announcements.length, icon: Megaphone, desc: "posted" },
+          { label: "Snapshots", value: snapshots.length, icon: Camera, desc: goldenSnapshot ? `golden: ${goldenSnapshot.name}` : "none set" },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -190,7 +244,6 @@ export default function BatchDetails() {
         {/* Overview Tab */}
         <TabsContent value="overview">
           <div className="grid gap-6 lg:grid-cols-3">
-            {/* Main Info */}
             <div className="lg:col-span-2 space-y-6">
               <Card>
                 <CardHeader>
@@ -217,8 +270,6 @@ export default function BatchDetails() {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Settings Quick View */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
@@ -242,7 +293,6 @@ export default function BatchDetails() {
               </Card>
             </div>
 
-            {/* Sidebar */}
             <div className="space-y-6">
               <Card>
                 <CardHeader>
@@ -265,8 +315,6 @@ export default function BatchDetails() {
                   )}
                 </CardContent>
               </Card>
-
-              {/* VM Status Quick Card */}
               {vm && (
                 <Card>
                   <CardHeader>
@@ -450,55 +498,271 @@ export default function BatchDetails() {
                   </CardContent>
                 </Card>
 
-                {/* Student VMs Table */}
-                {vm.cloneStatus === "cloned" && vm.studentVMs.length > 0 && (
-                  <Card>
-                    <CardHeader>
+                {/* Snapshot Management Panel */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
                       <CardTitle className="text-base flex items-center gap-2">
-                        <Monitor className="h-4 w-4 text-primary" />
-                        Student VMs ({vm.studentVMs.length})
+                        <Camera className="h-4 w-4 text-primary" />
+                        Snapshot Management
                       </CardTitle>
+                      <CardDescription>Create and manage VM snapshots for this batch</CardDescription>
+                    </div>
+                    <Dialog open={createSnapshotOpen} onOpenChange={setCreateSnapshotOpen}>
+                      <DialogTrigger asChild>
+                        <Button size="sm"><Plus className="mr-1.5 h-3.5 w-3.5" />Create Snapshot</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Create Snapshot</DialogTitle>
+                          <DialogDescription>Take a snapshot of the current trainer VM state</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div className="space-y-2">
+                            <Label>Name</Label>
+                            <Input placeholder="e.g., Post Lab 3" value={snapName} onChange={e => setSnapName(e.target.value)} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Description</Label>
+                            <Textarea placeholder="What state does this snapshot capture?" value={snapDesc} onChange={e => setSnapDesc(e.target.value)} className="min-h-[80px]" />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setCreateSnapshotOpen(false)}>Cancel</Button>
+                          <Button onClick={handleCreateSnapshot} disabled={!snapName.trim()}>Create</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </CardHeader>
+                  <CardContent>
+                    {snapshots.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-6">No snapshots yet. Create one to save the current VM state.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {snapshots.map(snap => (
+                          <div key={snap.id} className={cn(
+                            "flex items-center justify-between p-3 rounded-xl border transition-colors",
+                            snap.isGolden ? "border-primary/30 bg-primary/5" : "border-border/50"
+                          )}>
+                            <div className="flex items-center gap-3">
+                              <div className={cn(
+                                "h-8 w-8 rounded-lg flex items-center justify-center",
+                                snap.isGolden ? "bg-primary/10" : "bg-muted/50"
+                              )}>
+                                {snap.isGolden ? <Star className="h-4 w-4 text-primary" /> : <Camera className="h-4 w-4 text-muted-foreground" />}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-semibold text-sm">{snap.name}</p>
+                                  {snap.isGolden && <Badge className="text-[9px] h-4 px-1.5">Golden</Badge>}
+                                  {snap.status === "creating" && <Badge variant="secondary" className="text-[9px] h-4 px-1.5"><Loader2 className="h-2.5 w-2.5 animate-spin mr-1" />Creating</Badge>}
+                                </div>
+                                <p className="text-xs text-muted-foreground">{snap.description}</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">{snap.size} • {formatDate(snap.createdAt)}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              {!snap.isGolden && snap.status === "ready" && (
+                                <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { setGoldenSnapshot(batch.id, snap.id); toast({ title: "Golden Snapshot Set", description: `"${snap.name}" is now the golden snapshot` }); }}>
+                                  <Star className="mr-1 h-3 w-3" />Set Golden
+                                </Button>
+                              )}
+                              {snap.status === "ready" && (
+                                <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { resetAllVMs(batch.id, snap.id); toast({ title: "Resetting All VMs", description: `Resetting to "${snap.name}"...` }); }}>
+                                  <RotateCcw className="mr-1 h-3 w-3" />Reset All
+                                </Button>
+                              )}
+                              {!snap.isGolden && (
+                                <Button size="sm" variant="ghost" className="text-xs h-7 text-destructive" onClick={() => { deleteSnapshot(batch.id, snap.id); toast({ title: "Snapshot Deleted" }); }}>
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Student VMs Table with Rich Actions */}
+                {vm.studentVMs.length > 0 && (
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <div>
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Monitor className="h-4 w-4 text-primary" />
+                          Student VMs ({vm.studentVMs.length})
+                        </CardTitle>
+                        <CardDescription>
+                          {vm.studentVMs.filter(v => v.status === "running").length} running,{" "}
+                          {vm.studentVMs.filter(v => v.status === "stopped").length} stopped,{" "}
+                          {vm.studentVMs.filter(v => v.status === "error").length} errors
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline" onClick={() => { recloneAllVMs(batch.id); toast({ title: "Recloning All VMs", description: "All student VMs are being recloned from golden snapshot..." }); }}>
+                          <Copy className="mr-1.5 h-3.5 w-3.5" />Reclone All
+                        </Button>
+                      </div>
                     </CardHeader>
                     <CardContent className="p-0">
+                      {/* Bulk Actions Bar */}
+                      {selectedVMIds.length > 0 && (
+                        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2.5 bg-primary/5 border-b border-primary/20">
+                          <span className="text-sm font-medium">{selectedVMIds.length} VM{selectedVMIds.length > 1 ? "s" : ""} selected</span>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => {
+                              selectedVMIds.forEach(vmId => restartStudentVM(batch.id, vmId));
+                              toast({ title: "Restarting Selected VMs" });
+                              setSelectedVMIds([]);
+                            }}>
+                              <RotateCcw className="mr-1 h-3 w-3" />Restart
+                            </Button>
+                            {goldenSnapshot && (
+                              <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => {
+                                selectedVMIds.forEach(vmId => resetStudentVM(batch.id, vmId, goldenSnapshot.id));
+                                toast({ title: "Resetting Selected VMs" });
+                                setSelectedVMIds([]);
+                              }}>
+                                <RefreshCw className="mr-1 h-3 w-3" />Reset to Golden
+                              </Button>
+                            )}
+                            <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => {
+                              selectedVMIds.forEach(vmId => recloneStudentVM(batch.id, vmId));
+                              toast({ title: "Recloning Selected VMs" });
+                              setSelectedVMIds([]);
+                            }}>
+                              <Copy className="mr-1 h-3 w-3" />Reclone
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => setSelectedVMIds([])}>Clear</Button>
+                          </div>
+                        </div>
+                      )}
                       <Table>
                         <TableHeader>
                           <TableRow className="bg-muted/30 hover:bg-muted/30">
+                            <TableHead className="w-10">
+                              <Checkbox
+                                checked={selectedVMIds.length === vm.studentVMs.length && vm.studentVMs.length > 0}
+                                onCheckedChange={selectAllVMs}
+                              />
+                            </TableHead>
                             <TableHead className="font-medium">Assigned To</TableHead>
                             <TableHead className="font-medium">VM Name</TableHead>
                             <TableHead className="font-medium">IP Address</TableHead>
                             <TableHead className="font-medium">Status</TableHead>
-                            <TableHead className="w-24"></TableHead>
+                            <TableHead className="font-medium">CPU / RAM</TableHead>
+                            <TableHead className="font-medium">Snapshot</TableHead>
+                            <TableHead className="w-12"></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {vm.studentVMs.map((svm) => (
-                            <TableRow key={svm.id} className="group">
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="h-7 w-7">
-                                    <AvatarFallback className="bg-primary/10 text-primary text-xs">{svm.assignedTo.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                    <p className="font-medium text-sm">{svm.assignedTo}</p>
-                                    {svm.assignedEmail !== "unassigned" && <p className="text-xs text-muted-foreground">{svm.assignedEmail}</p>}
+                          {vm.studentVMs.map((svm) => {
+                            const mockCpu = Math.floor(20 + Math.random() * 60);
+                            const mockRam = Math.floor(30 + Math.random() * 50);
+                            const currentSnap = snapshots.find(s => s.id === svm.currentSnapshotId);
+                            return (
+                              <TableRow key={svm.id} className="group">
+                                <TableCell>
+                                  <Checkbox
+                                    checked={selectedVMIds.includes(svm.id)}
+                                    onCheckedChange={() => toggleVMSelection(svm.id)}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <Avatar className="h-7 w-7">
+                                      <AvatarFallback className="bg-primary/10 text-primary text-xs">{svm.assignedTo.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <p className="font-medium text-sm">{svm.assignedTo}</p>
+                                      {svm.assignedEmail !== "unassigned" && <p className="text-xs text-muted-foreground">{svm.assignedEmail}</p>}
+                                    </div>
                                   </div>
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-sm">{svm.vmName}</TableCell>
-                              <TableCell><code className="text-xs font-mono px-2 py-0.5 rounded bg-muted">{svm.ipAddress}</code></TableCell>
-                              <TableCell>
-                                <StatusBadge
-                                  status={svm.status === "running" ? "success" : svm.status === "error" ? "error" : "warning"}
-                                  label={svm.status === "running" ? "Running" : svm.status === "error" ? "Error" : "Starting"}
-                                />
-                              </TableCell>
-                              <TableCell>
-                                <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => { toast({ title: "Console", description: `Opening console for ${svm.assignedTo}...` }); }}>
-                                  <ExternalLink className="h-3.5 w-3.5" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                                </TableCell>
+                                <TableCell className="text-sm">{svm.vmName}</TableCell>
+                                <TableCell><code className="text-xs font-mono px-2 py-0.5 rounded bg-muted">{svm.ipAddress}</code></TableCell>
+                                <TableCell>
+                                  <StatusBadge
+                                    status={svm.status === "running" ? "success" : svm.status === "error" ? "error" : svm.status === "provisioning" ? "warning" : "default"}
+                                    label={svm.status === "running" ? "Running" : svm.status === "error" ? "Error" : svm.status === "provisioning" ? "Resetting..." : "Stopped"}
+                                    pulse={svm.status === "provisioning"}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  {svm.status === "running" ? (
+                                    <div className="space-y-1 w-24">
+                                      <div className="flex items-center justify-between text-[10px]">
+                                        <span className="text-muted-foreground">CPU</span>
+                                        <span className="font-mono">{mockCpu}%</span>
+                                      </div>
+                                      <Progress value={mockCpu} className="h-1" />
+                                      <div className="flex items-center justify-between text-[10px]">
+                                        <span className="text-muted-foreground">RAM</span>
+                                        <span className="font-mono">{mockRam}%</span>
+                                      </div>
+                                      <Progress value={mockRam} className="h-1" />
+                                    </div>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">—</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <span className="text-xs text-muted-foreground">{currentSnap?.name || "—"}</span>
+                                </TableCell>
+                                <TableCell>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <MoreVertical className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-52">
+                                      <DropdownMenuItem onClick={() => setConsoleSheetVM(svm.id)}>
+                                        <ExternalLink className="mr-2 h-3.5 w-3.5" />Open Console
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(`ssh root@${svm.ipAddress}`); toast({ title: "SSH Command Copied" }); }}>
+                                        <Clipboard className="mr-2 h-3.5 w-3.5" />Copy SSH Command
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem onClick={() => { restartStudentVM(batch.id, svm.id); toast({ title: `Restarting ${svm.assignedTo}'s VM` }); }}>
+                                        <RotateCcw className="mr-2 h-3.5 w-3.5" />Restart VM
+                                      </DropdownMenuItem>
+                                      {svm.status === "running" ? (
+                                        <DropdownMenuItem onClick={() => { stopStudentVM(batch.id, svm.id); toast({ title: `Stopped ${svm.assignedTo}'s VM` }); }}>
+                                          <PowerOff className="mr-2 h-3.5 w-3.5" />Stop VM
+                                        </DropdownMenuItem>
+                                      ) : svm.status === "stopped" ? (
+                                        <DropdownMenuItem onClick={() => { startStudentVM(batch.id, svm.id); toast({ title: `Starting ${svm.assignedTo}'s VM` }); }}>
+                                          <Power className="mr-2 h-3.5 w-3.5" />Start VM
+                                        </DropdownMenuItem>
+                                      ) : null}
+                                      <DropdownMenuSeparator />
+                                      {snapshots.filter(s => s.status === "ready").length > 0 && (
+                                        <DropdownMenuSub>
+                                          <DropdownMenuSubTrigger>
+                                            <RefreshCw className="mr-2 h-3.5 w-3.5" />Reset to Snapshot
+                                          </DropdownMenuSubTrigger>
+                                          <DropdownMenuSubContent>
+                                            {snapshots.filter(s => s.status === "ready").map(snap => (
+                                              <DropdownMenuItem key={snap.id} onClick={() => { resetStudentVM(batch.id, svm.id, snap.id); toast({ title: `Resetting to "${snap.name}"` }); }}>
+                                                {snap.isGolden && <Star className="mr-1.5 h-3 w-3 text-primary" />}
+                                                {snap.name}
+                                              </DropdownMenuItem>
+                                            ))}
+                                          </DropdownMenuSubContent>
+                                        </DropdownMenuSub>
+                                      )}
+                                      <DropdownMenuItem onClick={() => { recloneStudentVM(batch.id, svm.id); toast({ title: `Recloning ${svm.assignedTo}'s VM from golden snapshot` }); }}>
+                                        <Copy className="mr-2 h-3.5 w-3.5" />Reclone from Golden
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
                         </TableBody>
                       </Table>
                     </CardContent>
@@ -685,6 +949,92 @@ export default function BatchDetails() {
           <BatchSettingsTab batch={batch} />
         </TabsContent>
       </Tabs>
+
+      {/* Console Sheet for Student VM */}
+      <Sheet open={!!consoleSheetVM} onOpenChange={() => setConsoleSheetVM(null)}>
+        <SheetContent className="w-[520px] sm:max-w-[520px]">
+          {consoleVM && (
+            <>
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <Terminal className="h-5 w-5 text-primary" />
+                  Console — {consoleVM.assignedTo}
+                </SheetTitle>
+                <SheetDescription>{consoleVM.vmName} • {consoleVM.ipAddress}</SheetDescription>
+              </SheetHeader>
+              <div className="mt-6 space-y-4">
+                {/* Terminal Preview */}
+                <div className="rounded-lg bg-[hsl(var(--foreground))] p-4 font-mono text-xs leading-relaxed text-[hsl(var(--background))] min-h-[200px]">
+                  {terminalLines.map((line, i) => (
+                    <div key={i} className="opacity-80">{line}</div>
+                  ))}
+                </div>
+
+                {/* Connection Details */}
+                <div className="rounded-xl border border-border p-4 space-y-3">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Connection Details</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">IP Address</span>
+                      <div className="flex items-center gap-1.5">
+                        <code className="font-mono">{consoleVM.ipAddress}</code>
+                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => { navigator.clipboard.writeText(consoleVM.ipAddress); toast({ title: "Copied" }); }}>
+                          <Copy className="h-2.5 w-2.5" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">SSH Command</span>
+                      <div className="flex items-center gap-1.5">
+                        <code className="font-mono text-xs">ssh root@{consoleVM.ipAddress}</code>
+                        <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => { navigator.clipboard.writeText(`ssh root@${consoleVM.ipAddress}`); toast({ title: "SSH Copied" }); }}>
+                          <Copy className="h-2.5 w-2.5" />
+                        </Button>
+                      </div>
+                    </div>
+                    {vm?.trainerVM.credentials && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Password</span>
+                        <div className="flex items-center gap-1.5">
+                          <code className="font-mono text-xs">{showPassword ? vm.trainerVM.credentials.password : "••••••••"}</code>
+                          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => setShowPassword(!showPassword)}>
+                            {showPassword ? <EyeOff className="h-2.5 w-2.5" /> : <Eye className="h-2.5 w-2.5" />}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* VM Actions */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button size="sm" variant="outline" className="text-xs" onClick={() => { restartStudentVM(batch.id, consoleVM.id); toast({ title: "Restarting VM" }); }}>
+                      <RotateCcw className="mr-1.5 h-3 w-3" />Restart
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-xs" onClick={() => { recloneStudentVM(batch.id, consoleVM.id); toast({ title: "Recloning from Golden" }); setConsoleSheetVM(null); }}>
+                      <Copy className="mr-1.5 h-3 w-3" />Reclone
+                    </Button>
+                    {consoleVM.status === "running" ? (
+                      <Button size="sm" variant="outline" className="text-xs" onClick={() => { stopStudentVM(batch.id, consoleVM.id); toast({ title: "VM Stopped" }); }}>
+                        <PowerOff className="mr-1.5 h-3 w-3" />Stop
+                      </Button>
+                    ) : (
+                      <Button size="sm" variant="outline" className="text-xs" onClick={() => { startStudentVM(batch.id, consoleVM.id); toast({ title: "VM Starting" }); }}>
+                        <Power className="mr-1.5 h-3 w-3" />Start
+                      </Button>
+                    )}
+                    <Button size="sm" variant="outline" className="text-xs" onClick={() => { window.open(`https://console.cloudadda.io/vm/${consoleVM.id}`, "_blank"); }}>
+                      <ExternalLink className="mr-1.5 h-3 w-3" />External
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

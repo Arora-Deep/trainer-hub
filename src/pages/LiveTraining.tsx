@@ -3,7 +3,6 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -24,12 +23,16 @@ import {
   Tooltip, TooltipContent, TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+  Collapsible, CollapsibleContent, CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   Monitor, Terminal, Play, Pause, RotateCcw, ExternalLink, Copy, Wifi, WifiOff,
   Users, Eye, EyeOff, Megaphone, Send, Camera, Power, PowerOff, Shield,
   Cpu, HardDrive, Clock, CheckCircle2, AlertCircle, XCircle, RefreshCw,
   MessageSquare, Hand, Zap, Settings, Volume2, VolumeX, Share2, Download,
   ChevronRight, Search, MoreVertical, Radio, Loader2, Lock, Unlock,
   ScreenShare, ScreenShareOff, Clipboard, Server, Activity, ArrowUpDown,
+  Star, ChevronDown, FileText,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -38,9 +41,8 @@ import { useBatchStore, type Student, type VMInstance } from "@/stores/batchStor
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { LineChart, Line, ResponsiveContainer, AreaChart, Area } from "recharts";
+import { AreaChart, Area, ResponsiveContainer } from "recharts";
 
-// Mock real-time data
 const cpuData = Array.from({ length: 20 }, (_, i) => ({ t: i, v: 30 + Math.random() * 40 }));
 const ramData = Array.from({ length: 20 }, (_, i) => ({ t: i, v: 40 + Math.random() * 30 }));
 
@@ -61,13 +63,24 @@ const terminalLines = [
   "root@trainer-vm:~# _",
 ];
 
+const vmLogLines = [
+  "[2024-01-17 14:32:01] INFO  VM started successfully",
+  "[2024-01-17 14:32:03] INFO  Network interface eth0 configured: 10.0.1.x",
+  "[2024-01-17 14:32:05] INFO  SSH daemon started on port 22",
+  "[2024-01-17 14:33:12] INFO  User login: root from 10.0.0.1",
+  "[2024-01-17 14:35:45] WARN  High CPU usage detected: 87%",
+  "[2024-01-17 14:36:01] INFO  Snapshot checkpoint created",
+  "[2024-01-17 14:40:22] INFO  Package update: kubectl v1.28.4 installed",
+  "[2024-01-17 14:42:10] INFO  Lab environment validation passed",
+];
+
 export default function LiveTraining() {
-  const { batches } = useBatchStore();
+  const { batches, recloneStudentVM, recloneAllVMs, resetStudentVM, resetAllVMs,
+    restartStudentVM, stopStudentVM, startStudentVM, snapshotStudentVM } = useBatchStore();
   const liveBatches = batches.filter(b => b.status === "live" || b.status === "upcoming");
   const [selectedBatchId, setSelectedBatchId] = useState(liveBatches[0]?.id || "");
   const batch = batches.find(b => b.id === selectedBatchId);
 
-  // Session state
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionTimer, setSessionTimer] = useState(0);
   const [screenSharing, setScreenSharing] = useState(false);
@@ -82,8 +95,13 @@ export default function LiveTraining() {
   const [lockAllVMs, setLockAllVMs] = useState(false);
   const [quickPollOpen, setQuickPollOpen] = useState(false);
   const [pollQuestion, setPollQuestion] = useState("");
+  const [trainerConsoleOpen, setTrainerConsoleOpen] = useState(false);
+  const [showTrainerPassword, setShowTrainerPassword] = useState(false);
+  const [resetSnapshotId, setResetSnapshotId] = useState("");
+  const [recloneConfirmVM, setRecloneConfirmVM] = useState<string | null>(null);
+  const [showStudentLogs, setShowStudentLogs] = useState(false);
+  const [snapshotPanelOpen, setSnapshotPanelOpen] = useState(true);
 
-  // Live timer
   useEffect(() => {
     if (!sessionActive) return;
     const iv = setInterval(() => setSessionTimer(t => t + 1), 1000);
@@ -100,8 +118,8 @@ export default function LiveTraining() {
   const vm = batch?.vmConfig;
   const students = batch?.students || [];
   const studentVMs = vm?.studentVMs || [];
+  const snapshots = vm?.snapshots || [];
 
-  // Merge students with their VMs
   const studentGrid = students.map(s => {
     const svm = studentVMs.find(v => v.assignedTo === s.name);
     return { ...s, vm: svm };
@@ -113,17 +131,14 @@ export default function LiveTraining() {
   );
 
   const onlineCount = students.filter(s => s.vmStatus === "running").length;
-  const handsRaised = 2; // mock
+  const handsRaised = 2;
   const questionsCount = chatMessages.filter(m => m.type === "question").length;
 
   const sendChat = () => {
     if (!chatInput.trim()) return;
     setChatMessages(prev => [...prev, {
-      id: Date.now().toString(),
-      name: "You (Trainer)",
-      msg: chatInput.trim(),
-      time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
-      type: "message",
+      id: Date.now().toString(), name: "You (Trainer)", msg: chatInput.trim(),
+      time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }), type: "message",
     }]);
     setChatInput("");
   };
@@ -153,14 +168,10 @@ export default function LiveTraining() {
 
   return (
     <div className="space-y-4">
-      {/* Top Bar: Session Controls */}
+      {/* Top Bar */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <PageHeader
-            title="Live Training"
-            description="Real-time session command center"
-            breadcrumbs={[{ label: "Live Training" }]}
-          />
+          <PageHeader title="Live Training" description="Real-time session command center" breadcrumbs={[{ label: "Live Training" }]} />
           <div className="flex items-center gap-2">
             <Select value={selectedBatchId} onValueChange={setSelectedBatchId}>
               <SelectTrigger className="w-[260px]">
@@ -186,9 +197,7 @@ export default function LiveTraining() {
           animate={{ opacity: 1, y: 0 }}
           className={cn(
             "rounded-xl border p-3 flex items-center justify-between gap-4",
-            sessionActive
-              ? "border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/5"
-              : "border-border bg-card"
+            sessionActive ? "border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/5" : "border-border bg-card"
           )}
           style={{ boxShadow: "var(--shadow-card)" }}
         >
@@ -214,65 +223,49 @@ export default function LiveTraining() {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant={screenSharing ? "default" : "outline"} size="icon" className="h-8 w-8" onClick={() => { setScreenSharing(!screenSharing); toast({ title: screenSharing ? "Screen Share Stopped" : "Screen Sharing" }); }}>
-                  {screenSharing ? <ScreenShare className="h-3.5 w-3.5" /> : <ScreenShareOff className="h-3.5 w-3.5" />}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Screen Share</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant={labSync ? "default" : "outline"} size="icon" className="h-8 w-8" onClick={() => { setLabSync(!labSync); toast({ title: labSync ? "Lab Sync Off" : "Lab Sync On — Students see your terminal" }); }}>
-                  <Terminal className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Sync Terminal to Students</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant={recordingOn ? "default" : "outline"} size="icon" className="h-8 w-8" onClick={() => { setRecordingOn(!recordingOn); toast({ title: recordingOn ? "Recording Stopped" : "Recording Started" }); }}>
-                  <Camera className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Record Session</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => { setAudioOn(!audioOn); }}>
-                  {audioOn ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{audioOn ? "Mute" : "Unmute"}</TooltipContent>
-            </Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant={screenSharing ? "default" : "outline"} size="icon" className="h-8 w-8" onClick={() => { setScreenSharing(!screenSharing); toast({ title: screenSharing ? "Screen Share Stopped" : "Screen Sharing" }); }}>
+                {screenSharing ? <ScreenShare className="h-3.5 w-3.5" /> : <ScreenShareOff className="h-3.5 w-3.5" />}
+              </Button>
+            </TooltipTrigger><TooltipContent>Screen Share</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant={labSync ? "default" : "outline"} size="icon" className="h-8 w-8" onClick={() => { setLabSync(!labSync); toast({ title: labSync ? "Lab Sync Off" : "Lab Sync On — Students see your terminal" }); }}>
+                <Terminal className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger><TooltipContent>Sync Terminal to Students</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant={recordingOn ? "default" : "outline"} size="icon" className="h-8 w-8" onClick={() => { setRecordingOn(!recordingOn); toast({ title: recordingOn ? "Recording Stopped" : "Recording Started" }); }}>
+                <Camera className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger><TooltipContent>Record Session</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setAudioOn(!audioOn)}>
+                {audioOn ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+              </Button>
+            </TooltipTrigger><TooltipContent>{audioOn ? "Mute" : "Unmute"}</TooltipContent></Tooltip>
 
             <Separator orientation="vertical" className="h-6 mx-1" />
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant={lockAllVMs ? "destructive" : "outline"} size="icon" className="h-8 w-8" onClick={() => { setLockAllVMs(!lockAllVMs); toast({ title: lockAllVMs ? "VMs Unlocked" : "All Student VMs Locked", description: lockAllVMs ? "Students can use their VMs" : "Students cannot interact with VMs" }); }}>
-                  {lockAllVMs ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{lockAllVMs ? "Unlock All VMs" : "Lock All VMs"}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => toast({ title: "Snapshot Created", description: "All student VMs snapshotted" })}>
-                  <Camera className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Snapshot All VMs</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => toast({ title: "VMs Restarted", description: "Restarting all student VMs..." })}>
-                  <RotateCcw className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Restart All VMs</TooltipContent>
-            </Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant={lockAllVMs ? "destructive" : "outline"} size="icon" className="h-8 w-8" onClick={() => { setLockAllVMs(!lockAllVMs); toast({ title: lockAllVMs ? "VMs Unlocked" : "All Student VMs Locked" }); }}>
+                {lockAllVMs ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
+              </Button>
+            </TooltipTrigger><TooltipContent>{lockAllVMs ? "Unlock All VMs" : "Lock All VMs"}</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => toast({ title: "Snapshot Created", description: "All student VMs snapshotted" })}>
+                <Camera className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger><TooltipContent>Snapshot All VMs</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => toast({ title: "VMs Restarted" })}>
+                <RotateCcw className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger><TooltipContent>Restart All VMs</TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => { recloneAllVMs(batch.id); toast({ title: "Recloning All VMs", description: "All student VMs being recloned from golden..." }); }}>
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger><TooltipContent>Reclone All from Golden</TooltipContent></Tooltip>
           </div>
 
           <div className="flex items-center gap-4 text-sm">
@@ -316,10 +309,10 @@ export default function LiveTraining() {
         </CardContent>
       </Card>
 
-      {/* Main Content: 3-column layout */}
-      <div className="grid grid-cols-12 gap-4" style={{ height: "calc(100vh - 260px)" }}>
-        {/* Left: Trainer VM + Controls */}
-        <div className="col-span-3 flex flex-col gap-4">
+      {/* Main Content */}
+      <div className="grid grid-cols-12 gap-4" style={{ height: "calc(100vh - 300px)" }}>
+        {/* Left: Trainer VM + Snapshots + Controls */}
+        <div className="col-span-3 flex flex-col gap-4 min-h-0 overflow-y-auto">
           {/* Trainer VM Card */}
           <Card className="flex-none">
             <CardHeader className="pb-3">
@@ -375,8 +368,8 @@ export default function LiveTraining() {
 
                   {/* Trainer VM actions */}
                   <div className="grid grid-cols-2 gap-1.5">
-                    <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { toast({ title: "Console Opened" }); window.open(vm.trainerVM.consoleUrl, "_blank"); }}>
-                      <ExternalLink className="mr-1 h-3 w-3" />Console
+                    <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => setTrainerConsoleOpen(true)}>
+                      <Terminal className="mr-1 h-3 w-3" />Console
                     </Button>
                     <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { navigator.clipboard.writeText(`ssh ${vm.trainerVM.credentials.username}@${vm.trainerVM.ipAddress}`); toast({ title: "SSH Copied" }); }}>
                       <Clipboard className="mr-1 h-3 w-3" />SSH
@@ -411,6 +404,49 @@ export default function LiveTraining() {
             </CardContent>
           </Card>
 
+          {/* Snapshot Quick Panel */}
+          {snapshots.length > 0 && (
+            <Collapsible open={snapshotPanelOpen} onOpenChange={setSnapshotPanelOpen}>
+              <Card className="flex-none">
+                <CollapsibleTrigger className="w-full">
+                  <CardHeader className="pb-3 cursor-pointer">
+                    <CardTitle className="text-sm flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Camera className="h-4 w-4 text-primary" />
+                        Snapshots ({snapshots.length})
+                      </div>
+                      <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", snapshotPanelOpen && "rotate-180")} />
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0 space-y-2">
+                    {snapshots.filter(s => s.status === "ready").map(snap => (
+                      <div key={snap.id} className={cn(
+                        "flex items-center justify-between p-2 rounded-lg border text-xs",
+                        snap.isGolden ? "border-primary/30 bg-primary/5" : "border-border/50"
+                      )}>
+                        <div className="flex items-center gap-2 min-w-0">
+                          {snap.isGolden ? <Star className="h-3 w-3 text-primary shrink-0" /> : <Camera className="h-3 w-3 text-muted-foreground shrink-0" />}
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{snap.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{snap.size}</p>
+                          </div>
+                        </div>
+                        <Button size="sm" variant="ghost" className="text-[10px] h-6 px-2 shrink-0" onClick={() => {
+                          resetAllVMs(batch.id, snap.id);
+                          toast({ title: "Resetting All", description: `Resetting all VMs to "${snap.name}"` });
+                        }}>
+                          <RotateCcw className="mr-1 h-2.5 w-2.5" />Reset All
+                        </Button>
+                      </div>
+                    ))}
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
+
           {/* Quick Broadcast */}
           <Card className="flex-none">
             <CardHeader className="pb-3">
@@ -421,16 +457,8 @@ export default function LiveTraining() {
             </CardHeader>
             <CardContent>
               <div className="flex gap-2">
-                <Input
-                  placeholder="Type announcement..."
-                  value={announcementText}
-                  onChange={e => setAnnouncementText(e.target.value)}
-                  className="text-xs h-8"
-                  onKeyDown={e => e.key === "Enter" && sendAnnouncement()}
-                />
-                <Button size="sm" className="h-8 px-3 shrink-0" onClick={sendAnnouncement}>
-                  <Send className="h-3 w-3" />
-                </Button>
+                <Input placeholder="Type announcement..." value={announcementText} onChange={e => setAnnouncementText(e.target.value)} className="text-xs h-8" onKeyDown={e => e.key === "Enter" && sendAnnouncement()} />
+                <Button size="sm" className="h-8 px-3 shrink-0" onClick={sendAnnouncement}><Send className="h-3 w-3" /></Button>
               </div>
             </CardContent>
           </Card>
@@ -464,18 +492,11 @@ export default function LiveTraining() {
                 <div className="flex items-center gap-2">
                   <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                    <Input
-                      placeholder="Search students..."
-                      className="pl-7 h-7 w-48 text-xs"
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                    />
+                    <Input placeholder="Search students..." className="pl-7 h-7 w-48 text-xs" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-7 text-xs">
-                        <ArrowUpDown className="mr-1 h-3 w-3" />Sort
-                      </Button>
+                      <Button variant="outline" size="sm" className="h-7 text-xs"><ArrowUpDown className="mr-1 h-3 w-3" />Sort</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem>Name A-Z</DropdownMenuItem>
@@ -584,38 +605,26 @@ export default function LiveTraining() {
 
                             {/* Hover actions */}
                             <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-card to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); toast({ title: `Console: ${student.name}` }); }}>
-                                    <ExternalLink className="h-3 w-3" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Open Console</TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); toast({ title: `Viewing ${student.name}'s screen` }); }}>
-                                    <Eye className="h-3 w-3" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>View Screen</TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); toast({ title: `Restarting ${student.name}'s VM` }); }}>
-                                    <RotateCcw className="h-3 w-3" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Restart VM</TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); toast({ title: `Resetting ${student.name}'s VM to snapshot` }); }}>
-                                    <RefreshCw className="h-3 w-3" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Reset to Snapshot</TooltipContent>
-                              </Tooltip>
+                              <Tooltip><TooltipTrigger asChild>
+                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); toast({ title: `Console: ${student.name}` }); }}>
+                                  <ExternalLink className="h-3 w-3" />
+                                </Button>
+                              </TooltipTrigger><TooltipContent>Open Console</TooltipContent></Tooltip>
+                              <Tooltip><TooltipTrigger asChild>
+                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); toast({ title: `Viewing ${student.name}'s screen` }); }}>
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                              </TooltipTrigger><TooltipContent>View Screen</TooltipContent></Tooltip>
+                              <Tooltip><TooltipTrigger asChild>
+                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); if (student.vm) { restartStudentVM(batch.id, student.vm.id); } toast({ title: `Restarting ${student.name}'s VM` }); }}>
+                                  <RotateCcw className="h-3 w-3" />
+                                </Button>
+                              </TooltipTrigger><TooltipContent>Restart VM</TooltipContent></Tooltip>
+                              <Tooltip><TooltipTrigger asChild>
+                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); if (student.vm) { recloneStudentVM(batch.id, student.vm.id); } toast({ title: `Recloning ${student.name}'s VM` }); }}>
+                                  <Copy className="h-3 w-3" />
+                                </Button>
+                              </TooltipTrigger><TooltipContent>Reclone from Golden</TooltipContent></Tooltip>
                             </div>
                           </motion.div>
                         );
@@ -637,7 +646,6 @@ export default function LiveTraining() {
 
         {/* Right: Chat & Attendance */}
         <div className="col-span-3 flex flex-col gap-4 min-h-0">
-          {/* Chat Panel */}
           <Card className="flex-1 flex flex-col min-h-0">
             <CardHeader className="pb-2 flex-none">
               <div className="flex items-center justify-between">
@@ -655,7 +663,7 @@ export default function LiveTraining() {
               <ScrollArea className="flex-1 px-4">
                 <div className="space-y-2 py-2">
                   <AnimatePresence>
-                    {chatMessages.map((msg, i) => (
+                    {chatMessages.map((msg) => (
                       <motion.div
                         key={msg.id}
                         initial={{ opacity: 0, y: 4 }}
@@ -686,16 +694,8 @@ export default function LiveTraining() {
                 </div>
               </ScrollArea>
               <div className="p-3 border-t border-border flex gap-2">
-                <Input
-                  placeholder="Reply to students..."
-                  className="text-xs h-8"
-                  value={chatInput}
-                  onChange={e => setChatInput(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && sendChat()}
-                />
-                <Button size="sm" className="h-8 px-3 shrink-0" onClick={sendChat}>
-                  <Send className="h-3 w-3" />
-                </Button>
+                <Input placeholder="Reply to students..." className="text-xs h-8" value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendChat()} />
+                <Button size="sm" className="h-8 px-3 shrink-0" onClick={sendChat}><Send className="h-3 w-3" /></Button>
               </div>
             </CardContent>
           </Card>
@@ -718,9 +718,7 @@ export default function LiveTraining() {
                     )} />
                     <span className="truncate max-w-[120px]">{s.name}</span>
                   </div>
-                  <span className="text-muted-foreground font-mono">
-                    {s.attendance.present}/{s.attendance.total}
-                  </span>
+                  <span className="text-muted-foreground font-mono">{s.attendance.present}/{s.attendance.total}</span>
                 </div>
               ))}
               {students.length > 5 && (
@@ -731,9 +729,9 @@ export default function LiveTraining() {
         </div>
       </div>
 
-      {/* Student VM Detail Sheet */}
+      {/* Student VM Detail Sheet — Enhanced */}
       <Sheet open={!!selectedStudentVM} onOpenChange={() => setSelectedStudentVM(null)}>
-        <SheetContent className="w-[480px] sm:max-w-[480px]">
+        <SheetContent className="w-[520px] sm:max-w-[520px]">
           {(() => {
             const student = students.find(s => s.id === selectedStudentVM);
             if (!student) return null;
@@ -741,6 +739,7 @@ export default function LiveTraining() {
             const mockCpu = Math.floor(20 + Math.random() * 60);
             const mockRam = Math.floor(30 + Math.random() * 50);
             const mockDisk = Math.floor(20 + Math.random() * 40);
+            const currentSnap = snapshots.find(s => s.id === svm?.currentSnapshotId);
 
             return (
               <>
@@ -759,96 +758,261 @@ export default function LiveTraining() {
                   <SheetDescription>Student VM details and actions</SheetDescription>
                 </SheetHeader>
 
-                <div className="mt-6 space-y-6">
-                  {/* Status Overview */}
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-xl border border-border p-3 text-center">
-                      <p className="text-[10px] text-muted-foreground uppercase mb-1">VM</p>
-                      <StatusBadge
-                        status={student.vmStatus === "running" ? "success" : student.vmStatus === "error" ? "error" : "default"}
-                        label={student.vmStatus || "N/A"}
-                      />
-                    </div>
-                    <div className="rounded-xl border border-border p-3 text-center">
-                      <p className="text-[10px] text-muted-foreground uppercase mb-1">Score</p>
-                      <p className="text-lg font-bold">{student.quizScore ?? "—"}</p>
-                    </div>
-                    <div className="rounded-xl border border-border p-3 text-center">
-                      <p className="text-[10px] text-muted-foreground uppercase mb-1">Attend.</p>
-                      <p className="text-lg font-bold">{Math.round((student.attendance.present / Math.max(student.attendance.total, 1)) * 100)}%</p>
-                    </div>
-                  </div>
-
-                  {/* VM Details */}
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">VM Resources</h4>
-                    {[
-                      { label: "CPU", value: mockCpu, color: "hsl(var(--primary))" },
-                      { label: "RAM", value: mockRam, color: "hsl(var(--success))" },
-                      { label: "Disk", value: mockDisk, color: "hsl(var(--warning))" },
-                    ].map(r => (
-                      <div key={r.label} className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">{r.label}</span>
-                          <span className="font-mono font-medium">{r.value}%</span>
-                        </div>
-                        <Progress value={r.value} className="h-1.5" />
+                <ScrollArea className="mt-6 h-[calc(100vh-160px)]">
+                  <div className="space-y-6 pr-4">
+                    {/* Status Overview */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="rounded-xl border border-border p-3 text-center">
+                        <p className="text-[10px] text-muted-foreground uppercase mb-1">VM</p>
+                        <StatusBadge
+                          status={student.vmStatus === "running" ? "success" : student.vmStatus === "error" ? "error" : "default"}
+                          label={student.vmStatus || "N/A"}
+                        />
                       </div>
-                    ))}
-                  </div>
+                      <div className="rounded-xl border border-border p-3 text-center">
+                        <p className="text-[10px] text-muted-foreground uppercase mb-1">Score</p>
+                        <p className="text-lg font-bold">{student.quizScore ?? "—"}</p>
+                      </div>
+                      <div className="rounded-xl border border-border p-3 text-center">
+                        <p className="text-[10px] text-muted-foreground uppercase mb-1">Attend.</p>
+                        <p className="text-lg font-bold">{Math.round((student.attendance.present / Math.max(student.attendance.total, 1)) * 100)}%</p>
+                      </div>
+                    </div>
 
-                  {/* Connection Info */}
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Connection</h4>
-                    <div className="rounded-lg border border-border p-3 space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">IP Address</span>
-                        <div className="flex items-center gap-1.5">
-                          <code className="font-mono">{student.vmIpAddress || "—"}</code>
-                          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => { navigator.clipboard.writeText(student.vmIpAddress || ""); toast({ title: "Copied" }); }}>
-                            <Copy className="h-2.5 w-2.5" />
+                    {/* VM Resources */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">VM Resources</h4>
+                      {[
+                        { label: "CPU", value: mockCpu },
+                        { label: "RAM", value: mockRam },
+                        { label: "Disk", value: mockDisk },
+                      ].map(r => (
+                        <div key={r.label} className="space-y-1">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">{r.label}</span>
+                            <span className="font-mono font-medium">{r.value}%</span>
+                          </div>
+                          <Progress value={r.value} className="h-1.5" />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Connection Info */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Connection</h4>
+                      <div className="rounded-lg border border-border p-3 space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">IP Address</span>
+                          <div className="flex items-center gap-1.5">
+                            <code className="font-mono">{student.vmIpAddress || "—"}</code>
+                            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => { navigator.clipboard.writeText(student.vmIpAddress || ""); toast({ title: "Copied" }); }}>
+                              <Copy className="h-2.5 w-2.5" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">Module</span>
+                          <span className="font-medium">{student.currentModule}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">Last Active</span>
+                          <span>{student.lastActive}</span>
+                        </div>
+                        {currentSnap && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">Current Snapshot</span>
+                            <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{currentSnap.name}</Badge>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button size="sm" className="text-xs" onClick={() => toast({ title: `Console opened for ${student.name}` })}>
+                          <ExternalLink className="mr-1.5 h-3 w-3" />Open Console
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-xs" onClick={() => toast({ title: `Viewing ${student.name}'s screen` })}>
+                          <Eye className="mr-1.5 h-3 w-3" />View Screen
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-xs" onClick={() => { if (svm) restartStudentVM(batch.id, svm.id); toast({ title: `Restarting VM` }); }}>
+                          <RotateCcw className="mr-1.5 h-3 w-3" />Restart VM
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-xs" onClick={() => { navigator.clipboard.writeText(`ssh root@${student.vmIpAddress}`); toast({ title: "SSH Copied" }); }}>
+                          <Terminal className="mr-1.5 h-3 w-3" />Copy SSH
+                        </Button>
+                        {svm && svm.status === "running" ? (
+                          <Button size="sm" variant="outline" className="text-xs" onClick={() => { stopStudentVM(batch.id, svm.id); toast({ title: "VM Stopped" }); }}>
+                            <PowerOff className="mr-1.5 h-3 w-3" />Stop VM
+                          </Button>
+                        ) : svm ? (
+                          <Button size="sm" variant="outline" className="text-xs" onClick={() => { startStudentVM(batch.id, svm.id); toast({ title: "VM Starting" }); }}>
+                            <Power className="mr-1.5 h-3 w-3" />Start VM
+                          </Button>
+                        ) : null}
+                        <Button size="sm" variant="outline" className="text-xs" onClick={() => {
+                          if (svm) { snapshotStudentVM(batch.id, svm.id, `${student.name} - ${new Date().toLocaleTimeString()}`); }
+                          toast({ title: "Snapshot Created", description: `Saving ${student.name}'s VM state` });
+                        }}>
+                          <Camera className="mr-1.5 h-3 w-3" />Take Snapshot
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Reset to Snapshot Selector */}
+                    {snapshots.filter(s => s.status === "ready").length > 0 && svm && (
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reset to Snapshot</h4>
+                        <div className="flex gap-2">
+                          <Select value={resetSnapshotId} onValueChange={setResetSnapshotId}>
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Select snapshot..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {snapshots.filter(s => s.status === "ready").map(snap => (
+                                <SelectItem key={snap.id} value={snap.id}>
+                                  <div className="flex items-center gap-1.5">
+                                    {snap.isGolden && <Star className="h-3 w-3 text-primary" />}
+                                    {snap.name} ({snap.size})
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button size="sm" className="h-8 text-xs shrink-0" disabled={!resetSnapshotId} onClick={() => {
+                            if (svm && resetSnapshotId) {
+                              resetStudentVM(batch.id, svm.id, resetSnapshotId);
+                              toast({ title: "Resetting VM", description: `Resetting to "${snapshots.find(s => s.id === resetSnapshotId)?.name}"` });
+                              setResetSnapshotId("");
+                            }
+                          }}>
+                            <RefreshCw className="mr-1 h-3 w-3" />Reset
                           </Button>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Module</span>
-                        <span className="font-medium">{student.currentModule}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Last Active</span>
-                        <span>{student.lastActive}</span>
-                      </div>
-                    </div>
-                  </div>
+                    )}
 
-                  {/* Actions */}
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button size="sm" className="text-xs" onClick={() => toast({ title: `Console opened for ${student.name}` })}>
-                        <ExternalLink className="mr-1.5 h-3 w-3" />Open Console
-                      </Button>
-                      <Button size="sm" variant="outline" className="text-xs" onClick={() => toast({ title: `Viewing ${student.name}'s screen` })}>
-                        <Eye className="mr-1.5 h-3 w-3" />View Screen
-                      </Button>
-                      <Button size="sm" variant="outline" className="text-xs" onClick={() => toast({ title: `Restarting VM for ${student.name}` })}>
-                        <RotateCcw className="mr-1.5 h-3 w-3" />Restart VM
-                      </Button>
-                      <Button size="sm" variant="outline" className="text-xs" onClick={() => toast({ title: `Resetting VM for ${student.name}` })}>
-                        <RefreshCw className="mr-1.5 h-3 w-3" />Reset to Snapshot
-                      </Button>
-                      <Button size="sm" variant="outline" className="text-xs" onClick={() => toast({ title: `SSH copied for ${student.name}` })}>
-                        <Terminal className="mr-1.5 h-3 w-3" />Copy SSH
-                      </Button>
-                      <Button size="sm" variant="destructive" className="text-xs" onClick={() => toast({ title: `VM stopped for ${student.name}` })}>
-                        <PowerOff className="mr-1.5 h-3 w-3" />Stop VM
-                      </Button>
-                    </div>
+                    {/* Reclone from Golden */}
+                    {svm && (
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reclone</h4>
+                        <Button size="sm" variant="destructive" className="w-full text-xs" onClick={() => {
+                          recloneStudentVM(batch.id, svm.id);
+                          toast({ title: "Recloning VM", description: `Destroying and recreating ${student.name}'s VM from golden snapshot` });
+                        }}>
+                          <Copy className="mr-1.5 h-3 w-3" />Reclone from Golden Snapshot
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* VM Logs */}
+                    <Collapsible open={showStudentLogs} onOpenChange={setShowStudentLogs}>
+                      <div className="space-y-2">
+                        <CollapsibleTrigger className="flex items-center justify-between w-full">
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">VM Logs</h4>
+                          <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", showStudentLogs && "rotate-180")} />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="rounded-lg bg-[hsl(var(--foreground))] p-3 font-mono text-[10px] leading-relaxed text-[hsl(var(--background))] max-h-[200px] overflow-y-auto">
+                            {vmLogLines.map((line, i) => (
+                              <div key={i} className={cn(
+                                "opacity-80",
+                                line.includes("WARN") && "text-yellow-400",
+                                line.includes("ERROR") && "text-red-400"
+                              )}>{line}</div>
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </div>
+                    </Collapsible>
                   </div>
-                </div>
+                </ScrollArea>
               </>
             );
           })()}
+        </SheetContent>
+      </Sheet>
+
+      {/* Trainer Console Sheet */}
+      <Sheet open={trainerConsoleOpen} onOpenChange={setTrainerConsoleOpen}>
+        <SheetContent className="w-[560px] sm:max-w-[560px]">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Terminal className="h-5 w-5 text-primary" />
+              Trainer Console
+            </SheetTitle>
+            <SheetDescription>Full console access to your trainer VM</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            {/* Terminal */}
+            <div className="rounded-lg bg-[hsl(var(--foreground))] p-4 font-mono text-xs leading-relaxed text-[hsl(var(--background))] min-h-[280px]">
+              {terminalLines.map((line, i) => (
+                <div key={i} className="opacity-80">{line}</div>
+              ))}
+            </div>
+
+            {/* Connection Details */}
+            {vm?.trainerVM && (
+              <div className="rounded-xl border border-border p-4 space-y-3">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Connection Details</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">IP Address</span>
+                    <div className="flex items-center gap-1.5">
+                      <code className="font-mono">{vm.trainerVM.ipAddress}</code>
+                      <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => { navigator.clipboard.writeText(vm.trainerVM.ipAddress); toast({ title: "Copied" }); }}>
+                        <Copy className="h-2.5 w-2.5" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">SSH Command</span>
+                    <div className="flex items-center gap-1.5">
+                      <code className="font-mono text-xs">ssh {vm.trainerVM.credentials.username}@{vm.trainerVM.ipAddress}</code>
+                      <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => { navigator.clipboard.writeText(`ssh ${vm.trainerVM.credentials.username}@${vm.trainerVM.ipAddress}`); toast({ title: "SSH Copied" }); }}>
+                        <Copy className="h-2.5 w-2.5" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Username</span>
+                    <code className="font-mono text-xs">{vm.trainerVM.credentials.username}</code>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Password</span>
+                    <div className="flex items-center gap-1.5">
+                      <code className="font-mono text-xs">{showTrainerPassword ? vm.trainerVM.credentials.password : "••••••••"}</code>
+                      <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => setShowTrainerPassword(!showTrainerPassword)}>
+                        {showTrainerPassword ? <EyeOff className="h-2.5 w-2.5" /> : <Eye className="h-2.5 w-2.5" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Port</span>
+                    <code className="font-mono text-xs">{vm.trainerVM.credentials.sshPort}</code>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Trainer VM Actions */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</h4>
+              <div className="grid grid-cols-3 gap-2">
+                <Button size="sm" variant="outline" className="text-xs" onClick={() => toast({ title: "VM Restarting..." })}>
+                  <RotateCcw className="mr-1.5 h-3 w-3" />Restart
+                </Button>
+                <Button size="sm" variant="outline" className="text-xs" onClick={() => toast({ title: "Snapshot Created" })}>
+                  <Camera className="mr-1.5 h-3 w-3" />Snapshot
+                </Button>
+                <Button size="sm" variant="destructive" className="text-xs" onClick={() => toast({ title: "VM Stopped" })}>
+                  <PowerOff className="mr-1.5 h-3 w-3" />Stop
+                </Button>
+              </div>
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
 
