@@ -76,7 +76,8 @@ const vmLogLines = [
 
 export default function LiveTraining() {
   const { batches, recloneStudentVM, recloneAllVMs, resetStudentVM, resetAllVMs,
-    restartStudentVM, stopStudentVM, startStudentVM, snapshotStudentVM } = useBatchStore();
+    restartStudentVM, stopStudentVM, startStudentVM, snapshotStudentVM,
+    recloneTrainerVM, resetTrainerVM, stopTrainerVM, startTrainerVM, createSnapshot } = useBatchStore();
   const liveBatches = batches.filter(b => b.status === "live" || b.status === "upcoming");
   const [selectedBatchId, setSelectedBatchId] = useState(liveBatches[0]?.id || "");
   const batch = batches.find(b => b.id === selectedBatchId);
@@ -101,6 +102,10 @@ export default function LiveTraining() {
   const [recloneConfirmVM, setRecloneConfirmVM] = useState<string | null>(null);
   const [showStudentLogs, setShowStudentLogs] = useState(false);
   const [snapshotPanelOpen, setSnapshotPanelOpen] = useState(true);
+  const [trainerSnapshotDialogOpen, setTrainerSnapshotDialogOpen] = useState(false);
+  const [trainerSnapshotName, setTrainerSnapshotName] = useState("");
+  const [trainerRecloneSnapshotId, setTrainerRecloneSnapshotId] = useState("");
+  const [trainerResetSnapshotId, setTrainerResetSnapshotId] = useState("");
 
   useEffect(() => {
     if (!sessionActive) return;
