@@ -164,6 +164,10 @@ interface BatchStore {
   stopStudentVM: (batchId: string, vmId: string) => void;
   startStudentVM: (batchId: string, vmId: string) => void;
   restartStudentVM: (batchId: string, vmId: string) => void;
+  recloneTrainerVM: (batchId: string, snapshotId: string) => void;
+  resetTrainerVM: (batchId: string, snapshotId: string) => void;
+  stopTrainerVM: (batchId: string) => void;
+  startTrainerVM: (batchId: string) => void;
   // Legacy compat
   addLabConfig: (batchId: string, labConfig: any) => void;
   updateLabConfig: (batchId: string, labConfigId: string, updates: any) => void;
@@ -786,6 +790,73 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
                   ),
                 },
               }
+            : b
+        ),
+      }));
+    }, 2000);
+  },
+
+  recloneTrainerVM: (batchId, snapshotId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "provisioning" as const } } }
+          : b
+      ),
+    }));
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "running" as const } } }
+            : b
+        ),
+      }));
+    }, 4000);
+  },
+
+  resetTrainerVM: (batchId, snapshotId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "provisioning" as const } } }
+          : b
+      ),
+    }));
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "running" as const } } }
+            : b
+        ),
+      }));
+    }, 3000);
+  },
+
+  stopTrainerVM: (batchId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "stopped" as const } } }
+          : b
+      ),
+    }));
+  },
+
+  startTrainerVM: (batchId) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "provisioning" as const } } }
+          : b
+      ),
+    }));
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? { ...b, vmConfig: { ...b.vmConfig, trainerVM: { ...b.vmConfig.trainerVM, status: "running" as const } } }
             : b
         ),
       }));

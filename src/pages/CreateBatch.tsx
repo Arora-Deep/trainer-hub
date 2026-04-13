@@ -60,7 +60,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { TemplatePickerGrid } from "@/components/labs/TemplatePickerGrid";
+import { TemplatePickerDropdown } from "@/components/labs/TemplatePickerDropdown";
 
 const steps = [
   { id: 1, name: "Basic Info", description: "Batch details", icon: FileText },
@@ -582,7 +582,7 @@ export default function CreateBatch() {
                       <div className="p-4 rounded-xl border border-border bg-muted/10 space-y-4">
                         <div className="space-y-3">
                           <Label className="text-xs">Select Template</Label>
-                          <TemplatePickerGrid
+                          <TemplatePickerDropdown
                             templates={templates}
                             selectedId={vmTemplates[0]?.templateId || ""}
                             onSelect={(template) => handleVMTemplateChange(0, "templateId", template.id)}

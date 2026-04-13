@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useLabStore } from "@/stores/labStore";
 import { useBatchStore, type VMSnapshot } from "@/stores/batchStore";
-import { TemplatePickerGrid } from "@/components/labs/TemplatePickerGrid";
+import { TemplatePickerDropdown } from "@/components/labs/TemplatePickerDropdown";
 import { VMDaySchedule } from "@/components/batches/VMDaySchedule";
 import type { DaySchedule } from "@/components/batches/VMDaySchedule";
 import { cn } from "@/lib/utils";
@@ -781,7 +781,7 @@ export default function AdminBatchDetail() {
                   <CardTitle className="text-base flex items-center gap-2"><Server className="h-4 w-4 text-primary" /> VM Template</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <TemplatePickerGrid templates={templates} selectedId={selectedTemplateId} onSelect={(t) => setSelectedTemplateId(t.id)} />
+                  <TemplatePickerDropdown templates={templates} selectedId={selectedTemplateId} onSelect={(t) => setSelectedTemplateId(t.id)} />
                   <div className="space-y-2">
                     <Label className="text-xs">Instance Name</Label>
                     <Input placeholder="e.g., Web Server, Database, etc." value={instanceName} onChange={(e) => setInstanceName(e.target.value)} />

@@ -76,7 +76,8 @@ const vmLogLines = [
 
 export default function LiveTraining() {
   const { batches, recloneStudentVM, recloneAllVMs, resetStudentVM, resetAllVMs,
-    restartStudentVM, stopStudentVM, startStudentVM, snapshotStudentVM } = useBatchStore();
+    restartStudentVM, stopStudentVM, startStudentVM, snapshotStudentVM,
+    recloneTrainerVM, resetTrainerVM, stopTrainerVM, startTrainerVM, createSnapshot } = useBatchStore();
   const liveBatches = batches.filter(b => b.status === "live" || b.status === "upcoming");
   const [selectedBatchId, setSelectedBatchId] = useState(liveBatches[0]?.id || "");
   const batch = batches.find(b => b.id === selectedBatchId);
@@ -101,6 +102,10 @@ export default function LiveTraining() {
   const [recloneConfirmVM, setRecloneConfirmVM] = useState<string | null>(null);
   const [showStudentLogs, setShowStudentLogs] = useState(false);
   const [snapshotPanelOpen, setSnapshotPanelOpen] = useState(true);
+  const [trainerSnapshotDialogOpen, setTrainerSnapshotDialogOpen] = useState(false);
+  const [trainerSnapshotName, setTrainerSnapshotName] = useState("");
+  const [trainerRecloneSnapshotId, setTrainerRecloneSnapshotId] = useState("");
+  const [trainerResetSnapshotId, setTrainerResetSnapshotId] = useState("");
 
   useEffect(() => {
     if (!sessionActive) return;
@@ -367,18 +372,106 @@ export default function LiveTraining() {
                   </div>
 
                   {/* Trainer VM actions */}
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => setTrainerConsoleOpen(true)}>
-                      <Terminal className="mr-1 h-3 w-3" />Console
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => setTrainerConsoleOpen(true)}>
+                        <Terminal className="mr-1 h-3 w-3" />Console
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { navigator.clipboard.writeText(`ssh ${vm.trainerVM.credentials.username}@${vm.trainerVM.ipAddress}`); toast({ title: "SSH Copied" }); }}>
+                        <Clipboard className="mr-1 h-3 w-3" />SSH
+                      </Button>
+                    </div>
+
+                    {/* Power controls */}
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {(vm.trainerVM.status === "running" || vm.trainerVM.status === "configured") ? (
+                        <Button size="sm" variant="outline" className="text-xs h-7 text-destructive" onClick={() => { stopTrainerVM(batch.id); toast({ title: "Trainer VM Stopping..." }); }}>
+                          <PowerOff className="mr-1 h-3 w-3" />Stop
+                        </Button>
+                      ) : vm.trainerVM.status === "stopped" ? (
+                        <Button size="sm" variant="outline" className="text-xs h-7 text-[hsl(var(--success))]" onClick={() => { startTrainerVM(batch.id); toast({ title: "Trainer VM Starting..." }); }}>
+                          <Power className="mr-1 h-3 w-3" />Start
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" className="text-xs h-7" disabled>
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />...
+                        </Button>
+                      )}
+                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => toast({ title: "VM Restarting..." })}>
+                        <RotateCcw className="mr-1 h-3 w-3" />Restart
+                      </Button>
+                    </div>
+
+                    {/* Snapshot actions */}
+                    <Button size="sm" variant="outline" className="text-xs h-7 w-full" onClick={() => setTrainerSnapshotDialogOpen(true)}>
+                      <Camera className="mr-1 h-3 w-3" />Take Named Snapshot
                     </Button>
-                    <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { navigator.clipboard.writeText(`ssh ${vm.trainerVM.credentials.username}@${vm.trainerVM.ipAddress}`); toast({ title: "SSH Copied" }); }}>
-                      <Clipboard className="mr-1 h-3 w-3" />SSH
-                    </Button>
-                    <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => toast({ title: "VM Restarting..." })}>
-                      <RotateCcw className="mr-1 h-3 w-3" />Restart
-                    </Button>
-                    <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => toast({ title: "Snapshot Created" })}>
-                      <Camera className="mr-1 h-3 w-3" />Snapshot
+
+                    {/* Reclone from snapshot */}
+                    {snapshots.filter(s => s.status === "ready").length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Reclone from Snapshot</p>
+                        <div className="flex gap-1">
+                          <Select value={trainerRecloneSnapshotId} onValueChange={setTrainerRecloneSnapshotId}>
+                            <SelectTrigger className="h-7 text-xs flex-1">
+                              <SelectValue placeholder="Select..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {snapshots.filter(s => s.status === "ready").map(s => (
+                                <SelectItem key={s.id} value={s.id}>
+                                  <div className="flex items-center gap-1.5">
+                                    {s.isGolden && <Star className="h-2.5 w-2.5 text-primary" />}
+                                    {s.name}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button size="sm" variant="destructive" className="text-xs h-7 px-2 shrink-0" disabled={!trainerRecloneSnapshotId} onClick={() => {
+                            recloneTrainerVM(batch.id, trainerRecloneSnapshotId);
+                            toast({ title: "Recloning Trainer VM", description: "Destroying and rebuilding from snapshot..." });
+                            setTrainerRecloneSnapshotId("");
+                          }}>
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Reset to snapshot */}
+                    {snapshots.filter(s => s.status === "ready").length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Reset to Snapshot</p>
+                        <div className="flex gap-1">
+                          <Select value={trainerResetSnapshotId} onValueChange={setTrainerResetSnapshotId}>
+                            <SelectTrigger className="h-7 text-xs flex-1">
+                              <SelectValue placeholder="Select..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {snapshots.filter(s => s.status === "ready").map(s => (
+                                <SelectItem key={s.id} value={s.id}>
+                                  <div className="flex items-center gap-1.5">
+                                    {s.isGolden && <Star className="h-2.5 w-2.5 text-primary" />}
+                                    {s.name}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button size="sm" variant="outline" className="text-xs h-7 px-2 shrink-0" disabled={!trainerResetSnapshotId} onClick={() => {
+                            resetTrainerVM(batch.id, trainerResetSnapshotId);
+                            toast({ title: "Resetting Trainer VM", description: "Restoring disk state from snapshot..." });
+                            setTrainerResetSnapshotId("");
+                          }}>
+                            <RotateCcw className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* RDP command for Windows */}
+                    <Button size="sm" variant="outline" className="text-xs h-7 w-full" onClick={() => { navigator.clipboard.writeText(`mstsc /v:${vm.trainerVM.ipAddress}`); toast({ title: "RDP Command Copied" }); }}>
+                      <Monitor className="mr-1 h-3 w-3" />Copy RDP Command
                     </Button>
                   </div>
 
@@ -1004,11 +1097,85 @@ export default function LiveTraining() {
                 <Button size="sm" variant="outline" className="text-xs" onClick={() => toast({ title: "VM Restarting..." })}>
                   <RotateCcw className="mr-1.5 h-3 w-3" />Restart
                 </Button>
-                <Button size="sm" variant="outline" className="text-xs" onClick={() => toast({ title: "Snapshot Created" })}>
+                <Button size="sm" variant="outline" className="text-xs" onClick={() => setTrainerSnapshotDialogOpen(true)}>
                   <Camera className="mr-1.5 h-3 w-3" />Snapshot
                 </Button>
-                <Button size="sm" variant="destructive" className="text-xs" onClick={() => toast({ title: "VM Stopped" })}>
-                  <PowerOff className="mr-1.5 h-3 w-3" />Stop
+                {(vm?.trainerVM.status === "running" || vm?.trainerVM.status === "configured") ? (
+                  <Button size="sm" variant="destructive" className="text-xs" onClick={() => { stopTrainerVM(batch.id); toast({ title: "VM Stopped" }); }}>
+                    <PowerOff className="mr-1.5 h-3 w-3" />Stop
+                  </Button>
+                ) : vm?.trainerVM.status === "stopped" ? (
+                  <Button size="sm" className="text-xs" onClick={() => { startTrainerVM(batch.id); toast({ title: "VM Starting..." }); }}>
+                    <Power className="mr-1.5 h-3 w-3" />Start
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="outline" className="text-xs" disabled>
+                    <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />...
+                  </Button>
+                )}
+              </div>
+
+              {/* Reclone & Reset from Snapshot in Console Sheet */}
+              {snapshots.filter(s => s.status === "ready").length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground">Reclone from Snapshot</p>
+                    <div className="flex gap-2">
+                      <Select value={trainerRecloneSnapshotId} onValueChange={setTrainerRecloneSnapshotId}>
+                        <SelectTrigger className="h-8 text-xs flex-1">
+                          <SelectValue placeholder="Select snapshot..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {snapshots.filter(s => s.status === "ready").map(s => (
+                            <SelectItem key={s.id} value={s.id}>
+                              <div className="flex items-center gap-1.5">{s.isGolden && <Star className="h-2.5 w-2.5 text-primary" />}{s.name}</div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button size="sm" variant="destructive" className="text-xs h-8" disabled={!trainerRecloneSnapshotId} onClick={() => {
+                        recloneTrainerVM(batch.id, trainerRecloneSnapshotId);
+                        toast({ title: "Recloning Trainer VM" });
+                        setTrainerRecloneSnapshotId("");
+                      }}>
+                        <Copy className="mr-1 h-3 w-3" />Reclone
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground">Reset to Snapshot</p>
+                    <div className="flex gap-2">
+                      <Select value={trainerResetSnapshotId} onValueChange={setTrainerResetSnapshotId}>
+                        <SelectTrigger className="h-8 text-xs flex-1">
+                          <SelectValue placeholder="Select snapshot..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {snapshots.filter(s => s.status === "ready").map(s => (
+                            <SelectItem key={s.id} value={s.id}>
+                              <div className="flex items-center gap-1.5">{s.isGolden && <Star className="h-2.5 w-2.5 text-primary" />}{s.name}</div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button size="sm" variant="outline" className="text-xs h-8" disabled={!trainerResetSnapshotId} onClick={() => {
+                        resetTrainerVM(batch.id, trainerResetSnapshotId);
+                        toast({ title: "Resetting Trainer VM" });
+                        setTrainerResetSnapshotId("");
+                      }}>
+                        <RotateCcw className="mr-1 h-3 w-3" />Reset
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* RDP & SSH Key */}
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <Button size="sm" variant="outline" className="text-xs" onClick={() => { navigator.clipboard.writeText(`mstsc /v:${vm?.trainerVM.ipAddress}`); toast({ title: "RDP Copied" }); }}>
+                  <Monitor className="mr-1.5 h-3 w-3" />RDP
+                </Button>
+                <Button size="sm" variant="outline" className="text-xs" onClick={() => toast({ title: "SSH Key Downloaded", description: "trainer_key.pem saved" })}>
+                  <FileText className="mr-1.5 h-3 w-3" />SSH Key
                 </Button>
               </div>
             </div>
@@ -1045,6 +1212,32 @@ export default function LiveTraining() {
             <Button variant="outline" onClick={() => setQuickPollOpen(false)}>Cancel</Button>
             <Button onClick={() => { toast({ title: "Poll Launched", description: `"${pollQuestion}" sent to ${students.length} students` }); setQuickPollOpen(false); setPollQuestion(""); }}>
               <Zap className="mr-1.5 h-3.5 w-3.5" />Broadcast
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Trainer Snapshot Dialog */}
+      <Dialog open={trainerSnapshotDialogOpen} onOpenChange={setTrainerSnapshotDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Take Named Snapshot</DialogTitle>
+            <DialogDescription>Create a snapshot of your trainer VM's current state</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Snapshot Name *</label>
+              <Input placeholder="e.g., After Lab 3 Setup" value={trainerSnapshotName} onChange={e => setTrainerSnapshotName(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setTrainerSnapshotDialogOpen(false); setTrainerSnapshotName(""); }}>Cancel</Button>
+            <Button disabled={!trainerSnapshotName.trim()} onClick={() => {
+              createSnapshot(batch.id, trainerSnapshotName.trim(), "Trainer snapshot");
+              toast({ title: "Snapshot Creating", description: `"${trainerSnapshotName}" is being created...` });
+              setTrainerSnapshotName("");
+              setTrainerSnapshotDialogOpen(false);
+            }}>
+              <Camera className="mr-1.5 h-3.5 w-3.5" />Create Snapshot
             </Button>
           </DialogFooter>
         </DialogContent>
