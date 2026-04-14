@@ -197,7 +197,7 @@ export default function CreateBatch() {
         vmTemplates: addedVMs.map(vm => ({ templateId: vm.templateId, instanceName: vm.instanceName })),
         vmEntries: addedVMs,
         trainerVM: { status: "not_provisioned", ipAddress: "", provisionedAt: "", consoleUrl: "", credentials: { username: "root", password: "", sshPort: 22 } },
-        studentVMs: [],
+        participantVMs: [],
         snapshots: [],
         cloneStatus: "not_cloned",
         pricing: {

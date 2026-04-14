@@ -37,7 +37,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useBatchStore, type Student, type VMInstance } from "@/stores/batchStore";
+import { useBatchStore, type Participant, type VMInstance } from "@/stores/batchStore";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -75,8 +75,8 @@ const vmLogLines = [
 ];
 
 export default function LiveTraining() {
-  const { batches, recloneStudentVM, recloneAllVMs, resetStudentVM, resetAllVMs,
-    restartStudentVM, stopStudentVM, startStudentVM, snapshotStudentVM,
+  const { batches, recloneParticipantVM, recloneAllVMs, resetParticipantVM, resetAllVMs,
+    restartParticipantVM, stopParticipantVM, startParticipantVM, snapshotParticipantVM,
     recloneTrainerVM, resetTrainerVM, stopTrainerVM, startTrainerVM, createSnapshot } = useBatchStore();
   const liveBatches = batches.filter(b => b.status === "live" || b.status === "upcoming");
   const [selectedBatchId, setSelectedBatchId] = useState(liveBatches[0]?.id || "");
@@ -91,7 +91,7 @@ export default function LiveTraining() {
   const [chatMessages, setChatMessages] = useState(mockChat);
   const [chatInput, setChatInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStudentVM, setSelectedStudentVM] = useState<string | null>(null);
+  const [selectedParticipantVM, setSelectedStudentVM] = useState<string | null>(null);
   const [announcementText, setAnnouncementText] = useState("");
   const [lockAllVMs, setLockAllVMs] = useState(false);
   const [quickPollOpen, setQuickPollOpen] = useState(false);
@@ -100,7 +100,7 @@ export default function LiveTraining() {
   const [showTrainerPassword, setShowTrainerPassword] = useState(false);
   const [resetSnapshotId, setResetSnapshotId] = useState("");
   const [recloneConfirmVM, setRecloneConfirmVM] = useState<string | null>(null);
-  const [showStudentLogs, setShowStudentLogs] = useState(false);
+  const [showParticipantLogs, setShowStudentLogs] = useState(false);
   const [snapshotPanelOpen, setSnapshotPanelOpen] = useState(true);
   const [trainerSnapshotDialogOpen, setTrainerSnapshotDialogOpen] = useState(false);
   const [trainerSnapshotName, setTrainerSnapshotName] = useState("");
@@ -121,21 +121,21 @@ export default function LiveTraining() {
   };
 
   const vm = batch?.vmConfig;
-  const students = batch?.students || [];
-  const studentVMs = vm?.studentVMs || [];
+  const participants = batch?.participants || [];
+  const participantVMs = vm?.participantVMs || [];
   const snapshots = vm?.snapshots || [];
 
-  const studentGrid = students.map(s => {
-    const svm = studentVMs.find(v => v.assignedTo === s.name);
+  const participantGrid = participants.map(s => {
+    const svm = participantVMs.find(v => v.assignedTo === s.name);
     return { ...s, vm: svm };
   });
 
-  const filteredStudents = studentGrid.filter(s =>
+  const filteredParticipants = participantGrid.filter(s =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const onlineCount = students.filter(s => s.vmStatus === "running").length;
+  const onlineCount = participants.filter(s => s.vmStatus === "running").length;
   const handsRaised = 2;
   const questionsCount = chatMessages.filter(m => m.type === "question").length;
 
@@ -150,7 +150,7 @@ export default function LiveTraining() {
 
   const sendAnnouncement = () => {
     if (!announcementText.trim() || !batch) return;
-    toast({ title: "Announcement Sent", description: `Broadcast to ${students.length} students` });
+    toast({ title: "Announcement Sent", description: `Broadcast to ${participants.length} students` });
     setAnnouncementText("");
   };
 
@@ -252,7 +252,7 @@ export default function LiveTraining() {
             <Separator orientation="vertical" className="h-6 mx-1" />
 
             <Tooltip><TooltipTrigger asChild>
-              <Button variant={lockAllVMs ? "destructive" : "outline"} size="icon" className="h-8 w-8" onClick={() => { setLockAllVMs(!lockAllVMs); toast({ title: lockAllVMs ? "VMs Unlocked" : "All Student VMs Locked" }); }}>
+              <Button variant={lockAllVMs ? "destructive" : "outline"} size="icon" className="h-8 w-8" onClick={() => { setLockAllVMs(!lockAllVMs); toast({ title: lockAllVMs ? "VMs Unlocked" : "All Participant VMs Locked" }); }}>
                 {lockAllVMs ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
               </Button>
             </TooltipTrigger><TooltipContent>{lockAllVMs ? "Unlock All VMs" : "Lock All VMs"}</TooltipContent></Tooltip>
@@ -277,7 +277,7 @@ export default function LiveTraining() {
             <div className="flex items-center gap-1.5">
               <Users className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="font-semibold">{onlineCount}</span>
-              <span className="text-muted-foreground">/ {students.length}</span>
+              <span className="text-muted-foreground">/ {participants.length}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Hand className="h-3.5 w-3.5 text-[hsl(var(--warning))]" />
@@ -572,20 +572,20 @@ export default function LiveTraining() {
           </Card>
         </div>
 
-        {/* Center: Student VM Grid */}
+        {/* Center: Participant VM Grid */}
         <div className="col-span-6 flex flex-col gap-4 min-h-0">
           <Card className="flex-1 flex flex-col min-h-0">
             <CardHeader className="pb-3 flex-none">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Monitor className="h-4 w-4 text-primary" />
-                  Student VMs & Monitoring
-                  <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{students.length}</Badge>
+                  Participant VMs & Monitoring
+                  <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{participants.length}</Badge>
                 </CardTitle>
                 <div className="flex items-center gap-2">
                   <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                    <Input placeholder="Search students..." className="pl-7 h-7 w-48 text-xs" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                    <Input placeholder="Search participants..." className="pl-7 h-7 w-48 text-xs" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -608,9 +608,9 @@ export default function LiveTraining() {
                   <div className="grid grid-cols-4 gap-2 mb-4">
                     {[
                       { label: "Online", value: onlineCount, color: "text-[hsl(var(--success))]", icon: Wifi },
-                      { label: "Offline", value: students.length - onlineCount, color: "text-muted-foreground", icon: WifiOff },
+                      { label: "Offline", value: participants.length - onlineCount, color: "text-muted-foreground", icon: WifiOff },
                       { label: "Hands Up", value: handsRaised, color: "text-[hsl(var(--warning))]", icon: Hand },
-                      { label: "Errors", value: students.filter(s => s.vmStatus === "error").length, color: "text-[hsl(var(--destructive))]", icon: AlertCircle },
+                      { label: "Errors", value: participants.filter(s => s.vmStatus === "error").length, color: "text-[hsl(var(--destructive))]", icon: AlertCircle },
                     ].map(stat => (
                       <div key={stat.label} className="rounded-lg border border-border/50 p-2.5 text-center">
                         <stat.icon className={cn("h-3.5 w-3.5 mx-auto mb-1", stat.color)} />
@@ -623,17 +623,17 @@ export default function LiveTraining() {
                   {/* Student Grid */}
                   <div className="grid grid-cols-2 xl:grid-cols-3 gap-2">
                     <AnimatePresence>
-                      {filteredStudents.map((student, i) => {
-                        const vmRunning = student.vmStatus === "running";
-                        const vmError = student.vmStatus === "error";
-                        const vmStopped = student.vmStatus === "stopped";
+                      {filteredParticipants.map((participant, i) => {
+                        const vmRunning = participant.vmStatus === "running";
+                        const vmError = participant.vmStatus === "error";
+                        const vmStopped = participant.vmStatus === "stopped";
                         const mockCpu = Math.floor(20 + Math.random() * 60);
                         const mockRam = Math.floor(30 + Math.random() * 50);
                         const isRaisedHand = i < handsRaised;
 
                         return (
                           <motion.div
-                            key={student.id}
+                            key={participant.id}
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: i * 0.02 }}
@@ -644,7 +644,7 @@ export default function LiveTraining() {
                               vmRunning && "border-border",
                               vmStopped && "border-border/50 opacity-70"
                             )}
-                            onClick={() => setSelectedStudentVM(student.id)}
+                            onClick={() => setSelectedStudentVM(participant.id)}
                           >
                             {isRaisedHand && (
                               <div className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-[hsl(var(--warning))] flex items-center justify-center">
@@ -655,19 +655,19 @@ export default function LiveTraining() {
                             <div className="flex items-center gap-2 mb-2">
                               <Avatar className="h-6 w-6">
                                 <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
-                                  {student.name.split(" ").map(n => n[0]).join("")}
+                                  {participant.name.split(" ").map(n => n[0]).join("")}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold truncate">{student.name}</p>
-                                <p className="text-[10px] text-muted-foreground truncate">{student.currentModule}</p>
+                                <p className="text-xs font-semibold truncate">{participant.name}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{participant.currentModule}</p>
                               </div>
                               <span className={cn(
                                 "h-2 w-2 rounded-full shrink-0",
                                 vmRunning && "bg-[hsl(var(--success))]",
                                 vmError && "bg-[hsl(var(--destructive))]",
                                 vmStopped && "bg-muted-foreground",
-                                student.vmStatus === "not_assigned" && "bg-muted"
+                                participant.vmStatus === "not_assigned" && "bg-muted"
                               )} />
                             </div>
 
@@ -684,8 +684,8 @@ export default function LiveTraining() {
                                 </div>
                                 <Progress value={mockRam} className="h-1" />
                                 <div className="flex items-center justify-between text-[10px] mt-1">
-                                  <code className="font-mono text-muted-foreground">{student.vmIpAddress}</code>
-                                  <span className="text-muted-foreground">{student.lastActive}</span>
+                                  <code className="font-mono text-muted-foreground">{participant.vmIpAddress}</code>
+                                  <span className="text-muted-foreground">{participant.lastActive}</span>
                                 </div>
                               </div>
                             )}
@@ -699,22 +699,22 @@ export default function LiveTraining() {
                             {/* Hover actions */}
                             <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-card to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
                               <Tooltip><TooltipTrigger asChild>
-                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); toast({ title: `Console: ${student.name}` }); }}>
+                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); toast({ title: `Console: ${participant.name}` }); }}>
                                   <ExternalLink className="h-3 w-3" />
                                 </Button>
                               </TooltipTrigger><TooltipContent>Open Console</TooltipContent></Tooltip>
                               <Tooltip><TooltipTrigger asChild>
-                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); toast({ title: `Viewing ${student.name}'s screen` }); }}>
+                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); toast({ title: `Viewing ${participant.name}'s screen` }); }}>
                                   <Eye className="h-3 w-3" />
                                 </Button>
                               </TooltipTrigger><TooltipContent>View Screen</TooltipContent></Tooltip>
                               <Tooltip><TooltipTrigger asChild>
-                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); if (student.vm) { restartStudentVM(batch.id, student.vm.id); } toast({ title: `Restarting ${student.name}'s VM` }); }}>
+                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); if (participant.vm) { restartParticipantVM(batch.id, participant.vm.id); } toast({ title: `Restarting ${participant.name}'s VM` }); }}>
                                   <RotateCcw className="h-3 w-3" />
                                 </Button>
                               </TooltipTrigger><TooltipContent>Restart VM</TooltipContent></Tooltip>
                               <Tooltip><TooltipTrigger asChild>
-                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); if (student.vm) { recloneStudentVM(batch.id, student.vm.id); } toast({ title: `Recloning ${student.name}'s VM` }); }}>
+                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); if (participant.vm) { recloneParticipantVM(batch.id, participant.vm.id); } toast({ title: `Recloning ${participant.name}'s VM` }); }}>
                                   <Copy className="h-3 w-3" />
                                 </Button>
                               </TooltipTrigger><TooltipContent>Reclone from Golden</TooltipContent></Tooltip>
@@ -724,10 +724,10 @@ export default function LiveTraining() {
                       })}
                     </AnimatePresence>
 
-                    {filteredStudents.length === 0 && (
+                    {filteredParticipants.length === 0 && (
                       <div className="col-span-full py-8 text-center">
                         <Users className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">No students found</p>
+                        <p className="text-sm text-muted-foreground">No participants found</p>
                       </div>
                     )}
                   </div>
@@ -787,7 +787,7 @@ export default function LiveTraining() {
                 </div>
               </ScrollArea>
               <div className="p-3 border-t border-border flex gap-2">
-                <Input placeholder="Reply to students..." className="text-xs h-8" value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendChat()} />
+                <Input placeholder="Reply to participants..." className="text-xs h-8" value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendChat()} />
                 <Button size="sm" className="h-8 px-3 shrink-0" onClick={sendChat}><Send className="h-3 w-3" /></Button>
               </div>
             </CardContent>
@@ -802,7 +802,7 @@ export default function LiveTraining() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {students.slice(0, 5).map(s => (
+              {participants.slice(0, 5).map(s => (
                 <div key={s.id} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <span className={cn(
@@ -814,21 +814,21 @@ export default function LiveTraining() {
                   <span className="text-muted-foreground font-mono">{s.attendance.present}/{s.attendance.total}</span>
                 </div>
               ))}
-              {students.length > 5 && (
-                <p className="text-[10px] text-muted-foreground text-center mt-1">+{students.length - 5} more</p>
+              {participants.length > 5 && (
+                <p className="text-[10px] text-muted-foreground text-center mt-1">+{participants.length - 5} more</p>
               )}
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* Student VM Detail Sheet — Enhanced */}
-      <Sheet open={!!selectedStudentVM} onOpenChange={() => setSelectedStudentVM(null)}>
+      {/* Participant VM Detail Sheet — Enhanced */}
+      <Sheet open={!!selectedParticipantVM} onOpenChange={() => setSelectedStudentVM(null)}>
         <SheetContent className="w-[520px] sm:max-w-[520px]">
           {(() => {
-            const student = students.find(s => s.id === selectedStudentVM);
-            if (!student) return null;
-            const svm = studentVMs.find(v => v.assignedTo === student.name);
+            const participant = participants.find(p => p.id === selectedParticipantVM);
+            if (!participant) return null;
+            const svm = participantVMs.find(v => v.assignedTo === participant.name);
             const mockCpu = Math.floor(20 + Math.random() * 60);
             const mockRam = Math.floor(30 + Math.random() * 50);
             const mockDisk = Math.floor(20 + Math.random() * 40);
@@ -840,15 +840,15 @@ export default function LiveTraining() {
                   <SheetTitle className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        {student.name.split(" ").map(n => n[0]).join("")}
+                        {participant.name.split(" ").map(n => n[0]).join("")}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <span>{student.name}</span>
-                      <p className="text-sm font-normal text-muted-foreground">{student.email}</p>
+                      <span>{participant.name}</span>
+                      <p className="text-sm font-normal text-muted-foreground">{participant.email}</p>
                     </div>
                   </SheetTitle>
-                  <SheetDescription>Student VM details and actions</SheetDescription>
+                  <SheetDescription>Participant VM details and actions</SheetDescription>
                 </SheetHeader>
 
                 <ScrollArea className="mt-6 h-[calc(100vh-160px)]">
@@ -858,17 +858,17 @@ export default function LiveTraining() {
                       <div className="rounded-xl border border-border p-3 text-center">
                         <p className="text-[10px] text-muted-foreground uppercase mb-1">VM</p>
                         <StatusBadge
-                          status={student.vmStatus === "running" ? "success" : student.vmStatus === "error" ? "error" : "default"}
-                          label={student.vmStatus || "N/A"}
+                          status={participant.vmStatus === "running" ? "success" : participant.vmStatus === "error" ? "error" : "default"}
+                          label={participant.vmStatus || "N/A"}
                         />
                       </div>
                       <div className="rounded-xl border border-border p-3 text-center">
                         <p className="text-[10px] text-muted-foreground uppercase mb-1">Score</p>
-                        <p className="text-lg font-bold">{student.quizScore ?? "—"}</p>
+                        <p className="text-lg font-bold">{participant.quizScore ?? "—"}</p>
                       </div>
                       <div className="rounded-xl border border-border p-3 text-center">
                         <p className="text-[10px] text-muted-foreground uppercase mb-1">Attend.</p>
-                        <p className="text-lg font-bold">{Math.round((student.attendance.present / Math.max(student.attendance.total, 1)) * 100)}%</p>
+                        <p className="text-lg font-bold">{Math.round((participant.attendance.present / Math.max(participant.attendance.total, 1)) * 100)}%</p>
                       </div>
                     </div>
 
@@ -897,19 +897,19 @@ export default function LiveTraining() {
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">IP Address</span>
                           <div className="flex items-center gap-1.5">
-                            <code className="font-mono">{student.vmIpAddress || "—"}</code>
-                            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => { navigator.clipboard.writeText(student.vmIpAddress || ""); toast({ title: "Copied" }); }}>
+                            <code className="font-mono">{participant.vmIpAddress || "—"}</code>
+                            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => { navigator.clipboard.writeText(participant.vmIpAddress || ""); toast({ title: "Copied" }); }}>
                               <Copy className="h-2.5 w-2.5" />
                             </Button>
                           </div>
                         </div>
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">Module</span>
-                          <span className="font-medium">{student.currentModule}</span>
+                          <span className="font-medium">{participant.currentModule}</span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">Last Active</span>
-                          <span>{student.lastActive}</span>
+                          <span>{participant.lastActive}</span>
                         </div>
                         {currentSnap && (
                           <div className="flex items-center justify-between text-xs">
@@ -924,30 +924,30 @@ export default function LiveTraining() {
                     <div className="space-y-2">
                       <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</h4>
                       <div className="grid grid-cols-2 gap-2">
-                        <Button size="sm" className="text-xs" onClick={() => toast({ title: `Console opened for ${student.name}` })}>
+                        <Button size="sm" className="text-xs" onClick={() => toast({ title: `Console opened for ${participant.name}` })}>
                           <ExternalLink className="mr-1.5 h-3 w-3" />Open Console
                         </Button>
-                        <Button size="sm" variant="outline" className="text-xs" onClick={() => toast({ title: `Viewing ${student.name}'s screen` })}>
+                        <Button size="sm" variant="outline" className="text-xs" onClick={() => toast({ title: `Viewing ${participant.name}'s screen` })}>
                           <Eye className="mr-1.5 h-3 w-3" />View Screen
                         </Button>
-                        <Button size="sm" variant="outline" className="text-xs" onClick={() => { if (svm) restartStudentVM(batch.id, svm.id); toast({ title: `Restarting VM` }); }}>
+                        <Button size="sm" variant="outline" className="text-xs" onClick={() => { if (svm) restartParticipantVM(batch.id, svm.id); toast({ title: `Restarting VM` }); }}>
                           <RotateCcw className="mr-1.5 h-3 w-3" />Restart VM
                         </Button>
-                        <Button size="sm" variant="outline" className="text-xs" onClick={() => { navigator.clipboard.writeText(`ssh root@${student.vmIpAddress}`); toast({ title: "SSH Copied" }); }}>
+                        <Button size="sm" variant="outline" className="text-xs" onClick={() => { navigator.clipboard.writeText(`ssh root@${participant.vmIpAddress}`); toast({ title: "SSH Copied" }); }}>
                           <Terminal className="mr-1.5 h-3 w-3" />Copy SSH
                         </Button>
                         {svm && svm.status === "running" ? (
-                          <Button size="sm" variant="outline" className="text-xs" onClick={() => { stopStudentVM(batch.id, svm.id); toast({ title: "VM Stopped" }); }}>
+                          <Button size="sm" variant="outline" className="text-xs" onClick={() => { stopParticipantVM(batch.id, svm.id); toast({ title: "VM Stopped" }); }}>
                             <PowerOff className="mr-1.5 h-3 w-3" />Stop VM
                           </Button>
                         ) : svm ? (
-                          <Button size="sm" variant="outline" className="text-xs" onClick={() => { startStudentVM(batch.id, svm.id); toast({ title: "VM Starting" }); }}>
+                          <Button size="sm" variant="outline" className="text-xs" onClick={() => { startParticipantVM(batch.id, svm.id); toast({ title: "VM Starting" }); }}>
                             <Power className="mr-1.5 h-3 w-3" />Start VM
                           </Button>
                         ) : null}
                         <Button size="sm" variant="outline" className="text-xs" onClick={() => {
-                          if (svm) { snapshotStudentVM(batch.id, svm.id, `${student.name} - ${new Date().toLocaleTimeString()}`); }
-                          toast({ title: "Snapshot Created", description: `Saving ${student.name}'s VM state` });
+                          if (svm) { snapshotParticipantVM(batch.id, svm.id, `${participant.name} - ${new Date().toLocaleTimeString()}`); }
+                          toast({ title: "Snapshot Created", description: `Saving ${participant.name}'s VM state` });
                         }}>
                           <Camera className="mr-1.5 h-3 w-3" />Take Snapshot
                         </Button>
@@ -976,7 +976,7 @@ export default function LiveTraining() {
                           </Select>
                           <Button size="sm" className="h-8 text-xs shrink-0" disabled={!resetSnapshotId} onClick={() => {
                             if (svm && resetSnapshotId) {
-                              resetStudentVM(batch.id, svm.id, resetSnapshotId);
+                              resetParticipantVM(batch.id, svm.id, resetSnapshotId);
                               toast({ title: "Resetting VM", description: `Resetting to "${snapshots.find(s => s.id === resetSnapshotId)?.name}"` });
                               setResetSnapshotId("");
                             }
@@ -992,8 +992,8 @@ export default function LiveTraining() {
                       <div className="space-y-2">
                         <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reclone</h4>
                         <Button size="sm" variant="destructive" className="w-full text-xs" onClick={() => {
-                          recloneStudentVM(batch.id, svm.id);
-                          toast({ title: "Recloning VM", description: `Destroying and recreating ${student.name}'s VM from golden snapshot` });
+                          recloneParticipantVM(batch.id, svm.id);
+                          toast({ title: "Recloning VM", description: `Destroying and recreating ${participant.name}'s VM from golden snapshot` });
                         }}>
                           <Copy className="mr-1.5 h-3 w-3" />Reclone from Golden Snapshot
                         </Button>
@@ -1001,11 +1001,11 @@ export default function LiveTraining() {
                     )}
 
                     {/* VM Logs */}
-                    <Collapsible open={showStudentLogs} onOpenChange={setShowStudentLogs}>
+                    <Collapsible open={showParticipantLogs} onOpenChange={setShowStudentLogs}>
                       <div className="space-y-2">
                         <CollapsibleTrigger className="flex items-center justify-between w-full">
                           <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">VM Logs</h4>
-                          <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", showStudentLogs && "rotate-180")} />
+                          <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", showParticipantLogs && "rotate-180")} />
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <div className="rounded-lg bg-[hsl(var(--foreground))] p-3 font-mono text-[10px] leading-relaxed text-[hsl(var(--background))] max-h-[200px] overflow-y-auto">
@@ -1188,7 +1188,7 @@ export default function LiveTraining() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Launch Quick Poll</DialogTitle>
-            <DialogDescription>Create and broadcast a poll to all students</DialogDescription>
+            <DialogDescription>Create and broadcast a poll to all participants</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -1210,7 +1210,7 @@ export default function LiveTraining() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setQuickPollOpen(false)}>Cancel</Button>
-            <Button onClick={() => { toast({ title: "Poll Launched", description: `"${pollQuestion}" sent to ${students.length} students` }); setQuickPollOpen(false); setPollQuestion(""); }}>
+            <Button onClick={() => { toast({ title: "Poll Launched", description: `"${pollQuestion}" sent to ${participants.length} students` }); setQuickPollOpen(false); setPollQuestion(""); }}>
               <Zap className="mr-1.5 h-3.5 w-3.5" />Broadcast
             </Button>
           </DialogFooter>

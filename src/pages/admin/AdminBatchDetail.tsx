@@ -127,7 +127,7 @@ export default function AdminBatchDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { templates } = useLabStore();
-  const { batches, provisionTrainerVM, markTrainerVMConfigured, cloneTrainerVMForBatch, createSnapshot, setGoldenSnapshot, deleteSnapshot, resetStudentVM, resetAllVMs } = useBatchStore();
+  const { batches, provisionTrainerVM, markTrainerVMConfigured, cloneTrainerVMForBatch, createSnapshot, setGoldenSnapshot, deleteSnapshot, resetParticipantVM, resetAllVMs } = useBatchStore();
   const [addStudentOpen, setAddStudentOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
   const [snapshotName, setSnapshotName] = useState("");
@@ -209,7 +209,7 @@ export default function AdminBatchDetail() {
       resetAllVMs(batch.storeBatchId, selectedSnapshotForReset);
       toast({ title: "Resetting All VMs", description: `All student VMs are being reset to "${snap?.name}"...` });
     } else if (resetTarget.vmId) {
-      resetStudentVM(batch.storeBatchId, resetTarget.vmId, selectedSnapshotForReset);
+      resetParticipantVM(batch.storeBatchId, resetTarget.vmId, selectedSnapshotForReset);
       toast({ title: "Resetting VM", description: `${resetTarget.studentName}'s VM is being reset to "${snap?.name}"...` });
     }
     setResetDialogOpen(false);
@@ -647,11 +647,11 @@ export default function AdminBatchDetail() {
             </CardContent>
           </Card>
 
-          {/* Student VMs Section */}
+          {/* Participant VMs Section */}
           <div className="space-y-2">
             <h3 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
               <Users className="h-4 w-4" />
-              Student VMs ({labInstances.length})
+              Participant VMs ({labInstances.length})
             </h3>
             <Card>
               <CardContent className="p-0">
@@ -1217,7 +1217,7 @@ export default function AdminBatchDetail() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <RotateCcw className="h-4 w-4" />
-              {resetTarget.type === "all" ? "Reset All Student VMs" : `Reset ${resetTarget.studentName}'s VM`}
+              {resetTarget.type === "all" ? "Reset All Participant VMs" : `Reset ${resetTarget.studentName}'s VM`}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
