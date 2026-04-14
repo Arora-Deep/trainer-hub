@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import {
   Users, UserPlus, MoreHorizontal, ExternalLink, Monitor, CalendarCheck,
-  BookOpen, GraduationCap, Search, Download, Upload, Mail, ArrowUpDown,
+  BookOpen, GraduationCap, Search, Download, Upload, Mail, ArrowUpDown, Pencil, Check, X,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { Batch } from "@/stores/batchStore";
@@ -33,23 +33,79 @@ interface ParticipantsTabProps {
 type SortField = "name" | "quizScore" | "attendance" | "lastActive";
 
 export function ParticipantsTab({ batch }: ParticipantsTabProps) {
-  const { addParticipant, removeParticipant } = useBatchStore();
-  const [addParticipantOpen, setAddStudentOpen] = useState(false);
-  const [newParticipantName, setNewStudentName] = useState("");
-  const [newParticipantEmail, setNewStudentEmail] = useState("");
+  const { addParticipant, removeParticipant, updateParticipant, importParticipantsCSV } = useBatchStore();
+  const [addParticipantOpen, setAddParticipantOpen] = useState(false);
+  const [newParticipantName, setNewParticipantName] = useState("");
+  const [newParticipantEmail, setNewParticipantEmail] = useState("");
   const [search, setSearch] = useState("");
   const [vmFilter, setVmFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const csvInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAddStudent = () => {
+  const handleAddParticipant = () => {
     if (!newParticipantName.trim() || !newParticipantEmail.trim()) {
       toast({ title: "Error", description: "Name and email are required", variant: "destructive" });
       return;
     }
     addParticipant(batch.id, { name: newParticipantName.trim(), email: newParticipantEmail.trim() });
     toast({ title: "Success", description: "Participant added successfully" });
-    setNewStudentName(""); setNewStudentEmail(""); setAddStudentOpen(false);
+    setNewParticipantName(""); setNewParticipantEmail(""); setAddParticipantOpen(false);
+  };
+
+  const startEditing = (id: string, name: string, email: string) => {
+    setEditingId(id);
+    setEditName(name);
+    setEditEmail(email);
+  };
+
+  const saveEdit = () => {
+    if (!editingId || !editName.trim() || !editEmail.trim()) return;
+    updateParticipant(batch.id, editingId, { name: editName.trim(), email: editEmail.trim() });
+    toast({ title: "Updated", description: "Participant details saved" });
+    setEditingId(null);
+  };
+
+  const handleCSVImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split("\n").filter(l => l.trim());
+      // Skip header row if it looks like headers
+      const startIdx = lines[0]?.toLowerCase().includes("name") ? 1 : 0;
+      const participants = lines.slice(startIdx).map(line => {
+        const parts = line.split(",").map(p => p.trim().replace(/^["']|["']$/g, ""));
+        return { name: parts[0] || "", email: parts[1] || "" };
+      }).filter(p => p.name);
+
+      if (participants.length === 0) {
+        toast({ title: "Error", description: "No valid participants found in CSV", variant: "destructive" });
+        return;
+      }
+      importParticipantsCSV(batch.id, participants);
+      toast({ title: "Imported", description: `${participants.length} participants imported from CSV` });
+    };
+    reader.readAsText(file);
+    // Reset input
+    if (csvInputRef.current) csvInputRef.current.value = "";
+  };
+
+  const handleExportCSV = () => {
+    const header = "Name,Email\n";
+    const rows = batch.participants.map(p => `"${p.name}","${p.email}"`).join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${batch.name.replace(/\s+/g, "_")}_participants.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Exported", description: `${batch.participants.length} participants exported` });
   };
 
   const toggleSort = (field: SortField) => {
@@ -62,13 +118,13 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
   };
 
   const filteredParticipants = useMemo(() => {
-    let participants = batch.participants.filter((s) => {
-      const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) || s.email.toLowerCase().includes(search.toLowerCase());
-      const matchesVm = vmFilter === "all" || s.vmStatus === vmFilter;
+    let filtered = batch.participants.filter((p) => {
+      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.email.toLowerCase().includes(search.toLowerCase());
+      const matchesVm = vmFilter === "all" || p.vmStatus === vmFilter;
       return matchesSearch && matchesVm;
     });
 
-    participants.sort((a, b) => {
+    filtered.sort((a, b) => {
       const dir = sortDir === "asc" ? 1 : -1;
       switch (sortField) {
         case "name": return a.name.localeCompare(b.name) * dir;
@@ -87,21 +143,21 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
 
   const vmCounts = useMemo(() => ({
     all: batch.participants.length,
-    running: batch.participants.filter(s => s.vmStatus === "running").length,
-    stopped: batch.participants.filter(s => s.vmStatus === "stopped").length,
-    error: batch.participants.filter(s => s.vmStatus === "error").length,
+    running: batch.participants.filter(p => p.vmStatus === "running").length,
+    stopped: batch.participants.filter(p => p.vmStatus === "stopped").length,
+    error: batch.participants.filter(p => p.vmStatus === "error").length,
   }), [batch.participants]);
 
   const avgScore = useMemo(() => {
-    const scored = batch.participants.filter(s => s.quizScore !== null);
+    const scored = batch.participants.filter(p => p.quizScore !== null);
     if (scored.length === 0) return null;
-    return Math.round(scored.reduce((sum, s) => sum + (s.quizScore || 0), 0) / scored.length);
+    return Math.round(scored.reduce((sum, p) => sum + (p.quizScore || 0), 0) / scored.length);
   }, [batch.participants]);
 
   const avgAttendance = useMemo(() => {
-    const withAtt = batch.participants.filter(s => s.attendance.total > 0);
+    const withAtt = batch.participants.filter(p => p.attendance.total > 0);
     if (withAtt.length === 0) return null;
-    return Math.round(withAtt.reduce((sum, s) => sum + (s.attendance.present / s.attendance.total) * 100, 0) / withAtt.length);
+    return Math.round(withAtt.reduce((sum, p) => sum + (p.attendance.present / p.attendance.total) * 100, 0) / withAtt.length);
   }, [batch.participants]);
 
   const getVmStatusBadge = (status?: string) => {
@@ -135,8 +191,19 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
     </button>
   );
 
+  const isAutoGenerated = (name: string) => /^Participant \d+$/.test(name);
+
   return (
     <div className="space-y-4">
+      {/* Hidden CSV input */}
+      <input
+        ref={csvInputRef}
+        type="file"
+        accept=".csv"
+        className="hidden"
+        onChange={handleCSVImport}
+      />
+
       {/* Summary Strip */}
       {batch.participants.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -164,23 +231,37 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
         </div>
       )}
 
+      {/* Auto-generated hint */}
+      {batch.participants.length > 0 && batch.participants.some(p => isAutoGenerated(p.name)) && (
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-center gap-3">
+          <Pencil className="h-4 w-4 text-primary shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium">Participants auto-generated from seat count</p>
+            <p className="text-xs text-muted-foreground">Click the edit icon on any row to update names and emails, or import a CSV to replace all at once.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => csvInputRef.current?.click()}>
+            <Upload className="mr-1.5 h-3.5 w-3.5" />Import CSV
+          </Button>
+        </div>
+      )}
+
       {/* Main Card */}
       <Card>
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <CardTitle className="text-base">Students</CardTitle>
+            <CardTitle className="text-base">Participants</CardTitle>
             <CardDescription>Manage enrolled participants — monitor quiz scores, attendance, and VM access</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="hidden sm:flex">
+            <Button variant="outline" size="sm" className="hidden sm:flex" onClick={() => csvInputRef.current?.click()}>
               <Upload className="mr-1.5 h-3.5 w-3.5" />
               Import CSV
             </Button>
-            <Button variant="outline" size="sm" className="hidden sm:flex">
+            <Button variant="outline" size="sm" className="hidden sm:flex" onClick={handleExportCSV}>
               <Download className="mr-1.5 h-3.5 w-3.5" />
               Export
             </Button>
-            <Dialog open={addParticipantOpen} onOpenChange={setAddStudentOpen}>
+            <Dialog open={addParticipantOpen} onOpenChange={setAddParticipantOpen}>
               <DialogTrigger asChild>
                 <Button size="sm"><UserPlus className="mr-1.5 h-3.5 w-3.5" />Add Participant</Button>
               </DialogTrigger>
@@ -192,16 +273,16 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
                     <Label htmlFor="participantName">Full Name</Label>
-                    <Input id="participantName" placeholder="e.g., John Doe" value={newParticipantName} onChange={(e) => setNewStudentName(e.target.value)} />
+                    <Input id="participantName" placeholder="e.g., John Doe" value={newParticipantName} onChange={(e) => setNewParticipantName(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="participantEmail">Email Address</Label>
-                    <Input id="participantEmail" type="email" placeholder="john@company.com" value={newParticipantEmail} onChange={(e) => setNewStudentEmail(e.target.value)} />
+                    <Input id="participantEmail" type="email" placeholder="john@company.com" value={newParticipantEmail} onChange={(e) => setNewParticipantEmail(e.target.value)} />
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setAddStudentOpen(false)}>Cancel</Button>
-                  <Button onClick={handleAddStudent}>Add Participant</Button>
+                  <Button variant="outline" onClick={() => setAddParticipantOpen(false)}>Cancel</Button>
+                  <Button onClick={handleAddParticipant}>Add Participant</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -243,8 +324,8 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
               <h3 className="text-lg font-semibold">No participants enrolled</h3>
               <p className="text-sm text-muted-foreground max-w-sm mt-1.5">Add participants individually or import from a CSV file.</p>
               <div className="flex gap-2 mt-4">
-                <Button variant="outline" size="sm"><Upload className="mr-1.5 h-3.5 w-3.5" />Import CSV</Button>
-                <Button size="sm" onClick={() => setAddStudentOpen(true)}><UserPlus className="mr-1.5 h-3.5 w-3.5" />Add Participant</Button>
+                <Button variant="outline" size="sm" onClick={() => csvInputRef.current?.click()}><Upload className="mr-1.5 h-3.5 w-3.5" />Import CSV</Button>
+                <Button size="sm" onClick={() => setAddParticipantOpen(true)}><UserPlus className="mr-1.5 h-3.5 w-3.5" />Add Participant</Button>
               </div>
             </div>
           ) : filteredParticipants.length === 0 ? (
@@ -258,7 +339,7 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
               <TableHeader>
                 <TableRow className="bg-muted/30 hover:bg-muted/30">
                   <TableHead className="font-medium">
-                    <SortableHeader field="name">Student</SortableHeader>
+                    <SortableHeader field="name">Participant</SortableHeader>
                   </TableHead>
                   <TableHead className="font-medium">
                     <SortableHeader field="quizScore">
@@ -290,68 +371,111 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
               </TableHeader>
               <TableBody>
                 {filteredParticipants.map((participant) => (
-                  <TableRow key={student.id} className="group">
+                  <TableRow key={participant.id} className="group">
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9 border-2 border-primary/10">
-                          <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.name}`} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                            {student.name.split(" ").map((n) => n[0]).join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <span className="font-medium text-sm">{student.name}</span>
-                          <p className="text-xs text-muted-foreground">{student.email}</p>
+                      {editingId === participant.id ? (
+                        <div className="flex items-center gap-2">
+                          <div className="space-y-1 flex-1">
+                            <Input
+                              value={editName}
+                              onChange={(e) => setEditName(e.target.value)}
+                              className="h-7 text-sm"
+                              placeholder="Name"
+                              autoFocus
+                              onKeyDown={(e) => e.key === "Enter" && saveEdit()}
+                            />
+                            <Input
+                              value={editEmail}
+                              onChange={(e) => setEditEmail(e.target.value)}
+                              className="h-7 text-sm"
+                              placeholder="Email"
+                              onKeyDown={(e) => e.key === "Enter" && saveEdit()}
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-[hsl(var(--success))]" onClick={saveEdit}>
+                              <Check className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingId(null)}>
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-9 w-9 border-2 border-primary/10">
+                            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${participant.name}`} />
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                              {participant.name.split(" ").map((n) => n[0]).join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-medium text-sm">{participant.name}</span>
+                              {isAutoGenerated(participant.name) && (
+                                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 border-0 bg-muted">Auto</Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">{participant.email}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => startEditing(participant.id, participant.name, participant.email)}
+                          >
+                            <Pencil className="h-3 w-3 text-muted-foreground" />
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span className={cn("font-semibold text-sm tabular-nums", getScoreColor(student.quizScore))}>
-                          {student.quizScore !== null ? `${student.quizScore}%` : "—"}
+                        <span className={cn("font-semibold text-sm tabular-nums", getScoreColor(participant.quizScore))}>
+                          {participant.quizScore !== null ? `${participant.quizScore}%` : "—"}
                         </span>
-                        {student.quizScore !== null && student.quizScore >= 90 && (
+                        {participant.quizScore !== null && participant.quizScore >= 90 && (
                           <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-success/10 text-success border-0">Top</Badge>
                         )}
-                        {student.quizScore !== null && student.quizScore < 50 && (
+                        {participant.quizScore !== null && participant.quizScore < 50 && (
                           <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-destructive/10 text-destructive border-0">At Risk</Badge>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm">{student.currentModule}</span>
+                      <span className="text-sm">{participant.currentModule}</span>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5">
-                        <span className={cn("font-medium text-sm tabular-nums", getAttendanceColor(student.attendance.present, student.attendance.total))}>
-                          {student.attendance.present}/{student.attendance.total}
+                        <span className={cn("font-medium text-sm tabular-nums", getAttendanceColor(participant.attendance.present, participant.attendance.total))}>
+                          {participant.attendance.present}/{participant.attendance.total}
                         </span>
-                        {student.attendance.total > 0 && (
+                        {participant.attendance.total > 0 && (
                           <span className="text-xs text-muted-foreground">
-                            ({Math.round((student.attendance.present / student.attendance.total) * 100)}%)
+                            ({Math.round((participant.attendance.present / participant.attendance.total) * 100)}%)
                           </span>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {getVmStatusBadge(student.vmStatus)}
-                        {student.vmIpAddress && student.vmStatus === "running" && (
-                          <code className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted hidden xl:inline">{student.vmIpAddress}</code>
+                        {getVmStatusBadge(participant.vmStatus)}
+                        {participant.vmIpAddress && participant.vmStatus === "running" && (
+                          <code className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted hidden xl:inline">{participant.vmIpAddress}</code>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{student.lastActive}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">{participant.lastActive}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        {student.vmStatus === "running" && (
+                        {participant.vmStatus === "running" && (
                           <Button
                             variant="outline"
                             size="sm"
                             className="h-7 text-xs"
                             onClick={() => {
-                              toast({ title: "VM Console", description: `Opening ${student.name}'s VM console...` });
-                              window.open(`https://console.cloudadda.com/vm/${batch.id}/${student.id}`, "_blank");
+                              toast({ title: "VM Console", description: `Opening ${participant.name}'s VM console...` });
+                              window.open(`https://console.cloudadda.com/vm/${batch.id}/${participant.id}`, "_blank");
                             }}
                           >
                             <ExternalLink className="mr-1 h-3 w-3" />
@@ -365,12 +489,15 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => startEditing(participant.id, participant.name, participant.email)}>
+                              <Pencil className="mr-2 h-3.5 w-3.5" />Edit Details
+                            </DropdownMenuItem>
                             <DropdownMenuItem>View Profile</DropdownMenuItem>
                             <DropdownMenuItem><Mail className="mr-2 h-3.5 w-3.5" />Send Message</DropdownMenuItem>
                             <DropdownMenuItem>Mark Attendance</DropdownMenuItem>
-                            {student.vmStatus === "running" && (
+                            {participant.vmStatus === "running" && (
                               <DropdownMenuItem onClick={() => {
-                                toast({ title: "VM Console", description: `Accessing ${student.name}'s VM...` });
+                                toast({ title: "VM Console", description: `Accessing ${participant.name}'s VM...` });
                               }}>
                                 <ExternalLink className="mr-2 h-3.5 w-3.5" />Access VM Console
                               </DropdownMenuItem>
@@ -379,7 +506,7 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
                             <DropdownMenuItem
                               className="text-destructive"
                               onClick={() => {
-                                removeParticipant(batch.id, student.id);
+                                removeParticipant(batch.id, participant.id);
                                 toast({ title: "Removed", description: "Participant removed from batch" });
                               }}
                             >
