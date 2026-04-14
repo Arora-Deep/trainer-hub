@@ -39,7 +39,7 @@ import { useLabStore } from "@/stores/labStore";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { StudentsTab } from "@/components/batches/StudentsTab";
+import { ParticipantsTab } from "@/components/batches/ParticipantsTab";
 import { BatchSettingsTab } from "@/components/batches/BatchSettingsTab";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -71,7 +71,7 @@ export default function BatchDetails() {
   const {
     getBatch, addAnnouncement, setCourse, provisionTrainerVM, markTrainerVMConfigured,
     cloneTrainerVMForBatch, createSnapshot, setGoldenSnapshot, deleteSnapshot,
-    resetStudentVM, recloneStudentVM, restartStudentVM, stopStudentVM, startStudentVM,
+    resetParticipantVM, recloneParticipantVM, restartParticipantVM, stopParticipantVM, startParticipantVM,
     resetAllVMs, recloneAllVMs,
   } = useBatchStore();
   const { courses } = useCourseStore();
@@ -154,14 +154,14 @@ export default function BatchDetails() {
   };
   const selectAllVMs = () => {
     if (!vm) return;
-    if (selectedVMIds.length === vm.studentVMs.length) {
+    if (selectedVMIds.length === vm.participantVMs.length) {
       setSelectedVMIds([]);
     } else {
-      setSelectedVMIds(vm.studentVMs.map(v => v.id));
+      setSelectedVMIds(vm.participantVMs.map(v => v.id));
     }
   };
 
-  const consoleVM = vm?.studentVMs.find(v => v.id === consoleSheetVM);
+  const consoleVM = vm?.participantVMs.find(v => v.id === consoleSheetVM);
 
   return (
     <div className="space-y-6">
@@ -188,9 +188,9 @@ export default function BatchDetails() {
       {/* Quick Stats */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-5">
         {[
-          { label: "Students", value: `${batch.students.length}/${batch.seatCount}`, icon: Users, desc: "enrolled" },
+          { label: "Participants", value: `${batch.participants.length}/${batch.seatCount}`, icon: Users, desc: "enrolled" },
           { label: "Days Left", value: daysRemaining(), icon: Calendar, desc: `ends ${formatDate(batch.endDate)}` },
-          { label: "VMs Active", value: vm ? vm.studentVMs.filter(v => v.status === "running").length : 0, icon: Monitor, desc: "running" },
+          { label: "VMs Active", value: vm ? vm.participantVMs.filter(v => v.status === "running").length : 0, icon: Monitor, desc: "running" },
           { label: "Medium", value: mediumConfig[batch.medium]?.label || batch.medium, icon: MediumIcon, desc: "delivery" },
           { label: "Snapshots", value: snapshots.length, icon: Camera, desc: goldenSnapshot ? `golden: ${goldenSnapshot.name}` : "none set" },
         ].map((stat, i) => (
@@ -218,7 +218,7 @@ export default function BatchDetails() {
           <TabsList className="bg-transparent p-0 h-auto space-x-1">
             {[
               { value: "overview", label: "Overview", icon: BarChart3 },
-              { value: "students", label: "Students", icon: Users, count: batch.students.length },
+              { value: "participants", label: "Participants", icon: Users, count: batch.participants.length },
               { value: "vms", label: "VMs", icon: Monitor },
               { value: "course", label: "Course", icon: BookOpen },
               { value: "announcements", label: "Announcements", icon: Megaphone, count: batch.announcements.length },
@@ -339,8 +339,8 @@ export default function BatchDetails() {
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Student VMs</span>
-                      <span className="font-semibold text-sm">{vm.studentVMs.length}</span>
+                      <span className="text-sm text-muted-foreground">Participant VMs</span>
+                      <span className="font-semibold text-sm">{vm.participantVMs.length}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -350,8 +350,8 @@ export default function BatchDetails() {
         </TabsContent>
 
         {/* Students Tab */}
-        <TabsContent value="students">
-          <StudentsTab batch={batch} />
+        <TabsContent value="participants">
+          <ParticipantsTab batch={batch} />
         </TabsContent>
 
         {/* VMs Tab */}
@@ -376,7 +376,7 @@ export default function BatchDetails() {
                   {[
                     { label: "Template", value: templates.find(t => t.id === vm.vmTemplates[0]?.templateId)?.name || vm.vmTemplates[0]?.instanceName || "—" },
                     { label: "Type", value: `${vm.vmType} VM` },
-                    { label: "Student VMs", value: vm.studentVMs.length },
+                    { label: "Participant VMs", value: vm.participantVMs.length },
                     { label: "Est. Cost", value: `$${vm.pricing.total.toFixed(0)}` },
                   ].map((item) => (
                     <div key={item.label} className="p-4 rounded-xl bg-muted/30 border border-border/50">
@@ -393,7 +393,7 @@ export default function BatchDetails() {
                       <Terminal className="h-4 w-4 text-primary" />
                       Trainer VM Workflow
                     </CardTitle>
-                    <CardDescription>Provision → Configure → Clone for all students</CardDescription>
+                    <CardDescription>Provision → Configure → Clone for all participants</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
@@ -482,7 +482,7 @@ export default function BatchDetails() {
                             </div>
                             <div>
                               <p className="font-semibold text-sm">Clone for Batch</p>
-                              <p className="text-xs text-muted-foreground">Create identical VMs for all {batch.seatCount} students</p>
+                              <p className="text-xs text-muted-foreground">Create identical VMs for all {batch.seatCount} participants</p>
                             </div>
                           </div>
                           {trainerStatus === "configured" && vm.cloneStatus === "not_cloned" && (
@@ -491,7 +491,7 @@ export default function BatchDetails() {
                             </Button>
                           )}
                           {vm.cloneStatus === "cloning" && <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Cloning...</div>}
-                          {vm.cloneStatus === "cloned" && <StatusBadge status="success" label={`${vm.studentVMs.length} VMs`} />}
+                          {vm.cloneStatus === "cloned" && <StatusBadge status="success" label={`${vm.participantVMs.length} VMs`} />}
                         </div>
                       </div>
                     </div>
@@ -585,23 +585,23 @@ export default function BatchDetails() {
                   </CardContent>
                 </Card>
 
-                {/* Student VMs Table with Rich Actions */}
-                {vm.studentVMs.length > 0 && (
+                {/* Participant VMs Table with Rich Actions */}
+                {vm.participantVMs.length > 0 && (
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                       <div>
                         <CardTitle className="text-base flex items-center gap-2">
                           <Monitor className="h-4 w-4 text-primary" />
-                          Student VMs ({vm.studentVMs.length})
+                          Participant VMs ({vm.participantVMs.length})
                         </CardTitle>
                         <CardDescription>
-                          {vm.studentVMs.filter(v => v.status === "running").length} running,{" "}
-                          {vm.studentVMs.filter(v => v.status === "stopped").length} stopped,{" "}
-                          {vm.studentVMs.filter(v => v.status === "error").length} errors
+                          {vm.participantVMs.filter(v => v.status === "running").length} running,{" "}
+                          {vm.participantVMs.filter(v => v.status === "stopped").length} stopped,{" "}
+                          {vm.participantVMs.filter(v => v.status === "error").length} errors
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline" onClick={() => { recloneAllVMs(batch.id); toast({ title: "Recloning All VMs", description: "All student VMs are being recloned from golden snapshot..." }); }}>
+                        <Button size="sm" variant="outline" onClick={() => { recloneAllVMs(batch.id); toast({ title: "Recloning All VMs", description: "All participant VMs are being recloned from golden snapshot..." }); }}>
                           <Copy className="mr-1.5 h-3.5 w-3.5" />Reclone All
                         </Button>
                       </div>
@@ -613,7 +613,7 @@ export default function BatchDetails() {
                           <span className="text-sm font-medium">{selectedVMIds.length} VM{selectedVMIds.length > 1 ? "s" : ""} selected</span>
                           <div className="flex items-center gap-2">
                             <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => {
-                              selectedVMIds.forEach(vmId => restartStudentVM(batch.id, vmId));
+                              selectedVMIds.forEach(vmId => restartParticipantVM(batch.id, vmId));
                               toast({ title: "Restarting Selected VMs" });
                               setSelectedVMIds([]);
                             }}>
@@ -621,7 +621,7 @@ export default function BatchDetails() {
                             </Button>
                             {goldenSnapshot && (
                               <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => {
-                                selectedVMIds.forEach(vmId => resetStudentVM(batch.id, vmId, goldenSnapshot.id));
+                                selectedVMIds.forEach(vmId => resetParticipantVM(batch.id, vmId, goldenSnapshot.id));
                                 toast({ title: "Resetting Selected VMs" });
                                 setSelectedVMIds([]);
                               }}>
@@ -629,7 +629,7 @@ export default function BatchDetails() {
                               </Button>
                             )}
                             <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => {
-                              selectedVMIds.forEach(vmId => recloneStudentVM(batch.id, vmId));
+                              selectedVMIds.forEach(vmId => recloneParticipantVM(batch.id, vmId));
                               toast({ title: "Recloning Selected VMs" });
                               setSelectedVMIds([]);
                             }}>
@@ -644,7 +644,7 @@ export default function BatchDetails() {
                           <TableRow className="bg-muted/30 hover:bg-muted/30">
                             <TableHead className="w-10">
                               <Checkbox
-                                checked={selectedVMIds.length === vm.studentVMs.length && vm.studentVMs.length > 0}
+                                checked={selectedVMIds.length === vm.participantVMs.length && vm.participantVMs.length > 0}
                                 onCheckedChange={selectAllVMs}
                               />
                             </TableHead>
@@ -658,7 +658,7 @@ export default function BatchDetails() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {vm.studentVMs.map((svm) => {
+                          {vm.participantVMs.map((svm) => {
                             const mockCpu = Math.floor(20 + Math.random() * 60);
                             const mockRam = Math.floor(30 + Math.random() * 50);
                             const currentSnap = snapshots.find(s => s.id === svm.currentSnapshotId);
@@ -726,15 +726,15 @@ export default function BatchDetails() {
                                         <Clipboard className="mr-2 h-3.5 w-3.5" />Copy SSH Command
                                       </DropdownMenuItem>
                                       <DropdownMenuSeparator />
-                                      <DropdownMenuItem onClick={() => { restartStudentVM(batch.id, svm.id); toast({ title: `Restarting ${svm.assignedTo}'s VM` }); }}>
+                                      <DropdownMenuItem onClick={() => { restartParticipantVM(batch.id, svm.id); toast({ title: `Restarting ${svm.assignedTo}'s VM` }); }}>
                                         <RotateCcw className="mr-2 h-3.5 w-3.5" />Restart VM
                                       </DropdownMenuItem>
                                       {svm.status === "running" ? (
-                                        <DropdownMenuItem onClick={() => { stopStudentVM(batch.id, svm.id); toast({ title: `Stopped ${svm.assignedTo}'s VM` }); }}>
+                                        <DropdownMenuItem onClick={() => { stopParticipantVM(batch.id, svm.id); toast({ title: `Stopped ${svm.assignedTo}'s VM` }); }}>
                                           <PowerOff className="mr-2 h-3.5 w-3.5" />Stop VM
                                         </DropdownMenuItem>
                                       ) : svm.status === "stopped" ? (
-                                        <DropdownMenuItem onClick={() => { startStudentVM(batch.id, svm.id); toast({ title: `Starting ${svm.assignedTo}'s VM` }); }}>
+                                        <DropdownMenuItem onClick={() => { startParticipantVM(batch.id, svm.id); toast({ title: `Starting ${svm.assignedTo}'s VM` }); }}>
                                           <Power className="mr-2 h-3.5 w-3.5" />Start VM
                                         </DropdownMenuItem>
                                       ) : null}
@@ -746,7 +746,7 @@ export default function BatchDetails() {
                                           </DropdownMenuSubTrigger>
                                           <DropdownMenuSubContent>
                                             {snapshots.filter(s => s.status === "ready").map(snap => (
-                                              <DropdownMenuItem key={snap.id} onClick={() => { resetStudentVM(batch.id, svm.id, snap.id); toast({ title: `Resetting to "${snap.name}"` }); }}>
+                                              <DropdownMenuItem key={snap.id} onClick={() => { resetParticipantVM(batch.id, svm.id, snap.id); toast({ title: `Resetting to "${snap.name}"` }); }}>
                                                 {snap.isGolden && <Star className="mr-1.5 h-3 w-3 text-primary" />}
                                                 {snap.name}
                                               </DropdownMenuItem>
@@ -754,7 +754,7 @@ export default function BatchDetails() {
                                           </DropdownMenuSubContent>
                                         </DropdownMenuSub>
                                       )}
-                                      <DropdownMenuItem onClick={() => { recloneStudentVM(batch.id, svm.id); toast({ title: `Recloning ${svm.assignedTo}'s VM from golden snapshot` }); }}>
+                                      <DropdownMenuItem onClick={() => { recloneParticipantVM(batch.id, svm.id); toast({ title: `Recloning ${svm.assignedTo}'s VM from golden snapshot` }); }}>
                                         <Copy className="mr-2 h-3.5 w-3.5" />Reclone from Golden
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -838,7 +838,7 @@ export default function BatchDetails() {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-base">Announcements</CardTitle>
-                <CardDescription>Broadcast messages to all students</CardDescription>
+                <CardDescription>Broadcast messages to all participants</CardDescription>
               </div>
               <Dialog open={announcementOpen} onOpenChange={setAnnouncementOpen}>
                 <DialogTrigger asChild>
@@ -873,7 +873,7 @@ export default function BatchDetails() {
                     <Megaphone className="h-8 w-8 text-muted-foreground/50" />
                   </div>
                   <h3 className="text-lg font-semibold">No announcements yet</h3>
-                  <p className="text-sm text-muted-foreground max-w-sm mt-1.5">Create an announcement to broadcast to all students.</p>
+                  <p className="text-sm text-muted-foreground max-w-sm mt-1.5">Create an announcement to broadcast to all participants.</p>
                 </div>
               ) : (
                 batch.announcements.map((a, i) => (
@@ -950,7 +950,7 @@ export default function BatchDetails() {
         </TabsContent>
       </Tabs>
 
-      {/* Console Sheet for Student VM */}
+      {/* Console Sheet for Participant VM */}
       <Sheet open={!!consoleSheetVM} onOpenChange={() => setConsoleSheetVM(null)}>
         <SheetContent className="w-[520px] sm:max-w-[520px]">
           {consoleVM && (
@@ -1010,18 +1010,18 @@ export default function BatchDetails() {
                 <div className="space-y-2">
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</h4>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button size="sm" variant="outline" className="text-xs" onClick={() => { restartStudentVM(batch.id, consoleVM.id); toast({ title: "Restarting VM" }); }}>
+                    <Button size="sm" variant="outline" className="text-xs" onClick={() => { restartParticipantVM(batch.id, consoleVM.id); toast({ title: "Restarting VM" }); }}>
                       <RotateCcw className="mr-1.5 h-3 w-3" />Restart
                     </Button>
-                    <Button size="sm" variant="outline" className="text-xs" onClick={() => { recloneStudentVM(batch.id, consoleVM.id); toast({ title: "Recloning from Golden" }); setConsoleSheetVM(null); }}>
+                    <Button size="sm" variant="outline" className="text-xs" onClick={() => { recloneParticipantVM(batch.id, consoleVM.id); toast({ title: "Recloning from Golden" }); setConsoleSheetVM(null); }}>
                       <Copy className="mr-1.5 h-3 w-3" />Reclone
                     </Button>
                     {consoleVM.status === "running" ? (
-                      <Button size="sm" variant="outline" className="text-xs" onClick={() => { stopStudentVM(batch.id, consoleVM.id); toast({ title: "VM Stopped" }); }}>
+                      <Button size="sm" variant="outline" className="text-xs" onClick={() => { stopParticipantVM(batch.id, consoleVM.id); toast({ title: "VM Stopped" }); }}>
                         <PowerOff className="mr-1.5 h-3 w-3" />Stop
                       </Button>
                     ) : (
-                      <Button size="sm" variant="outline" className="text-xs" onClick={() => { startStudentVM(batch.id, consoleVM.id); toast({ title: "VM Starting" }); }}>
+                      <Button size="sm" variant="outline" className="text-xs" onClick={() => { startParticipantVM(batch.id, consoleVM.id); toast({ title: "VM Starting" }); }}>
                         <Power className="mr-1.5 h-3 w-3" />Start
                       </Button>
                     )}

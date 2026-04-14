@@ -70,7 +70,7 @@ const adminNav: NavConfig = {
     { label: "Users", icon: Users, items: [
       { title: "Platform Users", icon: UserCog, path: "/admin/users/platform" },
       { title: "Customer Users", icon: Building2, path: "/admin/users/customer" },
-      { title: "Students", icon: GraduationCap, path: "/admin/users/students" },
+      { title: "Participants", icon: GraduationCap, path: "/admin/users/students" },
       { title: "Roles", icon: Key, path: "/admin/users/roles" },
       { title: "Reset Password", icon: Lock, path: "/admin/users/reset-password" },
     ]},

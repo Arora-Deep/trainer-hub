@@ -5,11 +5,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { RotateCcw, Key } from "lucide-react";
 
 const students = [
-  { student: "Alice Johnson", customer: "DevOps Academy", batch: "K8s Batch #14", vm: "VM-2001", status: "active" },
-  { student: "Bob Williams", customer: "DevOps Academy", batch: "K8s Batch #14", vm: "VM-2002", status: "active" },
-  { student: "Carol Davis", customer: "Corporate L&D Co", batch: "Linux Fund. #8", vm: "VM-2003", status: "active" },
-  { student: "David Brown", customer: "SkillBridge Labs", batch: "K8s Batch #2", vm: "VM-2004", status: "inactive" },
-  { student: "Eva Martinez", customer: "DataScience Bootcamp", batch: "ML Cohort #5", vm: "VM-2005", status: "active" },
+  { participant: "Alice Johnson", customer: "DevOps Academy", batch: "K8s Batch #14", vm: "VM-2001", status: "active" },
+  { participant: "Bob Williams", customer: "DevOps Academy", batch: "K8s Batch #14", vm: "VM-2002", status: "active" },
+  { participant: "Carol Davis", customer: "Corporate L&D Co", batch: "Linux Fund. #8", vm: "VM-2003", status: "active" },
+  { participant: "David Brown", customer: "SkillBridge Labs", batch: "K8s Batch #2", vm: "VM-2004", status: "inactive" },
+  { participant: "Eva Martinez", customer: "DataScience Bootcamp", batch: "ML Cohort #5", vm: "VM-2005", status: "active" },
 ];
 
 const statusColors: Record<string, string> = {
@@ -17,12 +17,12 @@ const statusColors: Record<string, string> = {
   inactive: "bg-muted text-muted-foreground",
 };
 
-export default function AdminStudents() {
+export default function AdminParticipants() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Students</h1>
-        <p className="text-muted-foreground text-sm mt-1">All registered students across customers</p>
+        <h1 className="text-2xl font-bold tracking-tight">Participants</h1>
+        <p className="text-muted-foreground text-sm mt-1">All registered participants across customers</p>
       </div>
 
       <Card>
@@ -30,7 +30,7 @@ export default function AdminStudents() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student</TableHead>
+                <TableHead>Participant</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Batch</TableHead>
                 <TableHead>VM</TableHead>
@@ -41,7 +41,7 @@ export default function AdminStudents() {
             <TableBody>
               {students.map((s, i) => (
                 <TableRow key={i}>
-                  <TableCell className="text-sm font-medium">{s.student}</TableCell>
+                  <TableCell className="text-sm font-medium">{s.participant}</TableCell>
                   <TableCell className="text-sm">{s.customer}</TableCell>
                   <TableCell className="text-sm">{s.batch}</TableCell>
                   <TableCell className="text-sm font-mono">{s.vm}</TableCell>

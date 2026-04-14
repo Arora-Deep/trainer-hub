@@ -26,29 +26,29 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
-interface StudentsTabProps {
+interface ParticipantsTabProps {
   batch: Batch;
 }
 
 type SortField = "name" | "quizScore" | "attendance" | "lastActive";
 
-export function StudentsTab({ batch }: StudentsTabProps) {
-  const { addStudent, removeStudent } = useBatchStore();
-  const [addStudentOpen, setAddStudentOpen] = useState(false);
-  const [newStudentName, setNewStudentName] = useState("");
-  const [newStudentEmail, setNewStudentEmail] = useState("");
+export function ParticipantsTab({ batch }: ParticipantsTabProps) {
+  const { addParticipant, removeParticipant } = useBatchStore();
+  const [addParticipantOpen, setAddStudentOpen] = useState(false);
+  const [newParticipantName, setNewStudentName] = useState("");
+  const [newParticipantEmail, setNewStudentEmail] = useState("");
   const [search, setSearch] = useState("");
   const [vmFilter, setVmFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const handleAddStudent = () => {
-    if (!newStudentName.trim() || !newStudentEmail.trim()) {
+    if (!newParticipantName.trim() || !newParticipantEmail.trim()) {
       toast({ title: "Error", description: "Name and email are required", variant: "destructive" });
       return;
     }
-    addStudent(batch.id, { name: newStudentName.trim(), email: newStudentEmail.trim() });
-    toast({ title: "Success", description: "Student added successfully" });
+    addParticipant(batch.id, { name: newParticipantName.trim(), email: newParticipantEmail.trim() });
+    toast({ title: "Success", description: "Participant added successfully" });
     setNewStudentName(""); setNewStudentEmail(""); setAddStudentOpen(false);
   };
 
@@ -62,13 +62,13 @@ export function StudentsTab({ batch }: StudentsTabProps) {
   };
 
   const filteredStudents = useMemo(() => {
-    let students = batch.students.filter((s) => {
+    let participants = batch.participants.filter((s) => {
       const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) || s.email.toLowerCase().includes(search.toLowerCase());
       const matchesVm = vmFilter === "all" || s.vmStatus === vmFilter;
       return matchesSearch && matchesVm;
     });
 
-    students.sort((a, b) => {
+    participants.sort((a, b) => {
       const dir = sortDir === "asc" ? 1 : -1;
       switch (sortField) {
         case "name": return a.name.localeCompare(b.name) * dir;
@@ -83,26 +83,26 @@ export function StudentsTab({ batch }: StudentsTabProps) {
     });
 
     return students;
-  }, [batch.students, search, vmFilter, sortField, sortDir]);
+  }, [batch.participants, search, vmFilter, sortField, sortDir]);
 
   const vmCounts = useMemo(() => ({
-    all: batch.students.length,
-    running: batch.students.filter(s => s.vmStatus === "running").length,
-    stopped: batch.students.filter(s => s.vmStatus === "stopped").length,
-    error: batch.students.filter(s => s.vmStatus === "error").length,
-  }), [batch.students]);
+    all: batch.participants.length,
+    running: batch.participants.filter(s => s.vmStatus === "running").length,
+    stopped: batch.participants.filter(s => s.vmStatus === "stopped").length,
+    error: batch.participants.filter(s => s.vmStatus === "error").length,
+  }), [batch.participants]);
 
   const avgScore = useMemo(() => {
-    const scored = batch.students.filter(s => s.quizScore !== null);
+    const scored = batch.participants.filter(s => s.quizScore !== null);
     if (scored.length === 0) return null;
     return Math.round(scored.reduce((sum, s) => sum + (s.quizScore || 0), 0) / scored.length);
-  }, [batch.students]);
+  }, [batch.participants]);
 
   const avgAttendance = useMemo(() => {
-    const withAtt = batch.students.filter(s => s.attendance.total > 0);
+    const withAtt = batch.participants.filter(s => s.attendance.total > 0);
     if (withAtt.length === 0) return null;
     return Math.round(withAtt.reduce((sum, s) => sum + (s.attendance.present / s.attendance.total) * 100, 0) / withAtt.length);
-  }, [batch.students]);
+  }, [batch.participants]);
 
   const getVmStatusBadge = (status?: string) => {
     switch (status) {
@@ -138,10 +138,10 @@ export function StudentsTab({ batch }: StudentsTabProps) {
   return (
     <div className="space-y-4">
       {/* Summary Strip */}
-      {batch.students.length > 0 && (
+      {batch.participants.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Total Students", value: `${batch.students.length}/${batch.seatCount}`, icon: Users },
+            { label: "Total Participants", value: `${batch.participants.length}/${batch.seatCount}`, icon: Users },
             { label: "VMs Running", value: vmCounts.running, icon: Monitor },
             { label: "Avg Quiz Score", value: avgScore !== null ? `${avgScore}%` : "—", icon: GraduationCap },
             { label: "Avg Attendance", value: avgAttendance !== null ? `${avgAttendance}%` : "—", icon: CalendarCheck },
@@ -169,7 +169,7 @@ export function StudentsTab({ batch }: StudentsTabProps) {
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <CardTitle className="text-base">Students</CardTitle>
-            <CardDescription>Manage enrolled students — monitor quiz scores, attendance, and VM access</CardDescription>
+            <CardDescription>Manage enrolled participants — monitor quiz scores, attendance, and VM access</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="hidden sm:flex">
@@ -180,35 +180,35 @@ export function StudentsTab({ batch }: StudentsTabProps) {
               <Download className="mr-1.5 h-3.5 w-3.5" />
               Export
             </Button>
-            <Dialog open={addStudentOpen} onOpenChange={setAddStudentOpen}>
+            <Dialog open={addParticipantOpen} onOpenChange={setAddStudentOpen}>
               <DialogTrigger asChild>
-                <Button size="sm"><UserPlus className="mr-1.5 h-3.5 w-3.5" />Add Student</Button>
+                <Button size="sm"><UserPlus className="mr-1.5 h-3.5 w-3.5" />Add Participant</Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Add Student</DialogTitle>
-                  <DialogDescription>Add a new student to this batch.</DialogDescription>
+                  <DialogTitle>Add Participant</DialogTitle>
+                  <DialogDescription>Add a new participant to this batch.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="studentName">Full Name</Label>
-                    <Input id="studentName" placeholder="e.g., John Doe" value={newStudentName} onChange={(e) => setNewStudentName(e.target.value)} />
+                    <Label htmlFor="participantName">Full Name</Label>
+                    <Input id="participantName" placeholder="e.g., John Doe" value={newParticipantName} onChange={(e) => setNewStudentName(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="studentEmail">Email Address</Label>
-                    <Input id="studentEmail" type="email" placeholder="john@company.com" value={newStudentEmail} onChange={(e) => setNewStudentEmail(e.target.value)} />
+                    <Label htmlFor="participantEmail">Email Address</Label>
+                    <Input id="participantEmail" type="email" placeholder="john@company.com" value={newParticipantEmail} onChange={(e) => setNewStudentEmail(e.target.value)} />
                   </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setAddStudentOpen(false)}>Cancel</Button>
-                  <Button onClick={handleAddStudent}>Add Student</Button>
+                  <Button onClick={handleAddStudent}>Add Participant</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
         </CardHeader>
 
-        {batch.students.length > 0 && (
+        {batch.participants.length > 0 && (
           <div className="px-6 pb-4 flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -235,22 +235,22 @@ export function StudentsTab({ batch }: StudentsTabProps) {
         )}
 
         <CardContent className="p-0">
-          {batch.students.length === 0 ? (
+          {batch.participants.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
                 <Users className="h-8 w-8 text-muted-foreground/50" />
               </div>
-              <h3 className="text-lg font-semibold">No students enrolled</h3>
-              <p className="text-sm text-muted-foreground max-w-sm mt-1.5">Add students individually or import from a CSV file.</p>
+              <h3 className="text-lg font-semibold">No participants enrolled</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mt-1.5">Add participants individually or import from a CSV file.</p>
               <div className="flex gap-2 mt-4">
                 <Button variant="outline" size="sm"><Upload className="mr-1.5 h-3.5 w-3.5" />Import CSV</Button>
-                <Button size="sm" onClick={() => setAddStudentOpen(true)}><UserPlus className="mr-1.5 h-3.5 w-3.5" />Add Student</Button>
+                <Button size="sm" onClick={() => setAddStudentOpen(true)}><UserPlus className="mr-1.5 h-3.5 w-3.5" />Add Participant</Button>
               </div>
             </div>
           ) : filteredStudents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Search className="h-8 w-8 text-muted-foreground/40 mb-3" />
-              <p className="text-sm font-medium">No students match your filters</p>
+              <p className="text-sm font-medium">No participants match your filters</p>
               <p className="text-xs text-muted-foreground mt-1">Try adjusting your search or VM filter</p>
             </div>
           ) : (
@@ -379,8 +379,8 @@ export function StudentsTab({ batch }: StudentsTabProps) {
                             <DropdownMenuItem
                               className="text-destructive"
                               onClick={() => {
-                                removeStudent(batch.id, student.id);
-                                toast({ title: "Removed", description: "Student removed from batch" });
+                                removeParticipant(batch.id, student.id);
+                                toast({ title: "Removed", description: "Participant removed from batch" });
                               }}
                             >
                               Remove from Batch

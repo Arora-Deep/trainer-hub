@@ -15,7 +15,7 @@ const batchOptions = [
   { id: "b3", name: "Linux Fund. #8", customer: "Corporate L&D Co" },
 ];
 
-const students = [
+const participants = [
   { name: "Alice Johnson", assignedVM: "VM-2001", node: "node-mum-01", status: "running" },
   { name: "Bob Williams", assignedVM: "VM-2002", node: "node-mum-02", status: "running" },
   { name: "Carol Davis", assignedVM: "—", node: "—", status: "not_assigned" },
@@ -36,14 +36,14 @@ export default function AssignVM() {
   const [customer, setCustomer] = useState("");
   const [batch, setBatch] = useState("");
 
-  const assigned = students.filter(s => s.status === "running").length;
-  const unassigned = students.filter(s => s.status === "not_assigned").length;
+  const assigned = participants.filter(s => s.status === "running").length;
+  const unassigned = participants.filter(s => s.status === "not_assigned").length;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Assign VM</h1>
-        <p className="text-muted-foreground text-sm mt-1">Assign VMs to students by batch — supports bulk assignment</p>
+        <p className="text-muted-foreground text-sm mt-1">Assign VMs to participants by batch — supports bulk assignment</p>
       </div>
 
       {/* Step 1: Select Customer & Batch */}
@@ -77,7 +77,7 @@ export default function AssignVM() {
           <Card>
             <CardContent className="p-4 flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10"><Users className="h-4 w-4 text-primary" /></div>
-              <div><p className="text-xs text-muted-foreground">Total Students</p><p className="text-xl font-bold">{students.length}</p></div>
+              <div><p className="text-xs text-muted-foreground">Total Participants</p><p className="text-xl font-bold">{participants.length}</p></div>
             </CardContent>
           </Card>
           <Card>
@@ -95,12 +95,12 @@ export default function AssignVM() {
         </div>
       )}
 
-      {/* Students Table */}
+      {/* Participants Table */}
       {batch && (
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm">Students</CardTitle>
+              <CardTitle className="text-sm">Participants</CardTitle>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => toast({ title: "Auto Assign", description: "System will pick nodes with free capacity." })}>
                   <Zap className="h-3 w-3" /> Auto Assign
@@ -115,7 +115,7 @@ export default function AssignVM() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
+                  <TableHead>Participant</TableHead>
                   <TableHead>Assigned VM</TableHead>
                   <TableHead>Node</TableHead>
                   <TableHead>Status</TableHead>
@@ -123,7 +123,7 @@ export default function AssignVM() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {students.map((s, i) => {
+                {participants.map((s, i) => {
                   const sc = statusConfig[s.status];
                   return (
                     <TableRow key={i}>

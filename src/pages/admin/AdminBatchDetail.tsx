@@ -647,11 +647,11 @@ export default function AdminBatchDetail() {
             </CardContent>
           </Card>
 
-          {/* Student VMs Section */}
+          {/* Participant VMs Section */}
           <div className="space-y-2">
             <h3 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
               <Users className="h-4 w-4" />
-              Student VMs ({labInstances.length})
+              Participant VMs ({labInstances.length})
             </h3>
             <Card>
               <CardContent className="p-0">
@@ -1217,7 +1217,7 @@ export default function AdminBatchDetail() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <RotateCcw className="h-4 w-4" />
-              {resetTarget.type === "all" ? "Reset All Student VMs" : `Reset ${resetTarget.studentName}'s VM`}
+              {resetTarget.type === "all" ? "Reset All Participant VMs" : `Reset ${resetTarget.studentName}'s VM`}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
