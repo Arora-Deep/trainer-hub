@@ -143,8 +143,8 @@ interface BatchStore {
   getBatch: (id: string) => Batch | undefined;
   updateBatch: (id: string, updates: Partial<Batch>) => void;
   deleteBatch: (id: string) => void;
-  addParticipant: (batchId: string, student: Omit<Student, "id" | "quizScore" | "currentModule" | "lastActive" | "attendance" | "vmStatus" | "vmIpAddress">) => void;
-  removeParticipant: (batchId: string, studentId: string) => void;
+  addParticipant: (batchId: string, student: Omit<Participant, "id" | "quizScore" | "currentModule" | "lastActive" | "attendance" | "vmStatus" | "vmIpAddress">) => void;
+  removeParticipant: (batchId: string, participantId: string) => void;
   assignLab: (batchId: string, lab: Omit<AssignedLab, "id" | "completions">) => void;
   removeLab: (batchId: string, labAssignmentId: string) => void;
   addAnnouncement: (batchId: string, announcement: Omit<Announcement, "id" | "date">) => void;
@@ -156,14 +156,14 @@ interface BatchStore {
   createSnapshot: (batchId: string, name: string, description: string) => void;
   setGoldenSnapshot: (batchId: string, snapshotId: string) => void;
   deleteSnapshot: (batchId: string, snapshotId: string) => void;
-  resetStudentVM: (batchId: string, vmId: string, snapshotId: string) => void;
+  resetParticipantVM: (batchId: string, vmId: string, snapshotId: string) => void;
   resetAllVMs: (batchId: string, snapshotId: string) => void;
-  recloneStudentVM: (batchId: string, vmId: string) => void;
+  recloneParticipantVM: (batchId: string, vmId: string) => void;
   recloneAllVMs: (batchId: string) => void;
-  snapshotStudentVM: (batchId: string, vmId: string, name: string) => void;
-  stopStudentVM: (batchId: string, vmId: string) => void;
-  startStudentVM: (batchId: string, vmId: string) => void;
-  restartStudentVM: (batchId: string, vmId: string) => void;
+  snapshotParticipantVM: (batchId: string, vmId: string, name: string) => void;
+  stopParticipantVM: (batchId: string, vmId: string) => void;
+  startParticipantVM: (batchId: string, vmId: string) => void;
+  restartParticipantVM: (batchId: string, vmId: string) => void;
   recloneTrainerVM: (batchId: string, snapshotId: string) => void;
   resetTrainerVM: (batchId: string, snapshotId: string) => void;
   stopTrainerVM: (batchId: string) => void;
@@ -381,9 +381,9 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     set((state) => ({ batches: state.batches.filter((b) => b.id !== id) }));
   },
 
-  addParticipant: (batchId, student) => {
+  addParticipant: (batchId, participant) => {
     const newParticipant: Participant = {
-      ...student, id: `s-${Date.now()}`, quizScore: null, currentModule: "Not Started",
+      ...participant, id: `s-${Date.now()}`, quizScore: null, currentModule: "Not Started",
       lastActive: "Never", attendance: { present: 0, total: 0 }, vmStatus: "not_assigned",
     };
     set((state) => ({
@@ -391,9 +391,9 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     }));
   },
 
-  removeParticipant: (batchId, studentId) => {
+  removeParticipant: (batchId, participantId) => {
     set((state) => ({
-      batches: state.batches.map((b) => b.id === batchId ? { ...b, participants: b.participants.filter((s) => s.id !== studentId) } : b),
+      batches: state.batches.map((b) => b.id === batchId ? { ...b, participants: b.participants.filter((s) => s.id !== participantId) } : b),
     }));
   },
 
@@ -478,10 +478,10 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     setTimeout(() => {
       const currentBatch = get().batches.find((b) => b.id === batchId);
       if (!currentBatch?.vmConfig) return;
-      const participantVMs: VMInstance[] = currentBatch.participants.map((student, idx) => ({
-        id: `vm-student-${Date.now()}-${idx}`,
-        assignedTo: student.name, assignedEmail: student.email,
-        vmName: currentBatch.vmConfig!.vmTemplates[0]?.instanceName || "Student VM",
+      const participantVMs: VMInstance[] = currentBatch.participants.map((participant, idx) => ({
+        id: `vm-participant-${Date.now()}-${idx}`,
+        assignedTo: participant.name, assignedEmail: participant.email,
+        vmName: currentBatch.vmConfig!.vmTemplates[0]?.instanceName || "Participant VM",
         status: "running" as const,
         ipAddress: `10.0.${Math.floor((idx + 1) / 255)}.${((idx + 1) % 255) + 1}`,
         startedAt: new Date().toISOString(),
@@ -491,7 +491,7 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
         participantVMs.push({
           id: `vm-unassigned-${Date.now()}-${i}`,
           assignedTo: `Seat ${currentBatch.participants.length + i + 1}`, assignedEmail: "unassigned",
-          vmName: currentBatch.vmConfig!.vmTemplates[0]?.instanceName || "Student VM",
+          vmName: currentBatch.vmConfig!.vmTemplates[0]?.instanceName || "Participant VM",
           status: "running" as const,
           ipAddress: `10.0.${Math.floor((currentBatch.participants.length + i + 1) / 255)}.${((currentBatch.participants.length + i + 1) % 255) + 1}`,
           startedAt: new Date().toISOString(),
@@ -567,7 +567,7 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     }));
   },
 
-  resetStudentVM: (batchId, vmId, snapshotId) => {
+  resetParticipantVM: (batchId, vmId, snapshotId) => {
     set((state) => ({
       batches: state.batches.map((b) =>
         b.id === batchId && b.vmConfig
@@ -627,7 +627,7 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     }, 5000);
   },
 
-  recloneStudentVM: (batchId, vmId) => {
+  recloneParticipantVM: (batchId, vmId) => {
     set((state) => ({
       batches: state.batches.map((b) =>
         b.id === batchId && b.vmConfig
@@ -687,10 +687,10 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     }, 6000);
   },
 
-  snapshotStudentVM: (batchId, vmId, name) => {
+  snapshotParticipantVM: (batchId, vmId, name) => {
     const snapshotId = `snap-s-${Date.now()}`;
     const newSnapshot: VMSnapshot = {
-      id: snapshotId, name, description: `Snapshot of student VM ${vmId}`,
+      id: snapshotId, name, description: `Snapshot of participant VM ${vmId}`,
       createdAt: new Date().toISOString(), size: "Creating...", status: "creating", isGolden: false,
     };
     set((state) => ({
@@ -718,7 +718,7 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     }, 2000);
   },
 
-  stopStudentVM: (batchId, vmId) => {
+  stopParticipantVM: (batchId, vmId) => {
     set((state) => ({
       batches: state.batches.map((b) =>
         b.id === batchId && b.vmConfig
@@ -734,7 +734,7 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     }));
   },
 
-  startStudentVM: (batchId, vmId) => {
+  startParticipantVM: (batchId, vmId) => {
     set((state) => ({
       batches: state.batches.map((b) =>
         b.id === batchId && b.vmConfig
@@ -765,7 +765,7 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     }, 2000);
   },
 
-  restartStudentVM: (batchId, vmId) => {
+  restartParticipantVM: (batchId, vmId) => {
     set((state) => ({
       batches: state.batches.map((b) =>
         b.id === batchId && b.vmConfig

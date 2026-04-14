@@ -623,7 +623,7 @@ export default function LiveTraining() {
                   {/* Student Grid */}
                   <div className="grid grid-cols-2 xl:grid-cols-3 gap-2">
                     <AnimatePresence>
-                      {filteredParticipants.map((student, i) => {
+                      {filteredParticipants.map((participant, i) => {
                         const vmRunning = participant.vmStatus === "running";
                         const vmError = participant.vmStatus === "error";
                         const vmStopped = participant.vmStatus === "stopped";
@@ -826,8 +826,8 @@ export default function LiveTraining() {
       <Sheet open={!!selectedParticipantVM} onOpenChange={() => setSelectedStudentVM(null)}>
         <SheetContent className="w-[520px] sm:max-w-[520px]">
           {(() => {
-            const student = participants.find(s => s.id === selectedParticipantVM);
-            if (!student) return null;
+            const participant = participants.find(p => p.id === selectedParticipantVM);
+            if (!participant) return null;
             const svm = participantVMs.find(v => v.assignedTo === participant.name);
             const mockCpu = Math.floor(20 + Math.random() * 60);
             const mockRam = Math.floor(30 + Math.random() * 50);

@@ -82,7 +82,7 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
       }
     });
 
-    return students;
+    return filtered;
   }, [batch.participants, search, vmFilter, sortField, sortDir]);
 
   const vmCounts = useMemo(() => ({

@@ -68,7 +68,7 @@ export default function Batches() {
     // Sort
     switch (sortBy) {
       case "name": result.sort((a, b) => a.name.localeCompare(b.name)); break;
-      case "students": result.sort((a, b) => b.students.length - a.students.length); break;
+      case "students": result.sort((a, b) => b.participants.length - a.participants.length); break;
       case "newest": default: result.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()); break;
     }
     return result;
@@ -82,7 +82,7 @@ export default function Batches() {
     try { return format(new Date(dateStr), "MMM d"); } catch { return dateStr; }
   };
 
-  const totalStudents = useMemo(() => batches.reduce((sum, b) => sum + b.students.length, 0), [batches]);
+  const totalStudents = useMemo(() => batches.reduce((sum, b) => sum + b.participants.length, 0), [batches]);
 
   return (
     <div className="space-y-6">
@@ -284,7 +284,7 @@ export default function Batches() {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-1">
-                            <span className="text-sm font-semibold tabular-nums">{batch.students.length}</span>
+                            <span className="text-sm font-semibold tabular-nums">{batch.participants.length}</span>
                             <span className="text-xs text-muted-foreground">/ {batch.seatCount}</span>
                           </div>
                         </TableCell>
@@ -357,7 +357,7 @@ export default function Batches() {
                       <div className="grid grid-cols-2 gap-2 mb-4">
                         <div className="rounded-lg bg-muted/40 px-3 py-2">
                           <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Students</p>
-                          <p className="text-sm font-bold tabular-nums mt-0.5">{batch.students.length}<span className="text-xs font-normal text-muted-foreground">/{batch.seatCount}</span></p>
+                          <p className="text-sm font-bold tabular-nums mt-0.5">{batch.participants.length}<span className="text-xs font-normal text-muted-foreground">/{batch.seatCount}</span></p>
                         </div>
                         <div className="rounded-lg bg-muted/40 px-3 py-2">
                           <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Medium</p>
