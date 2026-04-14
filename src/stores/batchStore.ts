@@ -143,8 +143,10 @@ interface BatchStore {
   getBatch: (id: string) => Batch | undefined;
   updateBatch: (id: string, updates: Partial<Batch>) => void;
   deleteBatch: (id: string) => void;
-  addParticipant: (batchId: string, student: Omit<Participant, "id" | "quizScore" | "currentModule" | "lastActive" | "attendance" | "vmStatus" | "vmIpAddress">) => void;
+  addParticipant: (batchId: string, participant: Omit<Participant, "id" | "quizScore" | "currentModule" | "lastActive" | "attendance" | "vmStatus" | "vmIpAddress">) => void;
   removeParticipant: (batchId: string, participantId: string) => void;
+  updateParticipant: (batchId: string, participantId: string, updates: Partial<Pick<Participant, "name" | "email">>) => void;
+  importParticipantsCSV: (batchId: string, participants: { name: string; email: string }[]) => void;
   assignLab: (batchId: string, lab: Omit<AssignedLab, "id" | "completions">) => void;
   removeLab: (batchId: string, labAssignmentId: string) => void;
   addAnnouncement: (batchId: string, announcement: Omit<Announcement, "id" | "date">) => void;
@@ -362,10 +364,21 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
   addBatch: (batch, vmConfig) => {
     const id = Date.now().toString();
     const status = determineStatus(batch.startDate, batch.endDate);
+    // Auto-generate participants based on seat count
+    const autoParticipants: Participant[] = Array.from({ length: batch.seatCount }, (_, i) => ({
+      id: `p-${Date.now()}-${i}`,
+      name: `Participant ${i + 1}`,
+      email: `participant${i + 1}@example.com`,
+      quizScore: null,
+      currentModule: "Not Started",
+      lastActive: "Never",
+      attendance: { present: 0, total: 0 },
+      vmStatus: "not_assigned" as const,
+    }));
     const newBatch: Batch = {
       ...batch, id, status,
       createdAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-      participants: [], assignedLabs: [], announcements: [], vmConfig, labConfigs: [],
+      participants: autoParticipants, assignedLabs: [], announcements: [], vmConfig, labConfigs: [],
     };
     set((state) => ({ batches: [...state.batches, newBatch] }));
     return id;
@@ -394,6 +407,33 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
   removeParticipant: (batchId, participantId) => {
     set((state) => ({
       batches: state.batches.map((b) => b.id === batchId ? { ...b, participants: b.participants.filter((s) => s.id !== participantId) } : b),
+    }));
+  },
+
+  updateParticipant: (batchId, participantId, updates) => {
+    set((state) => ({
+      batches: state.batches.map((b) => b.id === batchId ? {
+        ...b, participants: b.participants.map((p) => p.id === participantId ? { ...p, ...updates } : p),
+      } : b),
+    }));
+  },
+
+  importParticipantsCSV: (batchId, csvParticipants) => {
+    set((state) => ({
+      batches: state.batches.map((b) => {
+        if (b.id !== batchId) return b;
+        const newParticipants: Participant[] = csvParticipants.map((cp, i) => ({
+          id: `p-${Date.now()}-${i}`,
+          name: cp.name,
+          email: cp.email,
+          quizScore: null,
+          currentModule: "Not Started",
+          lastActive: "Never",
+          attendance: { present: 0, total: 0 },
+          vmStatus: "not_assigned" as const,
+        }));
+        return { ...b, participants: newParticipants, seatCount: Math.max(b.seatCount, newParticipants.length) };
+      }),
     }));
   },
 
