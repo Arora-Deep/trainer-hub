@@ -61,7 +61,7 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
     }
   };
 
-  const filteredStudents = useMemo(() => {
+  const filteredParticipants = useMemo(() => {
     let participants = batch.participants.filter((s) => {
       const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) || s.email.toLowerCase().includes(search.toLowerCase());
       const matchesVm = vmFilter === "all" || s.vmStatus === vmFilter;
@@ -247,7 +247,7 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
                 <Button size="sm" onClick={() => setAddStudentOpen(true)}><UserPlus className="mr-1.5 h-3.5 w-3.5" />Add Participant</Button>
               </div>
             </div>
-          ) : filteredStudents.length === 0 ? (
+          ) : filteredParticipants.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Search className="h-8 w-8 text-muted-foreground/40 mb-3" />
               <p className="text-sm font-medium">No participants match your filters</p>
@@ -289,7 +289,7 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredStudents.map((student) => (
+                {filteredParticipants.map((participant) => (
                   <TableRow key={student.id} className="group">
                     <TableCell>
                       <div className="flex items-center gap-3">

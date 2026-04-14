@@ -127,7 +127,7 @@ export default function AdminBatchDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { templates } = useLabStore();
-  const { batches, provisionTrainerVM, markTrainerVMConfigured, cloneTrainerVMForBatch, createSnapshot, setGoldenSnapshot, deleteSnapshot, resetStudentVM, resetAllVMs } = useBatchStore();
+  const { batches, provisionTrainerVM, markTrainerVMConfigured, cloneTrainerVMForBatch, createSnapshot, setGoldenSnapshot, deleteSnapshot, resetParticipantVM, resetAllVMs } = useBatchStore();
   const [addStudentOpen, setAddStudentOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
   const [snapshotName, setSnapshotName] = useState("");
@@ -209,7 +209,7 @@ export default function AdminBatchDetail() {
       resetAllVMs(batch.storeBatchId, selectedSnapshotForReset);
       toast({ title: "Resetting All VMs", description: `All student VMs are being reset to "${snap?.name}"...` });
     } else if (resetTarget.vmId) {
-      resetStudentVM(batch.storeBatchId, resetTarget.vmId, selectedSnapshotForReset);
+      resetParticipantVM(batch.storeBatchId, resetTarget.vmId, selectedSnapshotForReset);
       toast({ title: "Resetting VM", description: `${resetTarget.studentName}'s VM is being reset to "${snap?.name}"...` });
     }
     setResetDialogOpen(false);
