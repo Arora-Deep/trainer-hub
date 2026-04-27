@@ -30,7 +30,7 @@ import {
   Monitor, Loader2, ExternalLink, Copy, CheckCircle2, Terminal, Mail,
   ClipboardList, Settings, GraduationCap, TrendingUp, Zap, BarChart3,
   AlertCircle, Globe, Building2, MoreVertical, RotateCcw, Power, PowerOff,
-  Camera, Trash2, Star, Eye, EyeOff, Clipboard,
+  Camera, Trash2, Star, Eye, EyeOff, Clipboard, Video,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBatchStore } from "@/stores/batchStore";
