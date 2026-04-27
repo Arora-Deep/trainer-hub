@@ -834,6 +834,11 @@ export default function BatchDetails() {
           </Card>
         </TabsContent>
 
+        {/* Meetings Tab */}
+        <TabsContent value="meetings">
+          <MeetingsTab batchName={batch.name} />
+        </TabsContent>
+
         {/* Announcements Tab */}
         <TabsContent value="announcements">
           <Card>
