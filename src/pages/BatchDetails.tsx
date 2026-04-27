@@ -222,6 +222,7 @@ export default function BatchDetails() {
               { value: "participants", label: "Participants", icon: Users, count: batch.participants.length },
               { value: "vms", label: "VMs", icon: Monitor },
               { value: "course", label: "Course", icon: BookOpen },
+              { value: "meetings", label: "Meetings", icon: Video },
               { value: "announcements", label: "Announcements", icon: Megaphone, count: batch.announcements.length },
               { value: "assessments", label: "Assessments", icon: ClipboardList },
               { value: "reports", label: "Reports", icon: TrendingUp },
