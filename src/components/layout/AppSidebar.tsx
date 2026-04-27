@@ -111,7 +111,7 @@ const trainerNav: NavConfig = {
     { label: "Main", icon: Home, items: [
       { title: "Dashboard", icon: Home, path: "/" },
       { title: "Live Training", icon: Radio, path: "/live-training" },
-      { title: "Meetings", icon: Video, path: "/meetings" },
+      
       { title: "Batches", icon: Users, path: "/batches" },
       { title: "Lab Templates", icon: FlaskConical, path: "/labs" },
       { title: "Courses", icon: BookOpen, path: "/courses" },
