@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,7 +21,7 @@ import {
 import {
   Video, VideoOff, Mic, MicOff, Monitor, MonitorOff, PhoneOff,
   Users, MessageSquare, Hand, Settings, Copy, ExternalLink, Plus,
-  Calendar, Clock, Link2, MoreVertical, Search, Play,
+  Clock, Link2, MoreVertical, Search, Play,
   VolumeX, Maximize2, Minimize2, LayoutGrid,
   Share2, Download, CircleDot, Send, XCircle,
 } from "lucide-react";
@@ -30,38 +29,29 @@ import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-// Mock meetings data
-const mockMeetings = [
-  {
-    id: "m1", title: "Kubernetes Batch - Day 3 Session", batch: "K8s Advanced - DevOps Academy",
-    status: "live" as const, startTime: "10:00 AM", endTime: "12:00 PM", date: "2026-04-07",
-    participants: 24, maxParticipants: 30, host: "Trainer Rahul",
-    platform: "built-in" as const, link: "", recording: true,
-  },
-  {
-    id: "m2", title: "ML Lab Walkthrough", batch: "ML GPU Lab - DataScience Bootcamp",
-    status: "scheduled" as const, startTime: "2:00 PM", endTime: "4:00 PM", date: "2026-04-07",
-    participants: 0, maxParticipants: 20, host: "Trainer Priya",
-    platform: "google-meet" as const, link: "https://meet.google.com/abc-defg-hij", recording: false,
-  },
-  {
-    id: "m3", title: "Linux Networking - Doubt Clearing", batch: "Linux Fundamentals - Corporate L&D",
-    status: "scheduled" as const, startTime: "5:00 PM", endTime: "6:00 PM", date: "2026-04-08",
-    participants: 0, maxParticipants: 15, host: "Trainer Amit",
-    platform: "zoom" as const, link: "https://zoom.us/j/123456789", recording: false,
-  },
-  {
-    id: "m4", title: "Docker Basics - Day 1", batch: "K8s Advanced - DevOps Academy",
-    status: "ended" as const, startTime: "10:00 AM", endTime: "12:00 PM", date: "2026-04-06",
-    participants: 22, maxParticipants: 30, host: "Trainer Rahul",
-    platform: "built-in" as const, link: "", recording: true,
-  },
-  {
-    id: "m5", title: "AWS Workshop Review", batch: "Cloud Practitioner - Corporate L&D",
-    status: "ended" as const, startTime: "3:00 PM", endTime: "5:00 PM", date: "2026-04-05",
-    participants: 18, maxParticipants: 25, host: "Trainer Priya",
-    platform: "google-meet" as const, link: "https://meet.google.com/xyz-uvwx-yz", recording: true,
-  },
+interface Meeting {
+  id: string;
+  title: string;
+  batch: string;
+  status: "live" | "scheduled" | "ended";
+  startTime: string;
+  endTime: string;
+  date: string;
+  participants: number;
+  maxParticipants: number;
+  host: string;
+  platform: "built-in" | "google-meet" | "zoom";
+  link: string;
+  recording: boolean;
+}
+
+// Mock meetings, scoped per batch via filter on `batch` prop
+const mockMeetings: Meeting[] = [
+  { id: "m1", title: "Day 3 Session - Deep Dive", batch: "__current__", status: "live", startTime: "10:00 AM", endTime: "12:00 PM", date: "2026-04-07", participants: 18, maxParticipants: 30, host: "You", platform: "built-in", link: "", recording: true },
+  { id: "m2", title: "Lab Walkthrough", batch: "__current__", status: "scheduled", startTime: "2:00 PM", endTime: "4:00 PM", date: "2026-04-07", participants: 0, maxParticipants: 30, host: "You", platform: "google-meet", link: "https://meet.google.com/abc-defg-hij", recording: false },
+  { id: "m3", title: "Doubt Clearing Session", batch: "__current__", status: "scheduled", startTime: "5:00 PM", endTime: "6:00 PM", date: "2026-04-08", participants: 0, maxParticipants: 30, host: "You", platform: "zoom", link: "https://zoom.us/j/123456789", recording: false },
+  { id: "m4", title: "Day 1 - Kickoff", batch: "__current__", status: "ended", startTime: "10:00 AM", endTime: "12:00 PM", date: "2026-04-06", participants: 22, maxParticipants: 30, host: "You", platform: "built-in", link: "", recording: true },
+  { id: "m5", title: "Day 2 - Workshop", batch: "__current__", status: "ended", startTime: "10:00 AM", endTime: "12:00 PM", date: "2026-04-05", participants: 20, maxParticipants: 30, host: "You", platform: "built-in", link: "", recording: true },
 ];
 
 const mockParticipants = [
@@ -83,14 +73,17 @@ const mockChatMessages = [
   { id: "c5", sender: "System", text: "Recording started", time: "10:37 AM" },
 ];
 
-export default function Meetings() {
+interface MeetingsTabProps {
+  batchName: string;
+}
+
+export function MeetingsTab({ batchName }: MeetingsTabProps) {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [inMeeting, setInMeeting] = useState(false);
-  const [activeMeeting, setActiveMeeting] = useState<typeof mockMeetings[0] | null>(null);
+  const [activeMeeting, setActiveMeeting] = useState<Meeting | null>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Meeting controls
   const [micOn, setMicOn] = useState(true);
   const [videoOn, setVideoOn] = useState(true);
   const [screenShare, setScreenShare] = useState(false);
@@ -102,14 +95,19 @@ export default function Meetings() {
   const [gridView, setGridView] = useState(true);
   const [handRaised, setHandRaised] = useState(false);
 
-  // Schedule form
   const [scheduleForm, setScheduleForm] = useState({
-    title: "", batch: "", date: "", startTime: "", endTime: "",
+    title: "", date: "", startTime: "", endTime: "",
     platform: "built-in", link: "", enableRecording: true, enableChat: true,
     waitingRoom: false, muteOnEntry: true,
   });
 
-  const joinMeeting = (meeting: typeof mockMeetings[0]) => {
+  // Scope all meetings to this batch
+  const batchMeetings = useMemo(
+    () => mockMeetings.map(m => ({ ...m, batch: batchName })),
+    [batchName]
+  );
+
+  const joinMeeting = (meeting: Meeting) => {
     if (meeting.platform !== "built-in") {
       window.open(meeting.link, "_blank");
       toast({ title: "Opening external meeting", description: `Redirecting to ${meeting.platform === "google-meet" ? "Google Meet" : "Zoom"}...` });
@@ -132,7 +130,7 @@ export default function Meetings() {
   const scheduleMeeting = () => {
     toast({ title: "Meeting scheduled", description: `"${scheduleForm.title}" scheduled for ${scheduleForm.date}` });
     setScheduleOpen(false);
-    setScheduleForm({ title: "", batch: "", date: "", startTime: "", endTime: "", platform: "built-in", link: "", enableRecording: true, enableChat: true, waitingRoom: false, muteOnEntry: true });
+    setScheduleForm({ title: "", date: "", startTime: "", endTime: "", platform: "built-in", link: "", enableRecording: true, enableChat: true, waitingRoom: false, muteOnEntry: true });
   };
 
   const copyLink = (link: string) => {
@@ -152,19 +150,18 @@ export default function Meetings() {
     return "⚡";
   };
 
-  const filteredMeetings = mockMeetings.filter(m => {
+  const filteredMeetings = batchMeetings.filter(m => {
     if (activeTab === "upcoming") return m.status === "live" || m.status === "scheduled";
     if (activeTab === "past") return m.status === "ended";
     return true;
   }).filter(m =>
-    !searchQuery || m.title.toLowerCase().includes(searchQuery.toLowerCase()) || m.batch.toLowerCase().includes(searchQuery.toLowerCase())
+    !searchQuery || m.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // ─── IN-MEETING VIEW ────────────────────────────────────────
   if (inMeeting && activeMeeting) {
     return (
-      <div className="flex flex-col h-[calc(100vh-4rem)]">
-        {/* Top bar */}
+      <div className="flex flex-col h-[calc(100vh-12rem)] rounded-xl border border-border overflow-hidden bg-background">
         <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
@@ -194,12 +191,9 @@ export default function Meetings() {
           </div>
         </div>
 
-        {/* Main content */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Video grid */}
           <div className="flex-1 flex flex-col">
             <div className={cn("flex-1 p-3", gridView ? "grid grid-cols-3 gap-2" : "flex flex-col gap-2")}>
-              {/* Trainer (You) - large tile */}
               <div className={cn(
                 "relative rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20",
                 gridView ? "col-span-2 row-span-2" : "flex-[2]"
@@ -240,7 +234,6 @@ export default function Meetings() {
                 </div>
               </div>
 
-              {/* Participant tiles */}
               {mockParticipants.slice(0, gridView ? 4 : 6).map((p) => (
                 <div key={p.id} className="relative rounded-xl overflow-hidden bg-card border border-border min-h-[120px] group">
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -272,7 +265,6 @@ export default function Meetings() {
                   <div className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5">
                     {!p.mic && <div className="h-5 w-5 rounded-full bg-destructive/60 flex items-center justify-center"><MicOff className="h-2.5 w-2.5" /></div>}
                   </div>
-                  {/* Hover actions */}
                   <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <Button size="sm" variant="outline" className="h-7 text-xs">
                       <MicOff className="h-3 w-3 mr-1" /> Mute
@@ -285,71 +277,30 @@ export default function Meetings() {
               ))}
             </div>
 
-            {/* Controls bar */}
             <div className="flex items-center justify-center gap-2 p-3 bg-card border-t border-border">
-              <Button
-                variant={micOn ? "outline" : "destructive"}
-                size="icon"
-                className="h-10 w-10 rounded-full"
-                onClick={() => setMicOn(!micOn)}
-              >
+              <Button variant={micOn ? "outline" : "destructive"} size="icon" className="h-10 w-10 rounded-full" onClick={() => setMicOn(!micOn)}>
                 {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
               </Button>
-              <Button
-                variant={videoOn ? "outline" : "destructive"}
-                size="icon"
-                className="h-10 w-10 rounded-full"
-                onClick={() => setVideoOn(!videoOn)}
-              >
+              <Button variant={videoOn ? "outline" : "destructive"} size="icon" className="h-10 w-10 rounded-full" onClick={() => setVideoOn(!videoOn)}>
                 {videoOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
               </Button>
-              <Button
-                variant={screenShare ? "secondary" : "outline"}
-                size="icon"
-                className="h-10 w-10 rounded-full"
-                onClick={() => setScreenShare(!screenShare)}
-              >
+              <Button variant={screenShare ? "secondary" : "outline"} size="icon" className="h-10 w-10 rounded-full" onClick={() => setScreenShare(!screenShare)}>
                 {screenShare ? <MonitorOff className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
               </Button>
-              <Button
-                variant={recording ? "secondary" : "outline"}
-                size="icon"
-                className="h-10 w-10 rounded-full"
-                onClick={() => { setRecording(!recording); toast({ title: recording ? "Recording stopped" : "Recording started" }); }}
-              >
+              <Button variant={recording ? "secondary" : "outline"} size="icon" className="h-10 w-10 rounded-full" onClick={() => { setRecording(!recording); toast({ title: recording ? "Recording stopped" : "Recording started" }); }}>
                 <CircleDot className={cn("h-4 w-4", recording && "text-destructive")} />
               </Button>
               <Separator orientation="vertical" className="h-6" />
-              <Button
-                variant={handRaised ? "secondary" : "outline"}
-                size="icon"
-                className="h-10 w-10 rounded-full"
-                onClick={() => setHandRaised(!handRaised)}
-              >
+              <Button variant={handRaised ? "secondary" : "outline"} size="icon" className="h-10 w-10 rounded-full" onClick={() => setHandRaised(!handRaised)}>
                 <Hand className={cn("h-4 w-4", handRaised && "text-amber-400")} />
               </Button>
-              <Button
-                variant={chatOpen ? "secondary" : "outline"}
-                size="icon"
-                className="h-10 w-10 rounded-full"
-                onClick={() => { setChatOpen(!chatOpen); setParticipantsOpen(false); }}
-              >
+              <Button variant={chatOpen ? "secondary" : "outline"} size="icon" className="h-10 w-10 rounded-full" onClick={() => { setChatOpen(!chatOpen); setParticipantsOpen(false); }}>
                 <MessageSquare className="h-4 w-4" />
               </Button>
-              <Button
-                variant={participantsOpen ? "secondary" : "outline"}
-                size="icon"
-                className="h-10 w-10 rounded-full"
-                onClick={() => { setParticipantsOpen(!participantsOpen); setChatOpen(false); }}
-              >
+              <Button variant={participantsOpen ? "secondary" : "outline"} size="icon" className="h-10 w-10 rounded-full" onClick={() => { setParticipantsOpen(!participantsOpen); setChatOpen(false); }}>
                 <Users className="h-4 w-4" />
               </Button>
-              <Button
-                variant={gridView ? "secondary" : "outline"}
-                size="icon"
-                className="h-10 w-10 rounded-full"
-                onClick={() => setGridView(!gridView)}
-              >
+              <Button variant={gridView ? "secondary" : "outline"} size="icon" className="h-10 w-10 rounded-full" onClick={() => setGridView(!gridView)}>
                 <LayoutGrid className="h-4 w-4" />
               </Button>
               <Separator orientation="vertical" className="h-6" />
@@ -359,15 +310,9 @@ export default function Meetings() {
             </div>
           </div>
 
-          {/* Side panel (chat or participants) */}
           <AnimatePresence>
             {(chatOpen || participantsOpen) && (
-              <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 320, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                className="border-l border-border bg-card flex flex-col overflow-hidden"
-              >
+              <motion.div initial={{ width: 0, opacity: 0 }} animate={{ width: 320, opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="border-l border-border bg-card flex flex-col overflow-hidden">
                 {chatOpen && (
                   <>
                     <div className="p-3 border-b border-border flex items-center justify-between">
@@ -396,13 +341,8 @@ export default function Meetings() {
                       </div>
                     </ScrollArea>
                     <div className="p-3 border-t border-border flex gap-2">
-                      <Input
-                        placeholder="Type a message..."
-                        value={chatInput}
-                        onChange={(e) => setChatInput(e.target.value)}
-                        className="text-xs h-8"
-                        onKeyDown={(e) => { if (e.key === "Enter" && chatInput.trim()) { toast({ title: "Message sent" }); setChatInput(""); }}}
-                      />
+                      <Input placeholder="Type a message..." value={chatInput} onChange={(e) => setChatInput(e.target.value)} className="text-xs h-8"
+                        onKeyDown={(e) => { if (e.key === "Enter" && chatInput.trim()) { toast({ title: "Message sent" }); setChatInput(""); }}} />
                       <Button size="icon" className="h-8 w-8 shrink-0">
                         <Send className="h-3.5 w-3.5" />
                       </Button>
@@ -417,7 +357,6 @@ export default function Meetings() {
                     </div>
                     <ScrollArea className="flex-1 p-3">
                       <div className="space-y-1">
-                        {/* Host */}
                         <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
                           <Avatar className="h-7 w-7">
                             <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">TR</AvatarFallback>
@@ -484,7 +423,12 @@ export default function Meetings() {
   // ─── MEETING LIST VIEW ──────────────────────────────────────
   return (
     <div className="space-y-6">
-      <PageHeader title="Meetings" description="Schedule, join, and manage training meetings" actions={
+      {/* Header bar inside tab */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-semibold">Meetings</h3>
+          <p className="text-xs text-muted-foreground">Schedule, join, and manage meetings for {batchName}</p>
+        </div>
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -492,30 +436,18 @@ export default function Meetings() {
           </div>
           <Button onClick={() => setScheduleOpen(true)}><Plus className="h-4 w-4 mr-2" /> Schedule Meeting</Button>
         </div>
-      } />
+      </div>
 
-      {/* Schedule Dialog */}
       <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Schedule a Meeting</DialogTitle>
-            <DialogDescription>Set up a new training meeting for a batch</DialogDescription>
+            <DialogDescription>Set up a new training meeting for {batchName}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label className="text-xs">Meeting Title</Label>
-              <Input placeholder="e.g. Kubernetes Day 4 - Deployments" value={scheduleForm.title} onChange={(e) => setScheduleForm({...scheduleForm, title: e.target.value})} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Batch</Label>
-              <Select value={scheduleForm.batch} onValueChange={(v) => setScheduleForm({...scheduleForm, batch: v})}>
-                <SelectTrigger><SelectValue placeholder="Select batch" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="k8s">K8s Advanced - DevOps Academy</SelectItem>
-                  <SelectItem value="ml">ML GPU Lab - DataScience Bootcamp</SelectItem>
-                  <SelectItem value="linux">Linux Fundamentals - Corporate L&D</SelectItem>
-                </SelectContent>
-              </Select>
+              <Input placeholder="e.g. Day 4 - Deployments" value={scheduleForm.title} onChange={(e) => setScheduleForm({...scheduleForm, title: e.target.value})} />
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
@@ -576,14 +508,14 @@ export default function Meetings() {
       </Dialog>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
               <CircleDot className="h-5 w-5 text-emerald-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{mockMeetings.filter(m => m.status === "live").length}</p>
+              <p className="text-2xl font-bold">{batchMeetings.filter(m => m.status === "live").length}</p>
               <p className="text-xs text-muted-foreground">Live Now</p>
             </div>
           </CardContent>
@@ -591,10 +523,10 @@ export default function Meetings() {
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-              <Calendar className="h-5 w-5 text-amber-400" />
+              <Clock className="h-5 w-5 text-amber-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{mockMeetings.filter(m => m.status === "scheduled").length}</p>
+              <p className="text-2xl font-bold">{batchMeetings.filter(m => m.status === "scheduled").length}</p>
               <p className="text-xs text-muted-foreground">Scheduled</p>
             </div>
           </CardContent>
@@ -605,8 +537,8 @@ export default function Meetings() {
               <Users className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{mockMeetings.reduce((a, m) => a + m.participants, 0)}</p>
-              <p className="text-xs text-muted-foreground">Total Participants</p>
+              <p className="text-2xl font-bold">{batchMeetings.reduce((a, m) => a + m.participants, 0)}</p>
+              <p className="text-xs text-muted-foreground">Total Attendees</p>
             </div>
           </CardContent>
         </Card>
@@ -616,14 +548,13 @@ export default function Meetings() {
               <Download className="h-5 w-5 text-blue-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{mockMeetings.filter(m => m.recording).length}</p>
+              <p className="text-2xl font-bold">{batchMeetings.filter(m => m.recording).length}</p>
               <p className="text-xs text-muted-foreground">Recordings</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="upcoming">Upcoming & Live</TabsTrigger>
@@ -632,14 +563,13 @@ export default function Meetings() {
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-4">
-          {/* Live meetings highlight */}
-          {activeTab !== "past" && mockMeetings.filter(m => m.status === "live").length > 0 && (
+          {activeTab !== "past" && batchMeetings.filter(m => m.status === "live").length > 0 && (
             <div className="mb-4 space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <CircleDot className="h-3.5 w-3.5 text-emerald-400 animate-pulse" /> Live Now
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {mockMeetings.filter(m => m.status === "live").map((meeting) => (
+                {batchMeetings.filter(m => m.status === "live").map((meeting) => (
                   <Card key={meeting.id} className="border-emerald-500/30 bg-emerald-500/5">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
@@ -680,7 +610,6 @@ export default function Meetings() {
             </div>
           )}
 
-          {/* Meeting table */}
           <Card>
             <CardContent className="p-0">
               <Table>
@@ -688,7 +617,6 @@ export default function Meetings() {
                   <TableRow>
                     <TableHead className="w-12">Platform</TableHead>
                     <TableHead>Meeting</TableHead>
-                    <TableHead>Batch</TableHead>
                     <TableHead>Date & Time</TableHead>
                     <TableHead>Host</TableHead>
                     <TableHead>Participants</TableHead>
@@ -706,7 +634,6 @@ export default function Meetings() {
                           {meeting.recording && <Badge variant="outline" className="text-[10px] mt-0.5">📹 Recording</Badge>}
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{meeting.batch}</TableCell>
                       <TableCell className="text-sm">
                         <div>{meeting.date}</div>
                         <div className="text-xs text-muted-foreground">{meeting.startTime} - {meeting.endTime}</div>
@@ -728,7 +655,7 @@ export default function Meetings() {
                           )}
                           {meeting.status === "scheduled" && (
                             <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => joinMeeting(meeting)}>
-                              {(meeting.platform as string) === "built-in" ? "Start" : "Open"}
+                              {meeting.platform === "built-in" ? "Start" : "Open"}
                             </Button>
                           )}
                           {meeting.status === "ended" && meeting.recording && (

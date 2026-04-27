@@ -30,7 +30,7 @@ import {
   Monitor, Loader2, ExternalLink, Copy, CheckCircle2, Terminal, Mail,
   ClipboardList, Settings, GraduationCap, TrendingUp, Zap, BarChart3,
   AlertCircle, Globe, Building2, MoreVertical, RotateCcw, Power, PowerOff,
-  Camera, Trash2, Star, Eye, EyeOff, Clipboard,
+  Camera, Trash2, Star, Eye, EyeOff, Clipboard, Video,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBatchStore } from "@/stores/batchStore";
@@ -41,6 +41,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ParticipantsTab } from "@/components/batches/ParticipantsTab";
 import { BatchSettingsTab } from "@/components/batches/BatchSettingsTab";
+import { MeetingsTab } from "@/components/batches/MeetingsTab";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
@@ -221,6 +222,7 @@ export default function BatchDetails() {
               { value: "participants", label: "Participants", icon: Users, count: batch.participants.length },
               { value: "vms", label: "VMs", icon: Monitor },
               { value: "course", label: "Course", icon: BookOpen },
+              { value: "meetings", label: "Meetings", icon: Video },
               { value: "announcements", label: "Announcements", icon: Megaphone, count: batch.announcements.length },
               { value: "assessments", label: "Assessments", icon: ClipboardList },
               { value: "reports", label: "Reports", icon: TrendingUp },
@@ -830,6 +832,11 @@ export default function BatchDetails() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Meetings Tab */}
+        <TabsContent value="meetings">
+          <MeetingsTab batchName={batch.name} />
         </TabsContent>
 
         {/* Announcements Tab */}
