@@ -33,6 +33,7 @@ import EditCertification from "./pages/EditCertification";
 import Support from "./pages/Support";
 import Settings from "./pages/Settings";
 import LiveTraining from "./pages/LiveTraining";
+import RequestLab from "./pages/RequestLab";
 
 import NotFound from "./pages/NotFound";
 
@@ -127,6 +128,7 @@ const App = () => (
             <Route path="/certifications/:id/edit" element={<EditCertification />} />
             <Route path="/support" element={<Support />} />
             <Route path="/live-training" element={<LiveTraining />} />
+            <Route path="/request-lab" element={<RequestLab />} />
             
             <Route path="/settings" element={<Settings />} />
 
