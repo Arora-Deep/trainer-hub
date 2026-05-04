@@ -287,6 +287,22 @@ export default function CustomerDetail() {
                   </SheetHeader>
 
                   <div className="mt-4 space-y-4">
+                    {/* Batch-level action toolbar */}
+                    <div className="flex flex-wrap gap-1.5 border rounded-lg p-2 bg-muted/30">
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action(`All VMs in ${selectedBatch.name} started`)}><Play className="h-3 w-3" /> Start All</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action(`All VMs in ${selectedBatch.name} stopped`)}><Square className="h-3 w-3" /> Stop All</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("All VMs rebooted")}><RotateCcw className="h-3 w-3" /> Reboot All</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Snapshot of all VMs taken")}><Camera className="h-3 w-3" /> Snapshot All</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Recloning all VMs from golden image")}><GitBranch className="h-3 w-3" /> Reclone All</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Broken VMs replaced")}><RefreshCw className="h-3 w-3" /> Replace Broken</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Credentials reset for all participants")}><Key className="h-3 w-3" /> Reset Creds</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => setResizeBatchOpen(true)}><HardDrive className="h-3 w-3" /> Resize VMs</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => setExtendBatchOpen(true)}><Clock className="h-3 w-3" /> Extend</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => navigate(`/admin/batches/${selectedBatch.id}`)}><Pencil className="h-3 w-3" /> Modify Batch</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Logs exported")}><Download className="h-3 w-3" /> Export Logs</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1 text-destructive" onClick={() => action("Batch terminated")}><Ban className="h-3 w-3" /> Terminate</Button>
+                    </div>
+
                     <div className="grid grid-cols-4 gap-3">
                       <Card><CardContent className="pt-3"><p className="text-[10px] text-muted-foreground">Participants</p><p className="text-lg font-bold">{selectedBatch.seatCount}</p></CardContent></Card>
                       <Card><CardContent className="pt-3"><p className="text-[10px] text-muted-foreground">Running</p><p className="text-lg font-bold text-success">{selectedBatch.participants.filter(p => p.vmStatus === "running").length}</p></CardContent></Card>
@@ -307,11 +323,7 @@ export default function CustomerDetail() {
                     <Card>
                       <CardHeader className="pb-2 flex flex-row items-center justify-between">
                         <CardTitle className="text-xs">Participants & VMs</CardTitle>
-                        <div className="flex gap-1.5">
-                          <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Broken VMs replaced")}><RotateCcw className="h-3 w-3" /> Replace Broken</Button>
-                          <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Credentials reset")}><Key className="h-3 w-3" /> Reset Creds</Button>
-                          <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1"><Download className="h-3 w-3" /> Logs</Button>
-                        </div>
+                        <Button size="sm" className="text-[10px] h-7 gap-1" onClick={() => setProvisionVMOpen(true)}><Plus className="h-3 w-3" /> Add VM</Button>
                       </CardHeader>
                       <CardContent className="p-0 max-h-[400px] overflow-y-auto">
                         <Table>
@@ -322,6 +334,7 @@ export default function CustomerDetail() {
                             <TableHead className="text-[10px]">CPU</TableHead>
                             <TableHead className="text-[10px]">RAM</TableHead>
                             <TableHead className="text-[10px]">IP</TableHead>
+                            <TableHead className="text-[10px] text-right">Actions</TableHead>
                           </TableRow></TableHeader>
                           <TableBody>
                             {selectedBatch.participants.map(p => (
@@ -332,6 +345,32 @@ export default function CustomerDetail() {
                                 <TableCell className="text-[11px]">{p.cpu}</TableCell>
                                 <TableCell className="text-[11px]">{p.ram}</TableCell>
                                 <TableCell className="text-[11px] font-mono">{p.ip}</TableCell>
+                                <TableCell className="text-right">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-6 w-6"><MoreHorizontal className="h-3.5 w-3.5" /></Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-52">
+                                      <DropdownMenuLabel className="text-[10px]">{p.vmId}</DropdownMenuLabel>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem onClick={() => setSelectedVM({ ...p, batchName: selectedBatch.name, batchId: selectedBatch.id, vmSpec: selectedBatch.vmSpec, region: selectedBatch.region })}><Eye className="h-3.5 w-3.5 mr-2" /> View Details</DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => action(`Console opened for ${p.vmId}`)}><Terminal className="h-3.5 w-3.5 mr-2" /> Open Console</DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem onClick={() => action(`${p.vmId} started`)}><Play className="h-3.5 w-3.5 mr-2" /> Start</DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => action(`${p.vmId} stopped`)}><Square className="h-3.5 w-3.5 mr-2" /> Stop</DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => action(`${p.vmId} rebooted`)}><RotateCcw className="h-3.5 w-3.5 mr-2" /> Reboot</DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem onClick={() => { setSelectedVM({ ...p, batchName: selectedBatch.name, batchId: selectedBatch.id, vmSpec: selectedBatch.vmSpec, region: selectedBatch.region }); setSnapshotsOpen(true); }}><Camera className="h-3.5 w-3.5 mr-2" /> Snapshots</DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => action(`Recloning ${p.vmId} from golden image`)}><GitBranch className="h-3.5 w-3.5 mr-2" /> Reclone from Snapshot</DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => action(`${p.vmId} reset`)}><RefreshCw className="h-3.5 w-3.5 mr-2" /> Reset VM</DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => { setSelectedVM({ ...p, batchName: selectedBatch.name, batchId: selectedBatch.id, vmSpec: selectedBatch.vmSpec, region: selectedBatch.region }); setEditVMOpen(true); }}><Pencil className="h-3.5 w-3.5 mr-2" /> Edit / Resize</DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => action(`Password reset for ${p.email}`)}><Key className="h-3.5 w-3.5 mr-2" /> Reset Password</DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => action("IP copied")}><Copy className="h-3.5 w-3.5 mr-2" /> Copy IP</DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem className="text-destructive" onClick={() => action(`${p.vmId} terminated`)}><Trash2 className="h-3.5 w-3.5 mr-2" /> Terminate</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -343,6 +382,257 @@ export default function CustomerDetail() {
               )}
             </SheetContent>
           </Sheet>
+
+          {/* Resize Batch Dialog */}
+          <Dialog open={resizeBatchOpen} onOpenChange={setResizeBatchOpen}>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Resize all VMs in {selectedBatch?.name}</DialogTitle></DialogHeader>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1.5"><Label className="text-xs">vCPU</Label><Input type="number" defaultValue={4} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">RAM (GB)</Label><Input type="number" defaultValue={8} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Disk (GB)</Label><Input type="number" defaultValue={60} className="h-9 text-sm" /></div>
+              </div>
+              <p className="text-[11px] text-muted-foreground"><AlertTriangle className="h-3 w-3 inline mr-1" />Requires VM restart. Participants will be notified.</p>
+              <DialogFooter>
+                <Button variant="outline" size="sm" onClick={() => setResizeBatchOpen(false)}>Cancel</Button>
+                <Button size="sm" onClick={() => { setResizeBatchOpen(false); action("Batch VMs being resized"); }}>Apply Resize</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Extend Batch Dialog */}
+          <Dialog open={extendBatchOpen} onOpenChange={setExtendBatchOpen}>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Extend {selectedBatch?.name}</DialogTitle></DialogHeader>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5"><Label className="text-xs">New End Date</Label><Input type="date" defaultValue={selectedBatch?.end} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Reason</Label><Input placeholder="Customer request" className="h-9 text-sm" /></div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" size="sm" onClick={() => setExtendBatchOpen(false)}>Cancel</Button>
+                <Button size="sm" onClick={() => { setExtendBatchOpen(false); action("Batch extended"); }}>Extend</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Provision VM Dialog */}
+          <Dialog open={provisionVMOpen} onOpenChange={setProvisionVMOpen}>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Add VM to {selectedBatch?.name}</DialogTitle></DialogHeader>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5"><Label className="text-xs">Participant Name</Label><Input placeholder="John Doe" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Email</Label><Input type="email" placeholder="john@company.com" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Template</Label>
+                  <Select defaultValue="batch"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="batch">Use batch template</SelectItem><SelectItem value="custom">Custom</SelectItem></SelectContent></Select>
+                </div>
+                <div className="space-y-1.5"><Label className="text-xs">Region</Label><Input defaultValue={selectedBatch?.region} className="h-9 text-sm" /></div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" size="sm" onClick={() => setProvisionVMOpen(false)}>Cancel</Button>
+                <Button size="sm" onClick={() => { setProvisionVMOpen(false); action("VM provisioning started"); }}>Provision VM</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* VM Detail Sheet */}
+          <Sheet open={!!selectedVM && !snapshotsOpen && !editVMOpen} onOpenChange={(o) => !o && setSelectedVM(null)}>
+            <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+              {selectedVM && (
+                <>
+                  <SheetHeader>
+                    <SheetTitle className="flex items-center gap-2 font-mono">
+                      {selectedVM.vmId}
+                      <Badge variant="secondary" className={`text-[10px] ${selectedVM.vmStatus === "running" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{selectedVM.vmStatus}</Badge>
+                    </SheetTitle>
+                    <SheetDescription>{selectedVM.name} · {selectedVM.batchName}</SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-4 space-y-4">
+                    <div className="flex flex-wrap gap-1.5 border rounded-lg p-2 bg-muted/30">
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Console opened")}><Terminal className="h-3 w-3" /> Console</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("VM started")}><Play className="h-3 w-3" /> Start</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("VM stopped")}><Square className="h-3 w-3" /> Stop</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("VM rebooted")}><RotateCcw className="h-3 w-3" /> Reboot</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => setSnapshotsOpen(true)}><Camera className="h-3 w-3" /> Snapshots</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Reclone initiated")}><GitBranch className="h-3 w-3" /> Reclone</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => setEditVMOpen(true)}><Pencil className="h-3 w-3" /> Edit / Resize</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Password reset")}><Key className="h-3 w-3" /> Reset Password</Button>
+                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1 text-destructive" onClick={() => action("VM terminated")}><Trash2 className="h-3 w-3" /> Terminate</Button>
+                    </div>
+                    <Card>
+                      <CardHeader className="pb-2"><CardTitle className="text-xs">VM Info</CardTitle></CardHeader>
+                      <CardContent className="grid grid-cols-2 gap-3 text-xs">
+                        <div><span className="text-muted-foreground">Spec:</span> <span className="font-mono">{selectedVM.vmSpec}</span></div>
+                        <div><span className="text-muted-foreground">Node:</span> {selectedVM.node}</div>
+                        <div><span className="text-muted-foreground">IP:</span> <span className="font-mono">{selectedVM.ip}</span></div>
+                        <div><span className="text-muted-foreground">Region:</span> {selectedVM.region}</div>
+                        <div><span className="text-muted-foreground">CPU:</span> {selectedVM.cpu}</div>
+                        <div><span className="text-muted-foreground">RAM:</span> {selectedVM.ram}</div>
+                        <div><span className="text-muted-foreground">Batch:</span> {selectedVM.batchName} <span className="font-mono text-[10px]">({selectedVM.batchId})</span></div>
+                        <div><span className="text-muted-foreground">Owner:</span> {selectedVM.email}</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </>
+              )}
+            </SheetContent>
+          </Sheet>
+
+          {/* Snapshots Dialog */}
+          <Dialog open={snapshotsOpen} onOpenChange={setSnapshotsOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader><DialogTitle>Snapshots — {selectedVM?.vmId}</DialogTitle></DialogHeader>
+              <div className="flex justify-end">
+                <Button size="sm" className="text-xs gap-1.5" onClick={() => action("Snapshot created")}><Camera className="h-3.5 w-3.5" /> Take Snapshot</Button>
+              </div>
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead className="text-xs">Name</TableHead>
+                  <TableHead className="text-xs">Created</TableHead>
+                  <TableHead className="text-xs">Size</TableHead>
+                  <TableHead className="text-xs text-right">Actions</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {mockSnapshots.map(s => (
+                    <TableRow key={s.id}>
+                      <TableCell className="text-xs font-medium">{s.name}<div className="text-[10px] text-muted-foreground font-mono">{s.id}</div></TableCell>
+                      <TableCell className="text-xs">{s.created}</TableCell>
+                      <TableCell className="text-xs">{s.size}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" className="h-7 text-[10px]" onClick={() => action(`Restored to ${s.name}`)}>Restore</Button>
+                        <Button variant="ghost" size="sm" className="h-7 text-[10px]" onClick={() => action(`Recloned from ${s.name}`)}>Reclone</Button>
+                        <Button variant="ghost" size="sm" className="h-7 text-[10px] text-destructive" onClick={() => action("Snapshot deleted")}>Delete</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <DialogFooter><Button variant="outline" size="sm" onClick={() => setSnapshotsOpen(false)}>Close</Button></DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit / Resize VM Dialog */}
+          <Dialog open={editVMOpen} onOpenChange={setEditVMOpen}>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Edit VM — {selectedVM?.vmId}</DialogTitle></DialogHeader>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1.5"><Label className="text-xs">vCPU</Label><Input type="number" defaultValue={4} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">RAM (GB)</Label><Input type="number" defaultValue={8} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Disk (GB)</Label><Input type="number" defaultValue={60} className="h-9 text-sm" /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5"><Label className="text-xs">Hostname</Label><Input defaultValue={selectedVM?.vmId} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Region</Label><Input defaultValue={selectedVM?.region} className="h-9 text-sm" /></div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" size="sm" onClick={() => setEditVMOpen(false)}>Cancel</Button>
+                <Button size="sm" onClick={() => { setEditVMOpen(false); action("VM updated"); }}>Save</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </TabsContent>
+
+        {/* Tab: VMs */}
+        <TabsContent value="vms" className="space-y-4 mt-4">
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Total VMs</p><p className="text-2xl font-bold mt-1">{allVMs.length}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Running</p><p className="text-2xl font-bold mt-1 text-success">{allVMs.filter(v => v.vmStatus === "running").length}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Stopped</p><p className="text-2xl font-bold mt-1 text-muted-foreground">{allVMs.filter(v => v.vmStatus === "stopped").length}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Avg CPU</p><p className="text-2xl font-bold mt-1">{Math.round(allVMs.reduce((s, v) => s + parseInt(v.cpu) || 0, 0) / Math.max(1, allVMs.length))}%</p></CardContent></Card>
+          </div>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-3 flex-wrap justify-between">
+                <CardTitle className="text-sm">All VMs ({customer.name})</CardTitle>
+                <div className="flex gap-2 flex-wrap">
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("All VMs started")}><Play className="h-3.5 w-3.5" /> Start All</Button>
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("All VMs stopped")}><Square className="h-3.5 w-3.5" /> Stop All</Button>
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Snapshot of all VMs taken")}><Camera className="h-3.5 w-3.5" /> Snapshot All</Button>
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5"><Download className="h-3.5 w-3.5" /> Export</Button>
+                  <Button size="sm" className="text-xs gap-1.5" onClick={() => setProvisionVMOpen(true)}><Plus className="h-3.5 w-3.5" /> Provision VM</Button>
+                </div>
+              </div>
+              <div className="flex gap-2 flex-wrap pt-2">
+                <Input placeholder="Search VM, IP, participant…" value={vmSearch} onChange={(e) => setVmSearch(e.target.value)} className="h-9 text-sm max-w-xs" />
+                <Select value={vmBatchFilter} onValueChange={setVmBatchFilter}>
+                  <SelectTrigger className="w-48 h-9 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All batches</SelectItem>
+                    {batches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={vmFilter} onValueChange={setVmFilter}>
+                  <SelectTrigger className="w-36 h-9 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All status</SelectItem>
+                    <SelectItem value="running">Running</SelectItem>
+                    <SelectItem value="stopped">Stopped</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead className="text-xs">VM</TableHead>
+                  <TableHead className="text-xs">Owner</TableHead>
+                  <TableHead className="text-xs">Batch</TableHead>
+                  <TableHead className="text-xs">Spec</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs text-right">CPU</TableHead>
+                  <TableHead className="text-xs text-right">RAM</TableHead>
+                  <TableHead className="text-xs">IP</TableHead>
+                  <TableHead className="text-xs">Node</TableHead>
+                  <TableHead className="text-xs text-right">Actions</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {filteredVMs.slice(0, 50).map(vm => (
+                    <TableRow key={vm.vmId} className="cursor-pointer hover:bg-muted/40" onClick={() => setSelectedVM(vm)}>
+                      <TableCell className="text-xs font-mono"><div className="flex items-center gap-1.5"><Server className="h-3.5 w-3.5 text-muted-foreground" />{vm.vmId}</div></TableCell>
+                      <TableCell className="text-xs"><div className="font-medium">{vm.name}</div><div className="text-[10px] text-muted-foreground">{vm.email}</div></TableCell>
+                      <TableCell className="text-xs">{vm.batchName}</TableCell>
+                      <TableCell className="text-[11px] font-mono">{vm.vmSpec}</TableCell>
+                      <TableCell><Badge variant="secondary" className={`text-[10px] capitalize ${vm.vmStatus === "running" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{vm.vmStatus}</Badge></TableCell>
+                      <TableCell className="text-xs text-right">{vm.cpu}</TableCell>
+                      <TableCell className="text-xs text-right">{vm.ram}</TableCell>
+                      <TableCell className="text-xs font-mono">{vm.ip}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{vm.node}</TableCell>
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-4 w-4" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-52">
+                            <DropdownMenuLabel className="text-[10px]">{vm.vmId}</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setSelectedVM(vm)}><Eye className="h-3.5 w-3.5 mr-2" /> View Details</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => action("Console opened")}><Terminal className="h-3.5 w-3.5 mr-2" /> Open Console</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => action(`${vm.vmId} started`)}><Play className="h-3.5 w-3.5 mr-2" /> Start</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => action(`${vm.vmId} stopped`)}><Square className="h-3.5 w-3.5 mr-2" /> Stop</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => action(`${vm.vmId} rebooted`)}><RotateCcw className="h-3.5 w-3.5 mr-2" /> Reboot</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => { setSelectedVM(vm); setSnapshotsOpen(true); }}><Camera className="h-3.5 w-3.5 mr-2" /> Snapshots</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => action(`Recloning ${vm.vmId}`)}><GitBranch className="h-3.5 w-3.5 mr-2" /> Reclone from Snapshot</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => action(`${vm.vmId} reset`)}><RefreshCw className="h-3.5 w-3.5 mr-2" /> Reset VM</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { setSelectedVM(vm); setEditVMOpen(true); }}><Pencil className="h-3.5 w-3.5 mr-2" /> Edit / Resize</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => action("Password reset")}><Key className="h-3.5 w-3.5 mr-2" /> Reset Password</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => action(`Migrating ${vm.vmId}`)}><Network className="h-3.5 w-3.5 mr-2" /> Migrate Node</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive" onClick={() => action(`${vm.vmId} terminated`)}><Trash2 className="h-3.5 w-3.5 mr-2" /> Terminate</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredVMs.length === 0 && <TableRow><TableCell colSpan={10} className="text-center text-sm text-muted-foreground py-8">No VMs match filter</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+              {filteredVMs.length > 50 && <div className="text-[11px] text-muted-foreground text-center py-2 border-t">Showing 50 of {filteredVMs.length}</div>}
+            </CardContent>
+          </Card>
+        </TabsContent>
         </TabsContent>
 
         {/* Tab C: Support */}
