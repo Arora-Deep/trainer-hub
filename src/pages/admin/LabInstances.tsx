@@ -240,7 +240,7 @@ export default function LabInstances() {
 
       {/* VM Detail Drawer */}
       <Sheet open={!!selectedVM} onOpenChange={() => setSelectedVM(null)}>
-        <SheetContent className="sm:max-w-lg overflow-y-auto">
+        <SheetContent side="full" className="overflow-y-auto">
           {selectedVM && (() => {
             const v = selectedVM;
             const sc = statusConfig[v.status];

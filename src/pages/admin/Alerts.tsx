@@ -233,7 +233,7 @@ export default function AdminAlerts() {
 
       {/* Alert Detail Sheet */}
       <Sheet open={!!selected} onOpenChange={() => { setSelected(null); setNotes(""); }}>
-        <SheetContent className="sm:max-w-lg overflow-y-auto">
+        <SheetContent side="full" className="overflow-y-auto">
           {selected && (
             <>
               <SheetHeader>

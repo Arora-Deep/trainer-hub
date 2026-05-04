@@ -178,7 +178,7 @@ export default function BatchRequests() {
 
       {/* Detail Sheet */}
       <Sheet open={!!selected} onOpenChange={() => { setSelected(null); setAdminNotes(""); }}>
-        <SheetContent className="sm:max-w-lg overflow-y-auto">
+        <SheetContent side="full" className="overflow-y-auto">
           {selected && (
             <>
               <SheetHeader>

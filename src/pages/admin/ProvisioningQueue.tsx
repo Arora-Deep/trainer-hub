@@ -183,7 +183,7 @@ export default function ProvisioningQueue() {
 
       {/* Logs Drawer */}
       <Sheet open={!!selectedJob} onOpenChange={open => !open && setSelectedJob(null)}>
-        <SheetContent className="sm:max-w-lg overflow-y-auto">
+        <SheetContent side="full" className="overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2 text-base">
               Job Details — <span className="font-mono">{selectedJob?.id}</span>

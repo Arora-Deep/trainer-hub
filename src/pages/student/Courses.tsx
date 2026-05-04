@@ -266,7 +266,7 @@ export default function StudentCourses() {
 
       {/* Course Detail Drawer */}
       <Sheet open={!!selectedCourse} onOpenChange={() => setSelectedCourse(null)}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetContent side="full" className="overflow-y-auto">
           {selectedCourse && (
             <>
               <SheetHeader>

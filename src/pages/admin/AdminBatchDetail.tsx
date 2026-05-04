@@ -1053,7 +1053,7 @@ export default function AdminBatchDetail() {
 
       {/* Console Sheet */}
       <Sheet open={consoleOpen} onOpenChange={setConsoleOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-xl p-0 flex flex-col">
+        <SheetContent side="full" className="p-0 flex flex-col">
           <SheetHeader className="p-4 border-b bg-card">
             <SheetTitle className="flex items-center gap-2">
               <Terminal className="h-4 w-4 text-primary" />
