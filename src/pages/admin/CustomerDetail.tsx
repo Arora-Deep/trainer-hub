@@ -275,7 +275,7 @@ export default function CustomerDetail() {
 
           {/* Batch Detail Sheet */}
           <Sheet open={!!selectedBatch} onOpenChange={(o) => !o && setSelectedBatch(null)}>
-            <SheetContent side="right" className="w-full sm:max-w-3xl overflow-y-auto">
+            <SheetContent side="full" className="overflow-y-auto">
               {selectedBatch && (
                 <>
                   <SheetHeader>
@@ -437,7 +437,7 @@ export default function CustomerDetail() {
 
           {/* VM Detail Sheet */}
           <Sheet open={!!selectedVM && !snapshotsOpen && !editVMOpen} onOpenChange={(o) => !o && setSelectedVM(null)}>
-            <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+            <SheetContent side="full" className="overflow-y-auto">
               {selectedVM && (
                 <>
                   <SheetHeader>

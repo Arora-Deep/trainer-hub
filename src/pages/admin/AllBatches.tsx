@@ -199,7 +199,7 @@ export default function AllBatches() {
 
       {/* Batch Control Drawer */}
       <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <SheetContent className="sm:max-w-lg overflow-y-auto">
+        <SheetContent side="full" className="overflow-y-auto">
           {selectedBatch && (() => {
             const b = selectedBatch;
             const sc = statusConfig[b.status];

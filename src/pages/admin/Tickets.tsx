@@ -233,7 +233,7 @@ export default function AdminTickets() {
 
       {/* Ticket Detail Sheet */}
       <Sheet open={!!selected} onOpenChange={() => { setSelected(null); setReply(""); }}>
-        <SheetContent className="sm:max-w-xl p-0 flex flex-col">
+        <SheetContent side="full" className="p-0 flex flex-col">
           {selected && (
             <>
               <SheetHeader className="p-4 border-b">

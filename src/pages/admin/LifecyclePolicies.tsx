@@ -131,7 +131,7 @@ export default function LifecyclePolicies() {
 
       {/* Policy Detail / Edit Drawer */}
       <Sheet open={!!selectedPolicy || showCreate} onOpenChange={open => { if (!open) { setSelectedPolicy(null); setShowCreate(false); } }}>
-        <SheetContent className="sm:max-w-lg overflow-y-auto">
+        <SheetContent side="full" className="overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{showCreate ? "Create Policy" : `Edit — ${selectedPolicy?.name}`}</SheetTitle>
           </SheetHeader>

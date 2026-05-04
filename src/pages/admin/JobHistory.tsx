@@ -220,7 +220,7 @@ export default function JobHistory() {
 
       {/* Detail Drawer */}
       <Sheet open={!!selectedJob} onOpenChange={open => !open && setSelectedJob(null)}>
-        <SheetContent className="sm:max-w-lg overflow-y-auto">
+        <SheetContent side="full" className="overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">Job Details — <span className="font-mono">{selectedJob?.id}</span></SheetTitle>
           </SheetHeader>
