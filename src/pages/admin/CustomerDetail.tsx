@@ -192,72 +192,126 @@ export default function CustomerDetail() {
           </div>
         </TabsContent>
 
-        {/* Tab B: Provisioning & Labs */}
+        {/* Tab B: Batches */}
         <TabsContent value="provisioning" className="space-y-4 mt-4">
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Total Batches</p><p className="text-2xl font-bold mt-1">{batches.length}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Active Batches</p><p className="text-2xl font-bold mt-1 text-success">{batches.filter(b => b.status === "active").length}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Total Participants</p><p className="text-2xl font-bold mt-1">{batches.reduce((s, b) => s + b.seatCount, 0)}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Running VMs</p><p className="text-2xl font-bold mt-1 text-success">{batches.reduce((s, b) => s + b.participants.filter(p => p.vmStatus === "running").length, 0)}</p></CardContent></Card>
+          </div>
+
           <Card>
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Batches</CardTitle>
+              <CardTitle className="text-sm">All Batches</CardTitle>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("All labs shutdown")}><Power className="h-3.5 w-3.5" /> Shutdown All</Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Batch extended")}><Clock className="h-3.5 w-3.5" /> Extend Batch</Button>
+                <Button size="sm" className="text-xs gap-1.5" onClick={() => navigate("/admin/batches/new")}><FlaskConical className="h-3.5 w-3.5" /> Provision Batch</Button>
               </div>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader><TableRow>
-                  <TableHead className="text-xs">Batch</TableHead><TableHead className="text-xs">Template</TableHead>
-                  <TableHead className="text-xs">Students</TableHead><TableHead className="text-xs">Start</TableHead>
-                  <TableHead className="text-xs">End</TableHead><TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Batch</TableHead>
+                  <TableHead className="text-xs">Template</TableHead>
+                  <TableHead className="text-xs">Trainer</TableHead>
+                  <TableHead className="text-xs">Participants</TableHead>
+                  <TableHead className="text-xs">VM Spec</TableHead>
+                  <TableHead className="text-xs">Period</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs"></TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {batches.map((b, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="text-sm font-medium">{b.name}</TableCell>
-                      <TableCell className="text-xs">{b.template}</TableCell>
-                      <TableCell className="text-xs">{b.students}</TableCell>
-                      <TableCell className="text-xs">{b.start}</TableCell>
-                      <TableCell className="text-xs">{b.end}</TableCell>
-                      <TableCell><Badge variant="secondary" className={`text-[10px] capitalize ${b.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{b.status}</Badge></TableCell>
-                    </TableRow>
-                  ))}
+                  {batches.map((b) => {
+                    const running = b.participants.filter(p => p.vmStatus === "running").length;
+                    return (
+                      <TableRow key={b.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setSelectedBatch(b)}>
+                        <TableCell className="text-sm font-medium">{b.name}<div className="text-[10px] text-muted-foreground font-mono">{b.id}</div></TableCell>
+                        <TableCell className="text-xs">{b.template}</TableCell>
+                        <TableCell className="text-xs">{b.trainer}</TableCell>
+                        <TableCell className="text-xs">{b.seatCount} <span className="text-muted-foreground">({running} running)</span></TableCell>
+                        <TableCell className="text-xs font-mono">{b.vmSpec}</TableCell>
+                        <TableCell className="text-xs">{b.start} → {b.end}</TableCell>
+                        <TableCell><Badge variant="secondary" className={`text-[10px] capitalize ${b.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{b.status}</Badge></TableCell>
+                        <TableCell><ChevronRight className="h-4 w-4 text-muted-foreground" /></TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Seat / Lab Instances</CardTitle>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Labs replaced")}><RotateCcw className="h-3.5 w-3.5" /> Replace Broken</Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Credentials reset")}><Key className="h-3.5 w-3.5" /> Reset Creds</Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5"><Download className="h-3.5 w-3.5" /> Download Logs</Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader><TableRow>
-                  <TableHead className="text-xs">VM ID</TableHead><TableHead className="text-xs">Student</TableHead>
-                  <TableHead className="text-xs">Status</TableHead><TableHead className="text-xs">Last Seen</TableHead>
-                  <TableHead className="text-xs">Node</TableHead><TableHead className="text-xs">IP</TableHead>
-                  <TableHead className="text-xs">CPU</TableHead><TableHead className="text-xs">RAM</TableHead>
-                </TableRow></TableHeader>
-                <TableBody>
-                  {seats.map(s => (
-                    <TableRow key={s.vmId}>
-                      <TableCell className="text-xs font-mono">{s.vmId}</TableCell>
-                      <TableCell className="text-xs">{s.student}</TableCell>
-                      <TableCell><Badge variant="secondary" className={`text-[10px] ${s.status === "running" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{s.status}</Badge></TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{s.lastSeen}</TableCell>
-                      <TableCell className="text-xs font-mono">{s.node}</TableCell>
-                      <TableCell className="text-xs font-mono">{s.ip}</TableCell>
-                      <TableCell className="text-xs">{s.cpu}</TableCell>
-                      <TableCell className="text-xs">{s.ram}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+
+          {/* Batch Detail Sheet */}
+          <Sheet open={!!selectedBatch} onOpenChange={(o) => !o && setSelectedBatch(null)}>
+            <SheetContent side="right" className="w-full sm:max-w-3xl overflow-y-auto">
+              {selectedBatch && (
+                <>
+                  <SheetHeader>
+                    <SheetTitle className="flex items-center gap-2">
+                      {selectedBatch.name}
+                      <Badge variant="secondary" className={`text-[10px] capitalize ${selectedBatch.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{selectedBatch.status}</Badge>
+                    </SheetTitle>
+                    <SheetDescription>{selectedBatch.template} · {selectedBatch.trainer}</SheetDescription>
+                  </SheetHeader>
+
+                  <div className="mt-4 space-y-4">
+                    <div className="grid grid-cols-4 gap-3">
+                      <Card><CardContent className="pt-3"><p className="text-[10px] text-muted-foreground">Participants</p><p className="text-lg font-bold">{selectedBatch.seatCount}</p></CardContent></Card>
+                      <Card><CardContent className="pt-3"><p className="text-[10px] text-muted-foreground">Running</p><p className="text-lg font-bold text-success">{selectedBatch.participants.filter(p => p.vmStatus === "running").length}</p></CardContent></Card>
+                      <Card><CardContent className="pt-3"><p className="text-[10px] text-muted-foreground">Stopped</p><p className="text-lg font-bold text-muted-foreground">{selectedBatch.participants.filter(p => p.vmStatus === "stopped").length}</p></CardContent></Card>
+                      <Card><CardContent className="pt-3"><p className="text-[10px] text-muted-foreground">VM Spec</p><p className="text-xs font-mono mt-1">{selectedBatch.vmSpec}</p></CardContent></Card>
+                    </div>
+
+                    <Card>
+                      <CardHeader className="pb-2"><CardTitle className="text-xs">Batch Info</CardTitle></CardHeader>
+                      <CardContent className="grid grid-cols-2 gap-3 text-xs">
+                        <div><span className="text-muted-foreground">Batch ID:</span> <span className="font-mono">{selectedBatch.id}</span></div>
+                        <div><span className="text-muted-foreground">Region:</span> {selectedBatch.region}</div>
+                        <div><span className="text-muted-foreground">Start:</span> {selectedBatch.start}</div>
+                        <div><span className="text-muted-foreground">End:</span> {selectedBatch.end}</div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                        <CardTitle className="text-xs">Participants & VMs</CardTitle>
+                        <div className="flex gap-1.5">
+                          <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Broken VMs replaced")}><RotateCcw className="h-3 w-3" /> Replace Broken</Button>
+                          <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Credentials reset")}><Key className="h-3 w-3" /> Reset Creds</Button>
+                          <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1"><Download className="h-3 w-3" /> Logs</Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-0 max-h-[400px] overflow-y-auto">
+                        <Table>
+                          <TableHeader><TableRow>
+                            <TableHead className="text-[10px]">Participant</TableHead>
+                            <TableHead className="text-[10px]">VM</TableHead>
+                            <TableHead className="text-[10px]">Status</TableHead>
+                            <TableHead className="text-[10px]">CPU</TableHead>
+                            <TableHead className="text-[10px]">RAM</TableHead>
+                            <TableHead className="text-[10px]">IP</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {selectedBatch.participants.map(p => (
+                              <TableRow key={p.vmId}>
+                                <TableCell className="text-[11px]"><div className="font-medium">{p.name}</div><div className="text-muted-foreground">{p.email}</div></TableCell>
+                                <TableCell className="text-[11px] font-mono">{p.vmId}</TableCell>
+                                <TableCell><Badge variant="secondary" className={`text-[9px] ${p.vmStatus === "running" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{p.vmStatus}</Badge></TableCell>
+                                <TableCell className="text-[11px]">{p.cpu}</TableCell>
+                                <TableCell className="text-[11px]">{p.ram}</TableCell>
+                                <TableCell className="text-[11px] font-mono">{p.ip}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </>
+              )}
+            </SheetContent>
+          </Sheet>
         </TabsContent>
 
         {/* Tab C: Support */}
