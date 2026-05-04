@@ -55,16 +55,60 @@ export default function CustomerDetail() {
   ];
 
   const batches = [
-    { name: "K8s Batch #14", template: "Kubernetes Lab v2", students: 35, start: "2026-02-25", end: "2026-03-10", status: "active" },
-    { name: "Linux Fundamentals #8", template: "Linux + Networking Lab v1", students: 50, start: "2026-03-01", end: "2026-03-15", status: "active" },
-    { name: "Docker Basics #3", template: "Docker Compose Lab", students: 25, start: "2026-02-10", end: "2026-02-24", status: "completed" },
+    {
+      id: "B-1014", name: "K8s Batch #14", template: "Kubernetes Lab v2",
+      trainer: "Rajesh Kumar", seatCount: 35, start: "2026-02-25", end: "2026-03-10",
+      status: "active", vmSpec: "4 vCPU · 8 GB · 60 GB", region: "ap-south-1",
+      participants: Array.from({ length: 35 }, (_, i) => ({
+        name: `Participant ${i + 1}`, email: `p${i + 1}@devops.in`,
+        vmId: `VM-45${(i + 1).toString().padStart(2, "0")}`,
+        vmStatus: i % 7 === 0 ? "stopped" : "running",
+        cpu: `${20 + (i * 7) % 60}%`, ram: `${30 + (i * 11) % 50}%`,
+        node: `node-ap-${(i % 4) + 1}`, ip: `10.0.1.${50 + i}`,
+      })),
+    },
+    {
+      id: "B-1008", name: "Linux Fundamentals #8", template: "Linux + Networking Lab v1",
+      trainer: "Priya Sharma", seatCount: 50, start: "2026-03-01", end: "2026-03-15",
+      status: "active", vmSpec: "2 vCPU · 4 GB · 40 GB", region: "ap-south-1",
+      participants: Array.from({ length: 50 }, (_, i) => ({
+        name: `Participant ${i + 1}`, email: `linux${i + 1}@devops.in`,
+        vmId: `VM-46${(i + 1).toString().padStart(2, "0")}`,
+        vmStatus: i % 9 === 0 ? "stopped" : "running",
+        cpu: `${15 + (i * 5) % 50}%`, ram: `${25 + (i * 9) % 45}%`,
+        node: `node-ap-${(i % 4) + 1}`, ip: `10.0.2.${50 + i}`,
+      })),
+    },
+    {
+      id: "B-1003", name: "Docker Basics #3", template: "Docker Compose Lab",
+      trainer: "Amit Patel", seatCount: 25, start: "2026-02-10", end: "2026-02-24",
+      status: "completed", vmSpec: "2 vCPU · 4 GB · 30 GB", region: "ap-south-1",
+      participants: Array.from({ length: 25 }, (_, i) => ({
+        name: `Participant ${i + 1}`, email: `docker${i + 1}@devops.in`,
+        vmId: `VM-47${(i + 1).toString().padStart(2, "0")}`,
+        vmStatus: "stopped",
+        cpu: "0%", ram: "0%",
+        node: `node-ap-${(i % 4) + 1}`, ip: `10.0.3.${50 + i}`,
+      })),
+    },
   ];
 
-  const seats = [
-    { vmId: "VM-4501", student: "student01@devops.in", status: "running", lastSeen: "2 min ago", node: "node-ap-3", ip: "10.0.1.51", cpu: "45%", ram: "62%" },
-    { vmId: "VM-4502", student: "student02@devops.in", status: "running", lastSeen: "5 min ago", node: "node-ap-3", ip: "10.0.1.52", cpu: "32%", ram: "48%" },
-    { vmId: "VM-4503", student: "student03@devops.in", status: "stopped", lastSeen: "2 hrs ago", node: "node-ap-1", ip: "10.0.1.53", cpu: "0%", ram: "0%" },
-  ];
+  type Batch = typeof batches[number];
+  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+
+  // Invoice line items per batch (for breakdown)
+  const invoiceLineItems: Record<string, Array<{ batchId: string; batchName: string; seats: number; days: number; ratePerSeat: number; amount: number }>> = {};
+  custInvoices.forEach((inv, idx) => {
+    invoiceLineItems[inv.id] = batches.slice(0, idx === 0 ? 3 : 2).map(b => {
+      const days = 14;
+      const rate = b.template.includes("Kubernetes") ? 800 : b.template.includes("Linux") ? 500 : 400;
+      return {
+        batchId: b.id, batchName: b.name, seats: b.seatCount, days,
+        ratePerSeat: rate, amount: b.seatCount * rate,
+      };
+    });
+  });
 
   const auditLogs = [
     { action: "Quota updated", user: "admin@cloudadda.com", time: "2026-02-28 14:30", details: "CPU: 400 → 500" },
