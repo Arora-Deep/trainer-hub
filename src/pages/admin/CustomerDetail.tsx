@@ -96,8 +96,36 @@ export default function CustomerDetail() {
   ];
 
   type Batch = typeof batches[number];
+  type Participant = Batch["participants"][number];
   const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+  const [selectedVM, setSelectedVM] = useState<(Participant & { batchName: string; batchId: string; vmSpec: string; region: string }) | null>(null);
+  const [provisionVMOpen, setProvisionVMOpen] = useState(false);
+  const [editVMOpen, setEditVMOpen] = useState(false);
+  const [snapshotsOpen, setSnapshotsOpen] = useState(false);
+  const [resizeBatchOpen, setResizeBatchOpen] = useState(false);
+  const [extendBatchOpen, setExtendBatchOpen] = useState(false);
+
+  // Snapshots per VM (mock)
+  const mockSnapshots = [
+    { id: "snap-001", name: "Pre-config baseline", created: "2026-02-25 09:00", size: "12 GB" },
+    { id: "snap-002", name: "After install", created: "2026-02-26 14:20", size: "14 GB" },
+    { id: "snap-003", name: "Mid-training checkpoint", created: "2026-02-28 11:00", size: "16 GB" },
+  ];
+
+  // Flatten all VMs across batches for the VMs tab
+  const allVMs = batches.flatMap(b => b.participants.map(p => ({
+    ...p, batchName: b.name, batchId: b.id, vmSpec: b.vmSpec, region: b.region,
+  })));
+  const [vmFilter, setVmFilter] = useState<string>("all");
+  const [vmBatchFilter, setVmBatchFilter] = useState<string>("all");
+  const [vmSearch, setVmSearch] = useState("");
+  const filteredVMs = allVMs.filter(vm => {
+    if (vmFilter !== "all" && vm.vmStatus !== vmFilter) return false;
+    if (vmBatchFilter !== "all" && vm.batchId !== vmBatchFilter) return false;
+    if (vmSearch && !`${vm.name} ${vm.email} ${vm.vmId} ${vm.ip}`.toLowerCase().includes(vmSearch.toLowerCase())) return false;
+    return true;
+  });
 
   // Invoice line items per batch (for breakdown)
   const invoiceLineItems: Record<string, Array<{ batchId: string; batchName: string; seats: number; days: number; ratePerSeat: number; amount: number }>> = {};
