@@ -8,7 +8,8 @@ import { useCustomerStore } from "@/stores/customerStore";
 import {
   ArrowLeft, Ban, UserCheck, Receipt, CreditCard, Activity, Shield, Clock, Users,
   LifeBuoy, Settings, BarChart3, FlaskConical, Download, RotateCcw, Key, Power, FileText,
-  ChevronRight, Server, Calendar, Mail, Eye,
+  ChevronRight, Server, Calendar, Mail, Eye, MoreHorizontal, Play, Square, Camera, GitBranch,
+  Trash2, RefreshCw, Pencil, Plus, Terminal, HardDrive, Network, Lock, AlertTriangle, Copy,
 } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
