@@ -358,40 +358,146 @@ export default function CustomerDetail() {
 
         {/* Tab D: Billing */}
         <TabsContent value="billing" className="space-y-4 mt-4">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
             <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Wallet / Credits</p><p className="text-2xl font-bold mt-1">₹{customer.walletBalance.toLocaleString()}</p></CardContent></Card>
             <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Monthly Usage</p><p className="text-2xl font-bold mt-1">₹{customer.monthlyUsage.toLocaleString()}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Outstanding</p><p className="text-2xl font-bold mt-1">₹{custInvoices.filter(i => i.status !== "paid").reduce((s, i) => s + i.amount, 0).toLocaleString()}</p></CardContent></Card>
             <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Overdue</p><p className={`text-2xl font-bold mt-1 ${customer.overdueAmount > 0 ? "text-destructive" : ""}`}>₹{customer.overdueAmount.toLocaleString()}</p></CardContent></Card>
           </div>
+
           <Card>
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
               <CardTitle className="text-sm">Invoices</CardTitle>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Invoice created")}><Receipt className="h-3.5 w-3.5" /> Create Invoice</Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Credit applied")}><CreditCard className="h-3.5 w-3.5" /> Apply Credit</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Invoice generated from current usage")}><Receipt className="h-3.5 w-3.5" /> Generate Invoice</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Credit applied to wallet")}><CreditCard className="h-3.5 w-3.5" /> Apply Credit</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5"><Download className="h-3.5 w-3.5" /> Export All</Button>
               </div>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader><TableRow><TableHead className="text-xs">Invoice</TableHead><TableHead className="text-xs">Amount</TableHead><TableHead className="text-xs">Due Date</TableHead><TableHead className="text-xs">Status</TableHead><TableHead className="text-xs">Overdue</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow>
+                  <TableHead className="text-xs">Invoice</TableHead>
+                  <TableHead className="text-xs">Period</TableHead>
+                  <TableHead className="text-xs">Batches Billed</TableHead>
+                  <TableHead className="text-xs text-right">Amount</TableHead>
+                  <TableHead className="text-xs">Due Date</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs text-right">Actions</TableHead>
+                </TableRow></TableHeader>
                 <TableBody>
-                  {custInvoices.map(inv => (
-                    <TableRow key={inv.id}>
-                      <TableCell className="text-xs font-mono">{inv.id}</TableCell>
-                      <TableCell className="text-sm font-medium">₹{inv.amount.toLocaleString()}</TableCell>
-                      <TableCell className="text-xs">{inv.dueDate}</TableCell>
-                      <TableCell><Badge variant="secondary" className={`text-[10px] capitalize ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "overdue" ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"}`}>{inv.status}</Badge></TableCell>
-                      <TableCell className="text-xs">{inv.overdueDays > 0 ? `${inv.overdueDays}d` : "—"}</TableCell>
-                    </TableRow>
-                  ))}
+                  {custInvoices.map(inv => {
+                    const items = invoiceLineItems[inv.id] || [];
+                    return (
+                      <TableRow key={inv.id}>
+                        <TableCell className="text-xs font-mono">{inv.id}</TableCell>
+                        <TableCell className="text-xs">Feb 2026</TableCell>
+                        <TableCell className="text-xs">{items.length} batches</TableCell>
+                        <TableCell className="text-sm font-medium text-right">₹{inv.amount.toLocaleString()}</TableCell>
+                        <TableCell className="text-xs">{inv.dueDate}{inv.overdueDays > 0 && <span className="text-destructive ml-1">({inv.overdueDays}d late)</span>}</TableCell>
+                        <TableCell><Badge variant="secondary" className={`text-[10px] capitalize ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "overdue" ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"}`}>{inv.status}</Badge></TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setSelectedInvoiceId(inv.id)}><Eye className="h-3 w-3" /> Breakdown</Button>
+                            <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1"><Download className="h-3 w-3" /> PDF</Button>
+                            {inv.status !== "paid" && <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => action(`Reminder sent for ${inv.id}`)}><Mail className="h-3 w-3" /> Remind</Button>}
+                            {inv.status !== "paid" && <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => action(`${inv.id} marked paid`)}>Mark Paid</Button>}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {custInvoices.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">No invoices yet</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Current Cycle — Usage by Batch</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead className="text-xs">Batch</TableHead>
+                  <TableHead className="text-xs">Template</TableHead>
+                  <TableHead className="text-xs text-right">Seats</TableHead>
+                  <TableHead className="text-xs text-right">Days</TableHead>
+                  <TableHead className="text-xs text-right">Rate / seat</TableHead>
+                  <TableHead className="text-xs text-right">Subtotal</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {batches.map(b => {
+                    const rate = b.template.includes("Kubernetes") ? 800 : b.template.includes("Linux") ? 500 : 400;
+                    const days = 14;
+                    const subtotal = b.seatCount * rate;
+                    return (
+                      <TableRow key={b.id}>
+                        <TableCell className="text-xs font-medium">{b.name}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{b.template}</TableCell>
+                        <TableCell className="text-xs text-right">{b.seatCount}</TableCell>
+                        <TableCell className="text-xs text-right">{days}</TableCell>
+                        <TableCell className="text-xs text-right">₹{rate}</TableCell>
+                        <TableCell className="text-sm text-right font-medium">₹{subtotal.toLocaleString()}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  <TableRow className="bg-muted/30">
+                    <TableCell colSpan={5} className="text-xs font-medium text-right">Total (current cycle)</TableCell>
+                    <TableCell className="text-sm font-bold text-right">₹{batches.reduce((s, b) => {
+                      const rate = b.template.includes("Kubernetes") ? 800 : b.template.includes("Linux") ? 500 : 400;
+                      return s + b.seatCount * rate;
+                    }, 0).toLocaleString()}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
           <div className="flex items-center gap-3">
             <Switch />
             <Label className="text-xs">Lock provisioning until payment/PO received</Label>
           </div>
+
+          {/* Invoice Breakdown Dialog */}
+          <Dialog open={!!selectedInvoiceId} onOpenChange={(o) => !o && setSelectedInvoiceId(null)}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Invoice Breakdown — {selectedInvoiceId}</DialogTitle>
+              </DialogHeader>
+              {selectedInvoiceId && (
+                <div className="space-y-3">
+                  <Table>
+                    <TableHeader><TableRow>
+                      <TableHead className="text-xs">Batch</TableHead>
+                      <TableHead className="text-xs text-right">Seats</TableHead>
+                      <TableHead className="text-xs text-right">Days</TableHead>
+                      <TableHead className="text-xs text-right">Rate</TableHead>
+                      <TableHead className="text-xs text-right">Amount</TableHead>
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {(invoiceLineItems[selectedInvoiceId] || []).map(li => (
+                        <TableRow key={li.batchId}>
+                          <TableCell className="text-xs font-medium">{li.batchName}<div className="text-[10px] text-muted-foreground font-mono">{li.batchId}</div></TableCell>
+                          <TableCell className="text-xs text-right">{li.seats}</TableCell>
+                          <TableCell className="text-xs text-right">{li.days}</TableCell>
+                          <TableCell className="text-xs text-right">₹{li.ratePerSeat}</TableCell>
+                          <TableCell className="text-sm text-right font-medium">₹{li.amount.toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
+                      <TableRow className="bg-muted/30">
+                        <TableCell colSpan={4} className="text-xs font-medium text-right">Total</TableCell>
+                        <TableCell className="text-sm font-bold text-right">₹{(invoiceLineItems[selectedInvoiceId] || []).reduce((s, li) => s + li.amount, 0).toLocaleString()}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" size="sm" className="text-xs gap-1.5"><Download className="h-3.5 w-3.5" /> Download PDF</Button>
+                    <Button variant="outline" size="sm" className="text-xs gap-1.5"><Mail className="h-3.5 w-3.5" /> Email to Customer</Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         {/* Tab E: Settings */}
