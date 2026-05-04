@@ -527,68 +527,91 @@ export default function CustomerDetail() {
             </CardContent>
           </Card>
 
-          {/* Portal Navigation & Layout */}
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Portal Navigation & Layout</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-xs text-muted-foreground">Control which sections are visible in the trainer portal sidebar.</p>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {[
-                  { label: "Dashboard", defaultOn: true },
-                  { label: "Courses & Content", defaultOn: true },
-                  { label: "Batches", defaultOn: true },
-                  { label: "Labs Management", defaultOn: true },
-                  { label: "Assignments", defaultOn: true },
-                  { label: "Quizzes", defaultOn: true },
-                  { label: "Exercises", defaultOn: true },
-                  { label: "Certifications", defaultOn: true },
-                  { label: "Programs / Learning Paths", defaultOn: false },
-                  { label: "Student Analytics", defaultOn: true },
-                  { label: "Reports & Exports", defaultOn: true },
-                  { label: "Support Tickets", defaultOn: true },
-                ].map(f => (
-                  <div key={f.label} className="flex items-center gap-3">
-                    <Switch defaultChecked={f.defaultOn} />
-                    <Label className="text-xs">{f.label}</Label>
-                  </div>
-                ))}
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 mt-2">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Default Landing Page</Label>
-                  <Select defaultValue="dashboard"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="dashboard">Dashboard</SelectItem><SelectItem value="batches">Batches</SelectItem><SelectItem value="courses">Courses</SelectItem><SelectItem value="labs">Labs</SelectItem></SelectContent></Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Dashboard Layout</Label>
-                  <Select defaultValue="default"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="default">Default (Stats + Activity)</SelectItem><SelectItem value="compact">Compact (Stats only)</SelectItem><SelectItem value="detailed">Detailed (Charts + Tables)</SelectItem></SelectContent></Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Course & Content Settings */}
+          {/* Course & Content Settings (incl. Assessment & Certification — Frappe LMS) */}
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm">Course & Content Settings</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {[
-                  { label: "Allow trainers to create courses", defaultOn: true },
-                  { label: "Allow trainers to upload videos", defaultOn: true },
-                  { label: "Allow trainers to upload documents", defaultOn: true },
-                  { label: "Enable SCORM package import", defaultOn: false },
-                  { label: "Enable course marketplace access", defaultOn: false },
-                  { label: "Allow course cloning from templates", defaultOn: true },
-                ].map(f => (
-                  <div key={f.label} className="flex items-center gap-3">
-                    <Switch defaultChecked={f.defaultOn} />
-                    <Label className="text-xs">{f.label}</Label>
+            <CardContent className="space-y-5">
+              <div>
+                <p className="text-xs font-medium mb-2">Authoring & Content</p>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {[
+                    { label: "Allow trainers to create courses", defaultOn: true },
+                    { label: "Allow trainers to upload videos", defaultOn: true },
+                    { label: "Allow trainers to upload documents", defaultOn: true },
+                    { label: "Allow course cloning from templates", defaultOn: true },
+                    { label: "Sync courses with Frappe LMS", defaultOn: true },
+                    { label: "Auto-publish courses on save", defaultOn: false },
+                    { label: "Allow embedded YouTube/Vimeo lessons", defaultOn: true },
+                    { label: "Enable course discussions / Q&A", defaultOn: true },
+                  ].map(f => (
+                    <div key={f.label} className="flex items-center gap-3">
+                      <Switch defaultChecked={f.defaultOn} />
+                      <Label className="text-xs">{f.label}</Label>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-3">
+                  <div className="space-y-1.5"><Label className="text-xs">Max Upload Size (MB)</Label><Input type="number" defaultValue={500} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Allowed File Formats</Label><Input defaultValue="pdf,mp4,pptx,docx,zip" className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Storage Quota (GB)</Label><Input type="number" defaultValue={50} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Frappe LMS Site URL</Label><Input placeholder="lms.company.com" className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Frappe API Key</Label><Input type="password" placeholder="key_..." className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Default Course Visibility</Label>
+                    <Select defaultValue="batch"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="batch">Batch only</SelectItem><SelectItem value="org">Whole organisation</SelectItem><SelectItem value="public">Public</SelectItem></SelectContent></Select>
                   </div>
-                ))}
+                </div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-1.5"><Label className="text-xs">Max Upload Size (MB)</Label><Input type="number" defaultValue={500} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Allowed File Formats</Label><Input defaultValue="pdf,mp4,pptx,docx,zip" className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Storage Quota (GB)</Label><Input type="number" defaultValue={50} className="h-9 text-sm" /></div>
+
+              <div className="border-t pt-4">
+                <p className="text-xs font-medium mb-2">Assessments</p>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {[
+                    { label: "Enable quizzes", defaultOn: true },
+                    { label: "Enable assignments", defaultOn: true },
+                    { label: "Enable coding exercises (Judge0)", defaultOn: true },
+                    { label: "Enable proctored exam mode", defaultOn: false },
+                    { label: "Lock browser during exams", defaultOn: false },
+                    { label: "Allow retakes on failed assessments", defaultOn: true },
+                    { label: "Show leaderboard to participants", defaultOn: false },
+                    { label: "Enable peer review assignments", defaultOn: false },
+                  ].map(f => (
+                    <div key={f.label} className="flex items-center gap-3">
+                      <Switch defaultChecked={f.defaultOn} />
+                      <Label className="text-xs">{f.label}</Label>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-3">
+                  <div className="space-y-1.5"><Label className="text-xs">Default Pass Percentage</Label><Input type="number" defaultValue={70} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Max Retakes Allowed</Label><Input type="number" defaultValue={3} className="h-9 text-sm" /></div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <p className="text-xs font-medium mb-2">Certification</p>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {[
+                    { label: "Auto-issue certificates on completion", defaultOn: true },
+                    { label: "Include trainer signature", defaultOn: true },
+                    { label: "Include verification QR code", defaultOn: true },
+                    { label: "Allow public certificate verification URL", defaultOn: true },
+                  ].map(f => (
+                    <div key={f.label} className="flex items-center gap-3">
+                      <Switch defaultChecked={f.defaultOn} />
+                      <Label className="text-xs">{f.label}</Label>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Certificate Template</Label>
+                    <Select defaultValue="default"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="default">Default Template</SelectItem><SelectItem value="modern">Modern</SelectItem><SelectItem value="classic">Classic</SelectItem><SelectItem value="custom">Custom Upload</SelectItem></SelectContent></Select>
+                  </div>
+                  <div className="space-y-1.5"><Label className="text-xs">Certificate Signatory Name</Label><Input placeholder="John Doe, CTO" className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Certificate Signatory Title</Label><Input placeholder="Chief Technology Officer" className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Certificate Logo</Label><Input type="file" accept="image/*" className="h-9 text-sm" /></div>
+                </div>
               </div>
             </CardContent>
           </Card>
