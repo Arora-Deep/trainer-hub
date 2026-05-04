@@ -633,7 +633,6 @@ export default function CustomerDetail() {
             </CardContent>
           </Card>
         </TabsContent>
-        </TabsContent>
 
         {/* Tab C: Support */}
         <TabsContent value="support" className="space-y-4 mt-4">
