@@ -8,7 +8,11 @@ import { useCustomerStore } from "@/stores/customerStore";
 import {
   ArrowLeft, Ban, UserCheck, Receipt, CreditCard, Activity, Shield, Clock, Users,
   LifeBuoy, Settings, BarChart3, FlaskConical, Download, RotateCcw, Key, Power, FileText,
+  ChevronRight, Server, Calendar, Mail, Eye,
 } from "lucide-react";
+import { useState } from "react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -51,16 +55,60 @@ export default function CustomerDetail() {
   ];
 
   const batches = [
-    { name: "K8s Batch #14", template: "Kubernetes Lab v2", students: 35, start: "2026-02-25", end: "2026-03-10", status: "active" },
-    { name: "Linux Fundamentals #8", template: "Linux + Networking Lab v1", students: 50, start: "2026-03-01", end: "2026-03-15", status: "active" },
-    { name: "Docker Basics #3", template: "Docker Compose Lab", students: 25, start: "2026-02-10", end: "2026-02-24", status: "completed" },
+    {
+      id: "B-1014", name: "K8s Batch #14", template: "Kubernetes Lab v2",
+      trainer: "Rajesh Kumar", seatCount: 35, start: "2026-02-25", end: "2026-03-10",
+      status: "active", vmSpec: "4 vCPU · 8 GB · 60 GB", region: "ap-south-1",
+      participants: Array.from({ length: 35 }, (_, i) => ({
+        name: `Participant ${i + 1}`, email: `p${i + 1}@devops.in`,
+        vmId: `VM-45${(i + 1).toString().padStart(2, "0")}`,
+        vmStatus: i % 7 === 0 ? "stopped" : "running",
+        cpu: `${20 + (i * 7) % 60}%`, ram: `${30 + (i * 11) % 50}%`,
+        node: `node-ap-${(i % 4) + 1}`, ip: `10.0.1.${50 + i}`,
+      })),
+    },
+    {
+      id: "B-1008", name: "Linux Fundamentals #8", template: "Linux + Networking Lab v1",
+      trainer: "Priya Sharma", seatCount: 50, start: "2026-03-01", end: "2026-03-15",
+      status: "active", vmSpec: "2 vCPU · 4 GB · 40 GB", region: "ap-south-1",
+      participants: Array.from({ length: 50 }, (_, i) => ({
+        name: `Participant ${i + 1}`, email: `linux${i + 1}@devops.in`,
+        vmId: `VM-46${(i + 1).toString().padStart(2, "0")}`,
+        vmStatus: i % 9 === 0 ? "stopped" : "running",
+        cpu: `${15 + (i * 5) % 50}%`, ram: `${25 + (i * 9) % 45}%`,
+        node: `node-ap-${(i % 4) + 1}`, ip: `10.0.2.${50 + i}`,
+      })),
+    },
+    {
+      id: "B-1003", name: "Docker Basics #3", template: "Docker Compose Lab",
+      trainer: "Amit Patel", seatCount: 25, start: "2026-02-10", end: "2026-02-24",
+      status: "completed", vmSpec: "2 vCPU · 4 GB · 30 GB", region: "ap-south-1",
+      participants: Array.from({ length: 25 }, (_, i) => ({
+        name: `Participant ${i + 1}`, email: `docker${i + 1}@devops.in`,
+        vmId: `VM-47${(i + 1).toString().padStart(2, "0")}`,
+        vmStatus: "stopped",
+        cpu: "0%", ram: "0%",
+        node: `node-ap-${(i % 4) + 1}`, ip: `10.0.3.${50 + i}`,
+      })),
+    },
   ];
 
-  const seats = [
-    { vmId: "VM-4501", student: "student01@devops.in", status: "running", lastSeen: "2 min ago", node: "node-ap-3", ip: "10.0.1.51", cpu: "45%", ram: "62%" },
-    { vmId: "VM-4502", student: "student02@devops.in", status: "running", lastSeen: "5 min ago", node: "node-ap-3", ip: "10.0.1.52", cpu: "32%", ram: "48%" },
-    { vmId: "VM-4503", student: "student03@devops.in", status: "stopped", lastSeen: "2 hrs ago", node: "node-ap-1", ip: "10.0.1.53", cpu: "0%", ram: "0%" },
-  ];
+  type Batch = typeof batches[number];
+  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+
+  // Invoice line items per batch (for breakdown)
+  const invoiceLineItems: Record<string, Array<{ batchId: string; batchName: string; seats: number; days: number; ratePerSeat: number; amount: number }>> = {};
+  custInvoices.forEach((inv, idx) => {
+    invoiceLineItems[inv.id] = batches.slice(0, idx === 0 ? 3 : 2).map(b => {
+      const days = 14;
+      const rate = b.template.includes("Kubernetes") ? 800 : b.template.includes("Linux") ? 500 : 400;
+      return {
+        batchId: b.id, batchName: b.name, seats: b.seatCount, days,
+        ratePerSeat: rate, amount: b.seatCount * rate,
+      };
+    });
+  });
 
   const auditLogs = [
     { action: "Quota updated", user: "admin@cloudadda.com", time: "2026-02-28 14:30", details: "CPU: 400 → 500" },
@@ -98,7 +146,7 @@ export default function CustomerDetail() {
       <Tabs defaultValue="overview">
         <TabsList className="bg-muted/50 flex-wrap h-auto gap-0.5 p-1">
           <TabsTrigger value="overview" className="text-xs gap-1.5"><Activity className="h-3.5 w-3.5" /> Overview</TabsTrigger>
-          <TabsTrigger value="provisioning" className="text-xs gap-1.5"><FlaskConical className="h-3.5 w-3.5" /> Provisioning & Labs</TabsTrigger>
+          <TabsTrigger value="provisioning" className="text-xs gap-1.5"><FlaskConical className="h-3.5 w-3.5" /> Batches</TabsTrigger>
           <TabsTrigger value="support" className="text-xs gap-1.5"><LifeBuoy className="h-3.5 w-3.5" /> Support</TabsTrigger>
           <TabsTrigger value="billing" className="text-xs gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Billing</TabsTrigger>
           <TabsTrigger value="settings" className="text-xs gap-1.5"><Settings className="h-3.5 w-3.5" /> Settings</TabsTrigger>
@@ -144,72 +192,126 @@ export default function CustomerDetail() {
           </div>
         </TabsContent>
 
-        {/* Tab B: Provisioning & Labs */}
+        {/* Tab B: Batches */}
         <TabsContent value="provisioning" className="space-y-4 mt-4">
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Total Batches</p><p className="text-2xl font-bold mt-1">{batches.length}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Active Batches</p><p className="text-2xl font-bold mt-1 text-success">{batches.filter(b => b.status === "active").length}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Total Participants</p><p className="text-2xl font-bold mt-1">{batches.reduce((s, b) => s + b.seatCount, 0)}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Running VMs</p><p className="text-2xl font-bold mt-1 text-success">{batches.reduce((s, b) => s + b.participants.filter(p => p.vmStatus === "running").length, 0)}</p></CardContent></Card>
+          </div>
+
           <Card>
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Batches</CardTitle>
+              <CardTitle className="text-sm">All Batches</CardTitle>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("All labs shutdown")}><Power className="h-3.5 w-3.5" /> Shutdown All</Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Batch extended")}><Clock className="h-3.5 w-3.5" /> Extend Batch</Button>
+                <Button size="sm" className="text-xs gap-1.5" onClick={() => navigate("/admin/batches/new")}><FlaskConical className="h-3.5 w-3.5" /> Provision Batch</Button>
               </div>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader><TableRow>
-                  <TableHead className="text-xs">Batch</TableHead><TableHead className="text-xs">Template</TableHead>
-                  <TableHead className="text-xs">Students</TableHead><TableHead className="text-xs">Start</TableHead>
-                  <TableHead className="text-xs">End</TableHead><TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Batch</TableHead>
+                  <TableHead className="text-xs">Template</TableHead>
+                  <TableHead className="text-xs">Trainer</TableHead>
+                  <TableHead className="text-xs">Participants</TableHead>
+                  <TableHead className="text-xs">VM Spec</TableHead>
+                  <TableHead className="text-xs">Period</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs"></TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {batches.map((b, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="text-sm font-medium">{b.name}</TableCell>
-                      <TableCell className="text-xs">{b.template}</TableCell>
-                      <TableCell className="text-xs">{b.students}</TableCell>
-                      <TableCell className="text-xs">{b.start}</TableCell>
-                      <TableCell className="text-xs">{b.end}</TableCell>
-                      <TableCell><Badge variant="secondary" className={`text-[10px] capitalize ${b.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{b.status}</Badge></TableCell>
-                    </TableRow>
-                  ))}
+                  {batches.map((b) => {
+                    const running = b.participants.filter(p => p.vmStatus === "running").length;
+                    return (
+                      <TableRow key={b.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setSelectedBatch(b)}>
+                        <TableCell className="text-sm font-medium">{b.name}<div className="text-[10px] text-muted-foreground font-mono">{b.id}</div></TableCell>
+                        <TableCell className="text-xs">{b.template}</TableCell>
+                        <TableCell className="text-xs">{b.trainer}</TableCell>
+                        <TableCell className="text-xs">{b.seatCount} <span className="text-muted-foreground">({running} running)</span></TableCell>
+                        <TableCell className="text-xs font-mono">{b.vmSpec}</TableCell>
+                        <TableCell className="text-xs">{b.start} → {b.end}</TableCell>
+                        <TableCell><Badge variant="secondary" className={`text-[10px] capitalize ${b.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{b.status}</Badge></TableCell>
+                        <TableCell><ChevronRight className="h-4 w-4 text-muted-foreground" /></TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm">Seat / Lab Instances</CardTitle>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Labs replaced")}><RotateCcw className="h-3.5 w-3.5" /> Replace Broken</Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Credentials reset")}><Key className="h-3.5 w-3.5" /> Reset Creds</Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5"><Download className="h-3.5 w-3.5" /> Download Logs</Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader><TableRow>
-                  <TableHead className="text-xs">VM ID</TableHead><TableHead className="text-xs">Student</TableHead>
-                  <TableHead className="text-xs">Status</TableHead><TableHead className="text-xs">Last Seen</TableHead>
-                  <TableHead className="text-xs">Node</TableHead><TableHead className="text-xs">IP</TableHead>
-                  <TableHead className="text-xs">CPU</TableHead><TableHead className="text-xs">RAM</TableHead>
-                </TableRow></TableHeader>
-                <TableBody>
-                  {seats.map(s => (
-                    <TableRow key={s.vmId}>
-                      <TableCell className="text-xs font-mono">{s.vmId}</TableCell>
-                      <TableCell className="text-xs">{s.student}</TableCell>
-                      <TableCell><Badge variant="secondary" className={`text-[10px] ${s.status === "running" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{s.status}</Badge></TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{s.lastSeen}</TableCell>
-                      <TableCell className="text-xs font-mono">{s.node}</TableCell>
-                      <TableCell className="text-xs font-mono">{s.ip}</TableCell>
-                      <TableCell className="text-xs">{s.cpu}</TableCell>
-                      <TableCell className="text-xs">{s.ram}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+
+          {/* Batch Detail Sheet */}
+          <Sheet open={!!selectedBatch} onOpenChange={(o) => !o && setSelectedBatch(null)}>
+            <SheetContent side="right" className="w-full sm:max-w-3xl overflow-y-auto">
+              {selectedBatch && (
+                <>
+                  <SheetHeader>
+                    <SheetTitle className="flex items-center gap-2">
+                      {selectedBatch.name}
+                      <Badge variant="secondary" className={`text-[10px] capitalize ${selectedBatch.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{selectedBatch.status}</Badge>
+                    </SheetTitle>
+                    <SheetDescription>{selectedBatch.template} · {selectedBatch.trainer}</SheetDescription>
+                  </SheetHeader>
+
+                  <div className="mt-4 space-y-4">
+                    <div className="grid grid-cols-4 gap-3">
+                      <Card><CardContent className="pt-3"><p className="text-[10px] text-muted-foreground">Participants</p><p className="text-lg font-bold">{selectedBatch.seatCount}</p></CardContent></Card>
+                      <Card><CardContent className="pt-3"><p className="text-[10px] text-muted-foreground">Running</p><p className="text-lg font-bold text-success">{selectedBatch.participants.filter(p => p.vmStatus === "running").length}</p></CardContent></Card>
+                      <Card><CardContent className="pt-3"><p className="text-[10px] text-muted-foreground">Stopped</p><p className="text-lg font-bold text-muted-foreground">{selectedBatch.participants.filter(p => p.vmStatus === "stopped").length}</p></CardContent></Card>
+                      <Card><CardContent className="pt-3"><p className="text-[10px] text-muted-foreground">VM Spec</p><p className="text-xs font-mono mt-1">{selectedBatch.vmSpec}</p></CardContent></Card>
+                    </div>
+
+                    <Card>
+                      <CardHeader className="pb-2"><CardTitle className="text-xs">Batch Info</CardTitle></CardHeader>
+                      <CardContent className="grid grid-cols-2 gap-3 text-xs">
+                        <div><span className="text-muted-foreground">Batch ID:</span> <span className="font-mono">{selectedBatch.id}</span></div>
+                        <div><span className="text-muted-foreground">Region:</span> {selectedBatch.region}</div>
+                        <div><span className="text-muted-foreground">Start:</span> {selectedBatch.start}</div>
+                        <div><span className="text-muted-foreground">End:</span> {selectedBatch.end}</div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                        <CardTitle className="text-xs">Participants & VMs</CardTitle>
+                        <div className="flex gap-1.5">
+                          <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Broken VMs replaced")}><RotateCcw className="h-3 w-3" /> Replace Broken</Button>
+                          <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Credentials reset")}><Key className="h-3 w-3" /> Reset Creds</Button>
+                          <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1"><Download className="h-3 w-3" /> Logs</Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-0 max-h-[400px] overflow-y-auto">
+                        <Table>
+                          <TableHeader><TableRow>
+                            <TableHead className="text-[10px]">Participant</TableHead>
+                            <TableHead className="text-[10px]">VM</TableHead>
+                            <TableHead className="text-[10px]">Status</TableHead>
+                            <TableHead className="text-[10px]">CPU</TableHead>
+                            <TableHead className="text-[10px]">RAM</TableHead>
+                            <TableHead className="text-[10px]">IP</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {selectedBatch.participants.map(p => (
+                              <TableRow key={p.vmId}>
+                                <TableCell className="text-[11px]"><div className="font-medium">{p.name}</div><div className="text-muted-foreground">{p.email}</div></TableCell>
+                                <TableCell className="text-[11px] font-mono">{p.vmId}</TableCell>
+                                <TableCell><Badge variant="secondary" className={`text-[9px] ${p.vmStatus === "running" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{p.vmStatus}</Badge></TableCell>
+                                <TableCell className="text-[11px]">{p.cpu}</TableCell>
+                                <TableCell className="text-[11px]">{p.ram}</TableCell>
+                                <TableCell className="text-[11px] font-mono">{p.ip}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </>
+              )}
+            </SheetContent>
+          </Sheet>
         </TabsContent>
 
         {/* Tab C: Support */}
@@ -256,40 +358,146 @@ export default function CustomerDetail() {
 
         {/* Tab D: Billing */}
         <TabsContent value="billing" className="space-y-4 mt-4">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
             <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Wallet / Credits</p><p className="text-2xl font-bold mt-1">₹{customer.walletBalance.toLocaleString()}</p></CardContent></Card>
             <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Monthly Usage</p><p className="text-2xl font-bold mt-1">₹{customer.monthlyUsage.toLocaleString()}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Outstanding</p><p className="text-2xl font-bold mt-1">₹{custInvoices.filter(i => i.status !== "paid").reduce((s, i) => s + i.amount, 0).toLocaleString()}</p></CardContent></Card>
             <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Overdue</p><p className={`text-2xl font-bold mt-1 ${customer.overdueAmount > 0 ? "text-destructive" : ""}`}>₹{customer.overdueAmount.toLocaleString()}</p></CardContent></Card>
           </div>
+
           <Card>
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
               <CardTitle className="text-sm">Invoices</CardTitle>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Invoice created")}><Receipt className="h-3.5 w-3.5" /> Create Invoice</Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Credit applied")}><CreditCard className="h-3.5 w-3.5" /> Apply Credit</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Invoice generated from current usage")}><Receipt className="h-3.5 w-3.5" /> Generate Invoice</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Credit applied to wallet")}><CreditCard className="h-3.5 w-3.5" /> Apply Credit</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5"><Download className="h-3.5 w-3.5" /> Export All</Button>
               </div>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader><TableRow><TableHead className="text-xs">Invoice</TableHead><TableHead className="text-xs">Amount</TableHead><TableHead className="text-xs">Due Date</TableHead><TableHead className="text-xs">Status</TableHead><TableHead className="text-xs">Overdue</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow>
+                  <TableHead className="text-xs">Invoice</TableHead>
+                  <TableHead className="text-xs">Period</TableHead>
+                  <TableHead className="text-xs">Batches Billed</TableHead>
+                  <TableHead className="text-xs text-right">Amount</TableHead>
+                  <TableHead className="text-xs">Due Date</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs text-right">Actions</TableHead>
+                </TableRow></TableHeader>
                 <TableBody>
-                  {custInvoices.map(inv => (
-                    <TableRow key={inv.id}>
-                      <TableCell className="text-xs font-mono">{inv.id}</TableCell>
-                      <TableCell className="text-sm font-medium">₹{inv.amount.toLocaleString()}</TableCell>
-                      <TableCell className="text-xs">{inv.dueDate}</TableCell>
-                      <TableCell><Badge variant="secondary" className={`text-[10px] capitalize ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "overdue" ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"}`}>{inv.status}</Badge></TableCell>
-                      <TableCell className="text-xs">{inv.overdueDays > 0 ? `${inv.overdueDays}d` : "—"}</TableCell>
-                    </TableRow>
-                  ))}
+                  {custInvoices.map(inv => {
+                    const items = invoiceLineItems[inv.id] || [];
+                    return (
+                      <TableRow key={inv.id}>
+                        <TableCell className="text-xs font-mono">{inv.id}</TableCell>
+                        <TableCell className="text-xs">Feb 2026</TableCell>
+                        <TableCell className="text-xs">{items.length} batches</TableCell>
+                        <TableCell className="text-sm font-medium text-right">₹{inv.amount.toLocaleString()}</TableCell>
+                        <TableCell className="text-xs">{inv.dueDate}{inv.overdueDays > 0 && <span className="text-destructive ml-1">({inv.overdueDays}d late)</span>}</TableCell>
+                        <TableCell><Badge variant="secondary" className={`text-[10px] capitalize ${inv.status === "paid" ? "bg-success/10 text-success" : inv.status === "overdue" ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"}`}>{inv.status}</Badge></TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => setSelectedInvoiceId(inv.id)}><Eye className="h-3 w-3" /> Breakdown</Button>
+                            <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1"><Download className="h-3 w-3" /> PDF</Button>
+                            {inv.status !== "paid" && <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => action(`Reminder sent for ${inv.id}`)}><Mail className="h-3 w-3" /> Remind</Button>}
+                            {inv.status !== "paid" && <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => action(`${inv.id} marked paid`)}>Mark Paid</Button>}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {custInvoices.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">No invoices yet</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Current Cycle — Usage by Batch</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead className="text-xs">Batch</TableHead>
+                  <TableHead className="text-xs">Template</TableHead>
+                  <TableHead className="text-xs text-right">Seats</TableHead>
+                  <TableHead className="text-xs text-right">Days</TableHead>
+                  <TableHead className="text-xs text-right">Rate / seat</TableHead>
+                  <TableHead className="text-xs text-right">Subtotal</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {batches.map(b => {
+                    const rate = b.template.includes("Kubernetes") ? 800 : b.template.includes("Linux") ? 500 : 400;
+                    const days = 14;
+                    const subtotal = b.seatCount * rate;
+                    return (
+                      <TableRow key={b.id}>
+                        <TableCell className="text-xs font-medium">{b.name}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{b.template}</TableCell>
+                        <TableCell className="text-xs text-right">{b.seatCount}</TableCell>
+                        <TableCell className="text-xs text-right">{days}</TableCell>
+                        <TableCell className="text-xs text-right">₹{rate}</TableCell>
+                        <TableCell className="text-sm text-right font-medium">₹{subtotal.toLocaleString()}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  <TableRow className="bg-muted/30">
+                    <TableCell colSpan={5} className="text-xs font-medium text-right">Total (current cycle)</TableCell>
+                    <TableCell className="text-sm font-bold text-right">₹{batches.reduce((s, b) => {
+                      const rate = b.template.includes("Kubernetes") ? 800 : b.template.includes("Linux") ? 500 : 400;
+                      return s + b.seatCount * rate;
+                    }, 0).toLocaleString()}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
           <div className="flex items-center gap-3">
             <Switch />
             <Label className="text-xs">Lock provisioning until payment/PO received</Label>
           </div>
+
+          {/* Invoice Breakdown Dialog */}
+          <Dialog open={!!selectedInvoiceId} onOpenChange={(o) => !o && setSelectedInvoiceId(null)}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Invoice Breakdown — {selectedInvoiceId}</DialogTitle>
+              </DialogHeader>
+              {selectedInvoiceId && (
+                <div className="space-y-3">
+                  <Table>
+                    <TableHeader><TableRow>
+                      <TableHead className="text-xs">Batch</TableHead>
+                      <TableHead className="text-xs text-right">Seats</TableHead>
+                      <TableHead className="text-xs text-right">Days</TableHead>
+                      <TableHead className="text-xs text-right">Rate</TableHead>
+                      <TableHead className="text-xs text-right">Amount</TableHead>
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {(invoiceLineItems[selectedInvoiceId] || []).map(li => (
+                        <TableRow key={li.batchId}>
+                          <TableCell className="text-xs font-medium">{li.batchName}<div className="text-[10px] text-muted-foreground font-mono">{li.batchId}</div></TableCell>
+                          <TableCell className="text-xs text-right">{li.seats}</TableCell>
+                          <TableCell className="text-xs text-right">{li.days}</TableCell>
+                          <TableCell className="text-xs text-right">₹{li.ratePerSeat}</TableCell>
+                          <TableCell className="text-sm text-right font-medium">₹{li.amount.toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
+                      <TableRow className="bg-muted/30">
+                        <TableCell colSpan={4} className="text-xs font-medium text-right">Total</TableCell>
+                        <TableCell className="text-sm font-bold text-right">₹{(invoiceLineItems[selectedInvoiceId] || []).reduce((s, li) => s + li.amount, 0).toLocaleString()}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" size="sm" className="text-xs gap-1.5"><Download className="h-3.5 w-3.5" /> Download PDF</Button>
+                    <Button variant="outline" size="sm" className="text-xs gap-1.5"><Mail className="h-3.5 w-3.5" /> Email to Customer</Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         {/* Tab E: Settings */}
@@ -319,68 +527,91 @@ export default function CustomerDetail() {
             </CardContent>
           </Card>
 
-          {/* Portal Navigation & Layout */}
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Portal Navigation & Layout</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-xs text-muted-foreground">Control which sections are visible in the trainer portal sidebar.</p>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {[
-                  { label: "Dashboard", defaultOn: true },
-                  { label: "Courses & Content", defaultOn: true },
-                  { label: "Batches", defaultOn: true },
-                  { label: "Labs Management", defaultOn: true },
-                  { label: "Assignments", defaultOn: true },
-                  { label: "Quizzes", defaultOn: true },
-                  { label: "Exercises", defaultOn: true },
-                  { label: "Certifications", defaultOn: true },
-                  { label: "Programs / Learning Paths", defaultOn: false },
-                  { label: "Student Analytics", defaultOn: true },
-                  { label: "Reports & Exports", defaultOn: true },
-                  { label: "Support Tickets", defaultOn: true },
-                ].map(f => (
-                  <div key={f.label} className="flex items-center gap-3">
-                    <Switch defaultChecked={f.defaultOn} />
-                    <Label className="text-xs">{f.label}</Label>
-                  </div>
-                ))}
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 mt-2">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Default Landing Page</Label>
-                  <Select defaultValue="dashboard"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="dashboard">Dashboard</SelectItem><SelectItem value="batches">Batches</SelectItem><SelectItem value="courses">Courses</SelectItem><SelectItem value="labs">Labs</SelectItem></SelectContent></Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Dashboard Layout</Label>
-                  <Select defaultValue="default"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="default">Default (Stats + Activity)</SelectItem><SelectItem value="compact">Compact (Stats only)</SelectItem><SelectItem value="detailed">Detailed (Charts + Tables)</SelectItem></SelectContent></Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Course & Content Settings */}
+          {/* Course & Content Settings (incl. Assessment & Certification — Frappe LMS) */}
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm">Course & Content Settings</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {[
-                  { label: "Allow trainers to create courses", defaultOn: true },
-                  { label: "Allow trainers to upload videos", defaultOn: true },
-                  { label: "Allow trainers to upload documents", defaultOn: true },
-                  { label: "Enable SCORM package import", defaultOn: false },
-                  { label: "Enable course marketplace access", defaultOn: false },
-                  { label: "Allow course cloning from templates", defaultOn: true },
-                ].map(f => (
-                  <div key={f.label} className="flex items-center gap-3">
-                    <Switch defaultChecked={f.defaultOn} />
-                    <Label className="text-xs">{f.label}</Label>
+            <CardContent className="space-y-5">
+              <div>
+                <p className="text-xs font-medium mb-2">Authoring & Content</p>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {[
+                    { label: "Allow trainers to create courses", defaultOn: true },
+                    { label: "Allow trainers to upload videos", defaultOn: true },
+                    { label: "Allow trainers to upload documents", defaultOn: true },
+                    { label: "Allow course cloning from templates", defaultOn: true },
+                    { label: "Sync courses with Frappe LMS", defaultOn: true },
+                    { label: "Auto-publish courses on save", defaultOn: false },
+                    { label: "Allow embedded YouTube/Vimeo lessons", defaultOn: true },
+                    { label: "Enable course discussions / Q&A", defaultOn: true },
+                  ].map(f => (
+                    <div key={f.label} className="flex items-center gap-3">
+                      <Switch defaultChecked={f.defaultOn} />
+                      <Label className="text-xs">{f.label}</Label>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-3">
+                  <div className="space-y-1.5"><Label className="text-xs">Max Upload Size (MB)</Label><Input type="number" defaultValue={500} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Allowed File Formats</Label><Input defaultValue="pdf,mp4,pptx,docx,zip" className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Storage Quota (GB)</Label><Input type="number" defaultValue={50} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Frappe LMS Site URL</Label><Input placeholder="lms.company.com" className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Frappe API Key</Label><Input type="password" placeholder="key_..." className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Default Course Visibility</Label>
+                    <Select defaultValue="batch"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="batch">Batch only</SelectItem><SelectItem value="org">Whole organisation</SelectItem><SelectItem value="public">Public</SelectItem></SelectContent></Select>
                   </div>
-                ))}
+                </div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-1.5"><Label className="text-xs">Max Upload Size (MB)</Label><Input type="number" defaultValue={500} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Allowed File Formats</Label><Input defaultValue="pdf,mp4,pptx,docx,zip" className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Storage Quota (GB)</Label><Input type="number" defaultValue={50} className="h-9 text-sm" /></div>
+
+              <div className="border-t pt-4">
+                <p className="text-xs font-medium mb-2">Assessments</p>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {[
+                    { label: "Enable quizzes", defaultOn: true },
+                    { label: "Enable assignments", defaultOn: true },
+                    { label: "Enable coding exercises (Judge0)", defaultOn: true },
+                    { label: "Enable proctored exam mode", defaultOn: false },
+                    { label: "Lock browser during exams", defaultOn: false },
+                    { label: "Allow retakes on failed assessments", defaultOn: true },
+                    { label: "Show leaderboard to participants", defaultOn: false },
+                    { label: "Enable peer review assignments", defaultOn: false },
+                  ].map(f => (
+                    <div key={f.label} className="flex items-center gap-3">
+                      <Switch defaultChecked={f.defaultOn} />
+                      <Label className="text-xs">{f.label}</Label>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-3">
+                  <div className="space-y-1.5"><Label className="text-xs">Default Pass Percentage</Label><Input type="number" defaultValue={70} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Max Retakes Allowed</Label><Input type="number" defaultValue={3} className="h-9 text-sm" /></div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <p className="text-xs font-medium mb-2">Certification</p>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {[
+                    { label: "Auto-issue certificates on completion", defaultOn: true },
+                    { label: "Include trainer signature", defaultOn: true },
+                    { label: "Include verification QR code", defaultOn: true },
+                    { label: "Allow public certificate verification URL", defaultOn: true },
+                  ].map(f => (
+                    <div key={f.label} className="flex items-center gap-3">
+                      <Switch defaultChecked={f.defaultOn} />
+                      <Label className="text-xs">{f.label}</Label>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Certificate Template</Label>
+                    <Select defaultValue="default"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="default">Default Template</SelectItem><SelectItem value="modern">Modern</SelectItem><SelectItem value="classic">Classic</SelectItem><SelectItem value="custom">Custom Upload</SelectItem></SelectContent></Select>
+                  </div>
+                  <div className="space-y-1.5"><Label className="text-xs">Certificate Signatory Name</Label><Input placeholder="John Doe, CTO" className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Certificate Signatory Title</Label><Input placeholder="Chief Technology Officer" className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Certificate Logo</Label><Input type="file" accept="image/*" className="h-9 text-sm" /></div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -462,39 +693,6 @@ export default function CustomerDetail() {
             </CardContent>
           </Card>
 
-          {/* Assessment & Certification */}
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Assessment & Certification</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {[
-                  { label: "Enable exam / proctored mode", defaultOn: false },
-                  { label: "Lock browser during exams", defaultOn: false },
-                  { label: "Allow retakes on failed assessments", defaultOn: true },
-                  { label: "Auto-issue certificates on completion", defaultOn: true },
-                  { label: "Show leaderboard to students", defaultOn: false },
-                  { label: "Enable peer review assignments", defaultOn: false },
-                ].map(f => (
-                  <div key={f.label} className="flex items-center gap-3">
-                    <Switch defaultChecked={f.defaultOn} />
-                    <Label className="text-xs">{f.label}</Label>
-                  </div>
-                ))}
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-1.5"><Label className="text-xs">Default Pass Percentage</Label><Input type="number" defaultValue={70} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Max Retakes Allowed</Label><Input type="number" defaultValue={3} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Certificate Template</Label>
-                  <Select defaultValue="default"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="default">Default Template</SelectItem><SelectItem value="modern">Modern</SelectItem><SelectItem value="classic">Classic</SelectItem><SelectItem value="custom">Custom Upload</SelectItem></SelectContent></Select>
-                </div>
-                <div className="space-y-1.5"><Label className="text-xs">Certificate Signatory Name</Label><Input placeholder="John Doe, CTO" className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Certificate Signatory Title</Label><Input placeholder="Chief Technology Officer" className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Certificate Logo</Label><Input type="file" accept="image/*" className="h-9 text-sm" /></div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Communication & Notifications */}
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm">Communication & Notifications</CardTitle></CardHeader>
@@ -502,9 +700,7 @@ export default function CustomerDetail() {
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {[
                   { label: "Email notifications to trainers", defaultOn: true },
-                  { label: "Email notifications to students", defaultOn: true },
-                  { label: "Slack integration", defaultOn: false },
-                  { label: "Microsoft Teams integration", defaultOn: false },
+                  { label: "Email notifications to participants", defaultOn: true },
                   { label: "In-portal announcement banners", defaultOn: true },
                   { label: "SMS notifications (if configured)", defaultOn: false },
                 ].map(f => (
@@ -515,12 +711,12 @@ export default function CustomerDetail() {
                 ))}
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-1.5"><Label className="text-xs">Slack Webhook URL</Label><Input placeholder="https://hooks.slack.com/..." className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Teams Webhook URL</Label><Input placeholder="https://outlook.office.com/..." className="h-9 text-sm" /></div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Digest Email Frequency</Label>
                   <Select defaultValue="daily"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="realtime">Real-time</SelectItem><SelectItem value="hourly">Hourly</SelectItem><SelectItem value="daily">Daily</SelectItem><SelectItem value="weekly">Weekly</SelectItem></SelectContent></Select>
                 </div>
+                <div className="space-y-1.5"><Label className="text-xs">From Email Name</Label><Input placeholder="Company Labs" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Reply-To Address</Label><Input placeholder="noreply@company.com" className="h-9 text-sm" /></div>
               </div>
             </CardContent>
           </Card>
