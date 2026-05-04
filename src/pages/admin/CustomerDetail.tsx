@@ -693,39 +693,6 @@ export default function CustomerDetail() {
             </CardContent>
           </Card>
 
-          {/* Assessment & Certification */}
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Assessment & Certification</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {[
-                  { label: "Enable exam / proctored mode", defaultOn: false },
-                  { label: "Lock browser during exams", defaultOn: false },
-                  { label: "Allow retakes on failed assessments", defaultOn: true },
-                  { label: "Auto-issue certificates on completion", defaultOn: true },
-                  { label: "Show leaderboard to students", defaultOn: false },
-                  { label: "Enable peer review assignments", defaultOn: false },
-                ].map(f => (
-                  <div key={f.label} className="flex items-center gap-3">
-                    <Switch defaultChecked={f.defaultOn} />
-                    <Label className="text-xs">{f.label}</Label>
-                  </div>
-                ))}
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-1.5"><Label className="text-xs">Default Pass Percentage</Label><Input type="number" defaultValue={70} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Max Retakes Allowed</Label><Input type="number" defaultValue={3} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Certificate Template</Label>
-                  <Select defaultValue="default"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="default">Default Template</SelectItem><SelectItem value="modern">Modern</SelectItem><SelectItem value="classic">Classic</SelectItem><SelectItem value="custom">Custom Upload</SelectItem></SelectContent></Select>
-                </div>
-                <div className="space-y-1.5"><Label className="text-xs">Certificate Signatory Name</Label><Input placeholder="John Doe, CTO" className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Certificate Signatory Title</Label><Input placeholder="Chief Technology Officer" className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Certificate Logo</Label><Input type="file" accept="image/*" className="h-9 text-sm" /></div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Communication & Notifications */}
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm">Communication & Notifications</CardTitle></CardHeader>
@@ -733,9 +700,7 @@ export default function CustomerDetail() {
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {[
                   { label: "Email notifications to trainers", defaultOn: true },
-                  { label: "Email notifications to students", defaultOn: true },
-                  { label: "Slack integration", defaultOn: false },
-                  { label: "Microsoft Teams integration", defaultOn: false },
+                  { label: "Email notifications to participants", defaultOn: true },
                   { label: "In-portal announcement banners", defaultOn: true },
                   { label: "SMS notifications (if configured)", defaultOn: false },
                 ].map(f => (
@@ -746,12 +711,12 @@ export default function CustomerDetail() {
                 ))}
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-1.5"><Label className="text-xs">Slack Webhook URL</Label><Input placeholder="https://hooks.slack.com/..." className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Teams Webhook URL</Label><Input placeholder="https://outlook.office.com/..." className="h-9 text-sm" /></div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Digest Email Frequency</Label>
                   <Select defaultValue="daily"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="realtime">Real-time</SelectItem><SelectItem value="hourly">Hourly</SelectItem><SelectItem value="daily">Daily</SelectItem><SelectItem value="weekly">Weekly</SelectItem></SelectContent></Select>
                 </div>
+                <div className="space-y-1.5"><Label className="text-xs">From Email Name</Label><Input placeholder="Company Labs" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Reply-To Address</Label><Input placeholder="noreply@company.com" className="h-9 text-sm" /></div>
               </div>
             </CardContent>
           </Card>
