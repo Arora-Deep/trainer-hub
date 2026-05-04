@@ -959,7 +959,7 @@ export default function BatchDetails() {
 
       {/* Console Sheet for Participant VM */}
       <Sheet open={!!consoleSheetVM} onOpenChange={() => setConsoleSheetVM(null)}>
-        <SheetContent side="full" className="w-[520px] sm:max-w-[520px]">
+        <SheetContent side="full" className="">
           {consoleVM && (
             <>
               <SheetHeader>

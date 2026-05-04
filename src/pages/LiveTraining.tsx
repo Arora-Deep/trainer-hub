@@ -824,7 +824,7 @@ export default function LiveTraining() {
 
       {/* Participant VM Detail Sheet — Enhanced */}
       <Sheet open={!!selectedParticipantVM} onOpenChange={() => setSelectedStudentVM(null)}>
-        <SheetContent side="full" className="w-[520px] sm:max-w-[520px]">
+        <SheetContent side="full" className="">
           {(() => {
             const participant = participants.find(p => p.id === selectedParticipantVM);
             if (!participant) return null;
@@ -1030,7 +1030,7 @@ export default function LiveTraining() {
 
       {/* Trainer Console Sheet */}
       <Sheet open={trainerConsoleOpen} onOpenChange={setTrainerConsoleOpen}>
-        <SheetContent side="full" className="w-[560px] sm:max-w-[560px]">
+        <SheetContent side="full" className="">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <Terminal className="h-5 w-5 text-primary" />
