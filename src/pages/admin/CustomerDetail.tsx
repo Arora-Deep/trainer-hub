@@ -281,8 +281,8 @@ export default function CustomerDetail() {
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
               <CardTitle className="text-sm">All Batches</CardTitle>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("All labs shutdown")}><Power className="h-3.5 w-3.5" /> Shutdown All</Button>
-                <Button size="sm" className="text-xs gap-1.5" onClick={() => navigate("/admin/batches/new")}><FlaskConical className="h-3.5 w-3.5" /> Provision Batch</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => navigate(`/admin/batches/modify?customerId=${customer.id}`)}><Pencil className="h-3.5 w-3.5" /> Modify Batch</Button>
+                <Button size="sm" className="text-xs gap-1.5" onClick={() => navigate(`/admin/batches/create?customerId=${customer.id}`)}><FlaskConical className="h-3.5 w-3.5" /> Provision Batch</Button>
               </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -301,7 +301,7 @@ export default function CustomerDetail() {
                   {batches.map((b) => {
                     const running = b.participants.filter(p => p.vmStatus === "running").length;
                     return (
-                      <TableRow key={b.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setSelectedBatch(b)}>
+                      <TableRow key={b.id} className="cursor-pointer hover:bg-muted/40" onClick={() => navigate(`/admin/batches/${b.id}`)}>
                         <TableCell className="text-sm font-medium">{b.name}<div className="text-[10px] text-muted-foreground font-mono">{b.id}</div></TableCell>
                         <TableCell className="text-xs">{b.template}</TableCell>
                         <TableCell className="text-xs">{b.trainer}</TableCell>
