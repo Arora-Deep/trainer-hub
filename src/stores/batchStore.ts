@@ -170,6 +170,8 @@ interface BatchStore {
   resetTrainerVM: (batchId: string, snapshotId: string) => void;
   stopTrainerVM: (batchId: string) => void;
   startTrainerVM: (batchId: string) => void;
+  assignParticipantVM: (batchId: string, participantId: string, vmName?: string) => void;
+  unassignParticipantVM: (batchId: string, vmId: string) => void;
   // Legacy compat
   addLabConfig: (batchId: string, labConfig: any) => void;
   updateLabConfig: (batchId: string, labConfigId: string, updates: any) => void;
@@ -901,6 +903,73 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
         ),
       }));
     }, 2000);
+  },
+
+  assignParticipantVM: (batchId, participantId, vmName) => {
+    set((state) => ({
+      batches: state.batches.map((b) => {
+        if (b.id !== batchId) return b;
+        const participant = b.participants.find((p) => p.id === participantId);
+        if (!participant) return b;
+        const ipAddress = `10.0.${Math.floor(Math.random() * 50) + 1}.${Math.floor(Math.random() * 250) + 2}`;
+        const newVM: VMInstance = {
+          id: `svm-${Date.now()}-${participantId}`,
+          assignedTo: participant.name,
+          assignedEmail: participant.email,
+          vmName: vmName || `VM-${Math.floor(Math.random() * 9000) + 1000}`,
+          status: "provisioning",
+          ipAddress,
+          startedAt: new Date().toISOString(),
+          currentSnapshotId: b.vmConfig?.goldenSnapshotId,
+        };
+        const updatedParticipants = b.participants.map((p) =>
+          p.id === participantId ? { ...p, vmStatus: "running" as const, vmIpAddress: ipAddress } : p
+        );
+        if (!b.vmConfig) {
+          return { ...b, participants: updatedParticipants };
+        }
+        return {
+          ...b,
+          participants: updatedParticipants,
+          vmConfig: { ...b.vmConfig, participantVMs: [...b.vmConfig.participantVMs, newVM] },
+        };
+      }),
+    }));
+    setTimeout(() => {
+      set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId && b.vmConfig
+            ? {
+                ...b,
+                vmConfig: {
+                  ...b.vmConfig,
+                  participantVMs: b.vmConfig.participantVMs.map((vm) =>
+                    vm.assignedEmail && b.participants.find((p) => p.id === participantId)?.email === vm.assignedEmail && vm.status === "provisioning"
+                      ? { ...vm, status: "running" as const }
+                      : vm
+                  ),
+                },
+              }
+            : b
+        ),
+      }));
+    }, 2000);
+  },
+
+  unassignParticipantVM: (batchId, vmId) => {
+    set((state) => ({
+      batches: state.batches.map((b) => {
+        if (b.id !== batchId || !b.vmConfig) return b;
+        const vm = b.vmConfig.participantVMs.find((v) => v.id === vmId);
+        return {
+          ...b,
+          vmConfig: { ...b.vmConfig, participantVMs: b.vmConfig.participantVMs.filter((v) => v.id !== vmId) },
+          participants: b.participants.map((p) =>
+            vm && p.email === vm.assignedEmail ? { ...p, vmStatus: "not_assigned" as const, vmIpAddress: undefined } : p
+          ),
+        };
+      }),
+    }));
   },
 
   // Legacy compatibility stubs
