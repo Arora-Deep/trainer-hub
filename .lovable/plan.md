@@ -1,43 +1,102 @@
+## Scope
+All changes target `src/pages/admin/CustomerDetail.tsx` plus light edits to `AdminCreateBatch.tsx`, `ModifyBatch.tsx`, `BatchProvisioning.tsx`, and `Tickets.tsx` so existing pages can accept a preselected customer via query string.
 
+## 1. Batches tab — drill-down opens a real batch detail view
+- Clicking a batch row (currently opens a Sheet) instead navigates to `AdminBatchDetail` (`/admin/batches/:id`) so admins use the same rich page they already know.
+- The Sheet is replaced by direct routing; `selectedBatch` state and its sheet are removed.
+- "Provision Batch" / "Create Batch" buttons link to `/admin/batches/new?customerId={id}` (no inline duplicate wizard).
 
-## Plan: Enhance Trainer VM Actions + Convert Template Picker to Filtered Dropdown
+## 2. VMs tab — complete admin VM action set
+For each row in the customer's VM list and via bulk-select toolbar, expose these actions in a dropdown menu:
+- Power: Turn On, Shutdown, Force Stop, Restart
+- Lab: Reset Lab, Reclone from Golden, Replace VM
+- Snapshots: Take Snapshot, View/Restore Snapshots
+- Access: Open Console (noVNC), Copy RDP/SSH, Reset Password
+- Maintenance: Resize (vCPU/RAM/Disk), Migrate Node, Change Region
+- Clone for All (apply current VM state as new golden image to all batch VMs)
+- Destroy
 
-### Changes
+Bulk toolbar mirrors these (Start All / Stop All / Reboot All / Snapshot All / Reclone All / Resize All / Destroy All).
 
-#### 1. Trainer VM — Reclone from Snapshot + More Actions (LiveTraining.tsx)
+## 3. Settings tab — pruning and reorg
+- **Security & Access**: remove Enforce SSO Login, SSO Provider, SSO Entity ID/Tenant. Move "Restrict Portal to Office Hours" into the **Scheduling & Calendar** card.
+- **Scheduling & Calendar**: remove Google Calendar and iCal export integrations. Keep timezone, working hours, holiday calendar, and the moved office-hours toggle.
+- **Data & Compliance**: remove the GDPR section entirely.
 
-In the **Trainer VM Card** (left column, lines 369-383) and the **Trainer Console Sheet** (lines 1000-1014), add:
+## 4. Commercial & Billing — per-customer rate card (replaces current simple card)
 
-- **Reclone from Snapshot selector**: A `Select` dropdown listing all available snapshots, with a "Reclone" button that destroys the trainer VM and rebuilds it from the chosen snapshot
-- **Reset to Snapshot**: Same dropdown pattern but resets without destroying (preserves VM, restores disk state)
-- **Power On/Off toggle**: Stop/Start button based on current status
-- **Take Named Snapshot**: Dialog to create a snapshot with a custom name
-- **Copy RDP command** (for Windows VMs)
-- **Download SSH Key** button
+New card structure with persisted state on the customer object:
 
-Also enhance the Trainer Console Sheet with the same reclone/reset-to-snapshot controls.
+**Base rates**
+- Default currency (INR/USD/EUR/GBP)
+- Default monthly rate per VM
+- Default daily rate per VM
+- Hourly rate (auto-calculated = daily / 8, editable override) with a hint "We charge for 8 working hours/day; rest is free"
 
-#### 2. Template Picker — Replace Cards with Filtered Dropdown (TemplatePickerGrid.tsx → TemplatePickerDropdown.tsx)
+**Volume tiers** (editable table, add/remove rows)
+- Default seed: 1–24 → 0%, 25–49 → 5%, 50–99 → 10%, 100+ → 15%
+- Columns: Min seats, Max seats, Discount %
 
-Create a new `TemplatePickerDropdown` component that replaces the card grid with:
+**Duration tiers** (editable table)
+- Default seed: <25 days → 0%, 25 d–3 mo → 5%, 3–6 mo → 10%, 6–12 mo → 15%, 1–2 yr → 20%, 2 yr+ → 25%
+- Columns: Min days, Max days, Discount %
 
-- A `Select`-style dropdown showing the selected template name + key specs inline
-- **Filter controls above the dropdown**: OS type (Linux/Windows), Cloud Provider (AWS/Azure/GCP/DO), Category
-- When a template is selected, show a compact summary row below with vCPU, RAM, Storage, Runtime, and Region
-- Replace usage in `CreateBatch.tsx` and `AdminBatchDetail.tsx`
+**Monthly spend rebate**
+- Editable rules: "If monthly spend ≥ X, give Y% rebate" (multi-row)
 
-#### 3. batchStore — Add trainer VM reclone/reset methods
+**Commercial terms**
+- Payment terms (Net 7/15/30/45/60 + custom days)
+- Billing cycle (Monthly / Quarterly / Annual / Per-batch)
+- Auto-renew toggle
+- Prepaid credit balance (read-only with top-up button)
+- Tax/GSTIN, PO required toggle, PO number field
+- Late-payment interest %, grace period days
+- Effective-from date for the rate card + version history note
 
-Add `recloneTrainerVM(batchId, snapshotId)` and `resetTrainerVM(batchId, snapshotId)` to the batch store.
+A live "Effective price preview" widget: input seats + duration → shows the resulting per-seat rate after stacked discounts.
 
-### Files Modified
+## 5. Analytics tab — usage + business reports
+Replace the current minimal analytics with:
+- KPI strip: Total VMs provisioned, Active VMs now, Total VM-hours (MTD), Spend MTD, Open tickets, Avg ticket resolution.
+- **Usage over time**: line chart of monthly VM-hours and spend (last 12 months).
+- **Per-batch usage table**: Batch, Participants, Active days, VM-hours, Spend, Status. Each row has a "Download CSV" action; toolbar has "Download all (CSV)" and "Download PDF report".
+- **Support stats**: tickets opened/closed per month bar chart, breakdown by category and priority.
+- **Engagement**: logins, course completion %, lab completion %, top trainers by hours.
+- Date-range picker (7d / 30d / 90d / 12m / custom) applied to all widgets.
+- All tables export as CSV; whole tab exports as PDF.
 
-| File | Change |
-|------|--------|
-| `src/pages/LiveTraining.tsx` | Add trainer reclone/reset-to-snapshot selector in VM card + Console Sheet |
-| `src/components/labs/TemplatePickerDropdown.tsx` | New — filtered dropdown replacing card grid |
-| `src/components/labs/TemplatePickerGrid.tsx` | Keep for backward compat but no longer used |
-| `src/pages/CreateBatch.tsx` | Swap `TemplatePickerGrid` → `TemplatePickerDropdown` |
-| `src/pages/admin/AdminBatchDetail.tsx` | Swap `TemplatePickerGrid` → `TemplatePickerDropdown` |
-| `src/stores/batchStore.ts` | Add `recloneTrainerVM`, `resetTrainerVM` methods |
+## 6. Deep-link existing pages with preselected customer
+Edit each target page to read `?customerId=` from the URL and skip/lock the customer-selection step:
+- `AdminCreateBatch.tsx` — if `customerId` present, prefill and auto-advance from step 1.
+- `ModifyBatch.tsx` — accept `?customerId=` and `?batchId=`.
+- `BatchProvisioning.tsx` — same.
+- Customer Detail buttons updated to use `navigate('/admin/.../...?customerId=' + id)` instead of opening inline sheets/wizards.
 
+## 7. Support tab improvements
+- Lists all tickets for the customer (table: ID, Subject, Priority, Status, Assignee, Updated).
+- Row click navigates to `/admin/tickets?ticketId={id}` (Tickets page auto-opens that ticket's drawer/page).
+- "New Ticket" button opens a compact create form (subject, priority, category, description, attachment) and saves via the existing ticket flow with the customer preselected.
+- Quick Fixes section expanded:
+  - Reset all VM passwords
+  - Reboot all VMs
+  - Reclone all VMs from golden
+  - Extend all batches by N days
+  - Send announcement to all participants
+  - Force re-sync from Frappe LMS
+  - Clear stuck provisioning jobs
+  - Resend last invoice
+  - Generate temporary access link for support engineer
+
+## Technical notes
+- Add `customerId` query-param parsing via `useSearchParams` on the four target pages; when present, set the customer in store and advance the stepper.
+- Extend `customerStore` Customer type with `rateCard: { currency, monthlyRate, dailyRate, hourlyRate?, volumeTiers[], durationTiers[], spendRebates[], paymentTerms, billingCycle, ... }`. Seed existing customers with defaults.
+- Reuse existing `Dialog`, `DropdownMenu`, `Table`, `Tabs`, `recharts` components — no new deps.
+- Keep all changes inside admin portal; trainer/student portals untouched.
+
+## Files touched
+- `src/pages/admin/CustomerDetail.tsx` (major refactor of Batches, VMs, Settings, Billing, Analytics, Support tabs)
+- `src/pages/admin/AdminCreateBatch.tsx` (read `?customerId`)
+- `src/pages/admin/ModifyBatch.tsx` (read `?customerId`)
+- `src/pages/admin/BatchProvisioning.tsx` (read `?customerId`)
+- `src/pages/admin/Tickets.tsx` (read `?ticketId` to auto-open)
+- `src/stores/customerStore.ts` (rateCard schema + defaults)

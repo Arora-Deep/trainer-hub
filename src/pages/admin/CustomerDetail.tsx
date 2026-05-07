@@ -97,14 +97,59 @@ export default function CustomerDetail() {
 
   type Batch = typeof batches[number];
   type Participant = Batch["participants"][number];
-  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [selectedVM, setSelectedVM] = useState<(Participant & { batchName: string; batchId: string; vmSpec: string; region: string }) | null>(null);
   const [provisionVMOpen, setProvisionVMOpen] = useState(false);
   const [editVMOpen, setEditVMOpen] = useState(false);
   const [snapshotsOpen, setSnapshotsOpen] = useState(false);
-  const [resizeBatchOpen, setResizeBatchOpen] = useState(false);
-  const [extendBatchOpen, setExtendBatchOpen] = useState(false);
+  const [newTicketOpen, setNewTicketOpen] = useState(false);
+  // Per-customer rate card (initial defaults; in production lives in store)
+  const [rateCard, setRateCard] = useState({
+    currency: "INR",
+    monthlyRate: 1500,
+    dailyRate: 80,
+    hourlyRateOverride: "" as string,
+    volumeTiers: [
+      { min: 1, max: 24, discount: 0 },
+      { min: 25, max: 49, discount: 5 },
+      { min: 50, max: 99, discount: 10 },
+      { min: 100, max: 9999, discount: 15 },
+    ],
+    durationTiers: [
+      { minDays: 0, maxDays: 25, discount: 0 },
+      { minDays: 25, maxDays: 90, discount: 5 },
+      { minDays: 90, maxDays: 180, discount: 10 },
+      { minDays: 180, maxDays: 365, discount: 15 },
+      { minDays: 365, maxDays: 730, discount: 20 },
+      { minDays: 730, maxDays: 99999, discount: 25 },
+    ],
+    spendRebates: [
+      { minSpend: 100000, rebate: 2 },
+      { minSpend: 500000, rebate: 5 },
+      { minSpend: 1000000, rebate: 8 },
+    ],
+    paymentTermsDays: 30,
+    billingCycle: "monthly",
+    autoRenew: true,
+    poRequired: false,
+    poNumber: "",
+    gstin: "",
+    lateInterestPct: 1.5,
+    gracePeriodDays: 7,
+    effectiveFrom: new Date().toISOString().split("T")[0],
+  });
+  const [previewSeats, setPreviewSeats] = useState(30);
+  const [previewDays, setPreviewDays] = useState(30);
+  const updateRateCard = <K extends keyof typeof rateCard>(k: K, v: (typeof rateCard)[K]) => setRateCard(r => ({ ...r, [k]: v }));
+  const currencySymbol = rateCard.currency === "INR" ? "₹" : rateCard.currency === "USD" ? "$" : rateCard.currency === "EUR" ? "€" : "£";
+  const computedHourly = rateCard.hourlyRateOverride ? Number(rateCard.hourlyRateOverride) : Math.round((rateCard.dailyRate / 8) * 100) / 100;
+  const computePreview = () => {
+    const v = rateCard.volumeTiers.find(t => previewSeats >= t.min && previewSeats <= t.max)?.discount || 0;
+    const d = rateCard.durationTiers.find(t => previewDays >= t.minDays && previewDays <= t.maxDays)?.discount || 0;
+    const base = rateCard.dailyRate * previewDays;
+    const afterDiscount = base * (1 - v / 100) * (1 - d / 100);
+    return { base, afterDiscount, vDisc: v, dDisc: d };
+  };
 
   // Snapshots per VM (mock)
   const mockSnapshots = [
@@ -166,7 +211,7 @@ export default function CustomerDetail() {
           <p className="text-sm text-muted-foreground mt-1">{customer.domain} · {customer.contactPerson}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs"><FlaskConical className="h-3.5 w-3.5" /> Provision Labs</Button>
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => navigate(`/admin/batches/create?customerId=${customer.id}`)}><FlaskConical className="h-3.5 w-3.5" /> Provision Batch</Button>
           <Button variant="outline" size="sm" className="gap-1.5 text-xs"><CreditCard className="h-3.5 w-3.5" /> Add Credits</Button>
           <Button variant="outline" size="sm" className="gap-1.5 text-xs text-destructive"><Ban className="h-3.5 w-3.5" /> Suspend</Button>
           <Button variant="outline" size="sm" className="gap-1.5 text-xs"><UserCheck className="h-3.5 w-3.5" /> Impersonate</Button>
@@ -236,8 +281,8 @@ export default function CustomerDetail() {
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
               <CardTitle className="text-sm">All Batches</CardTitle>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("All labs shutdown")}><Power className="h-3.5 w-3.5" /> Shutdown All</Button>
-                <Button size="sm" className="text-xs gap-1.5" onClick={() => navigate("/admin/batches/new")}><FlaskConical className="h-3.5 w-3.5" /> Provision Batch</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => navigate(`/admin/batches/modify?customerId=${customer.id}`)}><Pencil className="h-3.5 w-3.5" /> Modify Batch</Button>
+                <Button size="sm" className="text-xs gap-1.5" onClick={() => navigate(`/admin/batches/create?customerId=${customer.id}`)}><FlaskConical className="h-3.5 w-3.5" /> Provision Batch</Button>
               </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -256,7 +301,7 @@ export default function CustomerDetail() {
                   {batches.map((b) => {
                     const running = b.participants.filter(p => p.vmStatus === "running").length;
                     return (
-                      <TableRow key={b.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setSelectedBatch(b)}>
+                      <TableRow key={b.id} className="cursor-pointer hover:bg-muted/40" onClick={() => navigate(`/admin/batches/${b.id}`)}>
                         <TableCell className="text-sm font-medium">{b.name}<div className="text-[10px] text-muted-foreground font-mono">{b.id}</div></TableCell>
                         <TableCell className="text-xs">{b.template}</TableCell>
                         <TableCell className="text-xs">{b.trainer}</TableCell>
@@ -273,160 +318,20 @@ export default function CustomerDetail() {
             </CardContent>
           </Card>
 
-          {/* Batch Detail Sheet */}
-          <Sheet open={!!selectedBatch} onOpenChange={(o) => !o && setSelectedBatch(null)}>
-            <SheetContent side="full" className="overflow-y-auto">
-              {selectedBatch && (
-                <>
-                  <SheetHeader>
-                    <SheetTitle className="flex items-center gap-2">
-                      {selectedBatch.name}
-                      <Badge variant="secondary" className={`text-[10px] capitalize ${selectedBatch.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{selectedBatch.status}</Badge>
-                    </SheetTitle>
-                    <SheetDescription>{selectedBatch.template} · {selectedBatch.trainer}</SheetDescription>
-                  </SheetHeader>
-
-                  <div className="mt-4 space-y-4">
-                    {/* Batch-level action toolbar */}
-                    <div className="flex flex-wrap gap-1.5 border rounded-lg p-2 bg-muted/30">
-                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action(`All VMs in ${selectedBatch.name} started`)}><Play className="h-3 w-3" /> Start All</Button>
-                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action(`All VMs in ${selectedBatch.name} stopped`)}><Square className="h-3 w-3" /> Stop All</Button>
-                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("All VMs rebooted")}><RotateCcw className="h-3 w-3" /> Reboot All</Button>
-                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Snapshot of all VMs taken")}><Camera className="h-3 w-3" /> Snapshot All</Button>
-                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Recloning all VMs from golden image")}><GitBranch className="h-3 w-3" /> Reclone All</Button>
-                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Broken VMs replaced")}><RefreshCw className="h-3 w-3" /> Replace Broken</Button>
-                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Credentials reset for all participants")}><Key className="h-3 w-3" /> Reset Creds</Button>
-                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => setResizeBatchOpen(true)}><HardDrive className="h-3 w-3" /> Resize VMs</Button>
-                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => setExtendBatchOpen(true)}><Clock className="h-3 w-3" /> Extend</Button>
-                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => navigate(`/admin/batches/${selectedBatch.id}`)}><Pencil className="h-3 w-3" /> Modify Batch</Button>
-                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1" onClick={() => action("Logs exported")}><Download className="h-3 w-3" /> Export Logs</Button>
-                      <Button variant="outline" size="sm" className="text-[10px] h-7 gap-1 text-destructive" onClick={() => action("Batch terminated")}><Ban className="h-3 w-3" /> Terminate</Button>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-3">
-                      <Card><CardContent className="pt-3"><p className="text-[10px] text-muted-foreground">Participants</p><p className="text-lg font-bold">{selectedBatch.seatCount}</p></CardContent></Card>
-                      <Card><CardContent className="pt-3"><p className="text-[10px] text-muted-foreground">Running</p><p className="text-lg font-bold text-success">{selectedBatch.participants.filter(p => p.vmStatus === "running").length}</p></CardContent></Card>
-                      <Card><CardContent className="pt-3"><p className="text-[10px] text-muted-foreground">Stopped</p><p className="text-lg font-bold text-muted-foreground">{selectedBatch.participants.filter(p => p.vmStatus === "stopped").length}</p></CardContent></Card>
-                      <Card><CardContent className="pt-3"><p className="text-[10px] text-muted-foreground">VM Spec</p><p className="text-xs font-mono mt-1">{selectedBatch.vmSpec}</p></CardContent></Card>
-                    </div>
-
-                    <Card>
-                      <CardHeader className="pb-2"><CardTitle className="text-xs">Batch Info</CardTitle></CardHeader>
-                      <CardContent className="grid grid-cols-2 gap-3 text-xs">
-                        <div><span className="text-muted-foreground">Batch ID:</span> <span className="font-mono">{selectedBatch.id}</span></div>
-                        <div><span className="text-muted-foreground">Region:</span> {selectedBatch.region}</div>
-                        <div><span className="text-muted-foreground">Start:</span> {selectedBatch.start}</div>
-                        <div><span className="text-muted-foreground">End:</span> {selectedBatch.end}</div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                        <CardTitle className="text-xs">Participants & VMs</CardTitle>
-                        <Button size="sm" className="text-[10px] h-7 gap-1" onClick={() => setProvisionVMOpen(true)}><Plus className="h-3 w-3" /> Add VM</Button>
-                      </CardHeader>
-                      <CardContent className="p-0 max-h-[400px] overflow-y-auto">
-                        <Table>
-                          <TableHeader><TableRow>
-                            <TableHead className="text-[10px]">Participant</TableHead>
-                            <TableHead className="text-[10px]">VM</TableHead>
-                            <TableHead className="text-[10px]">Status</TableHead>
-                            <TableHead className="text-[10px]">CPU</TableHead>
-                            <TableHead className="text-[10px]">RAM</TableHead>
-                            <TableHead className="text-[10px]">IP</TableHead>
-                            <TableHead className="text-[10px] text-right">Actions</TableHead>
-                          </TableRow></TableHeader>
-                          <TableBody>
-                            {selectedBatch.participants.map(p => (
-                              <TableRow key={p.vmId}>
-                                <TableCell className="text-[11px]"><div className="font-medium">{p.name}</div><div className="text-muted-foreground">{p.email}</div></TableCell>
-                                <TableCell className="text-[11px] font-mono">{p.vmId}</TableCell>
-                                <TableCell><Badge variant="secondary" className={`text-[9px] ${p.vmStatus === "running" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{p.vmStatus}</Badge></TableCell>
-                                <TableCell className="text-[11px]">{p.cpu}</TableCell>
-                                <TableCell className="text-[11px]">{p.ram}</TableCell>
-                                <TableCell className="text-[11px] font-mono">{p.ip}</TableCell>
-                                <TableCell className="text-right">
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-6 w-6"><MoreHorizontal className="h-3.5 w-3.5" /></Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-52">
-                                      <DropdownMenuLabel className="text-[10px]">{p.vmId}</DropdownMenuLabel>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem onClick={() => setSelectedVM({ ...p, batchName: selectedBatch.name, batchId: selectedBatch.id, vmSpec: selectedBatch.vmSpec, region: selectedBatch.region })}><Eye className="h-3.5 w-3.5 mr-2" /> View Details</DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => action(`Console opened for ${p.vmId}`)}><Terminal className="h-3.5 w-3.5 mr-2" /> Open Console</DropdownMenuItem>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem onClick={() => action(`${p.vmId} started`)}><Play className="h-3.5 w-3.5 mr-2" /> Start</DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => action(`${p.vmId} stopped`)}><Square className="h-3.5 w-3.5 mr-2" /> Stop</DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => action(`${p.vmId} rebooted`)}><RotateCcw className="h-3.5 w-3.5 mr-2" /> Reboot</DropdownMenuItem>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem onClick={() => { setSelectedVM({ ...p, batchName: selectedBatch.name, batchId: selectedBatch.id, vmSpec: selectedBatch.vmSpec, region: selectedBatch.region }); setSnapshotsOpen(true); }}><Camera className="h-3.5 w-3.5 mr-2" /> Snapshots</DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => action(`Recloning ${p.vmId} from golden image`)}><GitBranch className="h-3.5 w-3.5 mr-2" /> Reclone from Snapshot</DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => action(`${p.vmId} reset`)}><RefreshCw className="h-3.5 w-3.5 mr-2" /> Reset VM</DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => { setSelectedVM({ ...p, batchName: selectedBatch.name, batchId: selectedBatch.id, vmSpec: selectedBatch.vmSpec, region: selectedBatch.region }); setEditVMOpen(true); }}><Pencil className="h-3.5 w-3.5 mr-2" /> Edit / Resize</DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => action(`Password reset for ${p.email}`)}><Key className="h-3.5 w-3.5 mr-2" /> Reset Password</DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => action("IP copied")}><Copy className="h-3.5 w-3.5 mr-2" /> Copy IP</DropdownMenuItem>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem className="text-destructive" onClick={() => action(`${p.vmId} terminated`)}><Trash2 className="h-3.5 w-3.5 mr-2" /> Terminate</DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </>
-              )}
-            </SheetContent>
-          </Sheet>
-
-          {/* Resize Batch Dialog */}
-          <Dialog open={resizeBatchOpen} onOpenChange={setResizeBatchOpen}>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Resize all VMs in {selectedBatch?.name}</DialogTitle></DialogHeader>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-1.5"><Label className="text-xs">vCPU</Label><Input type="number" defaultValue={4} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">RAM (GB)</Label><Input type="number" defaultValue={8} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Disk (GB)</Label><Input type="number" defaultValue={60} className="h-9 text-sm" /></div>
-              </div>
-              <p className="text-[11px] text-muted-foreground"><AlertTriangle className="h-3 w-3 inline mr-1" />Requires VM restart. Participants will be notified.</p>
-              <DialogFooter>
-                <Button variant="outline" size="sm" onClick={() => setResizeBatchOpen(false)}>Cancel</Button>
-                <Button size="sm" onClick={() => { setResizeBatchOpen(false); action("Batch VMs being resized"); }}>Apply Resize</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {/* Extend Batch Dialog */}
-          <Dialog open={extendBatchOpen} onOpenChange={setExtendBatchOpen}>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Extend {selectedBatch?.name}</DialogTitle></DialogHeader>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5"><Label className="text-xs">New End Date</Label><Input type="date" defaultValue={selectedBatch?.end} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Reason</Label><Input placeholder="Customer request" className="h-9 text-sm" /></div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" size="sm" onClick={() => setExtendBatchOpen(false)}>Cancel</Button>
-                <Button size="sm" onClick={() => { setExtendBatchOpen(false); action("Batch extended"); }}>Extend</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          {/* (Batch detail moved to /admin/batches/:id — clicking a row navigates there) */}
 
           {/* Provision VM Dialog */}
           <Dialog open={provisionVMOpen} onOpenChange={setProvisionVMOpen}>
             <DialogContent>
-              <DialogHeader><DialogTitle>Add VM to {selectedBatch?.name}</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>Provision VM</DialogTitle></DialogHeader>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5"><Label className="text-xs">Participant Name</Label><Input placeholder="John Doe" className="h-9 text-sm" /></div>
                 <div className="space-y-1.5"><Label className="text-xs">Email</Label><Input type="email" placeholder="john@company.com" className="h-9 text-sm" /></div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Template</Label>
-                  <Select defaultValue="batch"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="batch">Use batch template</SelectItem><SelectItem value="custom">Custom</SelectItem></SelectContent></Select>
+                  <Label className="text-xs">Batch</Label>
+                  <Select defaultValue={batches[0]?.id}><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent>{batches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select>
                 </div>
-                <div className="space-y-1.5"><Label className="text-xs">Region</Label><Input defaultValue={selectedBatch?.region} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Region</Label><Input defaultValue="ap-south-1" className="h-9 text-sm" /></div>
               </div>
               <DialogFooter>
                 <Button variant="outline" size="sm" onClick={() => setProvisionVMOpen(false)}>Cancel</Button>
@@ -636,11 +541,20 @@ export default function CustomerDetail() {
 
         {/* Tab C: Support */}
         <TabsContent value="support" className="space-y-4 mt-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium">Tickets</h3>
-            <Button size="sm" className="text-xs gap-1.5" onClick={() => action("Ticket created")}>Create Ticket</Button>
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Open</p><p className="text-2xl font-bold mt-1 text-destructive">{custTickets.filter(t => t.status === "open").length}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">In Progress</p><p className="text-2xl font-bold mt-1 text-warning">{custTickets.filter(t => t.status === "in_progress").length}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Resolved (30d)</p><p className="text-2xl font-bold mt-1 text-success">{custTickets.filter(t => t.status === "resolved").length}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Avg Resolution</p><p className="text-2xl font-bold mt-1">4.2h</p></CardContent></Card>
           </div>
           <Card>
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm">Tickets</CardTitle>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => navigate("/admin/tickets")}><LifeBuoy className="h-3.5 w-3.5" /> View All in Inbox</Button>
+                <Button size="sm" className="text-xs gap-1.5" onClick={() => setNewTicketOpen(true)}><Plus className="h-3.5 w-3.5" /> New Ticket</Button>
+              </div>
+            </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader><TableRow>
@@ -650,7 +564,7 @@ export default function CustomerDetail() {
                 </TableRow></TableHeader>
                 <TableBody>
                   {custTickets.map(t => (
-                    <TableRow key={t.id}>
+                    <TableRow key={t.id} className="cursor-pointer hover:bg-muted/40" onClick={() => navigate(`/admin/tickets?ticketId=${t.id}`)}>
                       <TableCell className="text-xs font-mono">{t.id}</TableCell>
                       <TableCell className="text-sm">{t.subject}</TableCell>
                       <TableCell><Badge variant="secondary" className={`text-[10px] capitalize ${t.priority === "critical" ? "bg-destructive/10 text-destructive" : t.priority === "high" ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"}`}>{t.priority}</Badge></TableCell>
@@ -668,12 +582,45 @@ export default function CustomerDetail() {
             <CardHeader className="pb-2"><CardTitle className="text-sm">Quick Fixes</CardTitle></CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Retrying failed provision")}><RotateCcw className="h-3.5 w-3.5" /> Retry Failed Provision</Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("VM restarted")}><Power className="h-3.5 w-3.5" /> Restart VM</Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Lab expiry extended")}><Clock className="h-3.5 w-3.5" /> Extend Lab Expiry</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Retrying failed provision jobs")}><RotateCcw className="h-3.5 w-3.5" /> Retry Failed Provision</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("All VMs rebooted")}><Power className="h-3.5 w-3.5" /> Reboot All VMs</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("All VM passwords reset")}><Key className="h-3.5 w-3.5" /> Reset All VM Passwords</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Recloning all VMs from golden image")}><GitBranch className="h-3.5 w-3.5" /> Reclone All from Golden</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("All batches extended by 7 days")}><Clock className="h-3.5 w-3.5" /> Extend All Batches +7d</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Announcement sent to all participants")}><Mail className="h-3.5 w-3.5" /> Send Announcement</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Frappe LMS sync triggered")}><RefreshCw className="h-3.5 w-3.5" /> Force LMS Re-sync</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Stuck provisioning jobs cleared")}><Trash2 className="h-3.5 w-3.5" /> Clear Stuck Jobs</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Last invoice resent")}><Receipt className="h-3.5 w-3.5" /> Resend Last Invoice</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Temporary support access link generated")}><Lock className="h-3.5 w-3.5" /> Temp Support Access</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Cache flushed")}><RefreshCw className="h-3.5 w-3.5" /> Flush Portal Cache</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Diagnostics bundle generated")}><Download className="h-3.5 w-3.5" /> Diagnostics Bundle</Button>
               </div>
             </CardContent>
           </Card>
+
+          {/* New Ticket Dialog */}
+          <Dialog open={newTicketOpen} onOpenChange={setNewTicketOpen}>
+            <DialogContent>
+              <DialogHeader><DialogTitle>New Ticket — {customer.name}</DialogTitle></DialogHeader>
+              <div className="space-y-3">
+                <div className="space-y-1.5"><Label className="text-xs">Subject</Label><Input placeholder="Short description" className="h-9 text-sm" /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5"><Label className="text-xs">Priority</Label>
+                    <Select defaultValue="medium"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="low">Low</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="high">High</SelectItem><SelectItem value="critical">Critical</SelectItem></SelectContent></Select>
+                  </div>
+                  <div className="space-y-1.5"><Label className="text-xs">Category</Label>
+                    <Select defaultValue="vm"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="vm">VM Issue</SelectItem><SelectItem value="provisioning">Provisioning</SelectItem><SelectItem value="billing">Billing</SelectItem><SelectItem value="account">Account</SelectItem><SelectItem value="feature">Feature Request</SelectItem></SelectContent></Select>
+                  </div>
+                </div>
+                <div className="space-y-1.5"><Label className="text-xs">Description</Label><Input placeholder="Provide details…" className="h-20 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Attachment</Label><Input type="file" className="h-9 text-sm" /></div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" size="sm" onClick={() => setNewTicketOpen(false)}>Cancel</Button>
+                <Button size="sm" onClick={() => { setNewTicketOpen(false); action("Ticket created"); }}>Create Ticket</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         {/* Tab D: Billing */}
@@ -1047,12 +994,10 @@ export default function CustomerDetail() {
             <CardContent className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {[
-                  { label: "Enforce SSO login", defaultOn: customer.ssoEnabled },
                   { label: "Enforce MFA for trainers", defaultOn: customer.mfaEnabled },
                   { label: "Enforce MFA for students", defaultOn: false },
                   { label: "Enable IP whitelisting", defaultOn: false },
                   { label: "Allow API access", defaultOn: false },
-                  { label: "Restrict portal access to office hours", defaultOn: false },
                 ].map(f => (
                   <div key={f.label} className="flex items-center gap-3">
                     <Switch defaultChecked={f.defaultOn} />
@@ -1063,11 +1008,6 @@ export default function CustomerDetail() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-1.5"><Label className="text-xs">Session Timeout (min)</Label><Input type="number" defaultValue={60} className="h-9 text-sm" /></div>
                 <div className="space-y-1.5"><Label className="text-xs">Max Concurrent Sessions per User</Label><Input type="number" defaultValue={2} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">SSO Provider</Label>
-                  <Select defaultValue="none"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem><SelectItem value="google">Google Workspace</SelectItem><SelectItem value="azure">Azure AD / Entra ID</SelectItem><SelectItem value="okta">Okta</SelectItem><SelectItem value="saml">Custom SAML</SelectItem></SelectContent></Select>
-                </div>
-                <div className="space-y-1.5"><Label className="text-xs">SSO Entity ID / Tenant</Label><Input placeholder="tenant-id or entity-id" className="h-9 text-sm" /></div>
                 <div className="space-y-1.5"><Label className="text-xs">Whitelisted IP Ranges</Label><Input placeholder="192.168.1.0/24, 10.0.0.0/8" className="h-9 text-sm" /></div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Internet Policy</Label>
@@ -1093,8 +1033,7 @@ export default function CustomerDetail() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  { label: "Enable Google Calendar sync", defaultOn: false },
-                  { label: "Enable iCal export for students", defaultOn: true },
+                  { label: "Restrict portal access to office hours", defaultOn: false },
                   { label: "Auto-schedule labs for batch start", defaultOn: true },
                   { label: "Allow trainers to set custom schedules", defaultOn: true },
                 ].map(f => (
@@ -1107,35 +1046,144 @@ export default function CustomerDetail() {
             </CardContent>
           </Card>
 
-          {/* Commercial & Billing */}
+          {/* Commercial & Billing — per-customer rate card */}
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Commercial & Billing</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Pricing Model</Label>
-                  <Select defaultValue="per-seat-month"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="per-seat-month">Per seat/month</SelectItem><SelectItem value="per-seat-hour">Per seat/hour</SelectItem><SelectItem value="batch-bundle">Batch bundle</SelectItem><SelectItem value="unlimited">Unlimited (flat fee)</SelectItem></SelectContent></Select>
-                </div>
-                <div className="space-y-1.5"><Label className="text-xs">Default Rate (₹)</Label><Input type="number" defaultValue={500} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Minimum Commitment (₹)</Label><Input type="number" defaultValue={10000} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Payment Terms (days)</Label><Input type="number" defaultValue={30} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Billing Currency</Label>
-                  <Select defaultValue="INR"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="INR">INR (₹)</SelectItem><SelectItem value="USD">USD ($)</SelectItem><SelectItem value="EUR">EUR (€)</SelectItem><SelectItem value="GBP">GBP (£)</SelectItem></SelectContent></Select>
-                </div>
-                <div className="space-y-1.5"><Label className="text-xs">Invoice Prefix</Label><Input defaultValue="INV" className="h-9 text-sm" /></div>
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-sm">Commercial & Billing — Rate Card</CardTitle>
+                <p className="text-[11px] text-muted-foreground mt-1">Per-customer pricing with volume, duration, and spend-based discounts. Hourly rate = Daily ÷ 8 (we charge for 8 working hours/day; rest of the day is free).</p>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {[
-                  { label: "Auto-generate invoices on billing cycle", defaultOn: true },
-                  { label: "Lock provisioning if payment overdue", defaultOn: false },
-                  { label: "Send invoice reminders", defaultOn: true },
-                  { label: "Allow prepaid credit top-up", defaultOn: true },
-                ].map(f => (
-                  <div key={f.label} className="flex items-center gap-3">
-                    <Switch defaultChecked={f.defaultOn} />
-                    <Label className="text-xs">{f.label}</Label>
+              <Badge variant="outline" className="text-[10px]">Effective from {rateCard.effectiveFrom}</Badge>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {/* Base rates */}
+              <div>
+                <p className="text-xs font-medium mb-2">Base Rates</p>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="space-y-1.5"><Label className="text-xs">Currency</Label>
+                    <Select value={rateCard.currency} onValueChange={(v) => updateRateCard("currency", v)}><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="INR">INR (₹)</SelectItem><SelectItem value="USD">USD ($)</SelectItem><SelectItem value="EUR">EUR (€)</SelectItem><SelectItem value="GBP">GBP (£)</SelectItem></SelectContent></Select>
                   </div>
-                ))}
+                  <div className="space-y-1.5"><Label className="text-xs">Monthly Rate / VM ({currencySymbol})</Label><Input type="number" value={rateCard.monthlyRate} onChange={e => updateRateCard("monthlyRate", Number(e.target.value))} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Daily Rate / VM ({currencySymbol})</Label><Input type="number" value={rateCard.dailyRate} onChange={e => updateRateCard("dailyRate", Number(e.target.value))} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Hourly Rate / VM ({currencySymbol}) <span className="text-muted-foreground">— auto: {currencySymbol}{computedHourly}</span></Label><Input type="number" placeholder={String(computedHourly)} value={rateCard.hourlyRateOverride} onChange={e => updateRateCard("hourlyRateOverride", e.target.value)} className="h-9 text-sm" /></div>
+                </div>
+              </div>
+
+              {/* Volume tiers */}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium">Volume Discount Tiers (by VM count)</p>
+                  <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => updateRateCard("volumeTiers", [...rateCard.volumeTiers, { min: 0, max: 0, discount: 0 }])}><Plus className="h-3 w-3" /> Add Tier</Button>
+                </div>
+                <Table>
+                  <TableHeader><TableRow>
+                    <TableHead className="text-[10px]">Min Seats</TableHead>
+                    <TableHead className="text-[10px]">Max Seats</TableHead>
+                    <TableHead className="text-[10px]">Discount %</TableHead>
+                    <TableHead className="text-[10px] text-right"></TableHead>
+                  </TableRow></TableHeader>
+                  <TableBody>
+                    {rateCard.volumeTiers.map((t, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Input type="number" value={t.min} onChange={e => { const arr = [...rateCard.volumeTiers]; arr[i] = { ...t, min: Number(e.target.value) }; updateRateCard("volumeTiers", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell><Input type="number" value={t.max} onChange={e => { const arr = [...rateCard.volumeTiers]; arr[i] = { ...t, max: Number(e.target.value) }; updateRateCard("volumeTiers", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell><Input type="number" value={t.discount} onChange={e => { const arr = [...rateCard.volumeTiers]; arr[i] = { ...t, discount: Number(e.target.value) }; updateRateCard("volumeTiers", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell className="text-right"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateRateCard("volumeTiers", rateCard.volumeTiers.filter((_, j) => j !== i))}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Duration tiers */}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium">Duration Discount Tiers (by batch length)</p>
+                  <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => updateRateCard("durationTiers", [...rateCard.durationTiers, { minDays: 0, maxDays: 0, discount: 0 }])}><Plus className="h-3 w-3" /> Add Tier</Button>
+                </div>
+                <Table>
+                  <TableHeader><TableRow>
+                    <TableHead className="text-[10px]">Min Days</TableHead>
+                    <TableHead className="text-[10px]">Max Days</TableHead>
+                    <TableHead className="text-[10px]">Discount %</TableHead>
+                    <TableHead className="text-[10px] text-right"></TableHead>
+                  </TableRow></TableHeader>
+                  <TableBody>
+                    {rateCard.durationTiers.map((t, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Input type="number" value={t.minDays} onChange={e => { const arr = [...rateCard.durationTiers]; arr[i] = { ...t, minDays: Number(e.target.value) }; updateRateCard("durationTiers", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell><Input type="number" value={t.maxDays} onChange={e => { const arr = [...rateCard.durationTiers]; arr[i] = { ...t, maxDays: Number(e.target.value) }; updateRateCard("durationTiers", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell><Input type="number" value={t.discount} onChange={e => { const arr = [...rateCard.durationTiers]; arr[i] = { ...t, discount: Number(e.target.value) }; updateRateCard("durationTiers", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell className="text-right"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateRateCard("durationTiers", rateCard.durationTiers.filter((_, j) => j !== i))}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Spend rebates */}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium">Monthly Spend Rebates</p>
+                  <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => updateRateCard("spendRebates", [...rateCard.spendRebates, { minSpend: 0, rebate: 0 }])}><Plus className="h-3 w-3" /> Add Rebate</Button>
+                </div>
+                <Table>
+                  <TableHeader><TableRow>
+                    <TableHead className="text-[10px]">Monthly Spend ≥ ({currencySymbol})</TableHead>
+                    <TableHead className="text-[10px]">Rebate %</TableHead>
+                    <TableHead className="text-[10px] text-right"></TableHead>
+                  </TableRow></TableHeader>
+                  <TableBody>
+                    {rateCard.spendRebates.map((r, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Input type="number" value={r.minSpend} onChange={e => { const arr = [...rateCard.spendRebates]; arr[i] = { ...r, minSpend: Number(e.target.value) }; updateRateCard("spendRebates", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell><Input type="number" value={r.rebate} onChange={e => { const arr = [...rateCard.spendRebates]; arr[i] = { ...r, rebate: Number(e.target.value) }; updateRateCard("spendRebates", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell className="text-right"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateRateCard("spendRebates", rateCard.spendRebates.filter((_, j) => j !== i))}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Commercial terms */}
+              <div className="border-t pt-4">
+                <p className="text-xs font-medium mb-2">Commercial Terms</p>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="space-y-1.5"><Label className="text-xs">Payment Terms (days)</Label><Input type="number" value={rateCard.paymentTermsDays} onChange={e => updateRateCard("paymentTermsDays", Number(e.target.value))} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Billing Cycle</Label>
+                    <Select value={rateCard.billingCycle} onValueChange={v => updateRateCard("billingCycle", v)}><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="monthly">Monthly</SelectItem><SelectItem value="quarterly">Quarterly</SelectItem><SelectItem value="annual">Annual</SelectItem><SelectItem value="per-batch">Per Batch</SelectItem></SelectContent></Select>
+                  </div>
+                  <div className="space-y-1.5"><Label className="text-xs">Late-Payment Interest %/mo</Label><Input type="number" step="0.1" value={rateCard.lateInterestPct} onChange={e => updateRateCard("lateInterestPct", Number(e.target.value))} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Grace Period (days)</Label><Input type="number" value={rateCard.gracePeriodDays} onChange={e => updateRateCard("gracePeriodDays", Number(e.target.value))} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">GSTIN / Tax ID</Label><Input value={rateCard.gstin} onChange={e => updateRateCard("gstin", e.target.value)} placeholder="29ABCDE1234F1Z5" className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">PO Number</Label><Input value={rateCard.poNumber} onChange={e => updateRateCard("poNumber", e.target.value)} placeholder="PO-2026-…" className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Effective From</Label><Input type="date" value={rateCard.effectiveFrom} onChange={e => updateRateCard("effectiveFrom", e.target.value)} className="h-9 text-sm" /></div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3 mt-3">
+                  <div className="flex items-center gap-3"><Switch checked={rateCard.autoRenew} onCheckedChange={v => updateRateCard("autoRenew", v)} /><Label className="text-xs">Auto-renew rate card</Label></div>
+                  <div className="flex items-center gap-3"><Switch checked={rateCard.poRequired} onCheckedChange={v => updateRateCard("poRequired", v)} /><Label className="text-xs">Require PO before invoicing</Label></div>
+                  <div className="flex items-center gap-3"><Switch defaultChecked /><Label className="text-xs">Send invoice reminders</Label></div>
+                </div>
+              </div>
+
+              {/* Live preview */}
+              <div className="border-t pt-4">
+                <p className="text-xs font-medium mb-2">Effective Price Preview</p>
+                <div className="grid gap-3 sm:grid-cols-3 items-end">
+                  <div className="space-y-1.5"><Label className="text-xs">Seats</Label><Input type="number" value={previewSeats} onChange={e => setPreviewSeats(Number(e.target.value))} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Duration (days)</Label><Input type="number" value={previewDays} onChange={e => setPreviewDays(Number(e.target.value))} className="h-9 text-sm" /></div>
+                  <div className="rounded-lg border p-3 bg-muted/30">
+                    {(() => { const p = computePreview(); return (
+                      <div className="text-xs space-y-0.5">
+                        <div className="flex justify-between"><span className="text-muted-foreground">Base / seat</span><span>{currencySymbol}{p.base.toLocaleString()}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Volume disc.</span><span>{p.vDisc}%</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Duration disc.</span><span>{p.dDisc}%</span></div>
+                        <div className="flex justify-between font-semibold pt-1 border-t mt-1"><span>Effective / seat</span><span>{currencySymbol}{Math.round(p.afterDiscount).toLocaleString()}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Total ({previewSeats} seats)</span><span className="font-semibold">{currencySymbol}{Math.round(p.afterDiscount * previewSeats).toLocaleString()}</span></div>
+                      </div>
+                    ); })()}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -1157,7 +1205,7 @@ export default function CustomerDetail() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  { label: "Enable GDPR compliance mode", defaultOn: false },
+                  
                   { label: "Allow trainers to export student data", defaultOn: true },
                   { label: "Allow trainers to bulk delete student data", defaultOn: false },
                   { label: "Enable anonymized analytics sharing", defaultOn: true },
@@ -1209,63 +1257,128 @@ export default function CustomerDetail() {
 
         {/* Tab F: Analytics */}
         <TabsContent value="analytics" className="space-y-4 mt-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Lab Hours Trend (Weekly)</CardTitle></CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={220}>
-                  <AreaChart data={usageTrend}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="day" tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                    <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                    <Tooltip />
-                    <Area type="monotone" dataKey="hours" className="fill-primary/20 stroke-primary" strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Peak Concurrency (Seats)</CardTitle></CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={usageTrend}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="day" tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                    <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                    <Tooltip />
-                    <Bar dataKey="seats" className="fill-primary" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Provision Success Rate</CardTitle></CardHeader>
-              <CardContent className="text-center py-4">
-                <p className="text-4xl font-bold text-success">96.8%</p>
-                <p className="text-xs text-muted-foreground mt-1">Last 30 days</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Support Stats</CardTitle></CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Tickets (30d)</span><span className="font-medium">{customer.openTickets + 3}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Avg Resolution</span><span className="font-medium">4.2 hrs</span></div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Billing Trend</CardTitle></CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={100}>
-                  <AreaChart data={billingTrend}>
-                    <Area type="monotone" dataKey="spend" className="fill-primary/10 stroke-primary" strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
-                <p className="text-xs text-muted-foreground mt-1 text-center">Last 5 months</p>
-              </CardContent>
-            </Card>
-          </div>
+          {(() => {
+            const monthly = ["May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr"].map((m,i) => ({ month: m, vmHours: 800 + i*120 + (i%3)*200, spend: 25000 + i*3500 + (i%2)*4000, tickets: 3 + (i%4) }));
+            const perBatch = batches.map(b => { const days = 14; const rate = b.template.includes("Kubernetes") ? 800 : b.template.includes("Linux") ? 500 : 400; return { ...b, days, vmHours: b.seatCount * days * 8, spend: b.seatCount * rate, rate }; });
+            const totalHours = perBatch.reduce((s,x) => s + x.vmHours, 0);
+            const totalSpend = perBatch.reduce((s,x) => s + x.spend, 0);
+            const csvAll = () => {
+              const rows = [["Batch","Template","Seats","Days","VM-Hours","Rate","Spend","Status"], ...perBatch.map(p => [p.name, p.template, p.seatCount, p.days, p.vmHours, p.rate, p.spend, p.status])];
+              const csv = rows.map(r => r.join(",")).join("\n");
+              const blob = new Blob([csv], { type: "text/csv" }); const url = URL.createObjectURL(blob);
+              const a = document.createElement("a"); a.href = url; a.download = `${customer.name}-usage.csv`; a.click(); URL.revokeObjectURL(url);
+            };
+            const csvOne = (p: typeof perBatch[number]) => {
+              const csv = `Batch,Template,Seats,Days,VM-Hours,Rate,Spend\n${p.name},${p.template},${p.seatCount},${p.days},${p.vmHours},${p.rate},${p.spend}`;
+              const blob = new Blob([csv], { type: "text/csv" }); const url = URL.createObjectURL(blob);
+              const a = document.createElement("a"); a.href = url; a.download = `${p.name}-usage.csv`; a.click(); URL.revokeObjectURL(url);
+            };
+            return (
+              <>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex gap-2">
+                    <Select defaultValue="30d"><SelectTrigger className="h-9 text-sm w-32"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="7d">Last 7 days</SelectItem><SelectItem value="30d">Last 30 days</SelectItem><SelectItem value="90d">Last 90 days</SelectItem><SelectItem value="12m">Last 12 months</SelectItem></SelectContent></Select>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={csvAll}><Download className="h-3.5 w-3.5" /> Download CSV</Button>
+                    <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("PDF report generated")}><FileText className="h-3.5 w-3.5" /> Download PDF Report</Button>
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+                  <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Total VMs</p><p className="text-2xl font-bold mt-1">{allVMs.length}</p></CardContent></Card>
+                  <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Active VMs</p><p className="text-2xl font-bold mt-1 text-success">{allVMs.filter(v => v.vmStatus === "running").length}</p></CardContent></Card>
+                  <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">VM-Hours (MTD)</p><p className="text-2xl font-bold mt-1">{totalHours.toLocaleString()}</p></CardContent></Card>
+                  <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Spend (MTD)</p><p className="text-2xl font-bold mt-1">{currencySymbol}{totalSpend.toLocaleString()}</p></CardContent></Card>
+                  <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Open Tickets</p><p className="text-2xl font-bold mt-1 text-destructive">{customer.openTickets}</p></CardContent></Card>
+                  <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Avg Resolution</p><p className="text-2xl font-bold mt-1">4.2h</p></CardContent></Card>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Usage Over Time (12 months)</CardTitle></CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={240}>
+                        <AreaChart data={monthly}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                          <XAxis dataKey="month" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip />
+                          <Area type="monotone" dataKey="vmHours" className="fill-primary/20 stroke-primary" strokeWidth={2} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Spend Trend ({currencySymbol})</CardTitle></CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={240}>
+                        <BarChart data={monthly}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                          <XAxis dataKey="month" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip />
+                          <Bar dataKey="spend" className="fill-primary" radius={[4,4,0,0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </div>
+                <Card>
+                  <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm">Per-Batch Usage Report</CardTitle>
+                    <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={csvAll}><Download className="h-3.5 w-3.5" /> Download All</Button>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader><TableRow>
+                        <TableHead className="text-xs">Batch</TableHead>
+                        <TableHead className="text-xs">Template</TableHead>
+                        <TableHead className="text-xs text-right">Participants</TableHead>
+                        <TableHead className="text-xs text-right">Active Days</TableHead>
+                        <TableHead className="text-xs text-right">VM-Hours</TableHead>
+                        <TableHead className="text-xs text-right">Spend</TableHead>
+                        <TableHead className="text-xs">Status</TableHead>
+                        <TableHead className="text-xs text-right"></TableHead>
+                      </TableRow></TableHeader>
+                      <TableBody>
+                        {perBatch.map(p => (
+                          <TableRow key={p.id}>
+                            <TableCell className="text-xs font-medium">{p.name}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{p.template}</TableCell>
+                            <TableCell className="text-xs text-right">{p.seatCount}</TableCell>
+                            <TableCell className="text-xs text-right">{p.days}</TableCell>
+                            <TableCell className="text-xs text-right">{p.vmHours.toLocaleString()}</TableCell>
+                            <TableCell className="text-sm text-right font-medium">{currencySymbol}{p.spend.toLocaleString()}</TableCell>
+                            <TableCell><Badge variant="secondary" className={`text-[10px] capitalize ${p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{p.status}</Badge></TableCell>
+                            <TableCell className="text-right"><Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => csvOne(p)}><Download className="h-3 w-3" /> CSV</Button></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Support Tickets / Month</CardTitle></CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={monthly}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                          <XAxis dataKey="month" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip />
+                          <Bar dataKey="tickets" className="fill-warning" radius={[4,4,0,0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Engagement Snapshot</CardTitle></CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                      <div className="flex justify-between"><span className="text-muted-foreground">Active Logins (30d)</span><span className="font-medium">{customer.currentUsage.activeSeats * 12}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Course Completion %</span><span className="font-medium">76%</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Lab Completion %</span><span className="font-medium">82%</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Top Trainer (hrs)</span><span className="font-medium">Rajesh K. — 124h</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Avg Session Length</span><span className="font-medium">2h 14m</span></div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            );
+          })()}
         </TabsContent>
       </Tabs>
     </div>

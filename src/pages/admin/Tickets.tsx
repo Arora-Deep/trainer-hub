@@ -105,7 +105,8 @@ const cannedResponses = [
 ];
 
 export default function AdminTickets() {
-  const [selected, setSelected] = useState<TicketWithThread | null>(null);
+  const presetTicketId = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("ticketId") : null;
+  const [selected, setSelected] = useState<TicketWithThread | null>(presetTicketId ? ticketsData.find(t => t.id === presetTicketId) || null : null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [reply, setReply] = useState("");

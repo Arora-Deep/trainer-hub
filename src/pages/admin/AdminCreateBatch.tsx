@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCustomerStore } from "@/stores/customerStore";
 import { useLabStore } from "@/stores/labStore";
 import { cn } from "@/lib/utils";
@@ -51,11 +51,13 @@ const regions = [
 
 export default function AdminCreateBatch() {
   const navigate = useNavigate();
+  const [searchParams] = useState(() => new URLSearchParams(window.location.search));
+  const presetCustomerId = searchParams.get("customerId") || "";
   const { customers } = useCustomerStore();
 
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(presetCustomerId ? 2 : 1);
   const [form, setForm] = useState({
-    customerId: "",
+    customerId: presetCustomerId,
     batchName: "",
     description: "",
     seatCount: "20",
