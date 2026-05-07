@@ -51,11 +51,13 @@ const regions = [
 
 export default function AdminCreateBatch() {
   const navigate = useNavigate();
+  const [searchParams] = useState(() => new URLSearchParams(window.location.search));
+  const presetCustomerId = searchParams.get("customerId") || "";
   const { customers } = useCustomerStore();
 
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(presetCustomerId ? 2 : 1);
   const [form, setForm] = useState({
-    customerId: "",
+    customerId: presetCustomerId,
     batchName: "",
     description: "",
     seatCount: "20",
