@@ -20,10 +20,11 @@ const steps = [
 
 export default function BatchProvisioning() {
   const { customers, blueprints } = useCustomerStore();
-  const [step, setStep] = useState(0);
+  const presetCustomerId = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("customerId") || "" : "";
+  const [step, setStep] = useState(presetCustomerId ? 1 : 0);
   const [provisioning, setProvisioning] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [selectedCustomer, setSelectedCustomer] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState(presetCustomerId);
   const [selectedBlueprint, setSelectedBlueprint] = useState("");
   const [seats, setSeats] = useState(50);
   const [region, setRegion] = useState("ap-south-1");
