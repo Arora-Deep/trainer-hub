@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
+import { useCustomerStore } from "@/stores/customerStore";
+import { toast } from "sonner";
 
 export default function CreateCustomer() {
   const navigate = useNavigate();
