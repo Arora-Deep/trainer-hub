@@ -1064,15 +1064,50 @@ export default function CustomerDetail() {
             <CardContent className="space-y-5">
               {/* Base rates */}
               <div>
-                <p className="text-xs font-medium mb-2">Base Rates</p>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="space-y-1.5"><Label className="text-xs">Currency</Label>
-                    <Select value={rateCard.currency} onValueChange={(v) => updateRateCard("currency", v)}><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="INR">INR (₹)</SelectItem><SelectItem value="USD">USD ($)</SelectItem><SelectItem value="EUR">EUR (€)</SelectItem><SelectItem value="GBP">GBP (£)</SelectItem></SelectContent></Select>
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <p className="text-xs font-medium">VM Configurations & Base Rates</p>
+                    <p className="text-[10px] text-muted-foreground">Define a base rate per VM spec. Volume / duration / spend discounts below apply on top.</p>
                   </div>
-                  <div className="space-y-1.5"><Label className="text-xs">Monthly Rate / VM ({currencySymbol})</Label><Input type="number" value={rateCard.monthlyRate} onChange={e => updateRateCard("monthlyRate", Number(e.target.value))} className="h-9 text-sm" /></div>
-                  <div className="space-y-1.5"><Label className="text-xs">Daily Rate / VM ({currencySymbol})</Label><Input type="number" value={rateCard.dailyRate} onChange={e => updateRateCard("dailyRate", Number(e.target.value))} className="h-9 text-sm" /></div>
-                  <div className="space-y-1.5"><Label className="text-xs">Hourly Rate / VM ({currencySymbol}) <span className="text-muted-foreground">— auto: {currencySymbol}{computedHourly}</span></Label><Input type="number" placeholder={String(computedHourly)} value={rateCard.hourlyRateOverride} onChange={e => updateRateCard("hourlyRateOverride", e.target.value)} className="h-9 text-sm" /></div>
+                  <div className="flex items-center gap-2">
+                    <div className="space-y-0">
+                      <Label className="text-[10px] text-muted-foreground">Currency</Label>
+                      <Select value={rateCard.currency} onValueChange={(v) => updateRateCard("currency", v)}><SelectTrigger className="h-8 text-xs w-28"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="INR">INR (₹)</SelectItem><SelectItem value="USD">USD ($)</SelectItem><SelectItem value="EUR">EUR (€)</SelectItem><SelectItem value="GBP">GBP (£)</SelectItem></SelectContent></Select>
+                    </div>
+                    <Button variant="outline" size="sm" className="h-8 text-[10px] gap-1 mt-4" onClick={() => updateRateCard("vmConfigs", [...rateCard.vmConfigs, { id: `cfg-${Date.now()}`, name: "New Config", vcpu: 2, ramGB: 4, diskGB: 50, gpu: "None", monthlyRate: 0, dailyRate: 0, hourlyRateOverride: "" }])}><Plus className="h-3 w-3" /> Add Config</Button>
+                  </div>
                 </div>
+                <div className="rounded-lg border overflow-x-auto">
+                  <Table>
+                    <TableHeader><TableRow>
+                      <TableHead className="text-[10px]">Name</TableHead>
+                      <TableHead className="text-[10px]">vCPU</TableHead>
+                      <TableHead className="text-[10px]">RAM (GB)</TableHead>
+                      <TableHead className="text-[10px]">Disk (GB)</TableHead>
+                      <TableHead className="text-[10px]">GPU</TableHead>
+                      <TableHead className="text-[10px]">Monthly ({currencySymbol})</TableHead>
+                      <TableHead className="text-[10px]">Daily ({currencySymbol})</TableHead>
+                      <TableHead className="text-[10px]">Hourly ({currencySymbol})</TableHead>
+                      <TableHead className="text-[10px] text-right"></TableHead>
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {rateCard.vmConfigs.map((c) => (
+                        <TableRow key={c.id}>
+                          <TableCell><Input value={c.name} onChange={e => updateConfig(c.id, { name: e.target.value })} className="h-8 text-xs min-w-[120px]" /></TableCell>
+                          <TableCell><Input type="number" value={c.vcpu} onChange={e => updateConfig(c.id, { vcpu: Number(e.target.value) })} className="h-8 text-xs w-16" /></TableCell>
+                          <TableCell><Input type="number" value={c.ramGB} onChange={e => updateConfig(c.id, { ramGB: Number(e.target.value) })} className="h-8 text-xs w-16" /></TableCell>
+                          <TableCell><Input type="number" value={c.diskGB} onChange={e => updateConfig(c.id, { diskGB: Number(e.target.value) })} className="h-8 text-xs w-20" /></TableCell>
+                          <TableCell><Input value={c.gpu} onChange={e => updateConfig(c.id, { gpu: e.target.value })} className="h-8 text-xs w-24" placeholder="None" /></TableCell>
+                          <TableCell><Input type="number" value={c.monthlyRate} onChange={e => updateConfig(c.id, { monthlyRate: Number(e.target.value) })} className="h-8 text-xs w-24" /></TableCell>
+                          <TableCell><Input type="number" value={c.dailyRate} onChange={e => updateConfig(c.id, { dailyRate: Number(e.target.value) })} className="h-8 text-xs w-20" /></TableCell>
+                          <TableCell><Input type="number" placeholder={String(hourlyFor(c))} value={c.hourlyRateOverride} onChange={e => updateConfig(c.id, { hourlyRateOverride: e.target.value })} className="h-8 text-xs w-20" /></TableCell>
+                          <TableCell className="text-right"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateRateCard("vmConfigs", rateCard.vmConfigs.filter(x => x.id !== c.id))}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1.5">Hourly rate auto-calculates as Daily ÷ 8 (we charge for 8 working hours/day; rest is free). Override per config if needed.</p>
               </div>
 
               {/* Volume tiers */}
