@@ -119,9 +119,12 @@ interface CustomerState {
   invoices: Invoice[];
   incidents: Incident[];
   tenantRequests: TenantRequest[];
+  addCustomer: (c: Partial<Tenant> & { name: string }) => string;
+  updateCustomer: (id: string, patch: Partial<Tenant>) => void;
+  deleteCustomer: (id: string) => void;
 }
 
-export const useCustomerStore = create<CustomerState>(() => ({
+export const useCustomerStore = create<CustomerState>((set) => ({
   customers: [],
   goldenImages: [],
   blueprints: [],
@@ -130,4 +133,40 @@ export const useCustomerStore = create<CustomerState>(() => ({
   invoices: [],
   incidents: [],
   tenantRequests: [],
+  addCustomer: (c) => {
+    const id = `cust-${Date.now()}`;
+    const newCustomer: Tenant = {
+      id,
+      name: c.name,
+      contactPerson: c.contactPerson ?? "",
+      email: c.email ?? "",
+      domain: c.domain ?? "",
+      plan: c.plan ?? "starter",
+      status: c.status ?? "active",
+      regions: c.regions ?? ["ap-south-1"],
+      quota: c.quota ?? { cpu: 0, ram: 0, storage: 0, gpu: 0 },
+      currentUsage: c.currentUsage ?? { liveLabs: 0, activeSeats: 0 },
+      healthScore: c.healthScore ?? 100,
+      openTickets: 0,
+      overdueAmount: 0,
+      lastActivity: new Date().toISOString(),
+      activeBatches: 0,
+      totalStudents: 0,
+      activeVMs: 0,
+      joinedDate: new Date().toISOString(),
+      monthlyUsage: 0,
+      slaTier: c.slaTier ?? "standard",
+      billingCycle: c.billingCycle ?? "monthly",
+      renewalDate: c.renewalDate ?? new Date(Date.now() + 365 * 86400000).toISOString(),
+      walletBalance: 0,
+      mfaEnabled: false,
+      ssoEnabled: false,
+    };
+    set((s) => ({ customers: [...s.customers, newCustomer] }));
+    return id;
+  },
+  updateCustomer: (id, patch) =>
+    set((s) => ({ customers: s.customers.map((c) => (c.id === id ? { ...c, ...patch } : c)) })),
+  deleteCustomer: (id) =>
+    set((s) => ({ customers: s.customers.filter((c) => c.id !== id) })),
 }));
