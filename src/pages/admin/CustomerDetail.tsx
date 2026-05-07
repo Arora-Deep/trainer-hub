@@ -541,11 +541,20 @@ export default function CustomerDetail() {
 
         {/* Tab C: Support */}
         <TabsContent value="support" className="space-y-4 mt-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium">Tickets</h3>
-            <Button size="sm" className="text-xs gap-1.5" onClick={() => action("Ticket created")}>Create Ticket</Button>
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Open</p><p className="text-2xl font-bold mt-1 text-destructive">{custTickets.filter(t => t.status === "open").length}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">In Progress</p><p className="text-2xl font-bold mt-1 text-warning">{custTickets.filter(t => t.status === "in_progress").length}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Resolved (30d)</p><p className="text-2xl font-bold mt-1 text-success">{custTickets.filter(t => t.status === "resolved").length}</p></CardContent></Card>
+            <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Avg Resolution</p><p className="text-2xl font-bold mt-1">4.2h</p></CardContent></Card>
           </div>
           <Card>
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm">Tickets</CardTitle>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => navigate("/admin/tickets")}><LifeBuoy className="h-3.5 w-3.5" /> View All in Inbox</Button>
+                <Button size="sm" className="text-xs gap-1.5" onClick={() => setNewTicketOpen(true)}><Plus className="h-3.5 w-3.5" /> New Ticket</Button>
+              </div>
+            </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader><TableRow>
@@ -555,7 +564,7 @@ export default function CustomerDetail() {
                 </TableRow></TableHeader>
                 <TableBody>
                   {custTickets.map(t => (
-                    <TableRow key={t.id}>
+                    <TableRow key={t.id} className="cursor-pointer hover:bg-muted/40" onClick={() => navigate(`/admin/tickets?ticketId=${t.id}`)}>
                       <TableCell className="text-xs font-mono">{t.id}</TableCell>
                       <TableCell className="text-sm">{t.subject}</TableCell>
                       <TableCell><Badge variant="secondary" className={`text-[10px] capitalize ${t.priority === "critical" ? "bg-destructive/10 text-destructive" : t.priority === "high" ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"}`}>{t.priority}</Badge></TableCell>
@@ -573,12 +582,45 @@ export default function CustomerDetail() {
             <CardHeader className="pb-2"><CardTitle className="text-sm">Quick Fixes</CardTitle></CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Retrying failed provision")}><RotateCcw className="h-3.5 w-3.5" /> Retry Failed Provision</Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("VM restarted")}><Power className="h-3.5 w-3.5" /> Restart VM</Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Lab expiry extended")}><Clock className="h-3.5 w-3.5" /> Extend Lab Expiry</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Retrying failed provision jobs")}><RotateCcw className="h-3.5 w-3.5" /> Retry Failed Provision</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("All VMs rebooted")}><Power className="h-3.5 w-3.5" /> Reboot All VMs</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("All VM passwords reset")}><Key className="h-3.5 w-3.5" /> Reset All VM Passwords</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Recloning all VMs from golden image")}><GitBranch className="h-3.5 w-3.5" /> Reclone All from Golden</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("All batches extended by 7 days")}><Clock className="h-3.5 w-3.5" /> Extend All Batches +7d</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Announcement sent to all participants")}><Mail className="h-3.5 w-3.5" /> Send Announcement</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Frappe LMS sync triggered")}><RefreshCw className="h-3.5 w-3.5" /> Force LMS Re-sync</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Stuck provisioning jobs cleared")}><Trash2 className="h-3.5 w-3.5" /> Clear Stuck Jobs</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Last invoice resent")}><Receipt className="h-3.5 w-3.5" /> Resend Last Invoice</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Temporary support access link generated")}><Lock className="h-3.5 w-3.5" /> Temp Support Access</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Cache flushed")}><RefreshCw className="h-3.5 w-3.5" /> Flush Portal Cache</Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("Diagnostics bundle generated")}><Download className="h-3.5 w-3.5" /> Diagnostics Bundle</Button>
               </div>
             </CardContent>
           </Card>
+
+          {/* New Ticket Dialog */}
+          <Dialog open={newTicketOpen} onOpenChange={setNewTicketOpen}>
+            <DialogContent>
+              <DialogHeader><DialogTitle>New Ticket — {customer.name}</DialogTitle></DialogHeader>
+              <div className="space-y-3">
+                <div className="space-y-1.5"><Label className="text-xs">Subject</Label><Input placeholder="Short description" className="h-9 text-sm" /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5"><Label className="text-xs">Priority</Label>
+                    <Select defaultValue="medium"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="low">Low</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="high">High</SelectItem><SelectItem value="critical">Critical</SelectItem></SelectContent></Select>
+                  </div>
+                  <div className="space-y-1.5"><Label className="text-xs">Category</Label>
+                    <Select defaultValue="vm"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="vm">VM Issue</SelectItem><SelectItem value="provisioning">Provisioning</SelectItem><SelectItem value="billing">Billing</SelectItem><SelectItem value="account">Account</SelectItem><SelectItem value="feature">Feature Request</SelectItem></SelectContent></Select>
+                  </div>
+                </div>
+                <div className="space-y-1.5"><Label className="text-xs">Description</Label><Input placeholder="Provide details…" className="h-20 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Attachment</Label><Input type="file" className="h-9 text-sm" /></div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" size="sm" onClick={() => setNewTicketOpen(false)}>Cancel</Button>
+                <Button size="sm" onClick={() => { setNewTicketOpen(false); action("Ticket created"); }}>Create Ticket</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         {/* Tab D: Billing */}
