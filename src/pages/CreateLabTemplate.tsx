@@ -88,6 +88,7 @@ type Step = "configure" | "choose-type" | "builder";
 export default function CreateLabTemplate() {
   const navigate = useNavigate();
   const { addTemplate } = useLabStore();
+  const returnTo = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("returnTo") || "/labs" : "/labs";
 
   const [step, setStep] = useState<Step>("configure");
   const [templateType, setTemplateType] = useState<"basic" | "custom" | null>(null);
@@ -206,7 +207,7 @@ export default function CreateLabTemplate() {
     });
 
     toast.success("Basic template created successfully");
-    navigate("/labs");
+    navigate(returnTo);
     setIsSubmitting(false);
   };
 
@@ -246,7 +247,7 @@ export default function CreateLabTemplate() {
 
     setBuilderStatus("complete");
     toast.success("Template created from snapshot successfully!");
-    setTimeout(() => navigate("/labs"), 1500);
+    setTimeout(() => navigate(returnTo), 1500);
   };
 
   const getStepNumber = () => {
@@ -269,7 +270,7 @@ export default function CreateLabTemplate() {
         ]}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate("/labs")}>
+            <Button variant="outline" onClick={() => navigate(returnTo)}>
               <X className="mr-2 h-4 w-4" />
               Cancel
             </Button>

@@ -1,102 +1,78 @@
-## Scope
-All changes target `src/pages/admin/CustomerDetail.tsx` plus light edits to `AdminCreateBatch.tsx`, `ModifyBatch.tsx`, `BatchProvisioning.tsx`, and `Tickets.tsx` so existing pages can accept a preselected customer via query string.
 
-## 1. Batches tab — drill-down opens a real batch detail view
-- Clicking a batch row (currently opens a Sheet) instead navigates to `AdminBatchDetail` (`/admin/batches/:id`) so admins use the same rich page they already know.
-- The Sheet is replaced by direct routing; `selectedBatch` state and its sheet are removed.
-- "Provision Batch" / "Create Batch" buttons link to `/admin/batches/new?customerId={id}` (no inline duplicate wizard).
+## Goal
 
-## 2. VMs tab — complete admin VM action set
-For each row in the customer's VM list and via bulk-select toolbar, expose these actions in a dropdown menu:
-- Power: Turn On, Shutdown, Force Stop, Restart
-- Lab: Reset Lab, Reclone from Golden, Replace VM
-- Snapshots: Take Snapshot, View/Restore Snapshots
-- Access: Open Console (noVNC), Copy RDP/SSH, Reset Password
-- Maintenance: Resize (vCPU/RAM/Disk), Migrate Node, Change Region
-- Clone for All (apply current VM state as new golden image to all batch VMs)
-- Destroy
+Make admin-side batch and lab management actually do something. Today the admin Create Batch is a thin 4-step shell with hard-coded templates, and Modify Batch / Replace VM / Reset Lab / Reset Password / Assign VM / Templates are mock pages whose buttons only show toasts. Real state lives in `useBatchStore`, `useLabStore`, `useCustomerStore`. We will rewrite the admin pages on top of the trainer Create Batch wizard (`src/pages/CreateBatch.tsx`), with admin-only extras, and hook every action to the stores so changes show up everywhere (admin batch list, customer detail, trainer batch detail, etc.).
 
-Bulk toolbar mirrors these (Start All / Stop All / Reboot All / Snapshot All / Reclone All / Resize All / Destroy All).
+## 1. AdminCreateBatch — same as trainer wizard, plus admin power
 
-## 3. Settings tab — pruning and reorg
-- **Security & Access**: remove Enforce SSO Login, SSO Provider, SSO Entity ID/Tenant. Move "Restrict Portal to Office Hours" into the **Scheduling & Calendar** card.
-- **Scheduling & Calendar**: remove Google Calendar and iCal export integrations. Keep timezone, working hours, holiday calendar, and the moved office-hours toggle.
-- **Data & Compliance**: remove the GDPR section entirely.
+Rewrite `src/pages/admin/AdminCreateBatch.tsx` to use the same step/UX as `src/pages/CreateBatch.tsx` (Basic Info → Schedule → VMs → Review), driving `useBatchStore.addBatch` and `LabStore` so the new batch appears in `AllBatches`, `AdminBatchDetail`, `CustomerDetail` Batches tab, and the trainer `Batches` page.
 
-## 4. Commercial & Billing — per-customer rate card (replaces current simple card)
+Reuse trainer pieces directly: `VMDaySchedule`, `TemplatePickerDropdown`, the same pricing logic, same `VMConfig` shape, same approval flow.
 
-New card structure with persisted state on the customer object:
+Admin-only additions on top of the trainer flow:
+- **Step 0 / Customer**: required Customer picker (`useCustomerStore`). Pre-selected and locked when `?customerId=` is in the URL (already supported).
+- **Step 1 (Basic)**: extra fields — Region (`ap-south-1` etc.), Resource Pool / Cluster, Tags, Internal Cost Center, Auto-extend toggle.
+- **Step 2 (Schedule)**: extra fields — Prep Period override (default 2 days, editable), Maintenance Window opt-out, Office-hours override.
+- **Step 3 (VMs)**: alongside trainer template picker, allow per-VM override of vCPU/RAM/Disk/GPU and choice between Template, ISO, or Customer Rate-Card profile (read from `customerStore.rateCard.vmConfigs`). Add "Skip approval" toggle (admins only) which sets both approval flags to `approved` immediately.
+- **Step 4 (Review)**: show pricing using customer rate card with stacked discounts (volume + duration tiers) instead of flat $50/VM/day.
 
-**Base rates**
-- Default currency (INR/USD/EUR/GBP)
-- Default monthly rate per VM
-- Default daily rate per VM
-- Hourly rate (auto-calculated = daily / 8, editable override) with a hint "We charge for 8 working hours/day; rest is free"
+On submit, call `addBatch(...)` with the full `VMConfig` (matching trainer behavior), then navigate to `/admin/batches/{newId}`.
 
-**Volume tiers** (editable table, add/remove rows)
-- Default seed: 1–24 → 0%, 25–49 → 5%, 50–99 → 10%, 100+ → 15%
-- Columns: Min seats, Max seats, Discount %
+## 2. ModifyBatch — make it actually modify
 
-**Duration tiers** (editable table)
-- Default seed: <25 days → 0%, 25 d–3 mo → 5%, 3–6 mo → 10%, 6–12 mo → 15%, 1–2 yr → 20%, 2 yr+ → 25%
-- Columns: Min days, Max days, Discount %
+Rewrite `src/pages/admin/ModifyBatch.tsx` to read from `useBatchStore.batches` (not the local `const batches`) and write through `updateBatch`.
 
-**Monthly spend rebate**
-- Editable rules: "If monthly spend ≥ X, give Y% rebate" (multi-row)
+- Batch picker filtered by `?customerId=`/`?batchId=`.
+- Editable fields: name, description, end date (extend), seat count, additional details, course, instructors, published/cert flags. Save → `updateBatch(id, ...)`.
+- Right-side action buttons wired to existing store actions: Pause/Resume → `updateBatch({ status })`; Complete → `updateBatch({ status: "completed" })`; Extend → opens date picker that updates `endDate`; Reset All Labs → `resetAllVMs`; Reclone All → `recloneAllVMs`; Take Snapshot → `createSnapshot`; Set Golden → `setGoldenSnapshot`; Delete Batch → `deleteBatch` then navigate back.
+- Confirmation dialogs for destructive actions (Pause, Complete, Delete, Reset All).
 
-**Commercial terms**
-- Payment terms (Net 7/15/30/45/60 + custom days)
-- Billing cycle (Monthly / Quarterly / Annual / Per-batch)
-- Auto-renew toggle
-- Prepaid credit balance (read-only with top-up button)
-- Tax/GSTIN, PO required toggle, PO number field
-- Late-payment interest %, grace period days
-- Effective-from date for the rate card + version history note
+## 3. ReplaceVM — drive batchStore
 
-A live "Effective price preview" widget: input seats + duration → shows the resulting per-seat rate after stacked discounts.
+Rewrite `src/pages/admin/ReplaceVM.tsx` to enumerate every batch's `participantVMs` from `useBatchStore`. The "Replace VM" button calls `recloneParticipantVM(batchId, vmId)` and disappears from the row when status flips to running. Add filters by customer, batch, status; bulk-replace selection; show node/IP from store.
 
-## 5. Analytics tab — usage + business reports
-Replace the current minimal analytics with:
-- KPI strip: Total VMs provisioned, Active VMs now, Total VM-hours (MTD), Spend MTD, Open tickets, Avg ticket resolution.
-- **Usage over time**: line chart of monthly VM-hours and spend (last 12 months).
-- **Per-batch usage table**: Batch, Participants, Active days, VM-hours, Spend, Status. Each row has a "Download CSV" action; toolbar has "Download all (CSV)" and "Download PDF report".
-- **Support stats**: tickets opened/closed per month bar chart, breakdown by category and priority.
-- **Engagement**: logins, course completion %, lab completion %, top trainers by hours.
-- Date-range picker (7d / 30d / 90d / 12m / custom) applied to all widgets.
-- All tables export as CSV; whole tab exports as PDF.
+## 4. ResetLab — drive batchStore
 
-## 6. Deep-link existing pages with preselected customer
-Edit each target page to read `?customerId=` from the URL and skip/lock the customer-selection step:
-- `AdminCreateBatch.tsx` — if `customerId` present, prefill and auto-advance from step 1.
-- `ModifyBatch.tsx` — accept `?customerId=` and `?batchId=`.
-- `BatchProvisioning.tsx` — same.
-- Customer Detail buttons updated to use `navigate('/admin/.../...?customerId=' + id)` instead of opening inline sheets/wizards.
+Rewrite `src/pages/admin/ResetLab.tsx` to source batches and snapshots from `useBatchStore`. "Reset to Snapshot" → `resetParticipantVM`; "Reset All" → `resetAllVMs`; "Restart" → `restartParticipantVM`; add "Stop/Start" via `stopParticipantVM`/`startParticipantVM`. Snapshots tab inside the page can `createSnapshot` / `setGoldenSnapshot` / `deleteSnapshot`.
 
-## 7. Support tab improvements
-- Lists all tickets for the customer (table: ID, Subject, Priority, Status, Assignee, Updated).
-- Row click navigates to `/admin/tickets?ticketId={id}` (Tickets page auto-opens that ticket's drawer/page).
-- "New Ticket" button opens a compact create form (subject, priority, category, description, attachment) and saves via the existing ticket flow with the customer preselected.
-- Quick Fixes section expanded:
-  - Reset all VM passwords
-  - Reboot all VMs
-  - Reclone all VMs from golden
-  - Extend all batches by N days
-  - Send announcement to all participants
-  - Force re-sync from Frappe LMS
-  - Clear stuck provisioning jobs
-  - Resend last invoice
-  - Generate temporary access link for support engineer
+## 5. AssignVM — drive batchStore
 
-## Technical notes
-- Add `customerId` query-param parsing via `useSearchParams` on the four target pages; when present, set the customer in store and advance the stepper.
-- Extend `customerStore` Customer type with `rateCard: { currency, monthlyRate, dailyRate, hourlyRate?, volumeTiers[], durationTiers[], spendRebates[], paymentTerms, billingCycle, ... }`. Seed existing customers with defaults.
-- Reuse existing `Dialog`, `DropdownMenu`, `Table`, `Tabs`, `recharts` components — no new deps.
-- Keep all changes inside admin portal; trainer/student portals untouched.
+Rewrite `src/pages/admin/AssignVM.tsx`:
+- Customer + batch dropdown drive a participants list from `getBatch(batchId).participants`.
+- Per-row "Assign VM" → adds an entry in `vmConfig.participantVMs` (extend store with `assignParticipantVM(batchId, participantId, vmName, ipAddress)` if missing) and updates the participant's `vmStatus`/`vmIpAddress`.
+- "Auto Assign" loops over unassigned participants. "Bulk Assign" with checkbox selection.
+- "Replace" on failed rows uses `recloneParticipantVM`.
 
-## Files touched
-- `src/pages/admin/CustomerDetail.tsx` (major refactor of Batches, VMs, Settings, Billing, Analytics, Support tabs)
-- `src/pages/admin/AdminCreateBatch.tsx` (read `?customerId`)
-- `src/pages/admin/ModifyBatch.tsx` (read `?customerId`)
-- `src/pages/admin/BatchProvisioning.tsx` (read `?customerId`)
-- `src/pages/admin/Tickets.tsx` (read `?ticketId` to auto-open)
-- `src/stores/customerStore.ts` (rateCard schema + defaults)
+## 6. Templates / CreateLabTemplate — persist
+
+`src/pages/admin/Templates.tsx`:
+- Replace local `const templates` with `useLabStore.templates`.
+- "Create Template" button navigates to `/labs/create-template` (existing `CreateLabTemplate` page) with `?returnTo=/admin/labs/templates`.
+- Row actions hit `updateTemplate` (Save in drawer), `deleteTemplate` (Deprecate), and a duplicate that calls `addTemplate` with a copy.
+
+`src/pages/CreateLabTemplate.tsx` — confirm it already calls `useLabStore.addTemplate`; if it doesn't, wire it. Honor `?returnTo` so admin lands back on `/admin/labs/templates` after create.
+
+## 7. ResetPassword — wire to a user list
+
+Rewrite `src/pages/admin/ResetPassword.tsx` to search across all batch participants (across all customers). Selecting a result shows their batch/customer. "Reset Password" generates a temp password (mock string), shows it in a dialog with copy button, and toasts. No store mutation required (no password field today), but the action persists a `lastPasswordReset` timestamp on the participant via a new `updateParticipant` extension.
+
+## 8. Reflection across the app
+
+Every action above mutates the same Zustand stores already consumed by:
+- `src/pages/admin/AllBatches.tsx`, `AdminBatchDetail.tsx` — batch list / detail
+- `src/pages/admin/CustomerDetail.tsx` Batches & VMs tabs
+- `src/pages/Batches.tsx`, `BatchDetails.tsx` (trainer)
+- `src/pages/admin/LabInstances.tsx`, `Templates.tsx`
+
+So creating a batch in the admin portal will instantly show up in the trainer's batch list, the customer's batch tab, and the admin batch list — no extra plumbing needed.
+
+## Files to change
+
+- Rewrite: `src/pages/admin/AdminCreateBatch.tsx`, `src/pages/admin/ModifyBatch.tsx`, `src/pages/admin/ReplaceVM.tsx`, `src/pages/admin/ResetLab.tsx`, `src/pages/admin/AssignVM.tsx`, `src/pages/admin/Templates.tsx`, `src/pages/admin/ResetPassword.tsx`
+- Touch: `src/stores/batchStore.ts` (add `assignParticipantVM`, extend `updateParticipant` with `lastPasswordReset`)
+- Touch: `src/pages/CreateLabTemplate.tsx` (honor `?returnTo`, ensure persistence)
+
+## Out of scope
+
+- No backend / Lovable Cloud yet — all state stays in Zustand (matches current architecture).
+- No new routes; only the existing admin routes are reused.
