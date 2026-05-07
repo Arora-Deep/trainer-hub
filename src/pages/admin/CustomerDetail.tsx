@@ -97,14 +97,59 @@ export default function CustomerDetail() {
 
   type Batch = typeof batches[number];
   type Participant = Batch["participants"][number];
-  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [selectedVM, setSelectedVM] = useState<(Participant & { batchName: string; batchId: string; vmSpec: string; region: string }) | null>(null);
   const [provisionVMOpen, setProvisionVMOpen] = useState(false);
   const [editVMOpen, setEditVMOpen] = useState(false);
   const [snapshotsOpen, setSnapshotsOpen] = useState(false);
-  const [resizeBatchOpen, setResizeBatchOpen] = useState(false);
-  const [extendBatchOpen, setExtendBatchOpen] = useState(false);
+  const [newTicketOpen, setNewTicketOpen] = useState(false);
+  // Per-customer rate card (initial defaults; in production lives in store)
+  const [rateCard, setRateCard] = useState({
+    currency: "INR",
+    monthlyRate: 1500,
+    dailyRate: 80,
+    hourlyRateOverride: "" as string,
+    volumeTiers: [
+      { min: 1, max: 24, discount: 0 },
+      { min: 25, max: 49, discount: 5 },
+      { min: 50, max: 99, discount: 10 },
+      { min: 100, max: 9999, discount: 15 },
+    ],
+    durationTiers: [
+      { minDays: 0, maxDays: 25, discount: 0 },
+      { minDays: 25, maxDays: 90, discount: 5 },
+      { minDays: 90, maxDays: 180, discount: 10 },
+      { minDays: 180, maxDays: 365, discount: 15 },
+      { minDays: 365, maxDays: 730, discount: 20 },
+      { minDays: 730, maxDays: 99999, discount: 25 },
+    ],
+    spendRebates: [
+      { minSpend: 100000, rebate: 2 },
+      { minSpend: 500000, rebate: 5 },
+      { minSpend: 1000000, rebate: 8 },
+    ],
+    paymentTermsDays: 30,
+    billingCycle: "monthly",
+    autoRenew: true,
+    poRequired: false,
+    poNumber: "",
+    gstin: "",
+    lateInterestPct: 1.5,
+    gracePeriodDays: 7,
+    effectiveFrom: new Date().toISOString().split("T")[0],
+  });
+  const [previewSeats, setPreviewSeats] = useState(30);
+  const [previewDays, setPreviewDays] = useState(30);
+  const updateRateCard = <K extends keyof typeof rateCard>(k: K, v: (typeof rateCard)[K]) => setRateCard(r => ({ ...r, [k]: v }));
+  const currencySymbol = rateCard.currency === "INR" ? "₹" : rateCard.currency === "USD" ? "$" : rateCard.currency === "EUR" ? "€" : "£";
+  const computedHourly = rateCard.hourlyRateOverride ? Number(rateCard.hourlyRateOverride) : Math.round((rateCard.dailyRate / 8) * 100) / 100;
+  const computePreview = () => {
+    const v = rateCard.volumeTiers.find(t => previewSeats >= t.min && previewSeats <= t.max)?.discount || 0;
+    const d = rateCard.durationTiers.find(t => previewDays >= t.minDays && previewDays <= t.maxDays)?.discount || 0;
+    const base = rateCard.dailyRate * previewDays;
+    const afterDiscount = base * (1 - v / 100) * (1 - d / 100);
+    return { base, afterDiscount, vDisc: v, dDisc: d };
+  };
 
   // Snapshots per VM (mock)
   const mockSnapshots = [
