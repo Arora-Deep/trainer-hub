@@ -994,12 +994,10 @@ export default function CustomerDetail() {
             <CardContent className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {[
-                  { label: "Enforce SSO login", defaultOn: customer.ssoEnabled },
                   { label: "Enforce MFA for trainers", defaultOn: customer.mfaEnabled },
                   { label: "Enforce MFA for students", defaultOn: false },
                   { label: "Enable IP whitelisting", defaultOn: false },
                   { label: "Allow API access", defaultOn: false },
-                  { label: "Restrict portal access to office hours", defaultOn: false },
                 ].map(f => (
                   <div key={f.label} className="flex items-center gap-3">
                     <Switch defaultChecked={f.defaultOn} />
@@ -1010,11 +1008,6 @@ export default function CustomerDetail() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-1.5"><Label className="text-xs">Session Timeout (min)</Label><Input type="number" defaultValue={60} className="h-9 text-sm" /></div>
                 <div className="space-y-1.5"><Label className="text-xs">Max Concurrent Sessions per User</Label><Input type="number" defaultValue={2} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">SSO Provider</Label>
-                  <Select defaultValue="none"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem><SelectItem value="google">Google Workspace</SelectItem><SelectItem value="azure">Azure AD / Entra ID</SelectItem><SelectItem value="okta">Okta</SelectItem><SelectItem value="saml">Custom SAML</SelectItem></SelectContent></Select>
-                </div>
-                <div className="space-y-1.5"><Label className="text-xs">SSO Entity ID / Tenant</Label><Input placeholder="tenant-id or entity-id" className="h-9 text-sm" /></div>
                 <div className="space-y-1.5"><Label className="text-xs">Whitelisted IP Ranges</Label><Input placeholder="192.168.1.0/24, 10.0.0.0/8" className="h-9 text-sm" /></div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Internet Policy</Label>
