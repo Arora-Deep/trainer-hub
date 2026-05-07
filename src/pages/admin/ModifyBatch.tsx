@@ -19,9 +19,12 @@ const batches = [
 ];
 
 export default function ModifyBatch() {
-  const [selectedId, setSelectedId] = useState("");
+  const presetCustomerId = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("customerId") || "" : "";
+  const presetBatchId = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("batchId") || "" : "";
+  const initial = batches.find(b => b.id === presetBatchId);
+  const [selectedId, setSelectedId] = useState(presetBatchId);
   const batch = batches.find(b => b.id === selectedId);
-  const [form, setForm] = useState({ batchName: "", endDate: "", seatCount: "", template: "" });
+  const [form, setForm] = useState({ batchName: initial?.name || "", endDate: initial?.endDate || "", seatCount: initial ? String(initial.seats) : "", template: initial?.template || "" });
 
   const selectBatch = (id: string) => {
     const b = batches.find(x => x.id === id);
