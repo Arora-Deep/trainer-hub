@@ -88,6 +88,7 @@ type Step = "configure" | "choose-type" | "builder";
 export default function CreateLabTemplate() {
   const navigate = useNavigate();
   const { addTemplate } = useLabStore();
+  const returnTo = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("returnTo") || "/labs" : "/labs";
 
   const [step, setStep] = useState<Step>("configure");
   const [templateType, setTemplateType] = useState<"basic" | "custom" | null>(null);
