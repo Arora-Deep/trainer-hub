@@ -1205,7 +1205,7 @@ export default function CustomerDetail() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  { label: "Enable GDPR compliance mode", defaultOn: false },
+                  
                   { label: "Allow trainers to export student data", defaultOn: true },
                   { label: "Allow trainers to bulk delete student data", defaultOn: false },
                   { label: "Enable anonymized analytics sharing", defaultOn: true },
