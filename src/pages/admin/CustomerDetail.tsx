@@ -1257,63 +1257,128 @@ export default function CustomerDetail() {
 
         {/* Tab F: Analytics */}
         <TabsContent value="analytics" className="space-y-4 mt-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Lab Hours Trend (Weekly)</CardTitle></CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={220}>
-                  <AreaChart data={usageTrend}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="day" tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                    <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                    <Tooltip />
-                    <Area type="monotone" dataKey="hours" className="fill-primary/20 stroke-primary" strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Peak Concurrency (Seats)</CardTitle></CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={usageTrend}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="day" tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                    <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                    <Tooltip />
-                    <Bar dataKey="seats" className="fill-primary" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Provision Success Rate</CardTitle></CardHeader>
-              <CardContent className="text-center py-4">
-                <p className="text-4xl font-bold text-success">96.8%</p>
-                <p className="text-xs text-muted-foreground mt-1">Last 30 days</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Support Stats</CardTitle></CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Tickets (30d)</span><span className="font-medium">{customer.openTickets + 3}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Avg Resolution</span><span className="font-medium">4.2 hrs</span></div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm">Billing Trend</CardTitle></CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={100}>
-                  <AreaChart data={billingTrend}>
-                    <Area type="monotone" dataKey="spend" className="fill-primary/10 stroke-primary" strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
-                <p className="text-xs text-muted-foreground mt-1 text-center">Last 5 months</p>
-              </CardContent>
-            </Card>
-          </div>
+          {(() => {
+            const monthly = ["May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr"].map((m,i) => ({ month: m, vmHours: 800 + i*120 + (i%3)*200, spend: 25000 + i*3500 + (i%2)*4000, tickets: 3 + (i%4) }));
+            const perBatch = batches.map(b => { const days = 14; const rate = b.template.includes("Kubernetes") ? 800 : b.template.includes("Linux") ? 500 : 400; return { ...b, days, vmHours: b.seatCount * days * 8, spend: b.seatCount * rate, rate }; });
+            const totalHours = perBatch.reduce((s,x) => s + x.vmHours, 0);
+            const totalSpend = perBatch.reduce((s,x) => s + x.spend, 0);
+            const csvAll = () => {
+              const rows = [["Batch","Template","Seats","Days","VM-Hours","Rate","Spend","Status"], ...perBatch.map(p => [p.name, p.template, p.seatCount, p.days, p.vmHours, p.rate, p.spend, p.status])];
+              const csv = rows.map(r => r.join(",")).join("\n");
+              const blob = new Blob([csv], { type: "text/csv" }); const url = URL.createObjectURL(blob);
+              const a = document.createElement("a"); a.href = url; a.download = `${customer.name}-usage.csv`; a.click(); URL.revokeObjectURL(url);
+            };
+            const csvOne = (p: typeof perBatch[number]) => {
+              const csv = `Batch,Template,Seats,Days,VM-Hours,Rate,Spend\n${p.name},${p.template},${p.seatCount},${p.days},${p.vmHours},${p.rate},${p.spend}`;
+              const blob = new Blob([csv], { type: "text/csv" }); const url = URL.createObjectURL(blob);
+              const a = document.createElement("a"); a.href = url; a.download = `${p.name}-usage.csv`; a.click(); URL.revokeObjectURL(url);
+            };
+            return (
+              <>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex gap-2">
+                    <Select defaultValue="30d"><SelectTrigger className="h-9 text-sm w-32"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="7d">Last 7 days</SelectItem><SelectItem value="30d">Last 30 days</SelectItem><SelectItem value="90d">Last 90 days</SelectItem><SelectItem value="12m">Last 12 months</SelectItem></SelectContent></Select>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={csvAll}><Download className="h-3.5 w-3.5" /> Download CSV</Button>
+                    <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => action("PDF report generated")}><FileText className="h-3.5 w-3.5" /> Download PDF Report</Button>
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+                  <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Total VMs</p><p className="text-2xl font-bold mt-1">{allVMs.length}</p></CardContent></Card>
+                  <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Active VMs</p><p className="text-2xl font-bold mt-1 text-success">{allVMs.filter(v => v.vmStatus === "running").length}</p></CardContent></Card>
+                  <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">VM-Hours (MTD)</p><p className="text-2xl font-bold mt-1">{totalHours.toLocaleString()}</p></CardContent></Card>
+                  <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Spend (MTD)</p><p className="text-2xl font-bold mt-1">{currencySymbol}{totalSpend.toLocaleString()}</p></CardContent></Card>
+                  <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Open Tickets</p><p className="text-2xl font-bold mt-1 text-destructive">{customer.openTickets}</p></CardContent></Card>
+                  <Card><CardContent className="pt-4"><p className="text-xs text-muted-foreground">Avg Resolution</p><p className="text-2xl font-bold mt-1">4.2h</p></CardContent></Card>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Usage Over Time (12 months)</CardTitle></CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={240}>
+                        <AreaChart data={monthly}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                          <XAxis dataKey="month" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip />
+                          <Area type="monotone" dataKey="vmHours" className="fill-primary/20 stroke-primary" strokeWidth={2} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Spend Trend ({currencySymbol})</CardTitle></CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={240}>
+                        <BarChart data={monthly}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                          <XAxis dataKey="month" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip />
+                          <Bar dataKey="spend" className="fill-primary" radius={[4,4,0,0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </div>
+                <Card>
+                  <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm">Per-Batch Usage Report</CardTitle>
+                    <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={csvAll}><Download className="h-3.5 w-3.5" /> Download All</Button>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader><TableRow>
+                        <TableHead className="text-xs">Batch</TableHead>
+                        <TableHead className="text-xs">Template</TableHead>
+                        <TableHead className="text-xs text-right">Participants</TableHead>
+                        <TableHead className="text-xs text-right">Active Days</TableHead>
+                        <TableHead className="text-xs text-right">VM-Hours</TableHead>
+                        <TableHead className="text-xs text-right">Spend</TableHead>
+                        <TableHead className="text-xs">Status</TableHead>
+                        <TableHead className="text-xs text-right"></TableHead>
+                      </TableRow></TableHeader>
+                      <TableBody>
+                        {perBatch.map(p => (
+                          <TableRow key={p.id}>
+                            <TableCell className="text-xs font-medium">{p.name}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{p.template}</TableCell>
+                            <TableCell className="text-xs text-right">{p.seatCount}</TableCell>
+                            <TableCell className="text-xs text-right">{p.days}</TableCell>
+                            <TableCell className="text-xs text-right">{p.vmHours.toLocaleString()}</TableCell>
+                            <TableCell className="text-sm text-right font-medium">{currencySymbol}{p.spend.toLocaleString()}</TableCell>
+                            <TableCell><Badge variant="secondary" className={`text-[10px] capitalize ${p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>{p.status}</Badge></TableCell>
+                            <TableCell className="text-right"><Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={() => csvOne(p)}><Download className="h-3 w-3" /> CSV</Button></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Support Tickets / Month</CardTitle></CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={monthly}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                          <XAxis dataKey="month" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip />
+                          <Bar dataKey="tickets" className="fill-warning" radius={[4,4,0,0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Engagement Snapshot</CardTitle></CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                      <div className="flex justify-between"><span className="text-muted-foreground">Active Logins (30d)</span><span className="font-medium">{customer.currentUsage.activeSeats * 12}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Course Completion %</span><span className="font-medium">76%</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Lab Completion %</span><span className="font-medium">82%</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Top Trainer (hrs)</span><span className="font-medium">Rajesh K. — 124h</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Avg Session Length</span><span className="font-medium">2h 14m</span></div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            );
+          })()}
         </TabsContent>
       </Tabs>
     </div>
