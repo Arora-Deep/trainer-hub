@@ -1210,12 +1210,19 @@ export default function CustomerDetail() {
               {/* Live preview */}
               <div className="border-t pt-4">
                 <p className="text-xs font-medium mb-2">Effective Price Preview</p>
-                <div className="grid gap-3 sm:grid-cols-3 items-end">
+                <div className="grid gap-3 sm:grid-cols-4 items-end">
+                  <div className="space-y-1.5"><Label className="text-xs">VM Config</Label>
+                    <Select value={previewConfigId} onValueChange={setPreviewConfigId}>
+                      <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>{rateCard.vmConfigs.map(c => <SelectItem key={c.id} value={c.id}>{c.name} ({c.vcpu}c / {c.ramGB}GB)</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
                   <div className="space-y-1.5"><Label className="text-xs">Seats</Label><Input type="number" value={previewSeats} onChange={e => setPreviewSeats(Number(e.target.value))} className="h-9 text-sm" /></div>
                   <div className="space-y-1.5"><Label className="text-xs">Duration (days)</Label><Input type="number" value={previewDays} onChange={e => setPreviewDays(Number(e.target.value))} className="h-9 text-sm" /></div>
                   <div className="rounded-lg border p-3 bg-muted/30">
                     {(() => { const p = computePreview(); return (
                       <div className="text-xs space-y-0.5">
+                        <div className="flex justify-between"><span className="text-muted-foreground">{p.cfg.name} · daily</span><span>{currencySymbol}{p.cfg.dailyRate}</span></div>
                         <div className="flex justify-between"><span className="text-muted-foreground">Base / seat</span><span>{currencySymbol}{p.base.toLocaleString()}</span></div>
                         <div className="flex justify-between"><span className="text-muted-foreground">Volume disc.</span><span>{p.vDisc}%</span></div>
                         <div className="flex justify-between"><span className="text-muted-foreground">Duration disc.</span><span>{p.dDisc}%</span></div>
