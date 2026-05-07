@@ -110,7 +110,7 @@ export default function CreateCustomer() {
       </Card>
 
       <div className="flex gap-3">
-        <Button className="gap-2">Create Customer</Button>
+        <Button className="gap-2" onClick={handleCreate}>Create Customer</Button>
         <Button variant="outline" onClick={() => navigate("/admin/customers")}>Cancel</Button>
       </div>
     </div>
