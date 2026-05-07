@@ -323,15 +323,15 @@ export default function CustomerDetail() {
           {/* Provision VM Dialog */}
           <Dialog open={provisionVMOpen} onOpenChange={setProvisionVMOpen}>
             <DialogContent>
-              <DialogHeader><DialogTitle>Add VM to {selectedBatch?.name}</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>Provision VM</DialogTitle></DialogHeader>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5"><Label className="text-xs">Participant Name</Label><Input placeholder="John Doe" className="h-9 text-sm" /></div>
                 <div className="space-y-1.5"><Label className="text-xs">Email</Label><Input type="email" placeholder="john@company.com" className="h-9 text-sm" /></div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Template</Label>
-                  <Select defaultValue="batch"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="batch">Use batch template</SelectItem><SelectItem value="custom">Custom</SelectItem></SelectContent></Select>
+                  <Label className="text-xs">Batch</Label>
+                  <Select defaultValue={batches[0]?.id}><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent>{batches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select>
                 </div>
-                <div className="space-y-1.5"><Label className="text-xs">Region</Label><Input defaultValue={selectedBatch?.region} className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Region</Label><Input defaultValue="ap-south-1" className="h-9 text-sm" /></div>
               </div>
               <DialogFooter>
                 <Button variant="outline" size="sm" onClick={() => setProvisionVMOpen(false)}>Cancel</Button>
