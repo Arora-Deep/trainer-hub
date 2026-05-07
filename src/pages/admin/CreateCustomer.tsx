@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 export default function CreateCustomer() {
   const navigate = useNavigate();
+  const addCustomer = useCustomerStore((s) => s.addCustomer);
   const [form, setForm] = useState({
     companyName: "", companyAlias: "", domain: "", website: "",
     ownerName: "", ownerEmail: "", ownerPhone: "",
