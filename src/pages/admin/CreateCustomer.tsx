@@ -20,6 +20,23 @@ export default function CreateCustomer() {
 
   const update = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }));
 
+  const handleCreate = () => {
+    if (!form.companyName.trim()) {
+      toast.error("Company name is required");
+      return;
+    }
+    const id = addCustomer({
+      name: form.companyName.trim(),
+      contactPerson: form.ownerName,
+      email: form.ownerEmail,
+      domain: form.domain,
+      status: form.status as any,
+      regions: [form.defaultRegion],
+    });
+    toast.success(`Customer "${form.companyName}" created`);
+    navigate(`/admin/customers/${id}`);
+  };
+
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
