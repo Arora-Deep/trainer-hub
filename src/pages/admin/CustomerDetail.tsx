@@ -106,9 +106,12 @@ export default function CustomerDetail() {
   // Per-customer rate card (initial defaults; in production lives in store)
   const [rateCard, setRateCard] = useState({
     currency: "INR",
-    monthlyRate: 1500,
-    dailyRate: 80,
-    hourlyRateOverride: "" as string,
+    vmConfigs: [
+      { id: "cfg-1", name: "Small", vcpu: 2, ramGB: 4, diskGB: 50, gpu: "None", monthlyRate: 1200, dailyRate: 60, hourlyRateOverride: "" as string },
+      { id: "cfg-2", name: "Medium", vcpu: 2, ramGB: 8, diskGB: 80, gpu: "None", monthlyRate: 1800, dailyRate: 90, hourlyRateOverride: "" as string },
+      { id: "cfg-3", name: "Large", vcpu: 4, ramGB: 16, diskGB: 120, gpu: "None", monthlyRate: 3200, dailyRate: 160, hourlyRateOverride: "" as string },
+      { id: "cfg-4", name: "GPU - T4", vcpu: 8, ramGB: 32, diskGB: 200, gpu: "1× T4", monthlyRate: 9500, dailyRate: 480, hourlyRateOverride: "" as string },
+    ],
     volumeTiers: [
       { min: 1, max: 24, discount: 0 },
       { min: 25, max: 49, discount: 5 },
@@ -140,15 +143,18 @@ export default function CustomerDetail() {
   });
   const [previewSeats, setPreviewSeats] = useState(30);
   const [previewDays, setPreviewDays] = useState(30);
+  const [previewConfigId, setPreviewConfigId] = useState("cfg-2");
   const updateRateCard = <K extends keyof typeof rateCard>(k: K, v: (typeof rateCard)[K]) => setRateCard(r => ({ ...r, [k]: v }));
   const currencySymbol = rateCard.currency === "INR" ? "₹" : rateCard.currency === "USD" ? "$" : rateCard.currency === "EUR" ? "€" : "£";
-  const computedHourly = rateCard.hourlyRateOverride ? Number(rateCard.hourlyRateOverride) : Math.round((rateCard.dailyRate / 8) * 100) / 100;
+  const hourlyFor = (cfg: typeof rateCard.vmConfigs[number]) => cfg.hourlyRateOverride ? Number(cfg.hourlyRateOverride) : Math.round((cfg.dailyRate / 8) * 100) / 100;
+  const updateConfig = (id: string, patch: Partial<typeof rateCard.vmConfigs[number]>) => updateRateCard("vmConfigs", rateCard.vmConfigs.map(c => c.id === id ? { ...c, ...patch } : c));
   const computePreview = () => {
+    const cfg = rateCard.vmConfigs.find(c => c.id === previewConfigId) || rateCard.vmConfigs[0];
     const v = rateCard.volumeTiers.find(t => previewSeats >= t.min && previewSeats <= t.max)?.discount || 0;
     const d = rateCard.durationTiers.find(t => previewDays >= t.minDays && previewDays <= t.maxDays)?.discount || 0;
-    const base = rateCard.dailyRate * previewDays;
+    const base = cfg.dailyRate * previewDays;
     const afterDiscount = base * (1 - v / 100) * (1 - d / 100);
-    return { base, afterDiscount, vDisc: v, dDisc: d };
+    return { cfg, base, afterDiscount, vDisc: v, dDisc: d };
   };
 
   // Snapshots per VM (mock)
@@ -1058,15 +1064,50 @@ export default function CustomerDetail() {
             <CardContent className="space-y-5">
               {/* Base rates */}
               <div>
-                <p className="text-xs font-medium mb-2">Base Rates</p>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="space-y-1.5"><Label className="text-xs">Currency</Label>
-                    <Select value={rateCard.currency} onValueChange={(v) => updateRateCard("currency", v)}><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="INR">INR (₹)</SelectItem><SelectItem value="USD">USD ($)</SelectItem><SelectItem value="EUR">EUR (€)</SelectItem><SelectItem value="GBP">GBP (£)</SelectItem></SelectContent></Select>
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <p className="text-xs font-medium">VM Configurations & Base Rates</p>
+                    <p className="text-[10px] text-muted-foreground">Define a base rate per VM spec. Volume / duration / spend discounts below apply on top.</p>
                   </div>
-                  <div className="space-y-1.5"><Label className="text-xs">Monthly Rate / VM ({currencySymbol})</Label><Input type="number" value={rateCard.monthlyRate} onChange={e => updateRateCard("monthlyRate", Number(e.target.value))} className="h-9 text-sm" /></div>
-                  <div className="space-y-1.5"><Label className="text-xs">Daily Rate / VM ({currencySymbol})</Label><Input type="number" value={rateCard.dailyRate} onChange={e => updateRateCard("dailyRate", Number(e.target.value))} className="h-9 text-sm" /></div>
-                  <div className="space-y-1.5"><Label className="text-xs">Hourly Rate / VM ({currencySymbol}) <span className="text-muted-foreground">— auto: {currencySymbol}{computedHourly}</span></Label><Input type="number" placeholder={String(computedHourly)} value={rateCard.hourlyRateOverride} onChange={e => updateRateCard("hourlyRateOverride", e.target.value)} className="h-9 text-sm" /></div>
+                  <div className="flex items-center gap-2">
+                    <div className="space-y-0">
+                      <Label className="text-[10px] text-muted-foreground">Currency</Label>
+                      <Select value={rateCard.currency} onValueChange={(v) => updateRateCard("currency", v)}><SelectTrigger className="h-8 text-xs w-28"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="INR">INR (₹)</SelectItem><SelectItem value="USD">USD ($)</SelectItem><SelectItem value="EUR">EUR (€)</SelectItem><SelectItem value="GBP">GBP (£)</SelectItem></SelectContent></Select>
+                    </div>
+                    <Button variant="outline" size="sm" className="h-8 text-[10px] gap-1 mt-4" onClick={() => updateRateCard("vmConfigs", [...rateCard.vmConfigs, { id: `cfg-${Date.now()}`, name: "New Config", vcpu: 2, ramGB: 4, diskGB: 50, gpu: "None", monthlyRate: 0, dailyRate: 0, hourlyRateOverride: "" }])}><Plus className="h-3 w-3" /> Add Config</Button>
+                  </div>
                 </div>
+                <div className="rounded-lg border overflow-x-auto">
+                  <Table>
+                    <TableHeader><TableRow>
+                      <TableHead className="text-[10px]">Name</TableHead>
+                      <TableHead className="text-[10px]">vCPU</TableHead>
+                      <TableHead className="text-[10px]">RAM (GB)</TableHead>
+                      <TableHead className="text-[10px]">Disk (GB)</TableHead>
+                      <TableHead className="text-[10px]">GPU</TableHead>
+                      <TableHead className="text-[10px]">Monthly ({currencySymbol})</TableHead>
+                      <TableHead className="text-[10px]">Daily ({currencySymbol})</TableHead>
+                      <TableHead className="text-[10px]">Hourly ({currencySymbol})</TableHead>
+                      <TableHead className="text-[10px] text-right"></TableHead>
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {rateCard.vmConfigs.map((c) => (
+                        <TableRow key={c.id}>
+                          <TableCell><Input value={c.name} onChange={e => updateConfig(c.id, { name: e.target.value })} className="h-8 text-xs min-w-[120px]" /></TableCell>
+                          <TableCell><Input type="number" value={c.vcpu} onChange={e => updateConfig(c.id, { vcpu: Number(e.target.value) })} className="h-8 text-xs w-16" /></TableCell>
+                          <TableCell><Input type="number" value={c.ramGB} onChange={e => updateConfig(c.id, { ramGB: Number(e.target.value) })} className="h-8 text-xs w-16" /></TableCell>
+                          <TableCell><Input type="number" value={c.diskGB} onChange={e => updateConfig(c.id, { diskGB: Number(e.target.value) })} className="h-8 text-xs w-20" /></TableCell>
+                          <TableCell><Input value={c.gpu} onChange={e => updateConfig(c.id, { gpu: e.target.value })} className="h-8 text-xs w-24" placeholder="None" /></TableCell>
+                          <TableCell><Input type="number" value={c.monthlyRate} onChange={e => updateConfig(c.id, { monthlyRate: Number(e.target.value) })} className="h-8 text-xs w-24" /></TableCell>
+                          <TableCell><Input type="number" value={c.dailyRate} onChange={e => updateConfig(c.id, { dailyRate: Number(e.target.value) })} className="h-8 text-xs w-20" /></TableCell>
+                          <TableCell><Input type="number" placeholder={String(hourlyFor(c))} value={c.hourlyRateOverride} onChange={e => updateConfig(c.id, { hourlyRateOverride: e.target.value })} className="h-8 text-xs w-20" /></TableCell>
+                          <TableCell className="text-right"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateRateCard("vmConfigs", rateCard.vmConfigs.filter(x => x.id !== c.id))}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1.5">Hourly rate auto-calculates as Daily ÷ 8 (we charge for 8 working hours/day; rest is free). Override per config if needed.</p>
               </div>
 
               {/* Volume tiers */}
@@ -1169,12 +1210,19 @@ export default function CustomerDetail() {
               {/* Live preview */}
               <div className="border-t pt-4">
                 <p className="text-xs font-medium mb-2">Effective Price Preview</p>
-                <div className="grid gap-3 sm:grid-cols-3 items-end">
+                <div className="grid gap-3 sm:grid-cols-4 items-end">
+                  <div className="space-y-1.5"><Label className="text-xs">VM Config</Label>
+                    <Select value={previewConfigId} onValueChange={setPreviewConfigId}>
+                      <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>{rateCard.vmConfigs.map(c => <SelectItem key={c.id} value={c.id}>{c.name} ({c.vcpu}c / {c.ramGB}GB)</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
                   <div className="space-y-1.5"><Label className="text-xs">Seats</Label><Input type="number" value={previewSeats} onChange={e => setPreviewSeats(Number(e.target.value))} className="h-9 text-sm" /></div>
                   <div className="space-y-1.5"><Label className="text-xs">Duration (days)</Label><Input type="number" value={previewDays} onChange={e => setPreviewDays(Number(e.target.value))} className="h-9 text-sm" /></div>
                   <div className="rounded-lg border p-3 bg-muted/30">
                     {(() => { const p = computePreview(); return (
                       <div className="text-xs space-y-0.5">
+                        <div className="flex justify-between"><span className="text-muted-foreground">{p.cfg.name} · daily</span><span>{currencySymbol}{p.cfg.dailyRate}</span></div>
                         <div className="flex justify-between"><span className="text-muted-foreground">Base / seat</span><span>{currencySymbol}{p.base.toLocaleString()}</span></div>
                         <div className="flex justify-between"><span className="text-muted-foreground">Volume disc.</span><span>{p.vDisc}%</span></div>
                         <div className="flex justify-between"><span className="text-muted-foreground">Duration disc.</span><span>{p.dDisc}%</span></div>
