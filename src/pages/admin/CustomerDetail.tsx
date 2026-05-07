@@ -211,7 +211,7 @@ export default function CustomerDetail() {
           <p className="text-sm text-muted-foreground mt-1">{customer.domain} · {customer.contactPerson}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs"><FlaskConical className="h-3.5 w-3.5" /> Provision Labs</Button>
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => navigate(`/admin/batches/create?customerId=${customer.id}`)}><FlaskConical className="h-3.5 w-3.5" /> Provision Batch</Button>
           <Button variant="outline" size="sm" className="gap-1.5 text-xs"><CreditCard className="h-3.5 w-3.5" /> Add Credits</Button>
           <Button variant="outline" size="sm" className="gap-1.5 text-xs text-destructive"><Ban className="h-3.5 w-3.5" /> Suspend</Button>
           <Button variant="outline" size="sm" className="gap-1.5 text-xs"><UserCheck className="h-3.5 w-3.5" /> Impersonate</Button>
