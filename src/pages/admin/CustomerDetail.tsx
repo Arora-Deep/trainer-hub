@@ -1046,35 +1046,144 @@ export default function CustomerDetail() {
             </CardContent>
           </Card>
 
-          {/* Commercial & Billing */}
+          {/* Commercial & Billing — per-customer rate card */}
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Commercial & Billing</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Pricing Model</Label>
-                  <Select defaultValue="per-seat-month"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="per-seat-month">Per seat/month</SelectItem><SelectItem value="per-seat-hour">Per seat/hour</SelectItem><SelectItem value="batch-bundle">Batch bundle</SelectItem><SelectItem value="unlimited">Unlimited (flat fee)</SelectItem></SelectContent></Select>
-                </div>
-                <div className="space-y-1.5"><Label className="text-xs">Default Rate (₹)</Label><Input type="number" defaultValue={500} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Minimum Commitment (₹)</Label><Input type="number" defaultValue={10000} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Payment Terms (days)</Label><Input type="number" defaultValue={30} className="h-9 text-sm" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Billing Currency</Label>
-                  <Select defaultValue="INR"><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="INR">INR (₹)</SelectItem><SelectItem value="USD">USD ($)</SelectItem><SelectItem value="EUR">EUR (€)</SelectItem><SelectItem value="GBP">GBP (£)</SelectItem></SelectContent></Select>
-                </div>
-                <div className="space-y-1.5"><Label className="text-xs">Invoice Prefix</Label><Input defaultValue="INV" className="h-9 text-sm" /></div>
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-sm">Commercial & Billing — Rate Card</CardTitle>
+                <p className="text-[11px] text-muted-foreground mt-1">Per-customer pricing with volume, duration, and spend-based discounts. Hourly rate = Daily ÷ 8 (we charge for 8 working hours/day; rest of the day is free).</p>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {[
-                  { label: "Auto-generate invoices on billing cycle", defaultOn: true },
-                  { label: "Lock provisioning if payment overdue", defaultOn: false },
-                  { label: "Send invoice reminders", defaultOn: true },
-                  { label: "Allow prepaid credit top-up", defaultOn: true },
-                ].map(f => (
-                  <div key={f.label} className="flex items-center gap-3">
-                    <Switch defaultChecked={f.defaultOn} />
-                    <Label className="text-xs">{f.label}</Label>
+              <Badge variant="outline" className="text-[10px]">Effective from {rateCard.effectiveFrom}</Badge>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {/* Base rates */}
+              <div>
+                <p className="text-xs font-medium mb-2">Base Rates</p>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="space-y-1.5"><Label className="text-xs">Currency</Label>
+                    <Select value={rateCard.currency} onValueChange={(v) => updateRateCard("currency", v)}><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="INR">INR (₹)</SelectItem><SelectItem value="USD">USD ($)</SelectItem><SelectItem value="EUR">EUR (€)</SelectItem><SelectItem value="GBP">GBP (£)</SelectItem></SelectContent></Select>
                   </div>
-                ))}
+                  <div className="space-y-1.5"><Label className="text-xs">Monthly Rate / VM ({currencySymbol})</Label><Input type="number" value={rateCard.monthlyRate} onChange={e => updateRateCard("monthlyRate", Number(e.target.value))} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Daily Rate / VM ({currencySymbol})</Label><Input type="number" value={rateCard.dailyRate} onChange={e => updateRateCard("dailyRate", Number(e.target.value))} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Hourly Rate / VM ({currencySymbol}) <span className="text-muted-foreground">— auto: {currencySymbol}{computedHourly}</span></Label><Input type="number" placeholder={String(computedHourly)} value={rateCard.hourlyRateOverride} onChange={e => updateRateCard("hourlyRateOverride", e.target.value)} className="h-9 text-sm" /></div>
+                </div>
+              </div>
+
+              {/* Volume tiers */}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium">Volume Discount Tiers (by VM count)</p>
+                  <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => updateRateCard("volumeTiers", [...rateCard.volumeTiers, { min: 0, max: 0, discount: 0 }])}><Plus className="h-3 w-3" /> Add Tier</Button>
+                </div>
+                <Table>
+                  <TableHeader><TableRow>
+                    <TableHead className="text-[10px]">Min Seats</TableHead>
+                    <TableHead className="text-[10px]">Max Seats</TableHead>
+                    <TableHead className="text-[10px]">Discount %</TableHead>
+                    <TableHead className="text-[10px] text-right"></TableHead>
+                  </TableRow></TableHeader>
+                  <TableBody>
+                    {rateCard.volumeTiers.map((t, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Input type="number" value={t.min} onChange={e => { const arr = [...rateCard.volumeTiers]; arr[i] = { ...t, min: Number(e.target.value) }; updateRateCard("volumeTiers", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell><Input type="number" value={t.max} onChange={e => { const arr = [...rateCard.volumeTiers]; arr[i] = { ...t, max: Number(e.target.value) }; updateRateCard("volumeTiers", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell><Input type="number" value={t.discount} onChange={e => { const arr = [...rateCard.volumeTiers]; arr[i] = { ...t, discount: Number(e.target.value) }; updateRateCard("volumeTiers", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell className="text-right"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateRateCard("volumeTiers", rateCard.volumeTiers.filter((_, j) => j !== i))}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Duration tiers */}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium">Duration Discount Tiers (by batch length)</p>
+                  <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => updateRateCard("durationTiers", [...rateCard.durationTiers, { minDays: 0, maxDays: 0, discount: 0 }])}><Plus className="h-3 w-3" /> Add Tier</Button>
+                </div>
+                <Table>
+                  <TableHeader><TableRow>
+                    <TableHead className="text-[10px]">Min Days</TableHead>
+                    <TableHead className="text-[10px]">Max Days</TableHead>
+                    <TableHead className="text-[10px]">Discount %</TableHead>
+                    <TableHead className="text-[10px] text-right"></TableHead>
+                  </TableRow></TableHeader>
+                  <TableBody>
+                    {rateCard.durationTiers.map((t, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Input type="number" value={t.minDays} onChange={e => { const arr = [...rateCard.durationTiers]; arr[i] = { ...t, minDays: Number(e.target.value) }; updateRateCard("durationTiers", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell><Input type="number" value={t.maxDays} onChange={e => { const arr = [...rateCard.durationTiers]; arr[i] = { ...t, maxDays: Number(e.target.value) }; updateRateCard("durationTiers", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell><Input type="number" value={t.discount} onChange={e => { const arr = [...rateCard.durationTiers]; arr[i] = { ...t, discount: Number(e.target.value) }; updateRateCard("durationTiers", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell className="text-right"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateRateCard("durationTiers", rateCard.durationTiers.filter((_, j) => j !== i))}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Spend rebates */}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium">Monthly Spend Rebates</p>
+                  <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" onClick={() => updateRateCard("spendRebates", [...rateCard.spendRebates, { minSpend: 0, rebate: 0 }])}><Plus className="h-3 w-3" /> Add Rebate</Button>
+                </div>
+                <Table>
+                  <TableHeader><TableRow>
+                    <TableHead className="text-[10px]">Monthly Spend ≥ ({currencySymbol})</TableHead>
+                    <TableHead className="text-[10px]">Rebate %</TableHead>
+                    <TableHead className="text-[10px] text-right"></TableHead>
+                  </TableRow></TableHeader>
+                  <TableBody>
+                    {rateCard.spendRebates.map((r, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Input type="number" value={r.minSpend} onChange={e => { const arr = [...rateCard.spendRebates]; arr[i] = { ...r, minSpend: Number(e.target.value) }; updateRateCard("spendRebates", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell><Input type="number" value={r.rebate} onChange={e => { const arr = [...rateCard.spendRebates]; arr[i] = { ...r, rebate: Number(e.target.value) }; updateRateCard("spendRebates", arr); }} className="h-8 text-xs" /></TableCell>
+                        <TableCell className="text-right"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateRateCard("spendRebates", rateCard.spendRebates.filter((_, j) => j !== i))}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Commercial terms */}
+              <div className="border-t pt-4">
+                <p className="text-xs font-medium mb-2">Commercial Terms</p>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="space-y-1.5"><Label className="text-xs">Payment Terms (days)</Label><Input type="number" value={rateCard.paymentTermsDays} onChange={e => updateRateCard("paymentTermsDays", Number(e.target.value))} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Billing Cycle</Label>
+                    <Select value={rateCard.billingCycle} onValueChange={v => updateRateCard("billingCycle", v)}><SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="monthly">Monthly</SelectItem><SelectItem value="quarterly">Quarterly</SelectItem><SelectItem value="annual">Annual</SelectItem><SelectItem value="per-batch">Per Batch</SelectItem></SelectContent></Select>
+                  </div>
+                  <div className="space-y-1.5"><Label className="text-xs">Late-Payment Interest %/mo</Label><Input type="number" step="0.1" value={rateCard.lateInterestPct} onChange={e => updateRateCard("lateInterestPct", Number(e.target.value))} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Grace Period (days)</Label><Input type="number" value={rateCard.gracePeriodDays} onChange={e => updateRateCard("gracePeriodDays", Number(e.target.value))} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">GSTIN / Tax ID</Label><Input value={rateCard.gstin} onChange={e => updateRateCard("gstin", e.target.value)} placeholder="29ABCDE1234F1Z5" className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">PO Number</Label><Input value={rateCard.poNumber} onChange={e => updateRateCard("poNumber", e.target.value)} placeholder="PO-2026-…" className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Effective From</Label><Input type="date" value={rateCard.effectiveFrom} onChange={e => updateRateCard("effectiveFrom", e.target.value)} className="h-9 text-sm" /></div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3 mt-3">
+                  <div className="flex items-center gap-3"><Switch checked={rateCard.autoRenew} onCheckedChange={v => updateRateCard("autoRenew", v)} /><Label className="text-xs">Auto-renew rate card</Label></div>
+                  <div className="flex items-center gap-3"><Switch checked={rateCard.poRequired} onCheckedChange={v => updateRateCard("poRequired", v)} /><Label className="text-xs">Require PO before invoicing</Label></div>
+                  <div className="flex items-center gap-3"><Switch defaultChecked /><Label className="text-xs">Send invoice reminders</Label></div>
+                </div>
+              </div>
+
+              {/* Live preview */}
+              <div className="border-t pt-4">
+                <p className="text-xs font-medium mb-2">Effective Price Preview</p>
+                <div className="grid gap-3 sm:grid-cols-3 items-end">
+                  <div className="space-y-1.5"><Label className="text-xs">Seats</Label><Input type="number" value={previewSeats} onChange={e => setPreviewSeats(Number(e.target.value))} className="h-9 text-sm" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Duration (days)</Label><Input type="number" value={previewDays} onChange={e => setPreviewDays(Number(e.target.value))} className="h-9 text-sm" /></div>
+                  <div className="rounded-lg border p-3 bg-muted/30">
+                    {(() => { const p = computePreview(); return (
+                      <div className="text-xs space-y-0.5">
+                        <div className="flex justify-between"><span className="text-muted-foreground">Base / seat</span><span>{currencySymbol}{p.base.toLocaleString()}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Volume disc.</span><span>{p.vDisc}%</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Duration disc.</span><span>{p.dDisc}%</span></div>
+                        <div className="flex justify-between font-semibold pt-1 border-t mt-1"><span>Effective / seat</span><span>{currencySymbol}{Math.round(p.afterDiscount).toLocaleString()}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Total ({previewSeats} seats)</span><span className="font-semibold">{currencySymbol}{Math.round(p.afterDiscount * previewSeats).toLocaleString()}</span></div>
+                      </div>
+                    ); })()}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
