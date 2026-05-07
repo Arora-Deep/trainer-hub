@@ -106,9 +106,12 @@ export default function CustomerDetail() {
   // Per-customer rate card (initial defaults; in production lives in store)
   const [rateCard, setRateCard] = useState({
     currency: "INR",
-    monthlyRate: 1500,
-    dailyRate: 80,
-    hourlyRateOverride: "" as string,
+    vmConfigs: [
+      { id: "cfg-1", name: "Small", vcpu: 2, ramGB: 4, diskGB: 50, gpu: "None", monthlyRate: 1200, dailyRate: 60, hourlyRateOverride: "" as string },
+      { id: "cfg-2", name: "Medium", vcpu: 2, ramGB: 8, diskGB: 80, gpu: "None", monthlyRate: 1800, dailyRate: 90, hourlyRateOverride: "" as string },
+      { id: "cfg-3", name: "Large", vcpu: 4, ramGB: 16, diskGB: 120, gpu: "None", monthlyRate: 3200, dailyRate: 160, hourlyRateOverride: "" as string },
+      { id: "cfg-4", name: "GPU - T4", vcpu: 8, ramGB: 32, diskGB: 200, gpu: "1× T4", monthlyRate: 9500, dailyRate: 480, hourlyRateOverride: "" as string },
+    ],
     volumeTiers: [
       { min: 1, max: 24, discount: 0 },
       { min: 25, max: 49, discount: 5 },
