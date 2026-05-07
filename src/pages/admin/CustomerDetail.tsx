@@ -1033,8 +1033,7 @@ export default function CustomerDetail() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  { label: "Enable Google Calendar sync", defaultOn: false },
-                  { label: "Enable iCal export for students", defaultOn: true },
+                  { label: "Restrict portal access to office hours", defaultOn: false },
                   { label: "Auto-schedule labs for batch start", defaultOn: true },
                   { label: "Allow trainers to set custom schedules", defaultOn: true },
                 ].map(f => (
