@@ -143,15 +143,18 @@ export default function CustomerDetail() {
   });
   const [previewSeats, setPreviewSeats] = useState(30);
   const [previewDays, setPreviewDays] = useState(30);
+  const [previewConfigId, setPreviewConfigId] = useState("cfg-2");
   const updateRateCard = <K extends keyof typeof rateCard>(k: K, v: (typeof rateCard)[K]) => setRateCard(r => ({ ...r, [k]: v }));
   const currencySymbol = rateCard.currency === "INR" ? "₹" : rateCard.currency === "USD" ? "$" : rateCard.currency === "EUR" ? "€" : "£";
-  const computedHourly = rateCard.hourlyRateOverride ? Number(rateCard.hourlyRateOverride) : Math.round((rateCard.dailyRate / 8) * 100) / 100;
+  const hourlyFor = (cfg: typeof rateCard.vmConfigs[number]) => cfg.hourlyRateOverride ? Number(cfg.hourlyRateOverride) : Math.round((cfg.dailyRate / 8) * 100) / 100;
+  const updateConfig = (id: string, patch: Partial<typeof rateCard.vmConfigs[number]>) => updateRateCard("vmConfigs", rateCard.vmConfigs.map(c => c.id === id ? { ...c, ...patch } : c));
   const computePreview = () => {
+    const cfg = rateCard.vmConfigs.find(c => c.id === previewConfigId) || rateCard.vmConfigs[0];
     const v = rateCard.volumeTiers.find(t => previewSeats >= t.min && previewSeats <= t.max)?.discount || 0;
     const d = rateCard.durationTiers.find(t => previewDays >= t.minDays && previewDays <= t.maxDays)?.discount || 0;
-    const base = rateCard.dailyRate * previewDays;
+    const base = cfg.dailyRate * previewDays;
     const afterDiscount = base * (1 - v / 100) * (1 - d / 100);
-    return { base, afterDiscount, vDisc: v, dDisc: d };
+    return { cfg, base, afterDiscount, vDisc: v, dDisc: d };
   };
 
   // Snapshots per VM (mock)
