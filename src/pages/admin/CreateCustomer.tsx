@@ -5,12 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import { useCustomerStore } from "@/stores/customerStore";
-import { toast } from "sonner";
 
 export default function CreateCustomer() {
   const navigate = useNavigate();
-  const addCustomer = useCustomerStore((s) => s.addCustomer);
   const [form, setForm] = useState({
     companyName: "", companyAlias: "", domain: "", website: "",
     ownerName: "", ownerEmail: "", ownerPhone: "",
@@ -19,23 +16,6 @@ export default function CreateCustomer() {
   });
 
   const update = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }));
-
-  const handleCreate = () => {
-    if (!form.companyName.trim()) {
-      toast.error("Company name is required");
-      return;
-    }
-    const id = addCustomer({
-      name: form.companyName.trim(),
-      contactPerson: form.ownerName,
-      email: form.ownerEmail,
-      domain: form.domain,
-      status: form.status as any,
-      regions: [form.defaultRegion],
-    });
-    toast.success(`Customer "${form.companyName}" created`);
-    navigate(`/admin/customers/${id}`);
-  };
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -110,7 +90,7 @@ export default function CreateCustomer() {
       </Card>
 
       <div className="flex gap-3">
-        <Button className="gap-2" onClick={handleCreate}>Create Customer</Button>
+        <Button className="gap-2">Create Customer</Button>
         <Button variant="outline" onClick={() => navigate("/admin/customers")}>Cancel</Button>
       </div>
     </div>
