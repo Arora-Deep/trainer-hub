@@ -141,11 +141,24 @@ export default function AdminTickets() {
     setReply("");
   };
 
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newTicket, setNewTicket] = useState({ tenant: "", subject: "", category: "VM Issue", priority: "medium" as TicketWithThread["priority"], message: "", assignee: "Support" });
+  const { customers } = useCustomerStore();
+  const handleCreate = () => {
+    if (!newTicket.tenant || !newTicket.subject) { toast({ title: "Missing fields", description: "Customer and subject required" }); return; }
+    toast({ title: "Ticket Created", description: `New ticket for ${newTicket.tenant}` });
+    setCreateOpen(false);
+    setNewTicket({ tenant: "", subject: "", category: "VM Issue", priority: "medium", message: "", assignee: "Support" });
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Tickets</h1>
-        <p className="text-muted-foreground text-sm mt-1">Support ticket management & help desk</p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Tickets</h1>
+          <p className="text-muted-foreground text-sm mt-1">Support ticket management & help desk</p>
+        </div>
+        <Button className="gap-1.5" onClick={() => setCreateOpen(true)}><MessageSquare className="h-4 w-4" /> New Ticket</Button>
       </div>
 
       {/* KPI Cards */}
