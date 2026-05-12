@@ -216,6 +216,47 @@ export default function BatchRequests() {
                   <p className="text-sm">{selected.details}</p>
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg border space-y-1">
+                    <p className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider flex items-center gap-1.5"><Server className="h-3 w-3" /> Requested VM Spec</p>
+                    <div className="text-xs grid grid-cols-2 gap-x-3 gap-y-0.5 mt-1">
+                      <span className="text-muted-foreground">vCPU</span><span className="font-medium">{selected.vmSpec.vcpu}</span>
+                      <span className="text-muted-foreground">RAM</span><span className="font-medium">{selected.vmSpec.ramGB} GB</span>
+                      <span className="text-muted-foreground">Disk</span><span className="font-medium">{selected.vmSpec.diskGB} GB</span>
+                      <span className="text-muted-foreground">GPU</span><span className="font-medium">{selected.vmSpec.gpu}</span>
+                      <span className="text-muted-foreground">OS</span><span className="font-medium">{selected.vmSpec.os}</span>
+                    </div>
+                  </div>
+                  <div className="p-3 rounded-lg border space-y-1">
+                    <p className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider flex items-center gap-1.5"><ClipboardList className="h-3 w-3" /> Batch Plan</p>
+                    <div className="text-xs grid grid-cols-2 gap-x-3 gap-y-0.5 mt-1">
+                      <span className="text-muted-foreground">Students</span><span className="font-medium">{selected.studentsCount}</span>
+                      <span className="text-muted-foreground">Duration</span><span className="font-medium">{selected.durationDays} days</span>
+                      <span className="text-muted-foreground">Start Date</span><span className="font-medium">{selected.startDate}</span>
+                      <span className="text-muted-foreground">Region</span><span className="font-medium">{selected.region}</span>
+                      <span className="text-muted-foreground">Est. Cost</span><span className="font-medium">₹{selected.estimatedCost.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg border">
+                  <p className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider mb-2">Courses Requested</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selected.courses.map((c) => <Badge key={c} variant="secondary" className="text-xs">{c}</Badge>)}
+                  </div>
+                </div>
+
+                {selected.attachments.length > 0 && (
+                  <div className="p-3 rounded-lg border">
+                    <p className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider mb-2">Attachments</p>
+                    <div className="space-y-1">
+                      {selected.attachments.map((a) => (
+                        <div key={a} className="text-xs flex items-center gap-2"><BarChart3 className="h-3 w-3 text-muted-foreground" /> {a}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <Separator />
 
                 {/* Customer Context */}
