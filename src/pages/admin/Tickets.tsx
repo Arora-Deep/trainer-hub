@@ -15,6 +15,8 @@ import {
   Eye, Clock, CheckCircle2, AlertTriangle, MessageSquare, Send, Search,
   LifeBuoy, ArrowUp, Timer, UserPlus, XCircle, ChevronRight, StickyNote,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
