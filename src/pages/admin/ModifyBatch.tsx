@@ -220,6 +220,8 @@ export default function ModifyBatch() {
               <CardContent className="space-y-2">
                 <Button className="w-full justify-start gap-2" onClick={handleSave}><Save className="h-4 w-4" /> Save Changes</Button>
                 <Button variant="outline" className="w-full justify-start gap-2" onClick={() => setSnapOpen(true)}><Camera className="h-4 w-4" /> Take Snapshot</Button>
+                <Button variant="outline" className="w-full justify-start gap-2" onClick={() => setExtendOpen(true)}><CalendarPlus className="h-4 w-4" /> Extend Batch</Button>
+                <Button variant="outline" className="w-full justify-start gap-2" onClick={() => setPrepOpen(true)}><Clock className="h-4 w-4" /> Trainer Prep / Free Days</Button>
                 {batch.status === "live" && (
                   <Button variant="outline" className="w-full justify-start gap-2" onClick={() => setConfirmAction("pause")}><Pause className="h-4 w-4" /> Pause Batch</Button>
                 )}
