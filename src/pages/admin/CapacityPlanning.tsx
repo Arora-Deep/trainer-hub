@@ -34,17 +34,20 @@ export default function CapacityPlanning() {
   const pendingProvisions = useMemo(() => {
     const list: { batchId: string; batchName: string; status: string; participants: number; vcpu: number; ram: number; storage: number; suggestedNode: string }[] = [];
     batches.forEach((b) => {
-      const v = b.vmConfig;
+      const tpl = b.vmConfig?.vmTemplates?.[0];
       const vmsNeeded = b.participants.length;
       if (vmsNeeded === 0) return;
+      const cpu = tpl?.vcpus ?? 2;
+      const ram = tpl?.memory ?? 4;
+      const disk = tpl?.storage ?? 30;
       list.push({
         batchId: b.id,
         batchName: b.name,
         status: b.status,
         participants: vmsNeeded,
-        vcpu: vmsNeeded * (v?.cpu || 2),
-        ram: vmsNeeded * (v?.ram || 4),
-        storage: vmsNeeded * (v?.disk || 30),
+        vcpu: vmsNeeded * cpu,
+        ram: vmsNeeded * ram,
+        storage: vmsNeeded * disk,
         suggestedNode: nodeCapacity.slice().sort((a, b) => a.stress - b.stress)[0].node,
       });
     });
