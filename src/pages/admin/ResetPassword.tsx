@@ -3,66 +3,64 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useBatchStore } from "@/stores/batchStore";
 import { toast } from "@/hooks/use-toast";
-import { Search, Key, Copy, CheckCircle2 } from "lucide-react";
+import { Search, Key, Mail, Smartphone, CheckCircle2, ShieldAlert } from "lucide-react";
 
-const generatePassword = () => {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$";
-  return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-};
+type User = { batchId: string; participantId: string; name: string; email: string; batchName: string };
+type Method = "email" | "sms" | "force";
 
 export default function ResetPassword() {
   const { batches } = useBatchStore();
   const [search, setSearch] = useState("");
-  const [target, setTarget] = useState<{ batchId: string; participantId: string; name: string; email: string; batchName: string } | null>(null);
-  const [tempPassword, setTempPassword] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [target, setTarget] = useState<User | null>(null);
+  const [method, setMethod] = useState<Method>("email");
+  const [reason, setReason] = useState("");
+  const [done, setDone] = useState<{ user: User; method: Method } | null>(null);
 
   const allUsers = useMemo(() => {
-    const list: { batchId: string; participantId: string; name: string; email: string; batchName: string }[] = [];
-    batches.forEach((b) => {
-      b.participants.forEach((p) => {
-        list.push({ batchId: b.id, participantId: p.id, name: p.name, email: p.email, batchName: b.name });
-      });
-    });
+    const list: User[] = [];
+    batches.forEach((b) => b.participants.forEach((p) => {
+      list.push({ batchId: b.id, participantId: p.id, name: p.name, email: p.email, batchName: b.name });
+    }));
     return list;
   }, [batches]);
 
   const results = search.length > 1
-    ? allUsers.filter((u) =>
-        u.email.toLowerCase().includes(search.toLowerCase()) || u.name.toLowerCase().includes(search.toLowerCase()))
-        .slice(0, 20)
+    ? allUsers.filter((u) => u.email.toLowerCase().includes(search.toLowerCase()) || u.name.toLowerCase().includes(search.toLowerCase())).slice(0, 20)
     : [];
 
-  const handleReset = (user: typeof allUsers[0]) => {
-    const pwd = generatePassword();
-    setTempPassword(pwd);
-    setTarget(user);
-    setCopied(false);
-  };
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(tempPassword);
-    setCopied(true);
-    toast({ title: "Copied", description: "Temporary password copied to clipboard" });
-  };
-
-  const handleConfirm = () => {
-    if (target) {
-      toast({ title: "Password Reset", description: `${target.email} can now sign in with the temporary password.` });
-    }
+  const handleSend = () => {
+    if (!target) return;
+    if (!reason.trim()) { toast({ title: "Reason required", description: "Audit log requires a reason for password reset.", variant: "destructive" }); return; }
+    const msg: Record<Method, string> = {
+      email: `A secure reset link has been emailed to ${target.email}. Expires in 30 minutes.`,
+      sms: `An SMS one-time code was sent to the user's verified phone.`,
+      force: `User flagged for forced password change on next login.`,
+    };
+    toast({ title: "Reset Initiated", description: msg[method] });
+    setDone({ user: target, method });
     setTarget(null);
-    setTempPassword("");
+    setReason("");
+    setMethod("email");
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Reset Password</h1>
-        <p className="text-muted-foreground text-sm mt-1">Search across all participants and reset their password</p>
+        <p className="text-muted-foreground text-sm mt-1">Initiate a secure password reset for any user. We never display or generate passwords.</p>
       </div>
+
+      <Card className="border-warning/30 bg-warning/5">
+        <CardContent className="pt-4 flex gap-2 items-start text-xs">
+          <ShieldAlert className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+          <p className="text-muted-foreground">For security, CloudAdda admins never see or create passwords. Choose a delivery method below — the user receives a one-time link or code and sets their own password.</p>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader><CardTitle className="text-base">Search User</CardTitle></CardHeader>
@@ -81,7 +79,7 @@ export default function ResetPassword() {
                     <p className="text-xs text-muted-foreground">{u.email}</p>
                     <Badge variant="secondary" className="text-[10px] mt-1">{u.batchName}</Badge>
                   </div>
-                  <Button size="sm" className="gap-2" onClick={() => handleReset(u)}>
+                  <Button size="sm" className="gap-2" onClick={() => setTarget(u)}>
                     <Key className="h-3 w-3" /> Reset
                   </Button>
                 </div>
@@ -98,29 +96,69 @@ export default function ResetPassword() {
       <Dialog open={!!target} onOpenChange={() => setTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Temporary Password Generated</DialogTitle>
+            <DialogTitle>Initiate Password Reset</DialogTitle>
+            <DialogDescription>Choose how the user will recover access. Action is logged in the audit trail.</DialogDescription>
           </DialogHeader>
           {target && (
             <div className="space-y-4">
-              <div className="text-sm space-y-1">
+              <div className="text-sm space-y-1 rounded-lg border p-3 bg-muted/30">
                 <p><span className="text-muted-foreground">User:</span> <span className="font-medium">{target.name}</span></p>
                 <p><span className="text-muted-foreground">Email:</span> {target.email}</p>
                 <p><span className="text-muted-foreground">Batch:</span> {target.batchName}</p>
               </div>
-              <div className="rounded-lg border bg-muted p-3 flex items-center justify-between gap-2">
-                <code className="text-base font-mono">{tempPassword}</code>
-                <Button size="sm" variant="outline" onClick={handleCopy} className="gap-1.5">
-                  {copied ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
-                  {copied ? "Copied" : "Copy"}
-                </Button>
+
+              <div className="space-y-2">
+                <Label className="text-xs">Delivery method</Label>
+                <RadioGroup value={method} onValueChange={(v) => setMethod(v as Method)} className="space-y-2">
+                  <label className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/40">
+                    <RadioGroupItem value="email" className="mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> Email reset link</p>
+                      <p className="text-xs text-muted-foreground">Sends a one-time link to {target.email}. Expires in 30 minutes.</p>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/40">
+                    <RadioGroupItem value="sms" className="mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium flex items-center gap-1.5"><Smartphone className="h-3.5 w-3.5" /> SMS one-time code</p>
+                      <p className="text-xs text-muted-foreground">Texts a 6-digit code to the user's verified phone.</p>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/40">
+                    <RadioGroupItem value="force" className="mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium flex items-center gap-1.5"><Key className="h-3.5 w-3.5" /> Force change on next login</p>
+                      <p className="text-xs text-muted-foreground">User must set a new password the next time they sign in.</p>
+                    </div>
+                  </label>
+                </RadioGroup>
               </div>
-              <p className="text-xs text-muted-foreground">Share this securely. The user will be required to change it on next sign-in.</p>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">Reason (required for audit)</Label>
+                <Input placeholder="e.g. Verified identity via support ticket #1234" value={reason} onChange={(e) => setReason(e.target.value)} />
+              </div>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setTarget(null)}>Cancel</Button>
-            <Button onClick={handleConfirm}>Confirm Reset</Button>
+            <Button onClick={handleSend}>Send Reset</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!done} onOpenChange={() => setDone(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-success" /> Reset Initiated</DialogTitle>
+          </DialogHeader>
+          {done && (
+            <div className="space-y-3 text-sm">
+              <p>Reset for <span className="font-medium">{done.user.name}</span> ({done.user.email}) was initiated via <span className="font-medium">{done.method}</span>.</p>
+              <p className="text-xs text-muted-foreground">A backend integration will dispatch the actual link/code when connected. This action has been logged in the audit trail.</p>
+            </div>
+          )}
+          <DialogFooter><Button onClick={() => setDone(null)}>Close</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

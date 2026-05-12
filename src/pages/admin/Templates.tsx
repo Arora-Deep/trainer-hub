@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,15 +8,28 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLabStore, type LabTemplate } from "@/stores/labStore";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Edit, Copy, Archive, Cpu, MemoryStick, HardDrive } from "lucide-react";
+import { Plus, Edit, Copy, Archive, Cpu, MemoryStick, HardDrive, Search } from "lucide-react";
 
 export default function AdminTemplates() {
   const navigate = useNavigate();
   const { templates, addTemplate, updateTemplate, deleteTemplate } = useLabStore();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Partial<LabTemplate>>({});
+  const [search, setSearch] = useState("");
+  const [osFilter, setOsFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+
+  const osList = useMemo(() => Array.from(new Set(templates.map((t) => t.os).filter(Boolean))), [templates]);
+  const categoryList = useMemo(() => Array.from(new Set(templates.map((t) => t.category).filter(Boolean))), [templates]);
+
+  const filtered = useMemo(() => templates.filter((t) =>
+    (osFilter === "all" || t.os === osFilter) &&
+    (categoryFilter === "all" || t.category === categoryFilter) &&
+    (t.name.toLowerCase().includes(search.toLowerCase()) || (t.category || "").toLowerCase().includes(search.toLowerCase()))
+  ), [templates, search, osFilter, categoryFilter]);
 
   const selected = templates.find((t) => t.id === selectedId);
 
@@ -56,7 +69,28 @@ export default function AdminTemplates() {
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search templates..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+            </div>
+            <Select value={osFilter} onValueChange={setOsFilter}>
+              <SelectTrigger className="w-40"><SelectValue placeholder="All OS" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All OS</SelectItem>
+                {osList.map((os) => <SelectItem key={os} value={os}>{os}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-44"><SelectValue placeholder="All categories" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All categories</SelectItem>
+                {categoryList.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground ml-auto">{filtered.length} of {templates.length}</p>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -70,7 +104,7 @@ export default function AdminTemplates() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {templates.map((t) => (
+              {filtered.map((t) => (
                 <TableRow key={t.id} className="group">
                   <TableCell>
                     <button className="text-sm font-medium text-primary hover:underline" onClick={() => openEdit(t)}>{t.name}</button>
