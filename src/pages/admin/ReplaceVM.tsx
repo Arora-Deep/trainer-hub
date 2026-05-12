@@ -24,6 +24,14 @@ export default function ReplaceVM() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [snapshotMode, setSnapshotMode] = useState<"latest" | "golden" | "specific">("latest");
+  const [snapshotId, setSnapshotId] = useState<string>("");
+
+  const availableSnapshots = useMemo(() => {
+    const list: { batchId: string; batchName: string; id: string; name: string }[] = [];
+    batches.forEach((b) => b.vmConfig?.snapshots.forEach((s) => list.push({ batchId: b.id, batchName: b.name, id: s.id, name: s.name })));
+    return list;
+  }, [batches]);
 
   const rows = useMemo(() => {
     const list: { batchId: string; batchName: string; vmId: string; student: string; vmName: string; ip: string; status: string }[] = [];
@@ -98,6 +106,29 @@ export default function ReplaceVM() {
               <ArrowLeftRight className="h-3 w-3" /> Replace {selected.size} selected
             </Button>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Source Snapshot</span>
+            <Select value={snapshotMode} onValueChange={(v) => setSnapshotMode(v as typeof snapshotMode)}>
+              <SelectTrigger className="w-[260px] h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="latest">Most recent snapshot of Admin VM (default)</SelectItem>
+                <SelectItem value="golden">Golden snapshot</SelectItem>
+                <SelectItem value="specific">Pick specific snapshot...</SelectItem>
+              </SelectContent>
+            </Select>
+            {snapshotMode === "specific" && (
+              <Select value={snapshotId} onValueChange={setSnapshotId}>
+                <SelectTrigger className="w-[300px] h-9"><SelectValue placeholder="Choose snapshot..." /></SelectTrigger>
+                <SelectContent>{availableSnapshots.map((s) => <SelectItem key={s.id} value={s.id}>{s.batchName} · {s.name}</SelectItem>)}</SelectContent>
+              </Select>
+            )}
+            <p className="text-[11px] text-muted-foreground">New VM will be a fresh clone from this image. Old VM will be destroyed.</p>
+          </div>
         </CardContent>
       </Card>
 

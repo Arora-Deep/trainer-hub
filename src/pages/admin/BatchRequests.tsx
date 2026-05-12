@@ -25,15 +25,24 @@ interface Request {
   healthScore: number;
   currentUsage: { cpu: number; cpuQuota: number; ram: number; ramQuota: number };
   impact: string;
+  // submitted form data
+  vmSpec: { vcpu: number; ramGB: number; diskGB: number; gpu: string; os: string };
+  courses: string[];
+  studentsCount: number;
+  durationDays: number;
+  startDate: string;
+  region: string;
+  estimatedCost: number;
+  attachments: string[];
 }
 
 const requests: Request[] = [
-  { id: "R-001", customer: "DevOps Academy", type: "Quota Increase", batch: "K8s Batch #14", requestedBy: "Rajesh Kumar", status: "pending", details: "Requesting CPU quota increase from 500 to 750 for upcoming AWS certification batch of 200 students", date: "2026-04-12", healthScore: 92, currentUsage: { cpu: 380, cpuQuota: 500, ram: 1500, ramQuota: 2048 }, impact: "Approving will use 51% of new CPU quota" },
-  { id: "R-002", customer: "Corporate L&D Co", type: "Seat Increase", batch: "Linux Fund. #8", requestedBy: "Mike Chen", status: "pending", details: "Add 10 more seats — new hires joining mid-batch", date: "2026-04-11", healthScore: 88, currentUsage: { cpu: 520, cpuQuota: 800, ram: 2900, ramQuota: 4096 }, impact: "10 extra VMs will add ~20 vCPU, 40GB RAM" },
-  { id: "R-003", customer: "DataScience Bootcamp", type: "VM Provisioning", batch: "ML Cohort #5", requestedBy: "Priya Sharma", status: "pending", details: "Customer wants CloudAdda to provision GPU VMs — they don't have infra expertise", date: "2026-04-10", healthScore: 78, currentUsage: { cpu: 140, cpuQuota: 200, ram: 800, ramQuota: 1024 }, impact: "25 GPU VMs will use 100% GPU quota in ap-south-1" },
-  { id: "R-004", customer: "DevOps Academy", type: "Batch Extension", batch: "AWS Batch #6", requestedBy: "Rajesh Kumar", status: "pending", details: "Need 1 extra week for certification prep — 35 students need more lab time", date: "2026-04-13", healthScore: 92, currentUsage: { cpu: 380, cpuQuota: 500, ram: 1500, ramQuota: 2048 }, impact: "7 additional days × 35 VMs = ₹12,250 estimated cost" },
-  { id: "R-005", customer: "SkillBridge Labs", type: "Lab Reset", batch: "Terraform Batch #2", requestedBy: "Amit Patel", status: "approved", details: "Student broke the Terraform environment, needs fresh reset from golden snapshot", date: "2026-04-09", healthScore: 65, currentUsage: { cpu: 200, cpuQuota: 300, ram: 1000, ramQuota: 1536 }, impact: "Single VM reset — minimal impact" },
-  { id: "R-006", customer: "SkillBridge Labs", type: "Extra VM", batch: "Terraform Batch #2", requestedBy: "Amit Patel", status: "rejected", details: "Requested GPU VM for ML demo — not part of batch scope", date: "2026-04-08", healthScore: 65, currentUsage: { cpu: 200, cpuQuota: 300, ram: 1000, ramQuota: 1536 }, impact: "Out of scope — GPU not included in plan" },
+  { id: "R-001", customer: "DevOps Academy", type: "Quota Increase", batch: "K8s Batch #14", requestedBy: "Rajesh Kumar", status: "pending", details: "Requesting CPU quota increase from 500 to 750 for upcoming AWS certification batch of 200 students", date: "2026-04-12", healthScore: 92, currentUsage: { cpu: 380, cpuQuota: 500, ram: 1500, ramQuota: 2048 }, impact: "Approving will use 51% of new CPU quota", vmSpec: { vcpu: 4, ramGB: 8, diskGB: 60, gpu: "None", os: "Ubuntu 22.04" }, courses: ["Kubernetes Fundamentals", "Helm 101"], studentsCount: 200, durationDays: 21, startDate: "2026-05-01", region: "ap-south-1", estimatedCost: 84000, attachments: ["batch-plan.pdf"] },
+  { id: "R-002", customer: "Corporate L&D Co", type: "Seat Increase", batch: "Linux Fund. #8", requestedBy: "Mike Chen", status: "pending", details: "Add 10 more seats — new hires joining mid-batch", date: "2026-04-11", healthScore: 88, currentUsage: { cpu: 520, cpuQuota: 800, ram: 2900, ramQuota: 4096 }, impact: "10 extra VMs will add ~20 vCPU, 40GB RAM", vmSpec: { vcpu: 2, ramGB: 4, diskGB: 30, gpu: "None", os: "CentOS 9" }, courses: ["Linux Fundamentals"], studentsCount: 10, durationDays: 14, startDate: "2026-04-15", region: "us-east-1", estimatedCost: 4200, attachments: [] },
+  { id: "R-003", customer: "DataScience Bootcamp", type: "VM Provisioning", batch: "ML Cohort #5", requestedBy: "Priya Sharma", status: "pending", details: "Customer wants CloudAdda to provision GPU VMs — they don't have infra expertise", date: "2026-04-10", healthScore: 78, currentUsage: { cpu: 140, cpuQuota: 200, ram: 800, ramQuota: 1024 }, impact: "25 GPU VMs will use 100% GPU quota in ap-south-1", vmSpec: { vcpu: 8, ramGB: 32, diskGB: 200, gpu: "1× T4", os: "Ubuntu 22.04 + CUDA 12" }, courses: ["ML with PyTorch", "Computer Vision"], studentsCount: 25, durationDays: 30, startDate: "2026-05-10", region: "ap-south-1", estimatedCost: 168000, attachments: ["curriculum.pdf", "compliance.pdf"] },
+  { id: "R-004", customer: "DevOps Academy", type: "Batch Extension", batch: "AWS Batch #6", requestedBy: "Rajesh Kumar", status: "pending", details: "Need 1 extra week for certification prep — 35 students need more lab time", date: "2026-04-13", healthScore: 92, currentUsage: { cpu: 380, cpuQuota: 500, ram: 1500, ramQuota: 2048 }, impact: "7 additional days × 35 VMs = ₹12,250 estimated cost", vmSpec: { vcpu: 2, ramGB: 4, diskGB: 30, gpu: "None", os: "Amazon Linux 2023" }, courses: ["AWS Solutions Architect"], studentsCount: 35, durationDays: 7, startDate: "2026-04-20", region: "us-east-1", estimatedCost: 12250, attachments: [] },
+  { id: "R-005", customer: "SkillBridge Labs", type: "Lab Reset", batch: "Terraform Batch #2", requestedBy: "Amit Patel", status: "approved", details: "Student broke the Terraform environment, needs fresh reset from golden snapshot", date: "2026-04-09", healthScore: 65, currentUsage: { cpu: 200, cpuQuota: 300, ram: 1000, ramQuota: 1536 }, impact: "Single VM reset — minimal impact", vmSpec: { vcpu: 2, ramGB: 4, diskGB: 30, gpu: "None", os: "Ubuntu 22.04" }, courses: ["Terraform on AWS"], studentsCount: 1, durationDays: 0, startDate: "2026-04-09", region: "ap-south-1", estimatedCost: 0, attachments: [] },
+  { id: "R-006", customer: "SkillBridge Labs", type: "Extra VM", batch: "Terraform Batch #2", requestedBy: "Amit Patel", status: "rejected", details: "Requested GPU VM for ML demo — not part of batch scope", date: "2026-04-08", healthScore: 65, currentUsage: { cpu: 200, cpuQuota: 300, ram: 1000, ramQuota: 1536 }, impact: "Out of scope — GPU not included in plan", vmSpec: { vcpu: 8, ramGB: 32, diskGB: 200, gpu: "1× T4", os: "Ubuntu 22.04" }, courses: ["ML Demo"], studentsCount: 1, durationDays: 3, startDate: "2026-04-12", region: "ap-south-1", estimatedCost: 4200, attachments: [] },
 ];
 
 const statusConfig: Record<string, { bg: string; text: string; icon: typeof CheckCircle2 }> = {
@@ -206,6 +215,47 @@ export default function BatchRequests() {
                   <p className="text-xs font-semibold text-muted-foreground mb-1">Details</p>
                   <p className="text-sm">{selected.details}</p>
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg border space-y-1">
+                    <p className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider flex items-center gap-1.5"><Server className="h-3 w-3" /> Requested VM Spec</p>
+                    <div className="text-xs grid grid-cols-2 gap-x-3 gap-y-0.5 mt-1">
+                      <span className="text-muted-foreground">vCPU</span><span className="font-medium">{selected.vmSpec.vcpu}</span>
+                      <span className="text-muted-foreground">RAM</span><span className="font-medium">{selected.vmSpec.ramGB} GB</span>
+                      <span className="text-muted-foreground">Disk</span><span className="font-medium">{selected.vmSpec.diskGB} GB</span>
+                      <span className="text-muted-foreground">GPU</span><span className="font-medium">{selected.vmSpec.gpu}</span>
+                      <span className="text-muted-foreground">OS</span><span className="font-medium">{selected.vmSpec.os}</span>
+                    </div>
+                  </div>
+                  <div className="p-3 rounded-lg border space-y-1">
+                    <p className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider flex items-center gap-1.5"><ClipboardList className="h-3 w-3" /> Batch Plan</p>
+                    <div className="text-xs grid grid-cols-2 gap-x-3 gap-y-0.5 mt-1">
+                      <span className="text-muted-foreground">Students</span><span className="font-medium">{selected.studentsCount}</span>
+                      <span className="text-muted-foreground">Duration</span><span className="font-medium">{selected.durationDays} days</span>
+                      <span className="text-muted-foreground">Start Date</span><span className="font-medium">{selected.startDate}</span>
+                      <span className="text-muted-foreground">Region</span><span className="font-medium">{selected.region}</span>
+                      <span className="text-muted-foreground">Est. Cost</span><span className="font-medium">₹{selected.estimatedCost.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg border">
+                  <p className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider mb-2">Courses Requested</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selected.courses.map((c) => <Badge key={c} variant="secondary" className="text-xs">{c}</Badge>)}
+                  </div>
+                </div>
+
+                {selected.attachments.length > 0 && (
+                  <div className="p-3 rounded-lg border">
+                    <p className="text-[10px] font-semibold uppercase text-muted-foreground tracking-wider mb-2">Attachments</p>
+                    <div className="space-y-1">
+                      {selected.attachments.map((a) => (
+                        <div key={a} className="text-xs flex items-center gap-2"><BarChart3 className="h-3 w-3 text-muted-foreground" /> {a}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <Separator />
 

@@ -14,6 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   Save, CalendarDays, Pause, Play, CheckCircle2, Users, Monitor,
   AlertTriangle, RotateCcw, Camera, Star, Trash2, RefreshCw, ArrowLeft,
+  CalendarPlus, Clock,
 } from "lucide-react";
 
 export default function ModifyBatch() {
@@ -54,6 +55,11 @@ export default function ModifyBatch() {
   const [confirmAction, setConfirmAction] = useState<null | "delete" | "complete" | "pause" | "resume" | "resetAll" | "recloneAll">(null);
   const [snapName, setSnapName] = useState("");
   const [snapOpen, setSnapOpen] = useState(false);
+  const [extendOpen, setExtendOpen] = useState(false);
+  const [extendDays, setExtendDays] = useState(7);
+  const [prepOpen, setPrepOpen] = useState(false);
+  const [prepDays, setPrepDays] = useState(2);
+  const [freeDays, setFreeDays] = useState(0);
 
   const snapshots = batch?.vmConfig?.snapshots || [];
   const goldenId = batch?.vmConfig?.goldenSnapshotId;
@@ -214,6 +220,8 @@ export default function ModifyBatch() {
               <CardContent className="space-y-2">
                 <Button className="w-full justify-start gap-2" onClick={handleSave}><Save className="h-4 w-4" /> Save Changes</Button>
                 <Button variant="outline" className="w-full justify-start gap-2" onClick={() => setSnapOpen(true)}><Camera className="h-4 w-4" /> Take Snapshot</Button>
+                <Button variant="outline" className="w-full justify-start gap-2" onClick={() => setExtendOpen(true)}><CalendarPlus className="h-4 w-4" /> Extend Batch</Button>
+                <Button variant="outline" className="w-full justify-start gap-2" onClick={() => setPrepOpen(true)}><Clock className="h-4 w-4" /> Trainer Prep / Free Days</Button>
                 {batch.status === "live" && (
                   <Button variant="outline" className="w-full justify-start gap-2" onClick={() => setConfirmAction("pause")}><Pause className="h-4 w-4" /> Pause Batch</Button>
                 )}
@@ -263,6 +271,53 @@ export default function ModifyBatch() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setSnapOpen(false)}>Cancel</Button>
             <Button disabled={!snapName.trim()} onClick={handleSnapshot}>Create</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={extendOpen} onOpenChange={setExtendOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Extend Batch</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Current end date: {batch?.endDate?.slice(0, 10)}</p>
+            <Label className="text-xs">Extend by (days)</Label>
+            <Input type="number" min={1} value={extendDays} onChange={(e) => setExtendDays(parseInt(e.target.value) || 0)} />
+            <p className="text-xs text-muted-foreground">New end date: {batch && new Date(new Date(batch.endDate).getTime() + extendDays * 86400000).toISOString().slice(0, 10)}</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExtendOpen(false)}>Cancel</Button>
+            <Button onClick={() => {
+              if (batch) {
+                const newEnd = new Date(new Date(batch.endDate).getTime() + extendDays * 86400000).toISOString();
+                updateBatch(batch.id, { endDate: newEnd });
+                toast({ title: "Batch Extended", description: `+${extendDays} days` });
+              }
+              setExtendOpen(false);
+            }}>Extend</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={prepOpen} onOpenChange={setPrepOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Trainer Prep & Free Access</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Prep Days (free trainer access BEFORE batch starts)</Label>
+              <Input type="number" min={0} value={prepDays} onChange={(e) => setPrepDays(parseInt(e.target.value) || 0)} />
+              <p className="text-[11px] text-muted-foreground">Trainer can boot the master VM and prepare content for free during this window.</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Extra Free Access Days (post-batch)</Label>
+              <Input type="number" min={0} value={freeDays} onChange={(e) => setFreeDays(parseInt(e.target.value) || 0)} />
+              <p className="text-[11px] text-muted-foreground">Adds complimentary days at the end without extra billing.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPrepOpen(false)}>Cancel</Button>
+            <Button onClick={() => { toast({ title: "Updated", description: `Prep: ${prepDays}d, Free: ${freeDays}d` }); setPrepOpen(false); }}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
