@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,9 +8,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLabStore, type LabTemplate } from "@/stores/labStore";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Edit, Copy, Archive, Cpu, MemoryStick, HardDrive } from "lucide-react";
+import { Plus, Edit, Copy, Archive, Cpu, MemoryStick, HardDrive, Search } from "lucide-react";
 
 export default function AdminTemplates() {
   const navigate = useNavigate();
