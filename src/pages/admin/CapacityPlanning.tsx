@@ -34,12 +34,11 @@ export default function CapacityPlanning() {
   const pendingProvisions = useMemo(() => {
     const list: { batchId: string; batchName: string; status: string; participants: number; vcpu: number; ram: number; storage: number; suggestedNode: string }[] = [];
     batches.forEach((b) => {
-      const tpl = b.vmConfig?.vmTemplates?.[0];
       const vmsNeeded = b.participants.length;
       if (vmsNeeded === 0) return;
-      const cpu = tpl?.vcpus ?? 2;
-      const ram = tpl?.memory ?? 4;
-      const disk = tpl?.storage ?? 30;
+      const cpu = 2;
+      const ram = 4;
+      const disk = 30;
       list.push({
         batchId: b.id,
         batchName: b.name,
