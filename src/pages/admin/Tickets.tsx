@@ -346,6 +346,67 @@ export default function AdminTickets() {
           )}
         </SheetContent>
       </Sheet>
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create Ticket</DialogTitle>
+            <DialogDescription>Raise a ticket on behalf of a customer</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Customer</Label>
+              <Select value={newTicket.tenant} onValueChange={(v) => setNewTicket((t) => ({ ...t, tenant: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select customer..." /></SelectTrigger>
+                <SelectContent>{customers.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5"><Label className="text-xs">Subject</Label><Input value={newTicket.subject} onChange={(e) => setNewTicket((t) => ({ ...t, subject: e.target.value }))} placeholder="Short summary" /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5"><Label className="text-xs">Category</Label>
+                <Select value={newTicket.category} onValueChange={(v) => setNewTicket((t) => ({ ...t, category: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="VM Issue">VM Issue</SelectItem>
+                    <SelectItem value="Provisioning">Provisioning</SelectItem>
+                    <SelectItem value="Billing">Billing</SelectItem>
+                    <SelectItem value="Account">Account</SelectItem>
+                    <SelectItem value="Feature Request">Feature Request</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5"><Label className="text-xs">Priority</Label>
+                <Select value={newTicket.priority} onValueChange={(v) => setNewTicket((t) => ({ ...t, priority: v as any }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="critical">Critical</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1.5"><Label className="text-xs">Assignee</Label>
+              <Select value={newTicket.assignee} onValueChange={(v) => setNewTicket((t) => ({ ...t, assignee: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Support">Support</SelectItem>
+                  <SelectItem value="Ops Team">Ops Team</SelectItem>
+                  <SelectItem value="Ravi M.">Ravi M.</SelectItem>
+                  <SelectItem value="Finance Team">Finance Team</SelectItem>
+                  <SelectItem value="Product">Product</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5"><Label className="text-xs">First message</Label><Textarea rows={3} value={newTicket.message} onChange={(e) => setNewTicket((t) => ({ ...t, message: e.target.value }))} placeholder="Describe the issue..." /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreate}>Create Ticket</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
