@@ -55,6 +55,11 @@ export default function ModifyBatch() {
   const [confirmAction, setConfirmAction] = useState<null | "delete" | "complete" | "pause" | "resume" | "resetAll" | "recloneAll">(null);
   const [snapName, setSnapName] = useState("");
   const [snapOpen, setSnapOpen] = useState(false);
+  const [extendOpen, setExtendOpen] = useState(false);
+  const [extendDays, setExtendDays] = useState(7);
+  const [prepOpen, setPrepOpen] = useState(false);
+  const [prepDays, setPrepDays] = useState(2);
+  const [freeDays, setFreeDays] = useState(0);
 
   const snapshots = batch?.vmConfig?.snapshots || [];
   const goldenId = batch?.vmConfig?.goldenSnapshotId;
