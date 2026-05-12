@@ -24,6 +24,14 @@ export default function ReplaceVM() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [snapshotMode, setSnapshotMode] = useState<"latest" | "golden" | "specific">("latest");
+  const [snapshotId, setSnapshotId] = useState<string>("");
+
+  const availableSnapshots = useMemo(() => {
+    const list: { batchId: string; batchName: string; id: string; name: string }[] = [];
+    batches.forEach((b) => b.vmConfig?.snapshots.forEach((s) => list.push({ batchId: b.id, batchName: b.name, id: s.id, name: s.name })));
+    return list;
+  }, [batches]);
 
   const rows = useMemo(() => {
     const list: { batchId: string; batchName: string; vmId: string; student: string; vmName: string; ip: string; status: string }[] = [];
