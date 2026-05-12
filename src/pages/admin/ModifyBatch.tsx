@@ -274,6 +274,53 @@ export default function ModifyBatch() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={extendOpen} onOpenChange={setExtendOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Extend Batch</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Current end date: {batch?.endDate?.slice(0, 10)}</p>
+            <Label className="text-xs">Extend by (days)</Label>
+            <Input type="number" min={1} value={extendDays} onChange={(e) => setExtendDays(parseInt(e.target.value) || 0)} />
+            <p className="text-xs text-muted-foreground">New end date: {batch && new Date(new Date(batch.endDate).getTime() + extendDays * 86400000).toISOString().slice(0, 10)}</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExtendOpen(false)}>Cancel</Button>
+            <Button onClick={() => {
+              if (batch) {
+                const newEnd = new Date(new Date(batch.endDate).getTime() + extendDays * 86400000).toISOString();
+                updateBatch(batch.id, { endDate: newEnd });
+                toast({ title: "Batch Extended", description: `+${extendDays} days` });
+              }
+              setExtendOpen(false);
+            }}>Extend</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={prepOpen} onOpenChange={setPrepOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Trainer Prep & Free Access</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Prep Days (free trainer access BEFORE batch starts)</Label>
+              <Input type="number" min={0} value={prepDays} onChange={(e) => setPrepDays(parseInt(e.target.value) || 0)} />
+              <p className="text-[11px] text-muted-foreground">Trainer can boot the master VM and prepare content for free during this window.</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Extra Free Access Days (post-batch)</Label>
+              <Input type="number" min={0} value={freeDays} onChange={(e) => setFreeDays(parseInt(e.target.value) || 0)} />
+              <p className="text-[11px] text-muted-foreground">Adds complimentary days at the end without extra billing.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPrepOpen(false)}>Cancel</Button>
+            <Button onClick={() => { toast({ title: "Updated", description: `Prep: ${prepDays}d, Free: ${freeDays}d` }); setPrepOpen(false); }}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
