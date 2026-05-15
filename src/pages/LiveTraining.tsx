@@ -423,17 +423,53 @@ export default function LiveTraining() {
       </div>
 
       {/* Floating Conversations */}
-      <button
-        onClick={() => setChatOpen(true)}
-        className="fixed bottom-6 right-6 z-40 h-12 px-5 inline-flex items-center gap-2.5 rounded-full bg-foreground text-background text-sm font-medium shadow-lg hover:opacity-90 transition"
-      >
-        <MessageSquare className="h-4 w-4" /> Conversations
-        {messages.filter(m => m.kind === "q").length > 0 && (
-          <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold">
-            {messages.filter(m => m.kind === "q").length}
-          </span>
-        )}
-      </button>
+      {mainTab !== "split" && (
+        <button
+          onClick={() => setChatOpen(true)}
+          className="fixed bottom-6 right-6 z-40 h-12 px-5 inline-flex items-center gap-2.5 rounded-full bg-foreground text-background text-sm font-medium shadow-lg hover:opacity-90 transition"
+        >
+          <MessageSquare className="h-4 w-4" /> Conversations
+          {messages.filter(m => m.kind === "q").length > 0 && (
+            <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold">
+              {messages.filter(m => m.kind === "q").length}
+            </span>
+          )}
+        </button>
+      )}
+
+      {/* SPLIT VIEW (fullscreen overlay) */}
+      {mainTab === "split" && (
+        <SplitView
+          batchName={batch.name}
+          sessionTimer={sessionTimer}
+          sessionActive={sessionActive}
+          mainTab={mainTab}
+          setMainTab={setMainTab}
+          gridLength={grid.length}
+          splitSide={splitSide}
+          setSplitSide={setSplitSide}
+          students={filtered}
+          search={search}
+          setSearch={setSearch}
+          onSelectStudent={(id) => setSelectedStudentId(id)}
+          messages={messages}
+          chatInput={chatInput}
+          setChatInput={setChatInput}
+          onSendChat={sendChat}
+          lessons={lessons}
+          activeLessonIdx={activeLessonIdx}
+          setActiveLessonIdx={setActiveLessonIdx}
+          courseName={linkedCourse?.name || "Course"}
+          trainerVmRunning={trainerVmRunning}
+          setTrainerVmRunning={setTrainerVmRunning}
+          micOn={micOn} setMicOn={setMicOn}
+          camOn={camOn} setCamOn={setCamOn}
+          shareOn={shareOn} setShareOn={setShareOn}
+          onOpenConsole={() => setConsoleOpen(true)}
+          onSnapshot={() => { createSnapshot(batch.id, `Session ${formatTimer(sessionTimer)}`, "Live snapshot"); toast({ title: "Snapshot created" }); }}
+          onEnd={() => setEndOpen(true)}
+        />
+      )}
 
       {/* Student Drawer */}
       <Sheet open={!!selectedStudent} onOpenChange={(o) => !o && setSelectedStudentId(null)}>
