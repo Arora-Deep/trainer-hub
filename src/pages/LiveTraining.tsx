@@ -1452,3 +1452,286 @@ function VMTabsPanel({ vms }: { vms: StudentVM[] }) {
     </div>
   );
 }
+
+/* ---------------- Split View ---------------- */
+
+type Msg = { id: string; from: string; text: string; t: string; kind: "msg" | "q" | "sys" };
+
+function SplitView(props: {
+  batchName: string;
+  sessionTimer: number;
+  sessionActive: boolean;
+  mainTab: MainTab;
+  setMainTab: (t: MainTab) => void;
+  gridLength: number;
+  splitSide: SplitSide;
+  setSplitSide: (s: SplitSide) => void;
+  students: StudentRow[];
+  search: string;
+  setSearch: (v: string) => void;
+  onSelectStudent: (id: string) => void;
+  messages: Msg[];
+  chatInput: string;
+  setChatInput: (v: string) => void;
+  onSendChat: () => void;
+  lessons: { id: string; title: string; module: string; duration?: string }[];
+  activeLessonIdx: number;
+  setActiveLessonIdx: (i: number) => void;
+  courseName: string;
+  trainerVmRunning: boolean;
+  setTrainerVmRunning: (v: boolean) => void;
+  micOn: boolean; setMicOn: (v: boolean) => void;
+  camOn: boolean; setCamOn: (v: boolean) => void;
+  shareOn: boolean; setShareOn: (v: boolean) => void;
+  onOpenConsole: () => void;
+  onSnapshot: () => void;
+  onEnd: () => void;
+}) {
+  const {
+    batchName, sessionTimer, sessionActive, setMainTab, gridLength,
+    splitSide, setSplitSide, students, search, setSearch, onSelectStudent,
+    messages, chatInput, setChatInput, onSendChat,
+    lessons, activeLessonIdx, setActiveLessonIdx, courseName,
+    trainerVmRunning, setTrainerVmRunning, micOn, setMicOn, camOn, setCamOn,
+    shareOn, setShareOn, onOpenConsole, onSnapshot, onEnd,
+  } = props;
+
+  const sideOpen = splitSide !== null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+      {/* Slim top bar */}
+      <header className="h-[44px] shrink-0 border-b border-border bg-card flex items-center justify-between px-3 gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          {sessionActive && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/10 px-2 py-0.5 ring-1 ring-destructive/30 shrink-0">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inset-0 animate-ping rounded-full bg-destructive opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-destructive" />
+              </span>
+              <span className="text-[10px] font-semibold tracking-[0.12em] text-destructive">LIVE</span>
+            </span>
+          )}
+          <span className="text-[13px] font-semibold truncate">{batchName}</span>
+          <span className="text-[11px] text-muted-foreground font-mono tabular-nums hidden sm:inline">{formatTimer(sessionTimer)}</span>
+        </div>
+
+        <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
+          <ViewTab active onClick={() => {}} icon={<LayoutPanelLeft className="h-3.5 w-3.5" />} label="Split" />
+          <ViewTab active={false} onClick={() => setMainTab("students")} icon={<Users className="h-3.5 w-3.5" />} label="Students" badge={gridLength} />
+          <ViewTab active={false} onClick={() => setMainTab("trainer")} icon={<Monitor className="h-3.5 w-3.5" />} label="Trainer" />
+          <ViewTab active={false} onClick={() => setMainTab("resources")} icon={<BookOpen className="h-3.5 w-3.5" />} label="Resources" />
+          <ViewTab active={false} onClick={() => setMainTab("analytics")} icon={<BarChart3 className="h-3.5 w-3.5" />} label="Analytics" />
+        </div>
+
+        <div className="flex items-center gap-1">
+          <button onClick={() => setMicOn(!micOn)} className={cn("h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted", micOn && "text-primary")} title="Mic"><Mic className="h-3.5 w-3.5" /></button>
+          <button onClick={() => setCamOn(!camOn)} className={cn("h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted", camOn && "text-primary")} title="Cam"><Video className="h-3.5 w-3.5" /></button>
+          <button onClick={() => setShareOn(!shareOn)} className={cn("h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted", shareOn && "text-primary")} title="Share"><ScreenShare className="h-3.5 w-3.5" /></button>
+          <div className="w-px h-5 bg-border mx-1" />
+          <button onClick={onSnapshot} className="h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted" title="Snapshot"><Camera className="h-3.5 w-3.5" /></button>
+          <button onClick={() => setMainTab("students")} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md hover:bg-muted text-[11px]" title="Exit split"><Minimize2 className="h-3.5 w-3.5" /> Exit</button>
+          <button onClick={onEnd} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-destructive hover:bg-destructive/10 text-[11px]"><Power className="h-3.5 w-3.5" /> End</button>
+        </div>
+      </header>
+
+      {/* Body: console | LMS | side panel */}
+      <div className="flex-1 flex min-h-0">
+        {/* CONSOLE */}
+        <section className="flex-1 min-w-0 flex flex-col border-r border-border bg-zinc-950">
+          <div className="h-9 shrink-0 px-3 flex items-center justify-between border-b border-zinc-800 bg-zinc-900/60">
+            <div className="flex items-center gap-2 min-w-0">
+              <Monitor className="h-3.5 w-3.5 text-zinc-400" />
+              <span className="text-[12px] font-medium text-zinc-200 truncate">trainer-master-vm</span>
+              <span className="text-[10px] text-zinc-500 font-mono">10.0.4.21</span>
+              {trainerVmRunning && (
+                <span className="inline-flex items-center gap-1 ml-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                  <span className="text-[9px] text-zinc-400 tracking-wider">RUNNING</span>
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              {trainerVmRunning ? (
+                <button onClick={() => setTrainerVmRunning(false)} className="h-6 px-2 inline-flex items-center gap-1 rounded text-[10px] text-zinc-300 hover:bg-zinc-800"><Square className="h-3 w-3" /> Stop</button>
+              ) : (
+                <button onClick={() => setTrainerVmRunning(true)} className="h-6 px-2 inline-flex items-center gap-1 rounded text-[10px] text-zinc-300 hover:bg-zinc-800"><Play className="h-3 w-3" /> Start</button>
+              )}
+              <button className="h-6 w-6 inline-flex items-center justify-center rounded text-zinc-300 hover:bg-zinc-800" title="Restart"><RotateCcw className="h-3 w-3" /></button>
+              <button onClick={onOpenConsole} className="h-6 w-6 inline-flex items-center justify-center rounded text-zinc-300 hover:bg-zinc-800" title="Expand"><Maximize2 className="h-3 w-3" /></button>
+            </div>
+          </div>
+          <div className="flex-1 p-4 font-mono text-[12px] leading-relaxed text-emerald-400 overflow-auto">
+            {trainerVmRunning ? (
+              <>
+                <div>$ kubectl get pods -n training</div>
+                <div className="text-zinc-500">NAME                READY   STATUS    AGE</div>
+                <div>vpc-router-7d4f      1/1     Running   2h</div>
+                <div>peering-gw-6a9e      1/1     Running   2h</div>
+                <div>nat-instance-2f      1/1     Running   2h</div>
+                <div className="mt-2">$ terraform apply -auto-approve</div>
+                <div className="text-zinc-500">Plan: 4 to add, 0 to change, 0 to destroy.</div>
+                <div className="text-emerald-400">Apply complete! Resources: 4 added.</div>
+                <div className="mt-2 inline-flex items-center">$ <span className="ml-1 inline-block h-3 w-2 bg-emerald-400 animate-pulse" /></div>
+              </>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-zinc-500 gap-2">
+                <Power className="h-8 w-8" />
+                <span className="text-xs">VM stopped</span>
+                <button onClick={() => setTrainerVmRunning(true)} className="mt-2 h-7 px-3 rounded-md bg-emerald-500/20 text-emerald-300 text-[11px] hover:bg-emerald-500/30">Start VM</button>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* LMS */}
+        <section className="flex-1 min-w-0 flex flex-col bg-card">
+          <div className="h-9 shrink-0 px-3 flex items-center justify-between border-b border-border">
+            <div className="flex items-center gap-2 min-w-0">
+              <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-[12px] font-medium truncate">{courseName}</span>
+            </div>
+            <span className="text-[10px] text-muted-foreground">{lessons.length} lessons</span>
+          </div>
+          <div className="px-4 py-3 border-b border-border bg-muted/20">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Now playing</p>
+            <p className="text-sm font-medium mt-0.5 truncate">{lessons[activeLessonIdx]?.title}</p>
+            <div className="mt-2 h-1 rounded-full bg-muted overflow-hidden">
+              <div className="h-full bg-primary" style={{ width: "40%" }} />
+            </div>
+          </div>
+          <ScrollArea className="flex-1">
+            <ul className="p-2">
+              {lessons.map((l, idx) => {
+                const done = idx < activeLessonIdx;
+                const active = idx === activeLessonIdx;
+                return (
+                  <li key={l.id}>
+                    <button
+                      onClick={() => setActiveLessonIdx(idx)}
+                      className={cn(
+                        "w-full flex items-center gap-2.5 px-3 py-2 text-left rounded-lg transition-colors",
+                        active ? "bg-primary/10" : "hover:bg-muted/60"
+                      )}
+                    >
+                      {done ? <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" /> :
+                        active ? <Play className="h-3.5 w-3.5 text-primary shrink-0" /> :
+                        <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+                      <span className="flex-1 min-w-0">
+                        <span className={cn("block text-[12px] truncate", active && "font-medium")}>{l.title}</span>
+                        <span className="block text-[10px] text-muted-foreground truncate">{l.module}</span>
+                      </span>
+                      {l.duration && <span className="text-[10px] text-muted-foreground">{l.duration}</span>}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </ScrollArea>
+        </section>
+
+        {/* SIDE PANEL: students / chat */}
+        <aside className={cn("shrink-0 border-l border-border bg-card flex flex-col transition-all duration-200", sideOpen ? "w-[320px]" : "w-[44px]")}>
+          {/* tab switcher */}
+          <div className="h-9 shrink-0 border-b border-border flex items-center">
+            <SidePanelTab
+              active={splitSide === "students"}
+              icon={<Users className="h-3.5 w-3.5" />}
+              label="Students"
+              badge={gridLength}
+              collapsed={!sideOpen}
+              onClick={() => setSplitSide(splitSide === "students" ? null : "students")}
+            />
+            <SidePanelTab
+              active={splitSide === "chat"}
+              icon={<MessageSquare className="h-3.5 w-3.5" />}
+              label="Live chat"
+              badge={messages.filter(m => m.kind === "q").length || undefined}
+              collapsed={!sideOpen}
+              onClick={() => setSplitSide(splitSide === "chat" ? null : "chat")}
+            />
+            {sideOpen && (
+              <button onClick={() => setSplitSide(null)} className="ml-auto mr-1 h-6 w-6 inline-flex items-center justify-center rounded text-muted-foreground hover:bg-muted" title="Collapse">
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
+          {sideOpen && splitSide === "students" && (
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="p-2.5 border-b border-border">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                  <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search students" className="h-8 pl-7 text-[12px]" />
+                </div>
+              </div>
+              <ScrollArea className="flex-1">
+                <ul className="p-1.5">
+                  {students.map(s => {
+                    const accent = stateAccent[s.state];
+                    return (
+                      <li key={s.id}>
+                        <button
+                          onClick={() => onSelectStudent(s.id)}
+                          className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-left hover:bg-muted/60 transition-colors"
+                        >
+                          <div className={cn("relative h-7 w-7 rounded-full ring-2 shrink-0", accent.ring)}>
+                            <Avatar className="h-7 w-7">
+                              <AvatarFallback className="bg-muted text-[10px] font-medium">{s.initials}</AvatarFallback>
+                            </Avatar>
+                            <span className={cn("absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-card", accent.dot)} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[12px] font-medium truncate">{s.name}</p>
+                            <p className="text-[10px] text-muted-foreground font-mono truncate">{s.vmName}</p>
+                          </div>
+                          {s.state === "raised" && <Hand className="h-3 w-3 text-warning animate-pulse shrink-0" />}
+                          <Monitor className="h-3 w-3 text-muted-foreground shrink-0" />
+                        </button>
+                      </li>
+                    );
+                  })}
+                  {students.length === 0 && (
+                    <div className="text-center py-8 text-[11px] text-muted-foreground">No students match.</div>
+                  )}
+                </ul>
+              </ScrollArea>
+            </div>
+          )}
+
+          {sideOpen && splitSide === "chat" && (
+            <div className="flex-1 flex flex-col min-h-0">
+              <ScrollArea className="flex-1 px-3">
+                <div className="space-y-2.5 py-3">
+                  {messages.map(m => <ChatBubble key={m.id} {...m} />)}
+                </div>
+              </ScrollArea>
+              <ChatInput value={chatInput} onChange={setChatInput} onSend={onSendChat} />
+            </div>
+          )}
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function SidePanelTab({ active, icon, label, badge, collapsed, onClick }: {
+  active: boolean; icon: React.ReactNode; label: string; badge?: number; collapsed: boolean; onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "h-full px-3 inline-flex items-center gap-1.5 text-[11px] font-medium border-b-2 transition-colors",
+        active ? "border-primary text-foreground bg-muted/40" : "border-transparent text-muted-foreground hover:text-foreground"
+      )}
+      title={label}
+    >
+      {icon}
+      {!collapsed && <span>{label}</span>}
+      {!collapsed && badge !== undefined && (
+        <span className="ml-0.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[9px] font-semibold">{badge}</span>
+      )}
+    </button>
+  );
+}
