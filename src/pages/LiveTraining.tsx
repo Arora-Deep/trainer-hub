@@ -209,6 +209,7 @@ export default function LiveTraining() {
           {/* MAIN VIEW SWITCHER */}
           <div className="flex items-center gap-1 rounded-xl border border-border p-1">
             <ViewTab active={mainTab === "students"} onClick={() => setMainTab("students")} icon={<Users className="h-3.5 w-3.5" />} label="Students" badge={grid.length} />
+            <ViewTab active={mainTab === "trainer"} onClick={() => setMainTab("trainer")} icon={<Monitor className="h-3.5 w-3.5" />} label="Trainer" />
             <ViewTab active={mainTab === "resources"} onClick={() => setMainTab("resources")} icon={<BookOpen className="h-3.5 w-3.5" />} label="Resources" />
             <ViewTab active={mainTab === "analytics"} onClick={() => setMainTab("analytics")} icon={<BarChart3 className="h-3.5 w-3.5" />} label="Analytics" />
           </div>
