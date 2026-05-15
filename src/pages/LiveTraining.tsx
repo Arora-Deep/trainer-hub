@@ -1248,8 +1248,8 @@ function TrainerView({
             <div className="flex items-center gap-3 min-w-0">
               <Monitor className="h-4 w-4 text-muted-foreground shrink-0" />
               <div className="min-w-0">
-                <p className="text-sm font-semibold truncate">Trainer console</p>
-                <p className="text-[11px] text-muted-foreground truncate">trainer-master-vm · 10.0.4.21</p>
+                <p className="text-sm font-semibold truncate">{current.name}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{current.role} · {current.ip} · {current.specs}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -1260,6 +1260,24 @@ function TrainerView({
                 {chatOpen ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
               </button>
             </div>
+          </div>
+
+          {/* VM Tabs */}
+          <div className="px-4 border-b border-border bg-card flex items-center gap-1 overflow-x-auto">
+            {trainerVMs.map(vm => (
+              <button
+                key={vm.id}
+                onClick={() => setActiveVm(vm.id)}
+                className={cn(
+                  "h-9 px-3 inline-flex items-center gap-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
+                  activeVm === vm.id ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Monitor className="h-3.5 w-3.5" />
+                <span>{vm.name}</span>
+                <span className="text-[10px] text-muted-foreground">· {vm.role}</span>
+              </button>
+            ))}
           </div>
 
           <div className="flex-1 p-6 overflow-hidden">
