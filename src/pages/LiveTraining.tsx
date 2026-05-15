@@ -1045,14 +1045,13 @@ function StudentDrawer({ student, onClose }: { student: StudentRow; onClose: () 
 
       <ScrollArea className="flex-1">
         <div className="px-6 py-5 space-y-6">
-          <Section title="VM preview">
-            <div className="aspect-video rounded-xl bg-muted border border-border flex items-center justify-center">
-              <div className="text-center">
-                <Monitor className="h-7 w-7 mx-auto text-muted-foreground" />
-                <p className="text-[11px] text-muted-foreground mt-2">{student.vmName}</p>
-              </div>
-            </div>
-          </Section>
+          <VMTabsPanel
+            vms={[
+              { id: "vm1", name: student.vmName, role: "Primary", ip: student.ip, running: student.state !== "offline", specs: "4 vCPU · 8 GB" },
+              { id: "vm2", name: `${student.vmName.replace(/-vm$/, "")}-db`, role: "Database", ip: "10.0.5.42", running: student.state !== "offline", specs: "2 vCPU · 4 GB" },
+              { id: "vm3", name: `${student.vmName.replace(/-vm$/, "")}-edge`, role: "Edge node", ip: "10.0.6.18", running: false, specs: "2 vCPU · 4 GB" },
+            ]}
+          />
           <Section title="Resources">
             <div className="space-y-3">
               <Meter label="CPU" value={student.cpu} />
