@@ -183,7 +183,7 @@ export default function LiveTraining() {
                 )}
               </div>
               <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-2">
-                <span>{batch.course || "Training"}</span>
+                <span>Live training</span>
                 <span className="text-zinc-700">•</span>
                 <span className="font-mono tabular-nums">{formatTimer(sessionTimer)}</span>
               </p>
