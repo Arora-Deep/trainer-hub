@@ -225,7 +225,7 @@ export function MeetingsTab({ batchName }: MeetingsTabProps) {
                   </div>
                 )}
                 <div className="absolute bottom-2 left-2 flex items-center gap-1">
-                  <Badge variant="outline" className="text-xs bg-background/60 backdrop-blur-sm">
+                  <Badge variant="outline" className="text-xs bg-background">
                     You (Host)
                   </Badge>
                 </div>
@@ -258,7 +258,7 @@ export function MeetingsTab({ batchName }: MeetingsTabProps) {
                     </div>
                   )}
                   <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1">
-                    <Badge variant="outline" className="text-[10px] bg-background/60 backdrop-blur-sm py-0">
+                    <Badge variant="outline" className="text-[10px] bg-background py-0">
                       {p.name.split(" ")[0]}
                     </Badge>
                   </div>

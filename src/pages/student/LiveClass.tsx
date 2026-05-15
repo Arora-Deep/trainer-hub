@@ -241,7 +241,7 @@ export default function StudentLiveClass() {
                     </AnimatePresence>
 
                     {/* Reactions Bar */}
-                    <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded-full px-3 py-1.5 border border-border">
+                    <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-background rounded-full px-3 py-1.5 border border-border">
                       {[
                         { emoji: "👍", icon: ThumbsUp },
                         { emoji: "👏", icon: Heart },
