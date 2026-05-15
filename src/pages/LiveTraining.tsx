@@ -397,6 +397,19 @@ export default function LiveTraining() {
               onRestart={(s) => toast({ title: `Restarting ${s.vmName}` })}
             />
           )}
+          {mainTab === "trainer" && (
+            <TrainerView
+              vmRunning={trainerVmRunning}
+              setVmRunning={setTrainerVmRunning}
+              micOn={micOn} setMicOn={setMicOn}
+              camOn={camOn} setCamOn={setCamOn}
+              shareOn={shareOn} setShareOn={setShareOn}
+              messages={messages}
+              chatInput={chatInput} setChatInput={setChatInput}
+              onSendChat={sendChat}
+              onOpenConsole={() => setConsoleOpen(true)}
+            />
+          )}
           {mainTab === "resources" && (
             <ResourcesView lessons={lessons} activeLessonIdx={activeLessonIdx} setActiveLessonIdx={setActiveLessonIdx} courseName={linkedCourse?.name || "Course"} />
           )}
