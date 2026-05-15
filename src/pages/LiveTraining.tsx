@@ -332,7 +332,7 @@ export default function LiveTraining() {
                   )}
 
                   {trainerTab === "course" && (
-                    <RailSection title={linkedCourse?.title || "Course content"}>
+                    <RailSection title={linkedCourse?.name || "Course content"}>
                       <ul className="space-y-1">
                         {lessons.map((l, idx) => {
                           const done = idx < activeLessonIdx;
