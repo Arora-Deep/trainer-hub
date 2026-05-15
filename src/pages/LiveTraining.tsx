@@ -23,7 +23,8 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 type StudentState = "healthy" | "raised" | "warning" | "offline";
-type MainTab = "students" | "trainer" | "resources" | "analytics";
+type MainTab = "split" | "students" | "trainer" | "resources" | "analytics";
+type SplitSide = "students" | "chat" | null;
 
 const stateAccent: Record<StudentState, { dot: string; ring: string; label: string; text: string; bg: string }> = {
   healthy: { dot: "bg-success",     ring: "ring-success/25",     label: "Healthy",         text: "text-success",     bg: "bg-success/5" },
