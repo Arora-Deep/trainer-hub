@@ -434,7 +434,7 @@ export default function LiveTraining() {
 
       {/* Student Drawer */}
       <Sheet open={!!selectedStudent} onOpenChange={(o) => !o && setSelectedStudentId(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-[520px] p-0">
+        <SheetContent side="right" className="w-full sm:max-w-[760px] p-0">
           {selectedStudent && <StudentDrawer student={selectedStudent} onClose={() => setSelectedStudentId(null)} />}
         </SheetContent>
       </Sheet>
@@ -1045,14 +1045,13 @@ function StudentDrawer({ student, onClose }: { student: StudentRow; onClose: () 
 
       <ScrollArea className="flex-1">
         <div className="px-6 py-5 space-y-6">
-          <Section title="VM preview">
-            <div className="aspect-video rounded-xl bg-muted border border-border flex items-center justify-center">
-              <div className="text-center">
-                <Monitor className="h-7 w-7 mx-auto text-muted-foreground" />
-                <p className="text-[11px] text-muted-foreground mt-2">{student.vmName}</p>
-              </div>
-            </div>
-          </Section>
+          <VMTabsPanel
+            vms={[
+              { id: "vm1", name: student.vmName, role: "Primary", ip: student.ip, running: student.state !== "offline", specs: "4 vCPU · 8 GB" },
+              { id: "vm2", name: `${student.vmName.replace(/-vm$/, "")}-db`, role: "Database", ip: "10.0.5.42", running: student.state !== "offline", specs: "2 vCPU · 4 GB" },
+              { id: "vm3", name: `${student.vmName.replace(/-vm$/, "")}-edge`, role: "Edge node", ip: "10.0.6.18", running: false, specs: "2 vCPU · 4 GB" },
+            ]}
+          />
           <Section title="Resources">
             <div className="space-y-3">
               <Meter label="CPU" value={student.cpu} />
@@ -1180,7 +1179,13 @@ function TrainerView({
 }: TrainerViewProps) {
   const [chatOpen, setChatOpen] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
-
+  const trainerVMs = [
+    { id: "vm1", name: "trainer-master-vm", role: "Primary", ip: "10.0.4.21", specs: "4 vCPU · 8 GB" },
+    { id: "vm2", name: "trainer-db-vm", role: "Database", ip: "10.0.4.22", specs: "2 vCPU · 4 GB" },
+    { id: "vm3", name: "trainer-edge-vm", role: "Edge node", ip: "10.0.4.23", specs: "2 vCPU · 4 GB" },
+  ];
+  const [activeVm, setActiveVm] = useState(trainerVMs[0].id);
+  const current = trainerVMs.find(v => v.id === activeVm)!;
   return (
     <div className="-mx-6 lg:-mx-8 -mt-8 -mb-24">
       <div className="flex h-[calc(100vh-64px)]">
@@ -1243,8 +1248,8 @@ function TrainerView({
             <div className="flex items-center gap-3 min-w-0">
               <Monitor className="h-4 w-4 text-muted-foreground shrink-0" />
               <div className="min-w-0">
-                <p className="text-sm font-semibold truncate">Trainer console</p>
-                <p className="text-[11px] text-muted-foreground truncate">trainer-master-vm · 10.0.4.21</p>
+                <p className="text-sm font-semibold truncate">{current.name}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{current.role} · {current.ip} · {current.specs}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -1255,6 +1260,24 @@ function TrainerView({
                 {chatOpen ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
               </button>
             </div>
+          </div>
+
+          {/* VM Tabs */}
+          <div className="px-4 border-b border-border bg-card flex items-center gap-1 overflow-x-auto">
+            {trainerVMs.map(vm => (
+              <button
+                key={vm.id}
+                onClick={() => setActiveVm(vm.id)}
+                className={cn(
+                  "h-9 px-3 inline-flex items-center gap-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
+                  activeVm === vm.id ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Monitor className="h-3.5 w-3.5" />
+                <span>{vm.name}</span>
+                <span className="text-[10px] text-muted-foreground">· {vm.role}</span>
+              </button>
+            ))}
           </div>
 
           <div className="flex-1 p-6 overflow-hidden">
@@ -1332,5 +1355,61 @@ function RailRow({ icon, label, onClick }: { icon: React.ReactNode; label: strin
       <span className="text-muted-foreground">{icon}</span>
       <span>{label}</span>
     </button>
+  );
+}
+
+/* ---------------- VM Tabs Panel (Student Drawer) ---------------- */
+
+type StudentVM = { id: string; name: string; role: string; ip: string; running: boolean; specs: string };
+
+function VMTabsPanel({ vms }: { vms: StudentVM[] }) {
+  const [active, setActive] = useState(vms[0]?.id);
+  const current = vms.find(v => v.id === active) || vms[0];
+  if (!current) return null;
+  return (
+    <div>
+      <h4 className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground mb-3">Virtual machines</h4>
+      <div className="flex items-center gap-1 border-b border-border mb-3 overflow-x-auto">
+        {vms.map(vm => (
+          <button
+            key={vm.id}
+            onClick={() => setActive(vm.id)}
+            className={cn(
+              "h-8 px-3 inline-flex items-center gap-1.5 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
+              active === vm.id ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <span className={cn("h-1.5 w-1.5 rounded-full", vm.running ? "bg-success" : "bg-muted-foreground")} />
+            <span>{vm.role}</span>
+          </button>
+        ))}
+      </div>
+      <div className="aspect-video rounded-xl bg-zinc-950 border border-border overflow-hidden relative">
+        {current.running ? (
+          <>
+            <div className="absolute inset-0 p-4 font-mono text-[10px] leading-tight text-emerald-400/80 overflow-hidden">
+              <div>$ ssh student@{current.ip}</div>
+              <div className="text-zinc-500">Last login: today 10:24:11</div>
+              <div>$ systemctl status nginx</div>
+              <div className="text-emerald-400">● active (running)</div>
+              <div className="mt-1 inline-flex items-center">$ <span className="ml-1 inline-block h-2 w-1.5 bg-emerald-400 animate-pulse" /></div>
+            </div>
+            <div className="absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-0.5 backdrop-blur-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+              <span className="text-[9px] font-medium text-white tracking-wide">RUNNING</span>
+            </div>
+          </>
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-zinc-500">
+            <Power className="h-6 w-6" />
+            <span className="text-[11px]">VM stopped</span>
+          </div>
+        )}
+      </div>
+      <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+        <span className="font-mono">{current.name} · {current.ip}</span>
+        <span>{current.specs}</span>
+      </div>
+    </div>
   );
 }
