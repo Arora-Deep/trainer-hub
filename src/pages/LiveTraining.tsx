@@ -1,111 +1,67 @@
-import { useState, useEffect } from "react";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
-} from "@/components/ui/sheet";
-import {
-  Tooltip, TooltipContent, TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Collapsible, CollapsibleContent, CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  Monitor, Terminal, Play, Pause, RotateCcw, ExternalLink, Copy, Wifi, WifiOff,
-  Users, Eye, EyeOff, Megaphone, Send, Camera, Power, PowerOff, Shield,
-  Cpu, HardDrive, Clock, CheckCircle2, AlertCircle, XCircle, RefreshCw,
-  MessageSquare, Hand, Zap, Settings, Volume2, VolumeX, Share2, Download,
-  ChevronRight, Search, MoreVertical, Radio, Loader2, Lock, Unlock,
-  ScreenShare, ScreenShareOff, Clipboard, Server, Activity, ArrowUpDown,
-  Star, ChevronDown, FileText,
+  Radio, Hand, Users, AlertCircle, Megaphone, BookOpen, Camera, Power,
+  MessageSquare, Send, X, Search, Wifi, WifiOff, RotateCcw, Monitor,
+  FileText, Link2, Download, ChevronRight, Sparkles, MoreHorizontal,
 } from "lucide-react";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useBatchStore, type Participant, type VMInstance } from "@/stores/batchStore";
+import { useBatchStore } from "@/stores/batchStore";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { AreaChart, Area, ResponsiveContainer } from "recharts";
 
-const cpuData = Array.from({ length: 20 }, (_, i) => ({ t: i, v: 30 + Math.random() * 40 }));
-const ramData = Array.from({ length: 20 }, (_, i) => ({ t: i, v: 40 + Math.random() * 30 }));
+type StudentState = "healthy" | "raised" | "warning" | "offline";
 
-const mockChat: { id: string; name: string; msg: string; time: string; type: "message" | "question" | "system" }[] = [
-  { id: "1", name: "Alice Johnson", msg: "Can you explain the VPC peering concept again?", time: "2:34 PM", type: "question" },
-  { id: "2", name: "Bob Williams", msg: "Got it, thanks!", time: "2:35 PM", type: "message" },
-  { id: "3", name: "System", msg: "Carol Davis raised hand", time: "2:36 PM", type: "system" },
-  { id: "4", name: "Eva Martinez", msg: "My terminal is showing permission denied on port 443", time: "2:37 PM", type: "question" },
-  { id: "5", name: "David Brown", msg: "Same issue here with the security group settings", time: "2:38 PM", type: "message" },
-];
+const stateAccent: Record<StudentState, { dot: string; ring: string; label: string; text: string }> = {
+  healthy:  { dot: "bg-emerald-400",  ring: "ring-emerald-400/20",  label: "Healthy",      text: "text-emerald-300" },
+  raised:   { dot: "bg-amber-400",    ring: "ring-amber-400/30",    label: "Hand raised",  text: "text-amber-300" },
+  warning:  { dot: "bg-orange-400",   ring: "ring-orange-400/25",   label: "Needs attention", text: "text-orange-300" },
+  offline:  { dot: "bg-zinc-500",     ring: "ring-zinc-500/20",     label: "Disconnected", text: "text-zinc-400" },
+};
 
-const terminalLines = [
-  "root@trainer-vm:~# kubectl get pods -n production",
-  "NAME                          READY   STATUS    RESTARTS   AGE",
-  "nginx-dep-7f44fc4d4-2k8x9    1/1     Running   0          2h",
-  "nginx-dep-7f44fc4d4-9j3bc    1/1     Running   0          2h",
-  "redis-master-0                1/1     Running   0          5h",
-  "root@trainer-vm:~# _",
-];
-
-const vmLogLines = [
-  "[2024-01-17 14:32:01] INFO  VM started successfully",
-  "[2024-01-17 14:32:03] INFO  Network interface eth0 configured: 10.0.1.x",
-  "[2024-01-17 14:32:05] INFO  SSH daemon started on port 22",
-  "[2024-01-17 14:33:12] INFO  User login: root from 10.0.0.1",
-  "[2024-01-17 14:35:45] WARN  High CPU usage detected: 87%",
-  "[2024-01-17 14:36:01] INFO  Snapshot checkpoint created",
-  "[2024-01-17 14:40:22] INFO  Package update: kubectl v1.28.4 installed",
-  "[2024-01-17 14:42:10] INFO  Lab environment validation passed",
-];
+function formatTimer(s: number) {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+}
 
 export default function LiveTraining() {
-  const { batches, recloneParticipantVM, recloneAllVMs, resetParticipantVM, resetAllVMs,
-    restartParticipantVM, stopParticipantVM, startParticipantVM, snapshotParticipantVM,
-    recloneTrainerVM, resetTrainerVM, stopTrainerVM, startTrainerVM, createSnapshot } = useBatchStore();
+  const {
+    batches, recloneAllVMs, restartParticipantVM, snapshotParticipantVM,
+    createSnapshot,
+  } = useBatchStore();
+
   const liveBatches = batches.filter(b => b.status === "live" || b.status === "upcoming");
   const [selectedBatchId, setSelectedBatchId] = useState(liveBatches[0]?.id || "");
   const batch = batches.find(b => b.id === selectedBatchId);
 
-  const [sessionActive, setSessionActive] = useState(false);
-  const [sessionTimer, setSessionTimer] = useState(0);
-  const [screenSharing, setScreenSharing] = useState(false);
-  const [labSync, setLabSync] = useState(false);
-  const [recordingOn, setRecordingOn] = useState(false);
-  const [audioOn, setAudioOn] = useState(true);
-  const [chatMessages, setChatMessages] = useState(mockChat);
+  const [sessionActive, setSessionActive] = useState(true);
+  const [sessionTimer, setSessionTimer] = useState(8062);
+  const [search, setSearch] = useState("");
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [resourcesOpen, setResourcesOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [endOpen, setEndOpen] = useState(false);
+  const [broadcastText, setBroadcastText] = useState("");
+  const [chatTab, setChatTab] = useState("chat");
   const [chatInput, setChatInput] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedParticipantVM, setSelectedStudentVM] = useState<string | null>(null);
-  const [announcementText, setAnnouncementText] = useState("");
-  const [lockAllVMs, setLockAllVMs] = useState(false);
-  const [quickPollOpen, setQuickPollOpen] = useState(false);
-  const [pollQuestion, setPollQuestion] = useState("");
-  const [trainerConsoleOpen, setTrainerConsoleOpen] = useState(false);
-  const [showTrainerPassword, setShowTrainerPassword] = useState(false);
-  const [resetSnapshotId, setResetSnapshotId] = useState("");
-  const [recloneConfirmVM, setRecloneConfirmVM] = useState<string | null>(null);
-  const [showParticipantLogs, setShowStudentLogs] = useState(false);
-  const [snapshotPanelOpen, setSnapshotPanelOpen] = useState(true);
-  const [trainerSnapshotDialogOpen, setTrainerSnapshotDialogOpen] = useState(false);
-  const [trainerSnapshotName, setTrainerSnapshotName] = useState("");
-  const [trainerRecloneSnapshotId, setTrainerRecloneSnapshotId] = useState("");
-  const [trainerResetSnapshotId, setTrainerResetSnapshotId] = useState("");
+  const [messages, setMessages] = useState<{ id: string; from: string; text: string; t: string; kind: "msg" | "q" | "sys" }[]>([
+    { id: "1", from: "Alice Johnson", text: "Can you re-explain VPC peering?", t: "2:34", kind: "q" },
+    { id: "2", from: "Bob Williams", text: "Got it, thanks!", t: "2:35", kind: "msg" },
+    { id: "3", from: "Eva Martinez", text: "Permission denied on port 443", t: "2:37", kind: "q" },
+  ]);
 
   useEffect(() => {
     if (!sessionActive) return;
@@ -113,1135 +69,666 @@ export default function LiveTraining() {
     return () => clearInterval(iv);
   }, [sessionActive]);
 
-  const formatTimer = (s: number) => {
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = s % 60;
-    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
-  };
-
-  const vm = batch?.vmConfig;
   const participants = batch?.participants || [];
-  const participantVMs = vm?.participantVMs || [];
-  const snapshots = vm?.snapshots || [];
+  const participantVMs = batch?.vmConfig?.participantVMs || [];
 
-  const participantGrid = participants.map(s => {
-    const svm = participantVMs.find(v => v.assignedTo === s.name);
-    return { ...s, vm: svm };
-  });
+  // Derive presentation-only state for each student
+  const grid = useMemo(() => {
+    return participants.map((p, i) => {
+      const vm = participantVMs.find(v => v.assignedTo === p.name);
+      const baseStatus = vm?.status || p.vmStatus || "running";
+      let state: StudentState = "healthy";
+      if (baseStatus === "stopped" || baseStatus === "error" || baseStatus === "not_assigned") state = "offline";
+      else if (i % 7 === 1) state = "raised";
+      else if (i % 11 === 3) state = "warning";
+      return {
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        initials: p.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase(),
+        ip: vm?.ipAddress || "—",
+        state,
+        connection: state === "offline" ? "offline" : (i % 13 === 5 ? "weak" : "strong"),
+        vmName: vm?.vmName || `${p.name.split(" ")[0].toLowerCase()}-vm`,
+        cpu: 18 + ((i * 13) % 60),
+        ram: 24 + ((i * 17) % 55),
+      };
+    });
+  }, [participants, participantVMs]);
 
-  const filteredParticipants = participantGrid.filter(s =>
-    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.email.toLowerCase().includes(searchQuery.toLowerCase())
+  const filtered = grid.filter(s =>
+    s.name.toLowerCase().includes(search.toLowerCase()) ||
+    s.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const onlineCount = participants.filter(s => s.vmStatus === "running").length;
-  const handsRaised = 2;
-  const questionsCount = chatMessages.filter(m => m.type === "question").length;
+  const onlineCount = grid.filter(s => s.state !== "offline").length;
+  const handsRaised = grid.filter(s => s.state === "raised").length;
+  const issues = grid.filter(s => s.state === "warning").length;
+
+  const selectedStudent = grid.find(s => s.id === selectedStudentId);
+
+  const sendBroadcast = () => {
+    if (!broadcastText.trim()) return;
+    toast({ title: "Broadcast sent", description: `Delivered to ${participants.length} students.` });
+    setBroadcastText("");
+    setBroadcastOpen(false);
+  };
 
   const sendChat = () => {
     if (!chatInput.trim()) return;
-    setChatMessages(prev => [...prev, {
-      id: Date.now().toString(), name: "You (Trainer)", msg: chatInput.trim(),
-      time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }), type: "message",
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(), from: "You", text: chatInput.trim(),
+      t: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }), kind: "msg",
     }]);
     setChatInput("");
   };
 
-  const sendAnnouncement = () => {
-    if (!announcementText.trim() || !batch) return;
-    toast({ title: "Announcement Sent", description: `Broadcast to ${participants.length} students` });
-    setAnnouncementText("");
-  };
-
+  // No batch
   if (!batch) {
     return (
-      <div className="space-y-6">
-        <PageHeader title="Live Training" description="Select a batch to start a live training session" />
-        <Card>
-          <CardContent className="py-16 text-center">
-            <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-              <Radio className="h-8 w-8 text-muted-foreground/50" />
-            </div>
-            <h3 className="text-lg font-semibold">No Active Batches</h3>
-            <p className="text-sm text-muted-foreground mt-1.5 max-w-sm mx-auto">Create a batch and start a live training session to use this command center.</p>
-          </CardContent>
-        </Card>
+      <div className="dark min-h-screen bg-[#07080b] text-zinc-100 -m-6 p-10 flex items-center justify-center">
+        <div className="max-w-md text-center space-y-4">
+          <div className="h-14 w-14 mx-auto rounded-2xl bg-white/5 ring-1 ring-white/10 flex items-center justify-center">
+            <Radio className="h-6 w-6 text-zinc-400" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight">No live session</h1>
+            <p className="text-sm text-zinc-400 mt-1.5">Schedule a batch to start running live training.</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Top Bar */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <PageHeader title="Live Training" description="Real-time session command center" breadcrumbs={[{ label: "Live Training" }]} />
-          <div className="flex items-center gap-2">
+    <div className="dark -m-6 min-h-screen bg-[#07080b] text-zinc-100 antialiased selection:bg-white/10">
+      {/* Ambient gradient */}
+      <div
+        className="pointer-events-none fixed inset-0 opacity-[0.35]"
+        style={{
+          background:
+            "radial-gradient(1200px 600px at 15% -10%, rgba(99,102,241,0.10), transparent 60%), radial-gradient(900px 500px at 100% 0%, rgba(16,185,129,0.06), transparent 60%)",
+        }}
+      />
+
+      {/* Top Session Bar */}
+      <header
+        className="sticky top-0 z-30 backdrop-blur-xl"
+        style={{ background: "rgba(10,11,14,0.72)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        <div className="h-[72px] px-6 lg:px-8 flex items-center justify-between gap-6">
+          {/* Left: session identity */}
+          <div className="flex items-center gap-4 min-w-0">
             <Select value={selectedBatchId} onValueChange={setSelectedBatchId}>
-              <SelectTrigger className="w-[260px]">
-                <SelectValue placeholder="Select batch..." />
+              <SelectTrigger className="h-9 w-auto border-white/10 bg-white/[0.03] hover:bg-white/[0.06] gap-2 text-zinc-300">
+                <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[#0d0e12] border-white/10 text-zinc-200">
                 {liveBatches.map(b => (
-                  <SelectItem key={b.id} value={b.id}>
-                    <div className="flex items-center gap-2">
-                      <span className={cn("h-2 w-2 rounded-full", b.status === "live" ? "bg-[hsl(var(--success))]" : "bg-[hsl(var(--warning))]")} />
-                      {b.name}
-                    </div>
-                  </SelectItem>
+                  <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-        </div>
-
-        {/* Session Control Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={cn(
-            "rounded-xl border p-3 flex items-center justify-between gap-4",
-            sessionActive ? "border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/5" : "border-border bg-card"
-          )}
-          style={{ boxShadow: "var(--shadow-card)" }}
-        >
-          <div className="flex items-center gap-3">
-            {sessionActive ? (
-              <Button variant="destructive" size="sm" onClick={() => { setSessionActive(false); toast({ title: "Session Ended" }); }}>
-                <Pause className="mr-1.5 h-3.5 w-3.5" />End Session
-              </Button>
-            ) : (
-              <Button size="sm" onClick={() => { setSessionActive(true); setSessionTimer(0); toast({ title: "Session Started", description: "Live training is now active" }); }}>
-                <Play className="mr-1.5 h-3.5 w-3.5" />Start Session
-              </Button>
-            )}
-            {sessionActive && (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-[hsl(var(--destructive))] animate-pulse" />
-                  <span className="text-xs font-mono font-semibold text-[hsl(var(--destructive))]">LIVE</span>
-                </div>
-                <span className="text-sm font-mono font-semibold tabular-nums">{formatTimer(sessionTimer)}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <Tooltip><TooltipTrigger asChild>
-              <Button variant={screenSharing ? "default" : "outline"} size="icon" className="h-8 w-8" onClick={() => { setScreenSharing(!screenSharing); toast({ title: screenSharing ? "Screen Share Stopped" : "Screen Sharing" }); }}>
-                {screenSharing ? <ScreenShare className="h-3.5 w-3.5" /> : <ScreenShareOff className="h-3.5 w-3.5" />}
-              </Button>
-            </TooltipTrigger><TooltipContent>Screen Share</TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild>
-              <Button variant={labSync ? "default" : "outline"} size="icon" className="h-8 w-8" onClick={() => { setLabSync(!labSync); toast({ title: labSync ? "Lab Sync Off" : "Lab Sync On — Students see your terminal" }); }}>
-                <Terminal className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger><TooltipContent>Sync Terminal to Students</TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild>
-              <Button variant={recordingOn ? "default" : "outline"} size="icon" className="h-8 w-8" onClick={() => { setRecordingOn(!recordingOn); toast({ title: recordingOn ? "Recording Stopped" : "Recording Started" }); }}>
-                <Camera className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger><TooltipContent>Record Session</TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setAudioOn(!audioOn)}>
-                {audioOn ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
-              </Button>
-            </TooltipTrigger><TooltipContent>{audioOn ? "Mute" : "Unmute"}</TooltipContent></Tooltip>
-
-            <Separator orientation="vertical" className="h-6 mx-1" />
-
-            <Tooltip><TooltipTrigger asChild>
-              <Button variant={lockAllVMs ? "destructive" : "outline"} size="icon" className="h-8 w-8" onClick={() => { setLockAllVMs(!lockAllVMs); toast({ title: lockAllVMs ? "VMs Unlocked" : "All Participant VMs Locked" }); }}>
-                {lockAllVMs ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-              </Button>
-            </TooltipTrigger><TooltipContent>{lockAllVMs ? "Unlock All VMs" : "Lock All VMs"}</TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => toast({ title: "Snapshot Created", description: "All student VMs snapshotted" })}>
-                <Camera className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger><TooltipContent>Snapshot All VMs</TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => toast({ title: "VMs Restarted" })}>
-                <RotateCcw className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger><TooltipContent>Restart All VMs</TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => { recloneAllVMs(batch.id); toast({ title: "Recloning All VMs", description: "All student VMs being recloned from golden..." }); }}>
-                <Copy className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger><TooltipContent>Reclone All from Golden</TooltipContent></Tooltip>
-          </div>
-
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="font-semibold">{onlineCount}</span>
-              <span className="text-muted-foreground">/ {participants.length}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Hand className="h-3.5 w-3.5 text-[hsl(var(--warning))]" />
-              <span className="font-semibold">{handsRaised}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <MessageSquare className="h-3.5 w-3.5 text-primary" />
-              <span className="font-semibold">{questionsCount}</span>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Quick Meeting Widget */}
-      <Card className="border-primary/20">
-        <CardContent className="p-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Monitor className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">Meeting Room</p>
-              <p className="text-xs text-muted-foreground">Start or join a video meeting with your batch</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => { window.location.href = "/meetings"; }}>
-              <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> All Meetings
-            </Button>
-            <Button size="sm" onClick={() => toast({ title: "Meeting Started", description: "CloudAdda Meet room is now live for this batch" })}>
-              <Monitor className="h-3.5 w-3.5 mr-1.5" /> Start Meeting
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Main Content */}
-      <div className="grid grid-cols-12 gap-4" style={{ height: "calc(100vh - 300px)" }}>
-        {/* Left: Trainer VM + Snapshots + Controls */}
-        <div className="col-span-3 flex flex-col gap-4 min-h-0 overflow-y-auto">
-          {/* Trainer VM Card */}
-          <Card className="flex-none">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Shield className="h-4 w-4 text-primary" />
-                Trainer VM
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {vm?.trainerVM ? (
-                <>
-                  <div className="flex items-center justify-between">
-                    <StatusBadge
-                      status={vm.trainerVM.status === "running" || vm.trainerVM.status === "configured" ? "success" : "warning"}
-                      label={vm.trainerVM.status === "running" || vm.trainerVM.status === "configured" ? "Running" : vm.trainerVM.status}
-                      pulse={vm.trainerVM.status === "running" || vm.trainerVM.status === "configured"}
-                    />
-                    <code className="text-xs font-mono px-2 py-0.5 rounded bg-muted">{vm.trainerVM.ipAddress || "—"}</code>
-                  </div>
-
-                  {/* Mini terminal preview */}
-                  <div className="rounded-lg bg-[hsl(var(--foreground))] p-2.5 font-mono text-[10px] leading-relaxed text-[hsl(var(--background))] overflow-hidden">
-                    {terminalLines.slice(-4).map((line, i) => (
-                      <div key={i} className="opacity-80">{line}</div>
-                    ))}
-                  </div>
-
-                  {/* Mini resource charts */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-lg border border-border/50 p-2">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] text-muted-foreground">CPU</span>
-                        <span className="text-[10px] font-semibold">47%</span>
-                      </div>
-                      <ResponsiveContainer width="100%" height={24}>
-                        <AreaChart data={cpuData}>
-                          <Area type="monotone" dataKey="v" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.15} strokeWidth={1.5} dot={false} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="rounded-lg border border-border/50 p-2">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] text-muted-foreground">RAM</span>
-                        <span className="text-[10px] font-semibold">62%</span>
-                      </div>
-                      <ResponsiveContainer width="100%" height={24}>
-                        <AreaChart data={ramData}>
-                          <Area type="monotone" dataKey="v" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.15} strokeWidth={1.5} dot={false} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-
-                  {/* Trainer VM actions */}
-                  <div className="space-y-1.5">
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => setTrainerConsoleOpen(true)}>
-                        <Terminal className="mr-1 h-3 w-3" />Console
-                      </Button>
-                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => { navigator.clipboard.writeText(`ssh ${vm.trainerVM.credentials.username}@${vm.trainerVM.ipAddress}`); toast({ title: "SSH Copied" }); }}>
-                        <Clipboard className="mr-1 h-3 w-3" />SSH
-                      </Button>
-                    </div>
-
-                    {/* Power controls */}
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {(vm.trainerVM.status === "running" || vm.trainerVM.status === "configured") ? (
-                        <Button size="sm" variant="outline" className="text-xs h-7 text-destructive" onClick={() => { stopTrainerVM(batch.id); toast({ title: "Trainer VM Stopping..." }); }}>
-                          <PowerOff className="mr-1 h-3 w-3" />Stop
-                        </Button>
-                      ) : vm.trainerVM.status === "stopped" ? (
-                        <Button size="sm" variant="outline" className="text-xs h-7 text-[hsl(var(--success))]" onClick={() => { startTrainerVM(batch.id); toast({ title: "Trainer VM Starting..." }); }}>
-                          <Power className="mr-1 h-3 w-3" />Start
-                        </Button>
-                      ) : (
-                        <Button size="sm" variant="outline" className="text-xs h-7" disabled>
-                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />...
-                        </Button>
-                      )}
-                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => toast({ title: "VM Restarting..." })}>
-                        <RotateCcw className="mr-1 h-3 w-3" />Restart
-                      </Button>
-                    </div>
-
-                    {/* Snapshot actions */}
-                    <Button size="sm" variant="outline" className="text-xs h-7 w-full" onClick={() => setTrainerSnapshotDialogOpen(true)}>
-                      <Camera className="mr-1 h-3 w-3" />Take Named Snapshot
-                    </Button>
-
-                    {/* Reclone from snapshot */}
-                    {snapshots.filter(s => s.status === "ready").length > 0 && (
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Reclone from Snapshot</p>
-                        <div className="flex gap-1">
-                          <Select value={trainerRecloneSnapshotId} onValueChange={setTrainerRecloneSnapshotId}>
-                            <SelectTrigger className="h-7 text-xs flex-1">
-                              <SelectValue placeholder="Select..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {snapshots.filter(s => s.status === "ready").map(s => (
-                                <SelectItem key={s.id} value={s.id}>
-                                  <div className="flex items-center gap-1.5">
-                                    {s.isGolden && <Star className="h-2.5 w-2.5 text-primary" />}
-                                    {s.name}
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button size="sm" variant="destructive" className="text-xs h-7 px-2 shrink-0" disabled={!trainerRecloneSnapshotId} onClick={() => {
-                            recloneTrainerVM(batch.id, trainerRecloneSnapshotId);
-                            toast({ title: "Recloning Trainer VM", description: "Destroying and rebuilding from snapshot..." });
-                            setTrainerRecloneSnapshotId("");
-                          }}>
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Reset to snapshot */}
-                    {snapshots.filter(s => s.status === "ready").length > 0 && (
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Reset to Snapshot</p>
-                        <div className="flex gap-1">
-                          <Select value={trainerResetSnapshotId} onValueChange={setTrainerResetSnapshotId}>
-                            <SelectTrigger className="h-7 text-xs flex-1">
-                              <SelectValue placeholder="Select..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {snapshots.filter(s => s.status === "ready").map(s => (
-                                <SelectItem key={s.id} value={s.id}>
-                                  <div className="flex items-center gap-1.5">
-                                    {s.isGolden && <Star className="h-2.5 w-2.5 text-primary" />}
-                                    {s.name}
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button size="sm" variant="outline" className="text-xs h-7 px-2 shrink-0" disabled={!trainerResetSnapshotId} onClick={() => {
-                            resetTrainerVM(batch.id, trainerResetSnapshotId);
-                            toast({ title: "Resetting Trainer VM", description: "Restoring disk state from snapshot..." });
-                            setTrainerResetSnapshotId("");
-                          }}>
-                            <RotateCcw className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* RDP command for Windows */}
-                    <Button size="sm" variant="outline" className="text-xs h-7 w-full" onClick={() => { navigator.clipboard.writeText(`mstsc /v:${vm.trainerVM.ipAddress}`); toast({ title: "RDP Command Copied" }); }}>
-                      <Monitor className="mr-1 h-3 w-3" />Copy RDP Command
-                    </Button>
-                  </div>
-
-                  {/* SSH credentials */}
-                  <div className="rounded-lg border border-border/50 p-2.5 space-y-1.5">
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Credentials</p>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">User</span>
-                      <code className="font-mono">{vm.trainerVM.credentials.username}</code>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Port</span>
-                      <code className="font-mono">{vm.trainerVM.credentials.sshPort}</code>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-4">
-                  <Monitor className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-xs text-muted-foreground">No VM configured</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Snapshot Quick Panel */}
-          {snapshots.length > 0 && (
-            <Collapsible open={snapshotPanelOpen} onOpenChange={setSnapshotPanelOpen}>
-              <Card className="flex-none">
-                <CollapsibleTrigger className="w-full">
-                  <CardHeader className="pb-3 cursor-pointer">
-                    <CardTitle className="text-sm flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Camera className="h-4 w-4 text-primary" />
-                        Snapshots ({snapshots.length})
-                      </div>
-                      <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", snapshotPanelOpen && "rotate-180")} />
-                    </CardTitle>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="pt-0 space-y-2">
-                    {snapshots.filter(s => s.status === "ready").map(snap => (
-                      <div key={snap.id} className={cn(
-                        "flex items-center justify-between p-2 rounded-lg border text-xs",
-                        snap.isGolden ? "border-primary/30 bg-primary/5" : "border-border/50"
-                      )}>
-                        <div className="flex items-center gap-2 min-w-0">
-                          {snap.isGolden ? <Star className="h-3 w-3 text-primary shrink-0" /> : <Camera className="h-3 w-3 text-muted-foreground shrink-0" />}
-                          <div className="min-w-0">
-                            <p className="font-medium truncate">{snap.name}</p>
-                            <p className="text-[10px] text-muted-foreground">{snap.size}</p>
-                          </div>
-                        </div>
-                        <Button size="sm" variant="ghost" className="text-[10px] h-6 px-2 shrink-0" onClick={() => {
-                          resetAllVMs(batch.id, snap.id);
-                          toast({ title: "Resetting All", description: `Resetting all VMs to "${snap.name}"` });
-                        }}>
-                          <RotateCcw className="mr-1 h-2.5 w-2.5" />Reset All
-                        </Button>
-                      </div>
-                    ))}
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-          )}
-
-          {/* Quick Broadcast */}
-          <Card className="flex-none">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Megaphone className="h-4 w-4 text-[hsl(var(--warning))]" />
-                Quick Broadcast
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-2">
-                <Input placeholder="Type announcement..." value={announcementText} onChange={e => setAnnouncementText(e.target.value)} className="text-xs h-8" onKeyDown={e => e.key === "Enter" && sendAnnouncement()} />
-                <Button size="sm" className="h-8 px-3 shrink-0" onClick={sendAnnouncement}><Send className="h-3 w-3" /></Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Poll */}
-          <Card className="flex-none">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Activity className="h-4 w-4 text-primary" />
-                Quick Poll
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Button size="sm" variant="outline" className="w-full text-xs h-8" onClick={() => setQuickPollOpen(true)}>
-                <Zap className="mr-1.5 h-3 w-3" />Launch Quick Poll
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Center: Participant VM Grid */}
-        <div className="col-span-6 flex flex-col gap-4 min-h-0">
-          <Card className="flex-1 flex flex-col min-h-0">
-            <CardHeader className="pb-3 flex-none">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Monitor className="h-4 w-4 text-primary" />
-                  Participant VMs & Monitoring
-                  <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{participants.length}</Badge>
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                    <Input placeholder="Search participants..." className="pl-7 h-7 w-48 text-xs" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-7 text-xs"><ArrowUpDown className="mr-1 h-3 w-3" />Sort</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem>Name A-Z</DropdownMenuItem>
-                      <DropdownMenuItem>Status</DropdownMenuItem>
-                      <DropdownMenuItem>Last Active</DropdownMenuItem>
-                      <DropdownMenuItem>Attendance</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="flex-1 p-0 min-h-0">
-              <ScrollArea className="h-full">
-                <div className="p-4 pt-0">
-                  {/* Stats Row */}
-                  <div className="grid grid-cols-4 gap-2 mb-4">
-                    {[
-                      { label: "Online", value: onlineCount, color: "text-[hsl(var(--success))]", icon: Wifi },
-                      { label: "Offline", value: participants.length - onlineCount, color: "text-muted-foreground", icon: WifiOff },
-                      { label: "Hands Up", value: handsRaised, color: "text-[hsl(var(--warning))]", icon: Hand },
-                      { label: "Errors", value: participants.filter(s => s.vmStatus === "error").length, color: "text-[hsl(var(--destructive))]", icon: AlertCircle },
-                    ].map(stat => (
-                      <div key={stat.label} className="rounded-lg border border-border/50 p-2.5 text-center">
-                        <stat.icon className={cn("h-3.5 w-3.5 mx-auto mb-1", stat.color)} />
-                        <p className="text-lg font-bold tabular-nums">{stat.value}</p>
-                        <p className="text-[10px] text-muted-foreground">{stat.label}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Student Grid */}
-                  <div className="grid grid-cols-2 xl:grid-cols-3 gap-2">
-                    <AnimatePresence>
-                      {filteredParticipants.map((participant, i) => {
-                        const vmRunning = participant.vmStatus === "running";
-                        const vmError = participant.vmStatus === "error";
-                        const vmStopped = participant.vmStatus === "stopped";
-                        const mockCpu = Math.floor(20 + Math.random() * 60);
-                        const mockRam = Math.floor(30 + Math.random() * 50);
-                        const isRaisedHand = i < handsRaised;
-
-                        return (
-                          <motion.div
-                            key={participant.id}
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: i * 0.02 }}
-                            className={cn(
-                              "rounded-xl border p-3 relative group cursor-pointer hover:border-primary/30 transition-all",
-                              vmError && "border-[hsl(var(--destructive))]/30 bg-[hsl(var(--destructive))]/5",
-                              isRaisedHand && "ring-2 ring-[hsl(var(--warning))]/40",
-                              vmRunning && "border-border",
-                              vmStopped && "border-border/50 opacity-70"
-                            )}
-                            onClick={() => setSelectedStudentVM(participant.id)}
-                          >
-                            {isRaisedHand && (
-                              <div className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-[hsl(var(--warning))] flex items-center justify-center">
-                                <Hand className="h-2.5 w-2.5 text-[hsl(var(--warning-foreground))]" />
-                              </div>
-                            )}
-
-                            <div className="flex items-center gap-2 mb-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
-                                  {participant.name.split(" ").map(n => n[0]).join("")}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold truncate">{participant.name}</p>
-                                <p className="text-[10px] text-muted-foreground truncate">{participant.currentModule}</p>
-                              </div>
-                              <span className={cn(
-                                "h-2 w-2 rounded-full shrink-0",
-                                vmRunning && "bg-[hsl(var(--success))]",
-                                vmError && "bg-[hsl(var(--destructive))]",
-                                vmStopped && "bg-muted-foreground",
-                                participant.vmStatus === "not_assigned" && "bg-muted"
-                              )} />
-                            </div>
-
-                            {vmRunning && (
-                              <div className="space-y-1.5">
-                                <div className="flex items-center justify-between text-[10px]">
-                                  <span className="text-muted-foreground">CPU</span>
-                                  <span className="font-mono font-medium">{mockCpu}%</span>
-                                </div>
-                                <Progress value={mockCpu} className="h-1" />
-                                <div className="flex items-center justify-between text-[10px]">
-                                  <span className="text-muted-foreground">RAM</span>
-                                  <span className="font-mono font-medium">{mockRam}%</span>
-                                </div>
-                                <Progress value={mockRam} className="h-1" />
-                                <div className="flex items-center justify-between text-[10px] mt-1">
-                                  <code className="font-mono text-muted-foreground">{participant.vmIpAddress}</code>
-                                  <span className="text-muted-foreground">{participant.lastActive}</span>
-                                </div>
-                              </div>
-                            )}
-
-                            {vmError && (
-                              <div className="mt-1 text-[10px] text-[hsl(var(--destructive))] flex items-center gap-1">
-                                <AlertCircle className="h-3 w-3" />VM Error — needs attention
-                              </div>
-                            )}
-
-                            {/* Hover actions */}
-                            <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-card to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                              <Tooltip><TooltipTrigger asChild>
-                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); toast({ title: `Console: ${participant.name}` }); }}>
-                                  <ExternalLink className="h-3 w-3" />
-                                </Button>
-                              </TooltipTrigger><TooltipContent>Open Console</TooltipContent></Tooltip>
-                              <Tooltip><TooltipTrigger asChild>
-                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); toast({ title: `Viewing ${participant.name}'s screen` }); }}>
-                                  <Eye className="h-3 w-3" />
-                                </Button>
-                              </TooltipTrigger><TooltipContent>View Screen</TooltipContent></Tooltip>
-                              <Tooltip><TooltipTrigger asChild>
-                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); if (participant.vm) { restartParticipantVM(batch.id, participant.vm.id); } toast({ title: `Restarting ${participant.name}'s VM` }); }}>
-                                  <RotateCcw className="h-3 w-3" />
-                                </Button>
-                              </TooltipTrigger><TooltipContent>Restart VM</TooltipContent></Tooltip>
-                              <Tooltip><TooltipTrigger asChild>
-                                <Button variant="secondary" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); if (participant.vm) { recloneParticipantVM(batch.id, participant.vm.id); } toast({ title: `Recloning ${participant.name}'s VM` }); }}>
-                                  <Copy className="h-3 w-3" />
-                                </Button>
-                              </TooltipTrigger><TooltipContent>Reclone from Golden</TooltipContent></Tooltip>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </AnimatePresence>
-
-                    {filteredParticipants.length === 0 && (
-                      <div className="col-span-full py-8 text-center">
-                        <Users className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">No participants found</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right: Chat & Attendance */}
-        <div className="col-span-3 flex flex-col gap-4 min-h-0">
-          <Card className="flex-1 flex flex-col min-h-0">
-            <CardHeader className="pb-2 flex-none">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-primary" />
-                  Live Chat
-                  <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{chatMessages.length}</Badge>
-                </CardTitle>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setChatMessages([])}>
-                  <XCircle className="h-3 w-3" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col min-h-0 p-0">
-              <ScrollArea className="flex-1 px-4">
-                <div className="space-y-2 py-2">
-                  <AnimatePresence>
-                    {chatMessages.map((msg) => (
-                      <motion.div
-                        key={msg.id}
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={cn(
-                          "rounded-lg p-2.5 text-xs",
-                          msg.type === "question" && "border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/5",
-                          msg.type === "system" && "bg-muted/50 text-center italic text-muted-foreground",
-                          msg.type === "message" && "bg-muted/30",
-                          msg.name === "You (Trainer)" && "bg-primary/10 border border-primary/20"
-                        )}
-                      >
-                        {msg.type !== "system" && (
-                          <div className="flex items-center justify-between mb-0.5">
-                            <span className="font-semibold">{msg.name}</span>
-                            <span className="text-[10px] text-muted-foreground">{msg.time}</span>
-                          </div>
-                        )}
-                        <p className={msg.type === "system" ? "text-[10px]" : ""}>{msg.msg}</p>
-                        {msg.type === "question" && (
-                          <Badge variant="outline" className="mt-1.5 text-[9px] h-4 border-[hsl(var(--warning))]/30 text-[hsl(var(--warning))]">
-                            Question
-                          </Badge>
-                        )}
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              </ScrollArea>
-              <div className="p-3 border-t border-border flex gap-2">
-                <Input placeholder="Reply to participants..." className="text-xs h-8" value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendChat()} />
-                <Button size="sm" className="h-8 px-3 shrink-0" onClick={sendChat}><Send className="h-3 w-3" /></Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Attendance Summary */}
-          <Card className="flex-none">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))]" />
-                Attendance
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {participants.slice(0, 5).map(s => (
-                <div key={s.id} className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className={cn(
-                      "h-1.5 w-1.5 rounded-full",
-                      s.vmStatus === "running" ? "bg-[hsl(var(--success))]" : "bg-muted-foreground"
-                    )} />
-                    <span className="truncate max-w-[120px]">{s.name}</span>
-                  </div>
-                  <span className="text-muted-foreground font-mono">{s.attendance.present}/{s.attendance.total}</span>
-                </div>
-              ))}
-              {participants.length > 5 && (
-                <p className="text-[10px] text-muted-foreground text-center mt-1">+{participants.length - 5} more</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Participant VM Detail Sheet — Enhanced */}
-      <Sheet open={!!selectedParticipantVM} onOpenChange={() => setSelectedStudentVM(null)}>
-        <SheetContent side="full" className="">
-          {(() => {
-            const participant = participants.find(p => p.id === selectedParticipantVM);
-            if (!participant) return null;
-            const svm = participantVMs.find(v => v.assignedTo === participant.name);
-            const mockCpu = Math.floor(20 + Math.random() * 60);
-            const mockRam = Math.floor(30 + Math.random() * 50);
-            const mockDisk = Math.floor(20 + Math.random() * 40);
-            const currentSnap = snapshots.find(s => s.id === svm?.currentSnapshotId);
-
-            return (
-              <>
-                <SheetHeader>
-                  <SheetTitle className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {participant.name.split(" ").map(n => n[0]).join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <span>{participant.name}</span>
-                      <p className="text-sm font-normal text-muted-foreground">{participant.email}</p>
-                    </div>
-                  </SheetTitle>
-                  <SheetDescription>Participant VM details and actions</SheetDescription>
-                </SheetHeader>
-
-                <ScrollArea className="mt-6 h-[calc(100vh-160px)]">
-                  <div className="space-y-6 pr-4">
-                    {/* Status Overview */}
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="rounded-xl border border-border p-3 text-center">
-                        <p className="text-[10px] text-muted-foreground uppercase mb-1">VM</p>
-                        <StatusBadge
-                          status={participant.vmStatus === "running" ? "success" : participant.vmStatus === "error" ? "error" : "default"}
-                          label={participant.vmStatus || "N/A"}
-                        />
-                      </div>
-                      <div className="rounded-xl border border-border p-3 text-center">
-                        <p className="text-[10px] text-muted-foreground uppercase mb-1">Score</p>
-                        <p className="text-lg font-bold">{participant.quizScore ?? "—"}</p>
-                      </div>
-                      <div className="rounded-xl border border-border p-3 text-center">
-                        <p className="text-[10px] text-muted-foreground uppercase mb-1">Attend.</p>
-                        <p className="text-lg font-bold">{Math.round((participant.attendance.present / Math.max(participant.attendance.total, 1)) * 100)}%</p>
-                      </div>
-                    </div>
-
-                    {/* VM Resources */}
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">VM Resources</h4>
-                      {[
-                        { label: "CPU", value: mockCpu },
-                        { label: "RAM", value: mockRam },
-                        { label: "Disk", value: mockDisk },
-                      ].map(r => (
-                        <div key={r.label} className="space-y-1">
-                          <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">{r.label}</span>
-                            <span className="font-mono font-medium">{r.value}%</span>
-                          </div>
-                          <Progress value={r.value} className="h-1.5" />
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Connection Info */}
-                    <div className="space-y-2">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Connection</h4>
-                      <div className="rounded-lg border border-border p-3 space-y-2">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">IP Address</span>
-                          <div className="flex items-center gap-1.5">
-                            <code className="font-mono">{participant.vmIpAddress || "—"}</code>
-                            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => { navigator.clipboard.writeText(participant.vmIpAddress || ""); toast({ title: "Copied" }); }}>
-                              <Copy className="h-2.5 w-2.5" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">Module</span>
-                          <span className="font-medium">{participant.currentModule}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">Last Active</span>
-                          <span>{participant.lastActive}</span>
-                        </div>
-                        {currentSnap && (
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">Current Snapshot</span>
-                            <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{currentSnap.name}</Badge>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="space-y-2">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button size="sm" className="text-xs" onClick={() => toast({ title: `Console opened for ${participant.name}` })}>
-                          <ExternalLink className="mr-1.5 h-3 w-3" />Open Console
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-xs" onClick={() => toast({ title: `Viewing ${participant.name}'s screen` })}>
-                          <Eye className="mr-1.5 h-3 w-3" />View Screen
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-xs" onClick={() => { if (svm) restartParticipantVM(batch.id, svm.id); toast({ title: `Restarting VM` }); }}>
-                          <RotateCcw className="mr-1.5 h-3 w-3" />Restart VM
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-xs" onClick={() => { navigator.clipboard.writeText(`ssh root@${participant.vmIpAddress}`); toast({ title: "SSH Copied" }); }}>
-                          <Terminal className="mr-1.5 h-3 w-3" />Copy SSH
-                        </Button>
-                        {svm && svm.status === "running" ? (
-                          <Button size="sm" variant="outline" className="text-xs" onClick={() => { stopParticipantVM(batch.id, svm.id); toast({ title: "VM Stopped" }); }}>
-                            <PowerOff className="mr-1.5 h-3 w-3" />Stop VM
-                          </Button>
-                        ) : svm ? (
-                          <Button size="sm" variant="outline" className="text-xs" onClick={() => { startParticipantVM(batch.id, svm.id); toast({ title: "VM Starting" }); }}>
-                            <Power className="mr-1.5 h-3 w-3" />Start VM
-                          </Button>
-                        ) : null}
-                        <Button size="sm" variant="outline" className="text-xs" onClick={() => {
-                          if (svm) { snapshotParticipantVM(batch.id, svm.id, `${participant.name} - ${new Date().toLocaleTimeString()}`); }
-                          toast({ title: "Snapshot Created", description: `Saving ${participant.name}'s VM state` });
-                        }}>
-                          <Camera className="mr-1.5 h-3 w-3" />Take Snapshot
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Reset to Snapshot Selector */}
-                    {snapshots.filter(s => s.status === "ready").length > 0 && svm && (
-                      <div className="space-y-2">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reset to Snapshot</h4>
-                        <div className="flex gap-2">
-                          <Select value={resetSnapshotId} onValueChange={setResetSnapshotId}>
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="Select snapshot..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {snapshots.filter(s => s.status === "ready").map(snap => (
-                                <SelectItem key={snap.id} value={snap.id}>
-                                  <div className="flex items-center gap-1.5">
-                                    {snap.isGolden && <Star className="h-3 w-3 text-primary" />}
-                                    {snap.name} ({snap.size})
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button size="sm" className="h-8 text-xs shrink-0" disabled={!resetSnapshotId} onClick={() => {
-                            if (svm && resetSnapshotId) {
-                              resetParticipantVM(batch.id, svm.id, resetSnapshotId);
-                              toast({ title: "Resetting VM", description: `Resetting to "${snapshots.find(s => s.id === resetSnapshotId)?.name}"` });
-                              setResetSnapshotId("");
-                            }
-                          }}>
-                            <RefreshCw className="mr-1 h-3 w-3" />Reset
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Reclone from Golden */}
-                    {svm && (
-                      <div className="space-y-2">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reclone</h4>
-                        <Button size="sm" variant="destructive" className="w-full text-xs" onClick={() => {
-                          recloneParticipantVM(batch.id, svm.id);
-                          toast({ title: "Recloning VM", description: `Destroying and recreating ${participant.name}'s VM from golden snapshot` });
-                        }}>
-                          <Copy className="mr-1.5 h-3 w-3" />Reclone from Golden Snapshot
-                        </Button>
-                      </div>
-                    )}
-
-                    {/* VM Logs */}
-                    <Collapsible open={showParticipantLogs} onOpenChange={setShowStudentLogs}>
-                      <div className="space-y-2">
-                        <CollapsibleTrigger className="flex items-center justify-between w-full">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">VM Logs</h4>
-                          <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", showParticipantLogs && "rotate-180")} />
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <div className="rounded-lg bg-[hsl(var(--foreground))] p-3 font-mono text-[10px] leading-relaxed text-[hsl(var(--background))] max-h-[200px] overflow-y-auto">
-                            {vmLogLines.map((line, i) => (
-                              <div key={i} className={cn(
-                                "opacity-80",
-                                line.includes("WARN") && "text-yellow-400",
-                                line.includes("ERROR") && "text-red-400"
-                              )}>{line}</div>
-                            ))}
-                          </div>
-                        </CollapsibleContent>
-                      </div>
-                    </Collapsible>
-                  </div>
-                </ScrollArea>
-              </>
-            );
-          })()}
-        </SheetContent>
-      </Sheet>
-
-      {/* Trainer Console Sheet */}
-      <Sheet open={trainerConsoleOpen} onOpenChange={setTrainerConsoleOpen}>
-        <SheetContent side="full" className="">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
-              <Terminal className="h-5 w-5 text-primary" />
-              Trainer Console
-            </SheetTitle>
-            <SheetDescription>Full console access to your trainer VM</SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 space-y-4">
-            {/* Terminal */}
-            <div className="rounded-lg bg-[hsl(var(--foreground))] p-4 font-mono text-xs leading-relaxed text-[hsl(var(--background))] min-h-[280px]">
-              {terminalLines.map((line, i) => (
-                <div key={i} className="opacity-80">{line}</div>
-              ))}
-            </div>
-
-            {/* Connection Details */}
-            {vm?.trainerVM && (
-              <div className="rounded-xl border border-border p-4 space-y-3">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Connection Details</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">IP Address</span>
-                    <div className="flex items-center gap-1.5">
-                      <code className="font-mono">{vm.trainerVM.ipAddress}</code>
-                      <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => { navigator.clipboard.writeText(vm.trainerVM.ipAddress); toast({ title: "Copied" }); }}>
-                        <Copy className="h-2.5 w-2.5" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">SSH Command</span>
-                    <div className="flex items-center gap-1.5">
-                      <code className="font-mono text-xs">ssh {vm.trainerVM.credentials.username}@{vm.trainerVM.ipAddress}</code>
-                      <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => { navigator.clipboard.writeText(`ssh ${vm.trainerVM.credentials.username}@${vm.trainerVM.ipAddress}`); toast({ title: "SSH Copied" }); }}>
-                        <Copy className="h-2.5 w-2.5" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Username</span>
-                    <code className="font-mono text-xs">{vm.trainerVM.credentials.username}</code>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Password</span>
-                    <div className="flex items-center gap-1.5">
-                      <code className="font-mono text-xs">{showTrainerPassword ? vm.trainerVM.credentials.password : "••••••••"}</code>
-                      <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => setShowTrainerPassword(!showTrainerPassword)}>
-                        {showTrainerPassword ? <EyeOff className="h-2.5 w-2.5" /> : <Eye className="h-2.5 w-2.5" />}
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Port</span>
-                    <code className="font-mono text-xs">{vm.trainerVM.credentials.sshPort}</code>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Trainer VM Actions */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</h4>
-              <div className="grid grid-cols-3 gap-2">
-                <Button size="sm" variant="outline" className="text-xs" onClick={() => toast({ title: "VM Restarting..." })}>
-                  <RotateCcw className="mr-1.5 h-3 w-3" />Restart
-                </Button>
-                <Button size="sm" variant="outline" className="text-xs" onClick={() => setTrainerSnapshotDialogOpen(true)}>
-                  <Camera className="mr-1.5 h-3 w-3" />Snapshot
-                </Button>
-                {(vm?.trainerVM.status === "running" || vm?.trainerVM.status === "configured") ? (
-                  <Button size="sm" variant="destructive" className="text-xs" onClick={() => { stopTrainerVM(batch.id); toast({ title: "VM Stopped" }); }}>
-                    <PowerOff className="mr-1.5 h-3 w-3" />Stop
-                  </Button>
-                ) : vm?.trainerVM.status === "stopped" ? (
-                  <Button size="sm" className="text-xs" onClick={() => { startTrainerVM(batch.id); toast({ title: "VM Starting..." }); }}>
-                    <Power className="mr-1.5 h-3 w-3" />Start
-                  </Button>
-                ) : (
-                  <Button size="sm" variant="outline" className="text-xs" disabled>
-                    <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />...
-                  </Button>
+            <div className="hidden md:block min-w-0">
+              <div className="flex items-center gap-2.5">
+                <h1 className="text-[15px] font-semibold tracking-tight truncate">{batch.name}</h1>
+                {sessionActive && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 px-2 py-0.5 ring-1 ring-rose-500/30">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inset-0 animate-ping rounded-full bg-rose-400 opacity-75" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-400" />
+                    </span>
+                    <span className="text-[10px] font-semibold tracking-[0.12em] text-rose-300">LIVE</span>
+                  </span>
                 )}
               </div>
-
-              {/* Reclone & Reset from Snapshot in Console Sheet */}
-              {snapshots.filter(s => s.status === "ready").length > 0 && (
-                <div className="space-y-3 pt-2">
-                  <div className="space-y-1.5">
-                    <p className="text-xs font-medium text-muted-foreground">Reclone from Snapshot</p>
-                    <div className="flex gap-2">
-                      <Select value={trainerRecloneSnapshotId} onValueChange={setTrainerRecloneSnapshotId}>
-                        <SelectTrigger className="h-8 text-xs flex-1">
-                          <SelectValue placeholder="Select snapshot..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {snapshots.filter(s => s.status === "ready").map(s => (
-                            <SelectItem key={s.id} value={s.id}>
-                              <div className="flex items-center gap-1.5">{s.isGolden && <Star className="h-2.5 w-2.5 text-primary" />}{s.name}</div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button size="sm" variant="destructive" className="text-xs h-8" disabled={!trainerRecloneSnapshotId} onClick={() => {
-                        recloneTrainerVM(batch.id, trainerRecloneSnapshotId);
-                        toast({ title: "Recloning Trainer VM" });
-                        setTrainerRecloneSnapshotId("");
-                      }}>
-                        <Copy className="mr-1 h-3 w-3" />Reclone
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <p className="text-xs font-medium text-muted-foreground">Reset to Snapshot</p>
-                    <div className="flex gap-2">
-                      <Select value={trainerResetSnapshotId} onValueChange={setTrainerResetSnapshotId}>
-                        <SelectTrigger className="h-8 text-xs flex-1">
-                          <SelectValue placeholder="Select snapshot..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {snapshots.filter(s => s.status === "ready").map(s => (
-                            <SelectItem key={s.id} value={s.id}>
-                              <div className="flex items-center gap-1.5">{s.isGolden && <Star className="h-2.5 w-2.5 text-primary" />}{s.name}</div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button size="sm" variant="outline" className="text-xs h-8" disabled={!trainerResetSnapshotId} onClick={() => {
-                        resetTrainerVM(batch.id, trainerResetSnapshotId);
-                        toast({ title: "Resetting Trainer VM" });
-                        setTrainerResetSnapshotId("");
-                      }}>
-                        <RotateCcw className="mr-1 h-3 w-3" />Reset
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* RDP & SSH Key */}
-              <div className="grid grid-cols-2 gap-2 pt-2">
-                <Button size="sm" variant="outline" className="text-xs" onClick={() => { navigator.clipboard.writeText(`mstsc /v:${vm?.trainerVM.ipAddress}`); toast({ title: "RDP Copied" }); }}>
-                  <Monitor className="mr-1.5 h-3 w-3" />RDP
-                </Button>
-                <Button size="sm" variant="outline" className="text-xs" onClick={() => toast({ title: "SSH Key Downloaded", description: "trainer_key.pem saved" })}>
-                  <FileText className="mr-1.5 h-3 w-3" />SSH Key
-                </Button>
-              </div>
+              <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-2">
+                <span>Live training</span>
+                <span className="text-zinc-700">•</span>
+                <span className="font-mono tabular-nums">{formatTimer(sessionTimer)}</span>
+              </p>
             </div>
           </div>
+
+          {/* Center: primary controls */}
+          <div className="flex items-center gap-1 rounded-xl bg-white/[0.03] ring-1 ring-white/[0.06] p-1">
+            <ToolbarBtn icon={<Megaphone className="h-3.5 w-3.5" />} label="Broadcast" onClick={() => setBroadcastOpen(true)} />
+            <ToolbarBtn icon={<BookOpen className="h-3.5 w-3.5" />} label="Resources" onClick={() => setResourcesOpen(true)} />
+            <ToolbarBtn
+              icon={<Camera className="h-3.5 w-3.5" />}
+              label="Snapshot all"
+              onClick={() => {
+                createSnapshot(batch.id, `Session ${formatTimer(sessionTimer)}`, "Live snapshot");
+                toast({ title: "Snapshot created", description: "All student VMs captured." });
+              }}
+            />
+            <div className="w-px h-5 bg-white/10 mx-1" />
+            <button
+              onClick={() => setEndOpen(true)}
+              className="h-8 px-3 inline-flex items-center gap-2 rounded-lg text-xs font-medium text-rose-300 hover:bg-rose-500/10 transition-colors"
+            >
+              <Power className="h-3.5 w-3.5" />
+              End session
+            </button>
+          </div>
+
+          {/* Right: live indicators */}
+          <div className="flex items-center gap-2">
+            <Pill icon={<Users className="h-3 w-3" />} label="Online" value={`${onlineCount}/${grid.length}`} />
+            <Pill icon={<Hand className="h-3 w-3" />} label="Raised" value={handsRaised} accent={handsRaised > 0 ? "amber" : undefined} />
+            <Pill icon={<AlertCircle className="h-3 w-3" />} label="Issues" value={issues} accent={issues > 0 ? "rose" : undefined} />
+          </div>
+        </div>
+      </header>
+
+      {/* Main content */}
+      <main className="relative px-6 lg:px-10 pt-10 pb-32 max-w-[1600px] mx-auto">
+        {/* Section heading */}
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-500">Classroom</p>
+            <h2 className="mt-1.5 text-2xl font-semibold tracking-tight">
+              {grid.length} students <span className="text-zinc-600 font-normal">· live now</span>
+            </h2>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
+            <Input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search students"
+              className="h-9 w-[260px] pl-9 bg-white/[0.03] border-white/10 text-zinc-200 placeholder:text-zinc-600 focus-visible:ring-white/20"
+            />
+          </div>
+        </div>
+
+        {/* Student Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {filtered.map((s, idx) => (
+            <StudentCard
+              key={s.id}
+              student={s}
+              index={idx}
+              onClick={() => setSelectedStudentId(s.id)}
+              onAssist={() => toast({ title: `Assisting ${s.name}` })}
+              onRestart={() => toast({ title: `Restarting ${s.vmName}` })}
+              onMessage={() => { setSelectedStudentId(s.id); }}
+            />
+          ))}
+        </div>
+
+        {filtered.length === 0 && (
+          <div className="text-center py-24 text-sm text-zinc-500">No students match "{search}"</div>
+        )}
+      </main>
+
+      {/* Floating Chat trigger */}
+      <button
+        onClick={() => setChatOpen(true)}
+        className="fixed bottom-6 right-6 z-40 h-12 px-5 inline-flex items-center gap-2.5 rounded-full bg-white text-black text-sm font-medium shadow-2xl shadow-black/40 hover:bg-zinc-100 transition-all hover:scale-[1.02] active:scale-[0.98]"
+      >
+        <MessageSquare className="h-4 w-4" />
+        Conversations
+        {messages.filter(m => m.kind === "q").length > 0 && (
+          <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-semibold">
+            {messages.filter(m => m.kind === "q").length}
+          </span>
+        )}
+      </button>
+
+      {/* Student Drawer */}
+      <Sheet open={!!selectedStudent} onOpenChange={(o) => !o && setSelectedStudentId(null)}>
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-[520px] bg-[#0a0b0e] border-white/10 text-zinc-100 p-0"
+        >
+          {selectedStudent && (
+            <StudentDrawer student={selectedStudent} onClose={() => setSelectedStudentId(null)} />
+          )}
         </SheetContent>
       </Sheet>
 
-      {/* Quick Poll Dialog */}
-      <Dialog open={quickPollOpen} onOpenChange={setQuickPollOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Launch Quick Poll</DialogTitle>
-            <DialogDescription>Create and broadcast a poll to all participants</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Question</label>
-              <Input placeholder="e.g., Are you able to see the output?" value={pollQuestion} onChange={e => setPollQuestion(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Type</label>
-              <Select defaultValue="yesno">
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="yesno">Yes / No</SelectItem>
-                  <SelectItem value="abc">A / B / C / D</SelectItem>
-                  <SelectItem value="scale">Scale 1-5</SelectItem>
-                  <SelectItem value="thumbs">👍 / 👎</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Resources Drawer */}
+      <Sheet open={resourcesOpen} onOpenChange={setResourcesOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-[440px] bg-[#0a0b0e] border-white/10 text-zinc-100 p-0">
+          <ResourcesPanel batchName={batch.name} />
+        </SheetContent>
+      </Sheet>
+
+      {/* Conversations Drawer */}
+      <Sheet open={chatOpen} onOpenChange={setChatOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-[420px] bg-[#0a0b0e] border-white/10 text-zinc-100 p-0 flex flex-col">
+          <div className="px-5 pt-5 pb-3">
+            <h3 className="text-base font-semibold tracking-tight">Conversations</h3>
+            <p className="text-xs text-zinc-500 mt-0.5">Live chat, questions and announcements.</p>
           </div>
+          <Tabs value={chatTab} onValueChange={setChatTab} className="flex-1 flex flex-col min-h-0">
+            <TabsList className="mx-5 bg-white/[0.04] border border-white/10 h-9">
+              <TabsTrigger value="chat" className="text-xs data-[state=active]:bg-white/10 data-[state=active]:text-white">Chat</TabsTrigger>
+              <TabsTrigger value="questions" className="text-xs data-[state=active]:bg-white/10 data-[state=active]:text-white">Questions</TabsTrigger>
+              <TabsTrigger value="announce" className="text-xs data-[state=active]:bg-white/10 data-[state=active]:text-white">Announcements</TabsTrigger>
+            </TabsList>
+            <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 mt-3">
+              <ScrollArea className="flex-1 px-5">
+                <div className="space-y-3 pb-4">
+                  {messages.filter(m => m.kind !== "q").map(m => (
+                    <ChatBubble key={m.id} {...m} />
+                  ))}
+                </div>
+              </ScrollArea>
+              <ChatInput value={chatInput} onChange={setChatInput} onSend={sendChat} />
+            </TabsContent>
+            <TabsContent value="questions" className="flex-1 mt-3">
+              <ScrollArea className="h-full px-5 pb-4">
+                <div className="space-y-2">
+                  {messages.filter(m => m.kind === "q").map(m => (
+                    <div key={m.id} className="rounded-xl bg-white/[0.03] ring-1 ring-white/[0.06] p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-zinc-300">{m.from}</span>
+                        <span className="text-[10px] text-zinc-500">{m.t}</span>
+                      </div>
+                      <p className="text-sm text-zinc-200 mt-1.5">{m.text}</p>
+                      <div className="flex items-center gap-2 mt-3">
+                        <button className="text-[11px] text-zinc-400 hover:text-white">Mark answered</button>
+                        <span className="text-zinc-700">·</span>
+                        <button className="text-[11px] text-zinc-400 hover:text-white">Reply</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="announce" className="flex-1 mt-3 px-5">
+              <Textarea
+                placeholder="Pin an announcement for this session…"
+                className="min-h-[120px] bg-white/[0.03] border-white/10 text-zinc-200 placeholder:text-zinc-600 resize-none"
+              />
+              <Button className="mt-3 w-full bg-white text-black hover:bg-zinc-100">Pin announcement</Button>
+            </TabsContent>
+          </Tabs>
+        </SheetContent>
+      </Sheet>
+
+      {/* Broadcast Dialog */}
+      <Dialog open={broadcastOpen} onOpenChange={setBroadcastOpen}>
+        <DialogContent className="bg-[#0a0b0e] border-white/10 text-zinc-100 max-w-md">
+          <DialogHeader>
+            <DialogTitle>Broadcast message</DialogTitle>
+            <DialogDescription className="text-zinc-500">
+              Sends a notification to all {participants.length} students in this batch.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={broadcastText}
+            onChange={e => setBroadcastText(e.target.value)}
+            placeholder="Write a short message…"
+            className="min-h-[120px] bg-white/[0.03] border-white/10 text-zinc-200 placeholder:text-zinc-600 resize-none"
+          />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setQuickPollOpen(false)}>Cancel</Button>
-            <Button onClick={() => { toast({ title: "Poll Launched", description: `"${pollQuestion}" sent to ${participants.length} students` }); setQuickPollOpen(false); setPollQuestion(""); }}>
-              <Zap className="mr-1.5 h-3.5 w-3.5" />Broadcast
+            <Button variant="ghost" onClick={() => setBroadcastOpen(false)} className="text-zinc-400 hover:bg-white/5 hover:text-white">Cancel</Button>
+            <Button onClick={sendBroadcast} className="bg-white text-black hover:bg-zinc-100">
+              <Send className="h-3.5 w-3.5 mr-1.5" />
+              Broadcast
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Trainer Snapshot Dialog */}
-      <Dialog open={trainerSnapshotDialogOpen} onOpenChange={setTrainerSnapshotDialogOpen}>
-        <DialogContent>
+
+      {/* End session dialog */}
+      <Dialog open={endOpen} onOpenChange={setEndOpen}>
+        <DialogContent className="bg-[#0a0b0e] border-white/10 text-zinc-100 max-w-sm">
           <DialogHeader>
-            <DialogTitle>Take Named Snapshot</DialogTitle>
-            <DialogDescription>Create a snapshot of your trainer VM's current state</DialogDescription>
+            <DialogTitle>End this session?</DialogTitle>
+            <DialogDescription className="text-zinc-500">
+              Students will lose access to live controls. VMs remain running.
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Snapshot Name *</label>
-              <Input placeholder="e.g., After Lab 3 Setup" value={trainerSnapshotName} onChange={e => setTrainerSnapshotName(e.target.value)} />
-            </div>
-          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setTrainerSnapshotDialogOpen(false); setTrainerSnapshotName(""); }}>Cancel</Button>
-            <Button disabled={!trainerSnapshotName.trim()} onClick={() => {
-              createSnapshot(batch.id, trainerSnapshotName.trim(), "Trainer snapshot");
-              toast({ title: "Snapshot Creating", description: `"${trainerSnapshotName}" is being created...` });
-              setTrainerSnapshotName("");
-              setTrainerSnapshotDialogOpen(false);
-            }}>
-              <Camera className="mr-1.5 h-3.5 w-3.5" />Create Snapshot
+            <Button variant="ghost" onClick={() => setEndOpen(false)} className="text-zinc-400 hover:bg-white/5 hover:text-white">Keep running</Button>
+            <Button
+              onClick={() => { setSessionActive(false); setEndOpen(false); toast({ title: "Session ended" }); }}
+              className="bg-rose-500 text-white hover:bg-rose-600"
+            >
+              End session
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+/* -------- Sub-components -------- */
+
+function ToolbarBtn({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="h-8 px-3 inline-flex items-center gap-2 rounded-lg text-xs font-medium text-zinc-300 hover:bg-white/[0.06] hover:text-white transition-colors"
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function Pill({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: number | string; accent?: "amber" | "rose" }) {
+  const accentText = accent === "amber" ? "text-amber-300" : accent === "rose" ? "text-rose-300" : "text-zinc-200";
+  const accentDot = accent === "amber" ? "bg-amber-400" : accent === "rose" ? "bg-rose-400" : "bg-zinc-500";
+  return (
+    <div className="h-8 inline-flex items-center gap-2 rounded-full bg-white/[0.03] ring-1 ring-white/[0.06] px-3">
+      <span className={cn("h-1.5 w-1.5 rounded-full", accentDot)} />
+      <span className="text-[11px] text-zinc-500">{label}</span>
+      <span className={cn("text-xs font-semibold tabular-nums", accentText)}>{value}</span>
+    </div>
+  );
+}
+
+function StudentCard({
+  student, index, onClick, onAssist, onRestart, onMessage,
+}: {
+  student: ReturnType<typeof useDeriveType>;
+  index: number;
+  onClick: () => void;
+  onAssist: () => void;
+  onRestart: () => void;
+  onMessage: () => void;
+}) {
+  const accent = stateAccent[student.state];
+  return (
+    <motion.button
+      type="button"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: Math.min(index * 0.015, 0.3) }}
+      onClick={onClick}
+      className={cn(
+        "group relative text-left rounded-2xl p-4 bg-white/[0.025] ring-1 ring-white/[0.06]",
+        "hover:bg-white/[0.04] hover:ring-white/[0.12] transition-all duration-200",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30",
+      )}
+    >
+      {/* status indicator */}
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={cn("relative h-9 w-9 rounded-full ring-2", accent.ring)}>
+            <Avatar className="h-9 w-9">
+              <AvatarFallback className="bg-zinc-800 text-zinc-200 text-xs font-medium">
+                {student.initials}
+              </AvatarFallback>
+            </Avatar>
+            <span className={cn("absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-[#07080b]", accent.dot)} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-zinc-100 truncate">{student.name}</p>
+            <p className={cn("text-[11px] mt-0.5", accent.text)}>{accent.label}</p>
+          </div>
+        </div>
+        {student.state === "raised" && (
+          <Hand className="h-4 w-4 text-amber-300 animate-pulse" />
+        )}
+      </div>
+
+      {/* meta */}
+      <div className="mt-4 flex items-center justify-between">
+        <div className="flex items-center gap-1.5 text-[11px] text-zinc-500">
+          {student.connection === "offline" ? <WifiOff className="h-3 w-3" /> : <Wifi className="h-3 w-3" />}
+          <span className="font-mono">{student.ip}</span>
+        </div>
+        <span className="text-[10px] uppercase tracking-wider text-zinc-600">VM</span>
+      </div>
+
+      {/* hover quick actions */}
+      <div className="absolute inset-x-3 bottom-3 flex items-center gap-1.5 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
+        <QuickAction onClick={(e) => { e.stopPropagation(); onClick(); }} label="View VM"><Monitor className="h-3 w-3" /></QuickAction>
+        <QuickAction onClick={(e) => { e.stopPropagation(); onAssist(); }} label="Assist"><Sparkles className="h-3 w-3" /></QuickAction>
+        <QuickAction onClick={(e) => { e.stopPropagation(); onRestart(); }} label="Restart"><RotateCcw className="h-3 w-3" /></QuickAction>
+        <QuickAction onClick={(e) => { e.stopPropagation(); onMessage(); }} label="Message"><MessageSquare className="h-3 w-3" /></QuickAction>
+      </div>
+    </motion.button>
+  );
+}
+
+// trick to derive student type
+function useDeriveType() { return null as unknown as {
+  id: string; name: string; email: string; initials: string; ip: string;
+  state: StudentState; connection: string; vmName: string; cpu: number; ram: number;
+}; }
+
+function QuickAction({ children, label, onClick }: { children: React.ReactNode; label: string; onClick: (e: React.MouseEvent) => void }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          onClick={onClick}
+          className="h-7 w-7 inline-flex items-center justify-center rounded-md bg-black/40 backdrop-blur ring-1 ring-white/10 text-zinc-300 hover:bg-white/10 hover:text-white transition-colors"
+        >
+          {children}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="bg-zinc-900 border-white/10 text-zinc-100 text-[11px]">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+function StudentDrawer({ student, onClose }: { student: ReturnType<typeof useDeriveType>; onClose: () => void }) {
+  const accent = stateAccent[student.state];
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="px-6 pt-6 pb-5 border-b border-white/5">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className={cn("relative h-11 w-11 rounded-full ring-2", accent.ring)}>
+              <Avatar className="h-11 w-11">
+                <AvatarFallback className="bg-zinc-800 text-zinc-200 text-sm">{student.initials}</AvatarFallback>
+              </Avatar>
+              <span className={cn("absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-[#0a0b0e]", accent.dot)} />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold tracking-tight">{student.name}</h3>
+              <p className="text-xs text-zinc-500">{student.email}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="h-8 w-8 inline-flex items-center justify-center rounded-md text-zinc-500 hover:bg-white/5 hover:text-zinc-200 transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="mt-4 flex items-center gap-2">
+          <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] ring-1", accent.ring, accent.text)}>
+            <span className={cn("h-1.5 w-1.5 rounded-full", accent.dot)} />
+            {accent.label}
+          </span>
+          <span className="text-[11px] text-zinc-500 font-mono">{student.ip}</span>
+        </div>
+      </div>
+
+      <ScrollArea className="flex-1">
+        <div className="px-6 py-5 space-y-6">
+          {/* VM preview */}
+          <Section title="VM preview">
+            <div className="aspect-video rounded-xl bg-gradient-to-br from-zinc-900 via-zinc-950 to-black ring-1 ring-white/5 flex items-center justify-center">
+              <div className="text-center">
+                <Monitor className="h-7 w-7 mx-auto text-zinc-700" />
+                <p className="text-[11px] text-zinc-600 mt-2">{student.vmName}</p>
+              </div>
+            </div>
+          </Section>
+
+          {/* Resource usage */}
+          <Section title="Resources">
+            <div className="space-y-3">
+              <Meter label="CPU" value={student.cpu} />
+              <Meter label="Memory" value={student.ram} />
+            </div>
+          </Section>
+
+          {/* VM controls */}
+          <Section title="Controls">
+            <div className="grid grid-cols-2 gap-2">
+              <DrawerBtn icon={<Sparkles className="h-3.5 w-3.5" />} label="Assist student" onClick={() => toast({ title: "Joining session" })} />
+              <DrawerBtn icon={<Camera className="h-3.5 w-3.5" />} label="Snapshot" onClick={() => toast({ title: "Snapshot saved" })} />
+              <DrawerBtn icon={<RotateCcw className="h-3.5 w-3.5" />} label="Restart VM" onClick={() => toast({ title: "VM restarting" })} />
+              <DrawerBtn icon={<RotateCcw className="h-3.5 w-3.5" />} label="Restore snapshot" onClick={() => toast({ title: "Restoring…" })} />
+            </div>
+          </Section>
+
+          {/* Activity */}
+          <Section title="Recent activity">
+            <ul className="space-y-2.5 text-xs">
+              {[
+                { t: "Now", e: "Connected to lab terminal" },
+                { t: "2m", e: "Submitted exercise: VPC peering" },
+                { t: "8m", e: "Joined session" },
+              ].map((a, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <span className="mt-1 h-1 w-1 rounded-full bg-zinc-600" />
+                  <div className="flex-1">
+                    <p className="text-zinc-300">{a.e}</p>
+                    <p className="text-[10px] text-zinc-600 mt-0.5">{a.t} ago</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </Section>
+
+          {/* Notes */}
+          <Section title="Trainer notes">
+            <Textarea
+              placeholder="Private notes for this student…"
+              className="min-h-[80px] bg-white/[0.03] border-white/10 text-zinc-200 placeholder:text-zinc-600 resize-none text-sm"
+            />
+          </Section>
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h4 className="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500 mb-3">{title}</h4>
+      {children}
+    </div>
+  );
+}
+
+function Meter({ label, value }: { label: string; value: number }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between text-[11px] text-zinc-400 mb-1.5">
+        <span>{label}</span>
+        <span className="font-mono tabular-nums text-zinc-300">{value}%</span>
+      </div>
+      <div className="h-1 rounded-full bg-white/[0.05] overflow-hidden">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-zinc-400 to-zinc-200 transition-all"
+          style={{ width: `${value}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function DrawerBtn({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="h-9 px-3 inline-flex items-center justify-center gap-2 rounded-lg bg-white/[0.04] ring-1 ring-white/[0.06] text-xs font-medium text-zinc-200 hover:bg-white/[0.08] hover:ring-white/15 transition-colors"
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function ResourcesPanel({ batchName }: { batchName: string }) {
+  return (
+    <div className="flex flex-col h-full">
+      <div className="px-6 pt-6 pb-4 border-b border-white/5">
+        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500">Session resources</p>
+        <h3 className="mt-1 text-base font-semibold tracking-tight">{batchName}</h3>
+      </div>
+      <ScrollArea className="flex-1">
+        <div className="px-6 py-5 space-y-6">
+          <Section title="Current lesson">
+            <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/[0.06] p-4">
+              <p className="text-sm font-medium">Module 4 — VPC Peering & Transit Gateway</p>
+              <p className="text-[11px] text-zinc-500 mt-1">In progress · 24 min</p>
+            </div>
+          </Section>
+          <Section title="Materials">
+            <div className="space-y-2">
+              {[
+                { i: <FileText className="h-3.5 w-3.5" />, t: "Lab guide.pdf", s: "1.2 MB" },
+                { i: <FileText className="h-3.5 w-3.5" />, t: "Slides — VPC peering.pdf", s: "3.4 MB" },
+                { i: <Link2 className="h-3.5 w-3.5" />, t: "github.com/cloudadda/aws-labs", s: "Repository" },
+                { i: <FileText className="h-3.5 w-3.5" />, t: "Architecture diagram.png", s: "820 KB" },
+              ].map((r, i) => (
+                <button key={i} className="w-full flex items-center justify-between rounded-lg px-3 py-2.5 text-left bg-white/[0.02] ring-1 ring-white/[0.05] hover:bg-white/[0.05] hover:ring-white/10 transition-colors">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-zinc-500">{r.i}</span>
+                    <div className="min-w-0">
+                      <p className="text-sm text-zinc-200 truncate">{r.t}</p>
+                      <p className="text-[10px] text-zinc-500">{r.s}</p>
+                    </div>
+                  </div>
+                  <Download className="h-3.5 w-3.5 text-zinc-600" />
+                </button>
+              ))}
+            </div>
+          </Section>
+          <Section title="Shared with class">
+            <p className="text-xs text-zinc-500">Drop a link or file to push it to all student environments.</p>
+            <Button className="mt-3 w-full bg-white/[0.05] ring-1 ring-white/10 text-zinc-200 hover:bg-white/[0.1]">Share new resource</Button>
+          </Section>
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+function ChatBubble({ from, text, t, kind }: { from: string; text: string; t: string; kind: "msg" | "q" | "sys" }) {
+  if (kind === "sys") {
+    return <p className="text-center text-[11px] text-zinc-600">{text}</p>;
+  }
+  const me = from === "You";
+  return (
+    <div className={cn("flex flex-col gap-1", me ? "items-end" : "items-start")}>
+      <div className="flex items-center gap-2">
+        <span className="text-[11px] text-zinc-500">{from}</span>
+        <span className="text-[10px] text-zinc-600">{t}</span>
+      </div>
+      <div className={cn(
+        "max-w-[85%] rounded-2xl px-3.5 py-2 text-sm",
+        me ? "bg-white text-black" : "bg-white/[0.05] text-zinc-100 ring-1 ring-white/[0.06]"
+      )}>
+        {text}
+      </div>
+    </div>
+  );
+}
+
+function ChatInput({ value, onChange, onSend }: { value: string; onChange: (v: string) => void; onSend: () => void }) {
+  return (
+    <div className="p-4 border-t border-white/5">
+      <div className="flex items-center gap-2 rounded-xl bg-white/[0.04] ring-1 ring-white/[0.08] px-3 py-1.5 focus-within:ring-white/20 transition">
+        <input
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && onSend()}
+          placeholder="Message your students…"
+          className="flex-1 bg-transparent border-0 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none py-2"
+        />
+        <button
+          onClick={onSend}
+          disabled={!value.trim()}
+          className="h-7 w-7 inline-flex items-center justify-center rounded-md bg-white text-black disabled:opacity-30 hover:bg-zinc-100 transition"
+        >
+          <Send className="h-3.5 w-3.5" />
+        </button>
+      </div>
     </div>
   );
 }
