@@ -1357,3 +1357,59 @@ function RailRow({ icon, label, onClick }: { icon: React.ReactNode; label: strin
     </button>
   );
 }
+
+/* ---------------- VM Tabs Panel (Student Drawer) ---------------- */
+
+type StudentVM = { id: string; name: string; role: string; ip: string; running: boolean; specs: string };
+
+function VMTabsPanel({ vms }: { vms: StudentVM[] }) {
+  const [active, setActive] = useState(vms[0]?.id);
+  const current = vms.find(v => v.id === active) || vms[0];
+  if (!current) return null;
+  return (
+    <div>
+      <h4 className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground mb-3">Virtual machines</h4>
+      <div className="flex items-center gap-1 border-b border-border mb-3 overflow-x-auto">
+        {vms.map(vm => (
+          <button
+            key={vm.id}
+            onClick={() => setActive(vm.id)}
+            className={cn(
+              "h-8 px-3 inline-flex items-center gap-1.5 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
+              active === vm.id ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <span className={cn("h-1.5 w-1.5 rounded-full", vm.running ? "bg-success" : "bg-muted-foreground")} />
+            <span>{vm.role}</span>
+          </button>
+        ))}
+      </div>
+      <div className="aspect-video rounded-xl bg-zinc-950 border border-border overflow-hidden relative">
+        {current.running ? (
+          <>
+            <div className="absolute inset-0 p-4 font-mono text-[10px] leading-tight text-emerald-400/80 overflow-hidden">
+              <div>$ ssh student@{current.ip}</div>
+              <div className="text-zinc-500">Last login: today 10:24:11</div>
+              <div>$ systemctl status nginx</div>
+              <div className="text-emerald-400">● active (running)</div>
+              <div className="mt-1 inline-flex items-center">$ <span className="ml-1 inline-block h-2 w-1.5 bg-emerald-400 animate-pulse" /></div>
+            </div>
+            <div className="absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-0.5 backdrop-blur-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+              <span className="text-[9px] font-medium text-white tracking-wide">RUNNING</span>
+            </div>
+          </>
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-zinc-500">
+            <Power className="h-6 w-6" />
+            <span className="text-[11px]">VM stopped</span>
+          </div>
+        )}
+      </div>
+      <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+        <span className="font-mono">{current.name} · {current.ip}</span>
+        <span>{current.specs}</span>
+      </div>
+    </div>
+  );
+}
