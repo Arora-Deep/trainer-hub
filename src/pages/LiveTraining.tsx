@@ -14,7 +14,7 @@ import {
   MessageSquare, Send, X, Search, Wifi, WifiOff, RotateCcw, Monitor,
   FileText, Link2, Download, Sparkles, ChevronLeft, ChevronRight, Play,
   CheckCircle2, Circle, Mic, Video, ScreenShare, Square, RefreshCw,
-  BarChart3, TrendingUp, Clock, Activity, Maximize2,
+  BarChart3, TrendingUp, Clock, Activity, Maximize2, LayoutPanelLeft, Minimize2,
 } from "lucide-react";
 import { useBatchStore } from "@/stores/batchStore";
 import { useCourseStore } from "@/stores/courseStore";
