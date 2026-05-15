@@ -434,7 +434,7 @@ export default function LiveTraining() {
 
       {/* Student Drawer */}
       <Sheet open={!!selectedStudent} onOpenChange={(o) => !o && setSelectedStudentId(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-[520px] p-0">
+        <SheetContent side="right" className="w-full sm:max-w-[760px] p-0">
           {selectedStudent && <StudentDrawer student={selectedStudent} onClose={() => setSelectedStudentId(null)} />}
         </SheetContent>
       </Sheet>
