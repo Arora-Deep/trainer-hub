@@ -117,7 +117,7 @@ export default function LiveTraining() {
   // Course content for left rail (LMS integration)
   const linkedCourse = courses.find(c => batch?.courseId === c.id) || courses[0];
   const lessons = useMemo(() => {
-    const mods = linkedCourse?.modules || [];
+    const mods = linkedCourse?.chapters || [];
     const flat: { id: string; title: string; module: string; duration?: string }[] = [];
     mods.forEach(m => {
       (m.lessons || []).forEach(l => flat.push({ id: l.id, title: l.title, module: m.title, duration: l.duration }));
