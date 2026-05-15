@@ -1179,7 +1179,13 @@ function TrainerView({
 }: TrainerViewProps) {
   const [chatOpen, setChatOpen] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
-
+  const trainerVMs = [
+    { id: "vm1", name: "trainer-master-vm", role: "Primary", ip: "10.0.4.21", specs: "4 vCPU · 8 GB" },
+    { id: "vm2", name: "trainer-db-vm", role: "Database", ip: "10.0.4.22", specs: "2 vCPU · 4 GB" },
+    { id: "vm3", name: "trainer-edge-vm", role: "Edge node", ip: "10.0.4.23", specs: "2 vCPU · 4 GB" },
+  ];
+  const [activeVm, setActiveVm] = useState(trainerVMs[0].id);
+  const current = trainerVMs.find(v => v.id === activeVm)!;
   return (
     <div className="-mx-6 lg:-mx-8 -mt-8 -mb-24">
       <div className="flex h-[calc(100vh-64px)]">
