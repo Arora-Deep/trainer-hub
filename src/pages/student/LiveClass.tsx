@@ -14,7 +14,8 @@ import {
   Hand, ThumbsUp, Heart, Zap, HelpCircle, Radio,
   ChevronDown, ChevronUp, Circle, LayoutGrid, Columns2,
   PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen,
-  RotateCw, Power, Save, StickyNote,
+  RotateCw, Power, Save, StickyNote, Mic, Camera, Share2,
+  Download, Link2, Image as ImageIcon, X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
