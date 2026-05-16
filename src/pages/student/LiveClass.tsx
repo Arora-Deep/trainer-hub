@@ -289,7 +289,10 @@ export default function StudentLiveClass() {
 
   // Split view state
   const [splitLeftCollapsed, setSplitLeftCollapsed] = useState(false);
-  const [splitRail, setSplitRail] = useState<SideRail>("chat");
+  const [splitRail, setSplitRail] = useState<SideRail>("materials");
+  const [fullscreen, setFullscreen] = useState(false);
+  const [micOn, setMicOn] = useState(false);
+  const [camOn, setCamOn] = useState(false);
 
   // Content view state
   const [contentLeftCollapsed, setContentLeftCollapsed] = useState(false);
