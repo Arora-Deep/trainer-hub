@@ -93,7 +93,14 @@ const statusIndicators: Record<string, { color: string; label: string }> = {
 };
 
 type ViewMode = "default" | "split" | "content" | "notes";
-type SideRail = "chat" | "students" | null;
+type SideRail = "materials" | "chat" | "students" | null;
+
+const sessionMaterials = [
+  { name: "Lab guide.pdf", size: "1.2 MB", icon: FileText },
+  { name: "Slides — VPC peering.pdf", size: "3.4 MB", icon: FileText },
+  { name: "github.com/cloudadda/aws-labs", size: "Repository", icon: Link2 },
+  { name: "Architecture diagram.png", size: "820 KB", icon: ImageIcon },
+];
 
 /* ── Floating Reaction ── */
 function FloatingReaction({ emoji, id, onDone }: { emoji: string; id: number; onDone: (id: number) => void }) {
