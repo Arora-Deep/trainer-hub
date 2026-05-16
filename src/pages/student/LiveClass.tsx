@@ -14,7 +14,8 @@ import {
   Hand, ThumbsUp, Heart, Zap, HelpCircle, Radio,
   ChevronDown, ChevronUp, Circle, LayoutGrid, Columns2,
   PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen,
-  RotateCw, Power, Save, StickyNote,
+  RotateCw, Power, Save, StickyNote, Mic, Camera, Share2,
+  Download, Link2, Image as ImageIcon, X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -92,7 +93,14 @@ const statusIndicators: Record<string, { color: string; label: string }> = {
 };
 
 type ViewMode = "default" | "split" | "content" | "notes";
-type SideRail = "chat" | "students" | null;
+type SideRail = "materials" | "chat" | "students" | null;
+
+const sessionMaterials = [
+  { name: "Lab guide.pdf", size: "1.2 MB", icon: FileText },
+  { name: "Slides — VPC peering.pdf", size: "3.4 MB", icon: FileText },
+  { name: "github.com/cloudadda/aws-labs", size: "Repository", icon: Link2 },
+  { name: "Architecture diagram.png", size: "820 KB", icon: ImageIcon },
+];
 
 /* ── Floating Reaction ── */
 function FloatingReaction({ emoji, id, onDone }: { emoji: string; id: number; onDone: (id: number) => void }) {
@@ -281,7 +289,10 @@ export default function StudentLiveClass() {
 
   // Split view state
   const [splitLeftCollapsed, setSplitLeftCollapsed] = useState(false);
-  const [splitRail, setSplitRail] = useState<SideRail>("chat");
+  const [splitRail, setSplitRail] = useState<SideRail>("materials");
+  const [fullscreen, setFullscreen] = useState(false);
+  const [micOn, setMicOn] = useState(false);
+  const [camOn, setCamOn] = useState(false);
 
   // Content view state
   const [contentLeftCollapsed, setContentLeftCollapsed] = useState(false);
@@ -339,14 +350,26 @@ export default function StudentLiveClass() {
       </div>
 
       {/* View Mode Tabs */}
-      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-        <TabsList className="h-9">
-          <TabsTrigger value="default" className="text-xs gap-1.5"><LayoutGrid className="h-3.5 w-3.5" /> Default</TabsTrigger>
-          <TabsTrigger value="split" className="text-xs gap-1.5"><Columns2 className="h-3.5 w-3.5" /> Split View</TabsTrigger>
-          <TabsTrigger value="content" className="text-xs gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Content View</TabsTrigger>
-          <TabsTrigger value="notes" className="text-xs gap-1.5"><StickyNote className="h-3.5 w-3.5" /> Notes</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+          <TabsList className="h-9">
+            <TabsTrigger value="default" className="text-xs gap-1.5"><LayoutGrid className="h-3.5 w-3.5" /> Default</TabsTrigger>
+            <TabsTrigger value="split" className="text-xs gap-1.5"><Columns2 className="h-3.5 w-3.5" /> Split View</TabsTrigger>
+            <TabsTrigger value="content" className="text-xs gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Content View</TabsTrigger>
+            <TabsTrigger value="notes" className="text-xs gap-1.5"><StickyNote className="h-3.5 w-3.5" /> Notes</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        {viewMode === "split" && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => setFullscreen(true)}
+          >
+            <Maximize2 className="h-3.5 w-3.5" /> Fullscreen
+          </Button>
+        )}
+      </div>
 
       {/* Recording Notice */}
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-destructive/5 border border-destructive/10 text-xs text-destructive">
@@ -516,64 +539,257 @@ export default function StudentLiveClass() {
 
       {/* ===== SPLIT VIEW ===== */}
       {viewMode === "split" && (
-        <div className="grid gap-3 transition-all" style={{
-          gridTemplateColumns: `${splitLeftCollapsed ? "44px" : "1fr"} 1fr ${splitRail ? "300px" : "44px"}`,
-        }}>
-          {/* Left: Console */}
-          <Card className="overflow-hidden">
-            <div className="flex items-center justify-between border-b border-border px-2 py-1.5">
-              {!splitLeftCollapsed && <span className="text-xs font-semibold px-1">Console</span>}
-              <Button variant="ghost" size="icon" className="h-6 w-6 ml-auto" onClick={() => setSplitLeftCollapsed(!splitLeftCollapsed)}>
-                {splitLeftCollapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
+        <div
+          className={
+            fullscreen
+              ? "fixed inset-0 z-[60] bg-background p-3 overflow-auto"
+              : ""
+          }
+        >
+          {fullscreen && (
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Badge className="bg-destructive/10 text-destructive text-[10px] animate-pulse">● LIVE</Badge>
+                <span className="text-sm font-semibold">AWS VPC Deep Dive — Split View</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => setFullscreen(false)}
+              >
+                <Minimize2 className="h-3.5 w-3.5" /> Exit Fullscreen
               </Button>
             </div>
-            {!splitLeftCollapsed && (
-              <div className="h-[640px]"><ConsolePanel terminalInput={terminalInput} setTerminalInput={setTerminalInput} /></div>
-            )}
-          </Card>
+          )}
 
-          {/* Center: LMS / Course Content */}
-          <Card className="overflow-hidden">
-            <div className="flex items-center gap-2 border-b border-border px-3 py-2">
-              <BookOpen className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold">Course Content</span>
-              <Badge variant="outline" className="text-[10px] ml-auto">Synced with instructor</Badge>
-            </div>
-            <div className="h-[640px]"><CourseContentPanel /></div>
-          </Card>
+          <div
+            className="grid gap-3 transition-all"
+            style={{
+              gridTemplateColumns: `${splitLeftCollapsed ? "44px" : "300px"} 1fr ${splitRail ? "320px" : "44px"}`,
+              height: fullscreen ? "calc(100vh - 60px)" : "auto",
+            }}
+          >
+            {/* ── Left Rail: Student profile + VM ── */}
+            <Card className="overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between border-b border-border px-2 py-1.5 shrink-0">
+                {!splitLeftCollapsed && <span className="text-xs font-semibold px-1 text-muted-foreground uppercase tracking-wider">You</span>}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 ml-auto"
+                  onClick={() => setSplitLeftCollapsed(!splitLeftCollapsed)}
+                >
+                  {splitLeftCollapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
+                </Button>
+              </div>
 
-          {/* Right: Collapsible Rail */}
-          <Card className="overflow-hidden">
-            <div className="flex items-center justify-between border-b border-border px-2 py-1.5">
-              <div className="flex gap-1">
-                {!splitRail || splitRail === "chat" ? null : null}
+              {!splitLeftCollapsed && (
+                <ScrollArea className="flex-1">
+                  <div className="p-3 space-y-4">
+                    {/* Profile */}
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold">
+                          SR
+                        </div>
+                        <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-success border-2 border-background" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold leading-tight">You · Student</div>
+                        <div className="text-[11px] text-muted-foreground truncate">student-vm-sarah-42</div>
+                      </div>
+                    </div>
+
+                    {/* Mic / Cam / Share */}
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <Button
+                        variant={micOn ? "default" : "outline"}
+                        size="sm"
+                        className={`h-12 flex-col gap-0.5 text-[10px] ${micOn ? "bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20" : ""}`}
+                        onClick={() => setMicOn(!micOn)}
+                      >
+                        <Mic className="h-3.5 w-3.5" /> Mic
+                      </Button>
+                      <Button
+                        variant={camOn ? "default" : "outline"}
+                        size="sm"
+                        className={`h-12 flex-col gap-0.5 text-[10px] ${camOn ? "bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20" : ""}`}
+                        onClick={() => setCamOn(!camOn)}
+                      >
+                        <Camera className="h-3.5 w-3.5" /> Cam
+                      </Button>
+                      <Button variant="outline" size="sm" className="h-12 flex-col gap-0.5 text-[10px]">
+                        <Share2 className="h-3.5 w-3.5" /> Share
+                      </Button>
+                    </div>
+
+                    {/* Your Machine */}
+                    <div>
+                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Your Machine</div>
+                      <div className="rounded-lg overflow-hidden border border-border bg-foreground text-background p-2.5 font-mono text-[10px] leading-relaxed">
+                        <div className="text-success">$ kubectl get pods -n training</div>
+                        <div className="text-background/70">NAME    READY  STATUS</div>
+                        <div className="text-background/70">vpc-router-7d4f  1/1  Running</div>
+                        <div className="text-background/70">peering-gw-6a9e  1/1  Running</div>
+                        <div className="text-background/70">nat-instance-2f  1/1  Running</div>
+                        <div className="text-success mt-1">$ terraform apply</div>
+                        <div className="text-background/70">Plan: 4 to add, 0 to change.</div>
+                        <div className="text-background/70">Apply complete! Resources: 4 added.</div>
+                        <div className="text-success">$ <span className="animate-pulse">▍</span></div>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1 px-0.5">
+                        <span className="font-mono">10.0.4.21</span>
+                        <span>4 vCPU · 8 GB</span>
+                      </div>
+                    </div>
+
+                    {/* VM Controls */}
+                    <div>
+                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">VM Controls</div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1 justify-start"><Power className="h-3 w-3" /> Stop</Button>
+                        <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1 justify-start"><RotateCw className="h-3 w-3" /> Restart</Button>
+                        <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1 justify-start"><Save className="h-3 w-3" /> Snapshot</Button>
+                        <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1 justify-start"><Zap className="h-3 w-3" /> Reset VM</Button>
+                        <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1 justify-start col-span-1"><Monitor className="h-3 w-3" /> Console</Button>
+                        <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1 justify-start col-span-1"><Share2 className="h-3 w-3" /> Share VM</Button>
+                      </div>
+                    </div>
+
+                    {/* Now Playing */}
+                    <div>
+                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Now Playing</div>
+                      <div className="rounded-lg border border-border p-2.5">
+                        <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Compute Services</div>
+                        <div className="text-sm font-semibold mt-0.5">EC2 Overview</div>
+                        <Progress value={55} className="h-1 mt-2 [&>div]:bg-primary" />
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1.5">
+                          <span>In progress · 24 min</span>
+                          <button className="text-primary font-medium">Open</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Class Pulse */}
+                    <div>
+                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Class Pulse</div>
+                      <div className="space-y-1.5 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5"><Circle className="h-2 w-2 fill-success text-success" /> Online</span>
+                          <span className="text-muted-foreground">{participants.filter(p => p.status === "watching" || p.status === "presenting").length}/{participants.length}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5"><Circle className="h-2 w-2 fill-warning text-warning" /> Hands raised</span>
+                          <span className="text-muted-foreground">{participants.filter(p => p.status === "hand_raised").length}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5"><Circle className="h-2 w-2 fill-destructive text-destructive" /> Issues</span>
+                          <span className="text-muted-foreground">0</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </ScrollArea>
+              )}
+            </Card>
+
+            {/* ── Center: Course Content ── */}
+            <Card className="overflow-hidden flex flex-col">
+              <div className="flex items-center gap-2 border-b border-border px-4 py-2.5 shrink-0">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Course Content</div>
+                <span className="text-sm font-semibold ml-2">AWS Solutions Architect Professional</span>
+                <Badge variant="outline" className="text-[10px] ml-auto">Synced with instructor</Badge>
+              </div>
+              <ScrollArea className="flex-1">
+                <div className="p-4">
+                  <CourseContentPanel />
+                </div>
+              </ScrollArea>
+            </Card>
+
+            {/* ── Right Rail: Materials / Chat / People ── */}
+            <Card className="overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between border-b border-border px-2 py-1.5 shrink-0 gap-1">
                 {splitRail && (
-                  <>
+                  <div className="flex gap-0.5 flex-1 min-w-0">
+                    <Button
+                      size="sm"
+                      variant={splitRail === "materials" ? "secondary" : "ghost"}
+                      className="h-6 px-2 text-[10px] gap-1"
+                      onClick={() => setSplitRail("materials")}
+                    ><FileText className="h-3 w-3" /> Materials</Button>
                     <Button
                       size="sm"
                       variant={splitRail === "chat" ? "secondary" : "ghost"}
-                      className="h-6 px-2 text-[11px] gap-1"
+                      className="h-6 px-2 text-[10px] gap-1"
                       onClick={() => setSplitRail("chat")}
                     ><MessageSquare className="h-3 w-3" /> Chat</Button>
                     <Button
                       size="sm"
                       variant={splitRail === "students" ? "secondary" : "ghost"}
-                      className="h-6 px-2 text-[11px] gap-1"
+                      className="h-6 px-2 text-[10px] gap-1"
                       onClick={() => setSplitRail("students")}
                     ><Users className="h-3 w-3" /> People</Button>
-                  </>
+                  </div>
                 )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 shrink-0"
+                  onClick={() => setSplitRail(splitRail ? null : "materials")}
+                >
+                  {splitRail ? <PanelRightClose className="h-3.5 w-3.5" /> : <PanelRightOpen className="h-3.5 w-3.5" />}
+                </Button>
               </div>
-              <Button
-                variant="ghost" size="icon" className="h-6 w-6"
-                onClick={() => setSplitRail(splitRail ? null : "chat")}
-              >
-                {splitRail ? <PanelRightClose className="h-3.5 w-3.5" /> : <PanelRightOpen className="h-3.5 w-3.5" />}
-              </Button>
-            </div>
-            {splitRail === "chat" && <div className="h-[640px]"><ChatPanel chatInput={chatInput} setChatInput={setChatInput} /></div>}
-            {splitRail === "students" && <div className="h-[640px]"><StudentsRail /></div>}
-          </Card>
+
+              {splitRail === "materials" && (
+                <ScrollArea className="flex-1">
+                  <div className="p-3 space-y-3">
+                    <div>
+                      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Session Materials</div>
+                      <div className="space-y-1.5">
+                        {sessionMaterials.map((m, i) => {
+                          const Icon = m.icon;
+                          return (
+                            <div key={i} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 border border-border/50">
+                              <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs font-medium truncate">{m.name}</div>
+                                <div className="text-[10px] text-muted-foreground">{m.size}</div>
+                              </div>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
+                                <Download className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-border p-3">
+                      <div className="text-xs font-semibold mb-1">Ask the instructor</div>
+                      <p className="text-[11px] text-muted-foreground mb-2">Raise your hand or drop a quick question in chat.</p>
+                      <div className="flex gap-1.5">
+                        <Button size="sm" variant="outline" className="h-7 px-2 text-[11px] gap-1 flex-1" onClick={toggleHand}>
+                          <Hand className="h-3 w-3" /> {handRaised ? "Lower" : "Raise"}
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-7 px-2 text-[11px] gap-1 flex-1" onClick={() => setSplitRail("chat")}>
+                          <MessageSquare className="h-3 w-3" /> Chat
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </ScrollArea>
+              )}
+              {splitRail === "chat" && (
+                <div className="flex-1 min-h-0"><ChatPanel chatInput={chatInput} setChatInput={setChatInput} /></div>
+              )}
+              {splitRail === "students" && (
+                <div className="flex-1 min-h-0"><StudentsRail /></div>
+              )}
+            </Card>
+          </div>
         </div>
       )}
 
