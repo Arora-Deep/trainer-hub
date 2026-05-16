@@ -322,7 +322,7 @@ export default function LiveTraining() {
                             <div className="mt-1 inline-flex items-center">$ <span className="ml-1 inline-block h-2 w-1.5 bg-emerald-400 animate-pulse" /></div>
                           </div>
                           {/* status chip */}
-                          <div className="absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-0.5 backdrop-blur-sm">
+                          <div className="absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-0.5">
                             <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                             <span className="text-[9px] font-medium text-white tracking-wide">RUNNING</span>
                           </div>
@@ -1336,7 +1336,7 @@ function TrainerView({
                     <div className="text-zinc-500">{`{ "VpcPeeringConnections": [ ... ] }`}</div>
                     <div className="mt-3 inline-flex items-center">$ <span className="ml-1 inline-block h-3.5 w-2 bg-emerald-400 animate-pulse" /></div>
                   </div>
-                  <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1 backdrop-blur-sm">
+                  <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1">
                     <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                     <span className="text-[10px] font-medium text-white tracking-wide">RUNNING</span>
                   </div>
@@ -1433,7 +1433,7 @@ function VMTabsPanel({ vms }: { vms: StudentVM[] }) {
               <div className="text-emerald-400">● active (running)</div>
               <div className="mt-1 inline-flex items-center">$ <span className="ml-1 inline-block h-2 w-1.5 bg-emerald-400 animate-pulse" /></div>
             </div>
-            <div className="absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-0.5 backdrop-blur-sm">
+            <div className="absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-0.5">
               <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
               <span className="text-[9px] font-medium text-white tracking-wide">RUNNING</span>
             </div>
