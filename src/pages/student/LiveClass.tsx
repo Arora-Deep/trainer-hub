@@ -350,14 +350,26 @@ export default function StudentLiveClass() {
       </div>
 
       {/* View Mode Tabs */}
-      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-        <TabsList className="h-9">
-          <TabsTrigger value="default" className="text-xs gap-1.5"><LayoutGrid className="h-3.5 w-3.5" /> Default</TabsTrigger>
-          <TabsTrigger value="split" className="text-xs gap-1.5"><Columns2 className="h-3.5 w-3.5" /> Split View</TabsTrigger>
-          <TabsTrigger value="content" className="text-xs gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Content View</TabsTrigger>
-          <TabsTrigger value="notes" className="text-xs gap-1.5"><StickyNote className="h-3.5 w-3.5" /> Notes</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+          <TabsList className="h-9">
+            <TabsTrigger value="default" className="text-xs gap-1.5"><LayoutGrid className="h-3.5 w-3.5" /> Default</TabsTrigger>
+            <TabsTrigger value="split" className="text-xs gap-1.5"><Columns2 className="h-3.5 w-3.5" /> Split View</TabsTrigger>
+            <TabsTrigger value="content" className="text-xs gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Content View</TabsTrigger>
+            <TabsTrigger value="notes" className="text-xs gap-1.5"><StickyNote className="h-3.5 w-3.5" /> Notes</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        {viewMode === "split" && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => setFullscreen(true)}
+          >
+            <Maximize2 className="h-3.5 w-3.5" /> Fullscreen
+          </Button>
+        )}
+      </div>
 
       {/* Recording Notice */}
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-destructive/5 border border-destructive/10 text-xs text-destructive">
