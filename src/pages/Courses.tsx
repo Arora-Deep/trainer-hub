@@ -80,11 +80,14 @@ export default function Courses() {
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <StatusBadge
-                      status={course.deliveryType === "instructor-led" ? "primary" : "info"}
-                      label={course.deliveryType === "instructor-led" ? "Instructor-led" : "Self-paced"}
-                      dot={false}
-                    />
+                    {(() => {
+                      const dt = course.deliveryType;
+                      const isLive = dt === "instructor-led" || dt === "live" || dt === "live-online";
+                      const isHybrid = dt === "hybrid";
+                      const label = isHybrid ? "Hybrid" : isLive ? "Live" : "Self-paced";
+                      const status: "primary" | "info" | "warning" = isHybrid ? "warning" : isLive ? "primary" : "info";
+                      return <StatusBadge status={status} label={label} dot={false} />;
+                    })()}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-1.5">

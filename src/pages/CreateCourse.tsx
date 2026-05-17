@@ -50,10 +50,21 @@ const categories = [
 ];
 
 const deliveryTypes = [
-  { value: "instructor-led", label: "Instructor-led" },
-  { value: "self-paced", label: "Self-paced" },
-  { value: "hybrid", label: "Hybrid" },
-  { value: "live-online", label: "Live Online" },
+  {
+    value: "live",
+    label: "Live instructor-led",
+    description: "Scheduled sessions with a trainer, fixed cohort dates and live labs.",
+  },
+  {
+    value: "self-paced",
+    label: "Self-paced",
+    description: "Learners progress on their own time with on-demand labs and floating enrolment.",
+  },
+  {
+    value: "hybrid",
+    label: "Hybrid",
+    description: "Mix of live sessions plus self-paced lessons — batches can be run either way.",
+  },
 ];
 
 const instructors = [
@@ -241,23 +252,33 @@ export default function CreateCourse() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Delivery Type *</Label>
-                  <Select 
-                    value={formData.deliveryType} 
-                    onValueChange={(value) => handleInputChange("deliveryType", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select delivery type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {deliveryTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Delivery Type *</Label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {deliveryTypes.map((type) => {
+                    const selected = formData.deliveryType === type.value;
+                    return (
+                      <button
+                        type="button"
+                        key={type.value}
+                        onClick={() => handleInputChange("deliveryType", type.value)}
+                        className={cn(
+                          "text-left p-4 rounded-xl border transition-all",
+                          selected
+                            ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                            : "border-border hover:border-primary/40"
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm">{type.label}</span>
+                          {selected && <Badge variant="secondary" className="text-[10px]">Selected</Badge>}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1.5">{type.description}</p>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
