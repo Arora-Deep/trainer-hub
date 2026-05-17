@@ -484,7 +484,7 @@ export default function LiveTraining() {
       )}
 
       {/* SPLIT VIEW (fullscreen overlay) */}
-      {mainTab === "split" && (
+      {mainTab === "split" && splitFullscreen && (
         <SplitView
           batchName={batch.name}
           sessionTimer={sessionTimer}
@@ -514,6 +514,8 @@ export default function LiveTraining() {
           onOpenConsole={() => setConsoleOpen(true)}
           onSnapshot={() => { createSnapshot(batch.id, `Session ${formatTimer(sessionTimer)}`, "Live snapshot"); toast({ title: "Snapshot created" }); }}
           onEnd={() => setEndOpen(true)}
+          fullscreen
+          setFullscreen={setSplitFullscreen}
         />
       )}
 
