@@ -228,8 +228,12 @@ export default function CreateBatch() {
         endDate: dateRange.to?.toISOString() || "",
         evaluationEndDate: dateRange.to?.toISOString() || "",
         additionalDetails: additionalDetails.trim(),
-        seatCount,
+        seatCount: deliveryMode === "self-paced" ? 0 : seatCount,
         medium,
+        deliveryMode,
+        accessModel: deliveryMode === "self-paced" ? accessModel : undefined,
+        totalAccessHours: deliveryMode === "self-paced" && accessModel === "full-course" ? totalAccessHours : undefined,
+        enrollmentMode: deliveryMode === "self-paced" ? "floating" : "fixed",
       },
       vmConfig
     );
