@@ -437,10 +437,18 @@ export default function CreateBatch() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="seatCount">Seat Count</Label>
-                    <Input id="seatCount" type="number" min={1} max={500} value={seatCount} onChange={(e) => setSeatCount(parseInt(e.target.value) || 20)} />
-                  </div>
+                  {deliveryMode === "self-paced" ? (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="estEnroll">Estimated Enrolment</Label>
+                      <Input id="estEnroll" type="number" min={1} value={estimatedEnrollment} onChange={(e) => setEstimatedEnrollment(parseInt(e.target.value) || 0)} />
+                      <p className="text-[11px] text-muted-foreground">Floating — learners can enrol anytime. Used only for cost estimation.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="seatCount">Seat Count</Label>
+                      <Input id="seatCount" type="number" min={1} max={500} value={seatCount} onChange={(e) => setSeatCount(parseInt(e.target.value) || 20)} />
+                    </div>
+                  )}
                   <div className="space-y-1.5">
                     <Label>Medium</Label>
                     <Select value={medium} onValueChange={(v) => setMedium(v as typeof medium)}>
