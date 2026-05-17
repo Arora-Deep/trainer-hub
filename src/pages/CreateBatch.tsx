@@ -389,6 +389,7 @@ export default function CreateBatch() {
               </CardContent>
             </Card>
           </div>
+          </div>
           </motion.div>
         )}
 
