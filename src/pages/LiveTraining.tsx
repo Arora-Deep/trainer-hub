@@ -431,6 +431,40 @@ export default function LiveTraining() {
           {mainTab === "analytics" && (
             <AnalyticsView grid={grid} lessons={lessons} sessionTimer={sessionTimer} />
           )}
+          {mainTab === "split" && !splitFullscreen && (
+            <SplitView
+              batchName={batch.name}
+              sessionTimer={sessionTimer}
+              sessionActive={sessionActive}
+              mainTab={mainTab}
+              setMainTab={setMainTab}
+              gridLength={grid.length}
+              splitSide={splitSide}
+              setSplitSide={setSplitSide}
+              students={filtered}
+              search={search}
+              setSearch={setSearch}
+              onSelectStudent={(id) => setSelectedStudentId(id)}
+              messages={messages}
+              chatInput={chatInput}
+              setChatInput={setChatInput}
+              onSendChat={sendChat}
+              lessons={lessons}
+              activeLessonIdx={activeLessonIdx}
+              setActiveLessonIdx={setActiveLessonIdx}
+              courseName={linkedCourse?.name || "Course"}
+              trainerVmRunning={trainerVmRunning}
+              setTrainerVmRunning={setTrainerVmRunning}
+              micOn={micOn} setMicOn={setMicOn}
+              camOn={camOn} setCamOn={setCamOn}
+              shareOn={shareOn} setShareOn={setShareOn}
+              onOpenConsole={() => setConsoleOpen(true)}
+              onSnapshot={() => { createSnapshot(batch.id, `Session ${formatTimer(sessionTimer)}`, "Live snapshot"); toast({ title: "Snapshot created" }); }}
+              onEnd={() => setEndOpen(true)}
+              fullscreen={false}
+              setFullscreen={setSplitFullscreen}
+            />
+          )}
         </main>
       </div>
 
