@@ -800,8 +800,51 @@ function ResourcesView({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-        {/* Curriculum */}
+        {/* Curriculum + active lesson preview */}
         <div className="space-y-5">
+          {lessons[activeLessonIdx] && (
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wider text-primary font-medium">Now teaching</p>
+                  <h3 className="text-base font-semibold tracking-tight truncate mt-0.5">{lessons[activeLessonIdx].title}</h3>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{lessons[activeLessonIdx].module}{lessons[activeLessonIdx].duration ? ` · ${lessons[activeLessonIdx].duration}` : ""}</p>
+                </div>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 ring-1 ring-primary/20 shrink-0">
+                  <Play className="h-3 w-3 text-primary" />
+                  <span className="text-[10px] font-semibold tracking-wider text-primary">LIVE</span>
+                </span>
+              </div>
+              <div className="px-5 py-5 space-y-4">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  This lesson covers the key concepts and hands-on exercises for <span className="text-foreground font-medium">{lessons[activeLessonIdx].title}</span>. Students follow along on their own lab VMs while you walk through the material.
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-xl border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Lesson</p>
+                    <p className="text-sm font-semibold mt-1">{activeLessonIdx + 1} / {lessons.length}</p>
+                  </div>
+                  <div className="rounded-xl border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Completed</p>
+                    <p className="text-sm font-semibold mt-1 text-success">{activeLessonIdx}</p>
+                  </div>
+                  <div className="rounded-xl border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Remaining</p>
+                    <p className="text-sm font-semibold mt-1">{Math.max(0, lessons.length - activeLessonIdx - 1)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <Button size="sm" variant="outline" onClick={() => setActiveLessonIdx(Math.max(0, activeLessonIdx - 1))} disabled={activeLessonIdx === 0}>
+                    <ChevronLeft className="h-3.5 w-3.5" /> Previous
+                  </Button>
+                  <Button size="sm" onClick={() => setActiveLessonIdx(Math.min(lessons.length - 1, activeLessonIdx + 1))} disabled={activeLessonIdx >= lessons.length - 1}>
+                    Mark complete & next <ChevronRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {grouped.map(([module, items]) => (
             <div key={module} className="rounded-2xl border border-border bg-card overflow-hidden">
               <div className="px-5 py-3 border-b border-border flex items-center justify-between">
