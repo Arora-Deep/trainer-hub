@@ -1239,7 +1239,9 @@ function TrainerView({
   const current = trainerVMs.find(v => v.id === activeVm)!;
   return (
     <div className="-mx-6 lg:-mx-8 -mt-8 -mb-24">
-      <div className="flex h-[calc(100vh-64px)]">
+      <ResizablePanelGroup direction="horizontal" className="h-[calc(100vh-64px)]">
+        <ResizablePanel defaultSize={chatOpen ? 75 : 100} minSize={40}>
+          <div className="h-full flex flex-col">
 
         {/* CENTER CONSOLE */}
         <section className="flex-1 min-w-0 bg-muted/30 flex flex-col">
