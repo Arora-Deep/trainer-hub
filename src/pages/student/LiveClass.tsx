@@ -326,39 +326,85 @@ export default function StudentLiveClass() {
 
   return (
     <div className="space-y-4">
+      {/* Course Switcher */}
+      {enrolledBatches.length > 0 && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">My Courses</span>
+          {enrolledBatches.map((b) => {
+            const active = b.id === selectedBatchId;
+            const sp = b.deliveryMode === "self-paced";
+            return (
+              <button
+                key={b.id}
+                onClick={() => setSelectedBatchId(b.id)}
+                className={cn(
+                  "shrink-0 flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-colors",
+                  active ? "border-primary bg-primary/10 text-foreground" : "border-border bg-card hover:border-primary/40 text-muted-foreground"
+                )}
+              >
+                <span className="font-medium truncate max-w-[180px]">{b.name}</span>
+                <Badge variant="secondary" className={cn("text-[9px]", sp ? "bg-amber-500/10 text-amber-600" : "bg-blue-500/10 text-blue-600")}>
+                  {sp ? `Self-paced • ${b.totalAccessHours ?? 0}h left` : "Live"}
+                </Badge>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight">AWS VPC Deep Dive</h1>
-            <Badge className="bg-destructive/10 text-destructive text-[10px] animate-pulse">● LIVE</Badge>
-            <Badge variant="outline" className="text-[10px] gap-1"><Radio className="h-2.5 w-2.5 text-destructive" /> Recording</Badge>
+            <h1 className="text-xl font-bold tracking-tight">
+              {isSelfPaced ? selectedBatch?.name : "AWS VPC Deep Dive"}
+            </h1>
+            {isSelfPaced ? (
+              <Badge className="bg-amber-500/10 text-amber-600 text-[10px]">SELF-PACED</Badge>
+            ) : (
+              <>
+                <Badge className="bg-destructive/10 text-destructive text-[10px] animate-pulse">● LIVE</Badge>
+                <Badge variant="outline" className="text-[10px] gap-1"><Radio className="h-2.5 w-2.5 text-destructive" /> Recording</Badge>
+              </>
+            )}
           </div>
-          <p className="text-muted-foreground text-xs mt-0.5">AWS Cloud Practitioner — Batch 12 · Instructor: James Wilson</p>
+          <p className="text-muted-foreground text-xs mt-0.5">
+            {isSelfPaced
+              ? `${selectedBatch?.courseName ?? "Course"} · Mentor: ${selectedBatch?.instructors?.[0] ?? "—"}`
+              : "AWS Cloud Practitioner — Batch 12 · Instructor: James Wilson"}
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="gap-1 text-xs cursor-pointer" onClick={() => setShowParticipants(!showParticipants)}>
-            <Users className="h-3 w-3" /> {participants.length} Online
-            {showParticipants ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          </Badge>
-          <Badge variant="outline" className="gap-1 text-xs"><Clock className="h-3 w-3" /> 1h 45m remaining</Badge>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={handRaised ? "default" : "outline"}
-                  size="sm"
-                  className={`gap-1.5 ${handRaised ? "bg-warning text-warning-foreground hover:bg-warning/90" : ""}`}
-                  onClick={toggleHand}
-                >
-                  <Hand className="h-3.5 w-3.5" />
-                  {handRaised ? "Lower" : "Raise"}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent><p className="text-xs">Signal the instructor</p></TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <Button variant="destructive" size="sm">Leave Session</Button>
+          {isSelfPaced ? (
+            <Badge variant="outline" className="gap-1 text-xs">
+              <Clock className="h-3 w-3" /> {hoursLeft}h lab access left
+            </Badge>
+          ) : (
+            <>
+              <Badge variant="outline" className="gap-1 text-xs cursor-pointer" onClick={() => setShowParticipants(!showParticipants)}>
+                <Users className="h-3 w-3" /> {participants.length} Online
+                {showParticipants ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              </Badge>
+              <Badge variant="outline" className="gap-1 text-xs"><Clock className="h-3 w-3" /> 1h 45m remaining</Badge>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={handRaised ? "default" : "outline"}
+                      size="sm"
+                      className={`gap-1.5 ${handRaised ? "bg-warning text-warning-foreground hover:bg-warning/90" : ""}`}
+                      onClick={toggleHand}
+                    >
+                      <Hand className="h-3.5 w-3.5" />
+                      {handRaised ? "Lower" : "Raise"}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p className="text-xs">Signal the instructor</p></TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Button variant="destructive" size="sm">Leave Session</Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -366,7 +412,7 @@ export default function StudentLiveClass() {
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
           <TabsList className="h-9">
-            <TabsTrigger value="default" className="text-xs gap-1.5"><LayoutGrid className="h-3.5 w-3.5" /> Default</TabsTrigger>
+            <TabsTrigger value="default" className="text-xs gap-1.5"><LayoutGrid className="h-3.5 w-3.5" /> {isSelfPaced ? "Overview" : "Default"}</TabsTrigger>
             <TabsTrigger value="content" className="text-xs gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Content View</TabsTrigger>
             <TabsTrigger value="lab" className="text-xs gap-1.5"><Terminal className="h-3.5 w-3.5" /> Lab View</TabsTrigger>
             <TabsTrigger value="notes" className="text-xs gap-1.5"><StickyNote className="h-3.5 w-3.5" /> Notes</TabsTrigger>
@@ -374,11 +420,25 @@ export default function StudentLiveClass() {
         </Tabs>
       </div>
 
-      {/* Recording Notice */}
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-destructive/5 border border-destructive/10 text-xs text-destructive">
-        <Radio className="h-3 w-3 animate-pulse" />
-        This session is being recorded. Recording will be available within 24 hours.
-      </div>
+      {/* Mode Notice */}
+      {isSelfPaced ? (
+        <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-amber-500/5 border border-amber-500/20 text-xs">
+          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+            <BookOpen className="h-3.5 w-3.5" />
+            Self-paced course — work through lessons on your schedule. Lab time is metered.
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Hours remaining</span>
+            <div className="w-32"><Progress value={Math.min(100, (hoursLeft / 120) * 100)} className="h-1.5" /></div>
+            <span className="font-semibold tabular-nums">{hoursLeft}h</span>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-destructive/5 border border-destructive/10 text-xs text-destructive">
+          <Radio className="h-3 w-3 animate-pulse" />
+          This session is being recorded. Recording will be available within 24 hours.
+        </div>
+      )}
 
       {/* Participants Panel */}
       <AnimatePresence>
