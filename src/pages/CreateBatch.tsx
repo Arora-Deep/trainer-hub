@@ -523,6 +523,38 @@ export default function CreateBatch() {
                 </CardContent>
               </Card>
 
+              {enableVMs && deliveryMode === "self-paced" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> VM Access Model</CardTitle>
+                    <CardDescription>How long do learners get with VMs?</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <button type="button" onClick={() => setAccessModel("full-course")} className={cn("p-4 rounded-xl border-2 text-left transition-all", accessModel === "full-course" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40")}>
+                        <p className="font-semibold text-sm">Full-course access</p>
+                        <p className="text-xs text-muted-foreground mt-1">VMs available the entire enrolment, capped by total hours.</p>
+                      </button>
+                      <button type="button" onClick={() => setAccessModel("lesson-unlock")} className={cn("p-4 rounded-xl border-2 text-left transition-all", accessModel === "lesson-unlock" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40")}>
+                        <p className="font-semibold text-sm">Lesson-based access</p>
+                        <p className="text-xs text-muted-foreground mt-1">VMs unlock per lesson with their own hour budget.</p>
+                      </button>
+                    </div>
+                    {accessModel === "full-course" ? (
+                      <div className="space-y-1.5">
+                        <Label>Total access hours per learner</Label>
+                        <Input type="number" min={1} value={totalAccessHours} onChange={(e) => setTotalAccessHours(parseInt(e.target.value) || 120)} />
+                        <p className="text-[11px] text-muted-foreground">Each enrolled learner gets {totalAccessHours} hours of VM time.</p>
+                      </div>
+                    ) : (
+                      <div className="p-3 rounded-lg bg-muted/30 border border-dashed text-xs text-muted-foreground">
+                        After creation, open the batch's <strong>Course</strong> tab to attach a VM template and hour budget to each lesson.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               {enableVMs && (
                 <>
                   {/* Added VMs List */}
