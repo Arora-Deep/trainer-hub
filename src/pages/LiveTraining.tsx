@@ -1541,7 +1541,11 @@ function SplitView(props: {
           <button onClick={() => setShareOn(!shareOn)} className={cn("h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted", shareOn && "text-primary")} title="Share"><ScreenShare className="h-3.5 w-3.5" /></button>
           <div className="w-px h-5 bg-border mx-1" />
           <button onClick={onSnapshot} className="h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted" title="Snapshot"><Camera className="h-3.5 w-3.5" /></button>
-          <button onClick={() => setMainTab("students")} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md hover:bg-muted text-[11px]" title="Exit split"><Minimize2 className="h-3.5 w-3.5" /> Exit</button>
+          {fullscreen ? (
+            <button onClick={() => setFullscreen?.(false)} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md hover:bg-muted text-[11px]" title="Exit fullscreen"><Minimize2 className="h-3.5 w-3.5" /> Exit</button>
+          ) : (
+            <button onClick={() => setFullscreen?.(true)} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md hover:bg-muted text-[11px]" title="Fullscreen"><Maximize2 className="h-3.5 w-3.5" /> Fullscreen</button>
+          )}
           <button onClick={onEnd} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-destructive hover:bg-destructive/10 text-[11px]"><Power className="h-3.5 w-3.5" /> End</button>
         </div>
       </header>
