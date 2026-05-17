@@ -360,6 +360,7 @@ export default function AdminCreateBatch() {
                   </CardContent>
                 </Card>
               </div>
+              </div>
             </motion.div>
           )}
 
