@@ -76,6 +76,12 @@ export default function CreateBatch() {
 
   const [currentStep, setCurrentStep] = useState(1);
 
+  // Step 0: Delivery mode (rendered inside Step 1)
+  const [deliveryMode, setDeliveryMode] = useState<"live" | "self-paced">("live");
+  const [accessModel, setAccessModel] = useState<"full-course" | "lesson-unlock">("full-course");
+  const [totalAccessHours, setTotalAccessHours] = useState(120);
+  const [estimatedEnrollment, setEstimatedEnrollment] = useState(20);
+
   // Step 1: Basic Information
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -222,8 +228,12 @@ export default function CreateBatch() {
         endDate: dateRange.to?.toISOString() || "",
         evaluationEndDate: dateRange.to?.toISOString() || "",
         additionalDetails: additionalDetails.trim(),
-        seatCount,
+        seatCount: deliveryMode === "self-paced" ? 0 : seatCount,
         medium,
+        deliveryMode,
+        accessModel: deliveryMode === "self-paced" ? accessModel : undefined,
+        totalAccessHours: deliveryMode === "self-paced" && accessModel === "full-course" ? totalAccessHours : undefined,
+        enrollmentMode: deliveryMode === "self-paced" ? "floating" : "fixed",
       },
       vmConfig
     );
@@ -311,6 +321,27 @@ export default function CreateBatch() {
         {/* Step 1: Basic Info */}
         {currentStep === 1 && (
           <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
+          <div className="space-y-6">
+            {/* Delivery Mode */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Delivery Mode</CardTitle>
+                <CardDescription>How will participants experience this batch?</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <button type="button" onClick={() => setDeliveryMode("live")} className={cn("p-4 rounded-xl border-2 text-left transition-all", deliveryMode === "live" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40")}>
+                    <div className="flex items-center gap-2 mb-1.5"><Users className="h-4 w-4 text-primary" /><span className="font-semibold text-sm">Live Instructor-led</span></div>
+                    <p className="text-xs text-muted-foreground">Scheduled sessions, fixed seat count, classroom-style VMs.</p>
+                  </button>
+                  <button type="button" onClick={() => setDeliveryMode("self-paced")} className={cn("p-4 rounded-xl border-2 text-left transition-all", deliveryMode === "self-paced" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40")}>
+                    <div className="flex items-center gap-2 mb-1.5"><Clock className="h-4 w-4 text-primary" /><span className="font-semibold text-sm">Self-paced</span></div>
+                    <p className="text-xs text-muted-foreground">Open enrolment, hour-budget VM access, learners progress at their own pace.</p>
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
@@ -357,6 +388,7 @@ export default function CreateBatch() {
                 </Button>
               </CardContent>
             </Card>
+          </div>
           </div>
           </motion.div>
         )}
@@ -405,10 +437,18 @@ export default function CreateBatch() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="seatCount">Seat Count</Label>
-                    <Input id="seatCount" type="number" min={1} max={500} value={seatCount} onChange={(e) => setSeatCount(parseInt(e.target.value) || 20)} />
-                  </div>
+                  {deliveryMode === "self-paced" ? (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="estEnroll">Estimated Enrolment</Label>
+                      <Input id="estEnroll" type="number" min={1} value={estimatedEnrollment} onChange={(e) => setEstimatedEnrollment(parseInt(e.target.value) || 0)} />
+                      <p className="text-[11px] text-muted-foreground">Floating — learners can enrol anytime. Used only for cost estimation.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="seatCount">Seat Count</Label>
+                      <Input id="seatCount" type="number" min={1} max={500} value={seatCount} onChange={(e) => setSeatCount(parseInt(e.target.value) || 20)} />
+                    </div>
+                  )}
                   <div className="space-y-1.5">
                     <Label>Medium</Label>
                     <Select value={medium} onValueChange={(v) => setMedium(v as typeof medium)}>
@@ -482,6 +522,38 @@ export default function CreateBatch() {
                   </div>
                 </CardContent>
               </Card>
+
+              {enableVMs && deliveryMode === "self-paced" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> VM Access Model</CardTitle>
+                    <CardDescription>How long do learners get with VMs?</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <button type="button" onClick={() => setAccessModel("full-course")} className={cn("p-4 rounded-xl border-2 text-left transition-all", accessModel === "full-course" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40")}>
+                        <p className="font-semibold text-sm">Full-course access</p>
+                        <p className="text-xs text-muted-foreground mt-1">VMs available the entire enrolment, capped by total hours.</p>
+                      </button>
+                      <button type="button" onClick={() => setAccessModel("lesson-unlock")} className={cn("p-4 rounded-xl border-2 text-left transition-all", accessModel === "lesson-unlock" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40")}>
+                        <p className="font-semibold text-sm">Lesson-based access</p>
+                        <p className="text-xs text-muted-foreground mt-1">VMs unlock per lesson with their own hour budget.</p>
+                      </button>
+                    </div>
+                    {accessModel === "full-course" ? (
+                      <div className="space-y-1.5">
+                        <Label>Total access hours per learner</Label>
+                        <Input type="number" min={1} value={totalAccessHours} onChange={(e) => setTotalAccessHours(parseInt(e.target.value) || 120)} />
+                        <p className="text-[11px] text-muted-foreground">Each enrolled learner gets {totalAccessHours} hours of VM time.</p>
+                      </div>
+                    ) : (
+                      <div className="p-3 rounded-lg bg-muted/30 border border-dashed text-xs text-muted-foreground">
+                        After creation, open the batch's <strong>Course</strong> tab to attach a VM template and hour budget to each lesson.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
               {enableVMs && (
                 <>

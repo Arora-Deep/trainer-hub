@@ -110,6 +110,22 @@ export interface Announcement {
   date: string;
 }
 
+export type DeliveryMode = "live" | "self-paced";
+export type AccessModel = "full-course" | "lesson-unlock";
+export type EnrollmentMode = "fixed" | "floating";
+
+export interface LessonVMAccess {
+  id: string;
+  chapterId: string;
+  chapterTitle?: string;
+  lessonId: string;
+  lessonTitle?: string;
+  vmTemplateId: string;
+  instanceName: string;
+  hours: number;
+  unlockOn: "lesson-start" | "lesson-complete" | "previous-complete";
+}
+
 export interface Batch {
   id: string;
   name: string;
@@ -135,6 +151,13 @@ export interface Batch {
   announcements: Announcement[];
   vmConfig?: VMConfig;
   labConfigs: VMConfig[];
+  // Self-paced support (optional, additive)
+  deliveryMode?: DeliveryMode;
+  accessModel?: AccessModel;
+  totalAccessHours?: number;
+  lessonVMAccess?: LessonVMAccess[];
+  enrollmentMode?: EnrollmentMode;
+  enrolledCount?: number;
 }
 
 interface BatchStore {
@@ -358,6 +381,32 @@ const initialBatches: Batch[] = [
     announcements: [],
     labConfigs: [],
   },
+  {
+    id: "7",
+    name: "Python for Data Science — Self-Paced",
+    description: "Self-paced Python journey with hands-on labs available on-demand.",
+    courseId: "2",
+    courseName: "Python Data Science",
+    instructors: ["Mentor: Sarah Wilson"],
+    settings: { published: true, allowSelfEnrollment: true, certification: true },
+    startDate: "2024-02-01",
+    endDate: "2024-12-31",
+    evaluationEndDate: "2024-12-31",
+    additionalDetails: "Open enrolment, 120 hours of lab access per learner.",
+    seatCount: 0,
+    medium: "online",
+    status: "live",
+    createdAt: "Feb 1, 2024",
+    participants: [],
+    assignedLabs: [],
+    announcements: [],
+    labConfigs: [],
+    deliveryMode: "self-paced",
+    accessModel: "full-course",
+    totalAccessHours: 120,
+    enrollmentMode: "floating",
+    enrolledCount: 47,
+  },
 ];
 
 export const useBatchStore = create<BatchStore>((set, get) => ({
@@ -366,21 +415,25 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
   addBatch: (batch, vmConfig) => {
     const id = Date.now().toString();
     const status = determineStatus(batch.startDate, batch.endDate);
-    // Auto-generate participants based on seat count
-    const autoParticipants: Participant[] = Array.from({ length: batch.seatCount }, (_, i) => ({
-      id: `p-${Date.now()}-${i}`,
-      name: `Participant ${i + 1}`,
-      email: `participant${i + 1}@example.com`,
-      quizScore: null,
-      currentModule: "Not Started",
-      lastActive: "Never",
-      attendance: { present: 0, total: 0 },
-      vmStatus: "not_assigned" as const,
-    }));
+    const isFloating = batch.enrollmentMode === "floating" || batch.deliveryMode === "self-paced";
+    // Skip auto-generation for floating / self-paced batches
+    const autoParticipants: Participant[] = isFloating
+      ? []
+      : Array.from({ length: batch.seatCount }, (_, i) => ({
+          id: `p-${Date.now()}-${i}`,
+          name: `Participant ${i + 1}`,
+          email: `participant${i + 1}@example.com`,
+          quizScore: null,
+          currentModule: "Not Started",
+          lastActive: "Never",
+          attendance: { present: 0, total: 0 },
+          vmStatus: "not_assigned" as const,
+        }));
     const newBatch: Batch = {
       ...batch, id, status,
       createdAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
       participants: autoParticipants, assignedLabs: [], announcements: [], vmConfig, labConfigs: [],
+      enrolledCount: isFloating ? 0 : batch.seatCount,
     };
     set((state) => ({ batches: [...state.batches, newBatch] }));
     return id;
