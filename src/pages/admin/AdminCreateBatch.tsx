@@ -76,6 +76,12 @@ export default function AdminCreateBatch() {
   const [prepDays, setPrepDays] = useState(2);
   const [autoExtend, setAutoExtend] = useState(false);
 
+  // Delivery mode
+  const [deliveryMode, setDeliveryMode] = useState<"live" | "self-paced">("live");
+  const [accessModel, setAccessModel] = useState<"full-course" | "lesson-unlock">("full-course");
+  const [totalAccessHours, setTotalAccessHours] = useState(120);
+  const [estimatedEnrollment, setEstimatedEnrollment] = useState(20);
+
   // Step 4
   const [enableVMs, setEnableVMs] = useState(true);
   const [vmType, setVmType] = useState<"single" | "multi">("single");
