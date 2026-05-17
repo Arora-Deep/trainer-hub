@@ -1490,6 +1490,8 @@ function SplitView(props: {
   onOpenConsole: () => void;
   onSnapshot: () => void;
   onEnd: () => void;
+  fullscreen?: boolean;
+  setFullscreen?: (v: boolean) => void;
 }) {
   const {
     batchName, sessionTimer, sessionActive, setMainTab, gridLength,
@@ -1498,12 +1500,17 @@ function SplitView(props: {
     lessons, activeLessonIdx, setActiveLessonIdx, courseName,
     trainerVmRunning, setTrainerVmRunning, micOn, setMicOn, camOn, setCamOn,
     shareOn, setShareOn, onOpenConsole, onSnapshot, onEnd,
+    fullscreen = false, setFullscreen,
   } = props;
 
   const sideOpen = splitSide !== null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div className={cn(
+      fullscreen
+        ? "fixed inset-0 z-50 bg-background flex flex-col"
+        : "-mx-6 lg:-mx-8 -mt-8 -mb-24 h-[calc(100vh-64px)] flex flex-col bg-background"
+    )}>
       {/* Slim top bar */}
       <header className="h-[44px] shrink-0 border-b border-border bg-card flex items-center justify-between px-3 gap-3">
         <div className="flex items-center gap-3 min-w-0">
