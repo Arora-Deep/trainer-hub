@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Radio, Hand, Users, AlertCircle, Megaphone, BookOpen, Camera, Power,
@@ -71,7 +72,8 @@ export default function LiveTraining() {
   const [camOn, setCamOn] = useState(true);
   const [shareOn, setShareOn] = useState(false);
   const [trainerVmRunning, setTrainerVmRunning] = useState(true);
-  const [mainTab, setMainTab] = useState<MainTab>("split");
+  const [mainTab, setMainTab] = useState<MainTab>("students");
+  const [splitFullscreen, setSplitFullscreen] = useState(false);
   const [splitSide, setSplitSide] = useState<SplitSide>("students");
 
   const [messages, setMessages] = useState<{ id: string; from: string; text: string; t: string; kind: "msg" | "q" | "sys" }[]>([
@@ -361,18 +363,28 @@ export default function LiveTraining() {
                     </div>
                   </RailSection>
 
-                  {/* Now playing */}
-                  <RailSection title="Now playing">
+                  {/* Completed lessons */}
+                  <RailSection title="Completed">
                     <div className="rounded-xl border border-border p-3">
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{lessons[activeLessonIdx]?.module}</p>
-                      <p className="text-sm font-medium mt-0.5 truncate">{lessons[activeLessonIdx]?.title}</p>
-                      <div className="mt-2.5 h-1 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full bg-primary" style={{ width: "40%" }} />
+                      <div className="flex items-baseline justify-between">
+                        <p className="text-2xl font-semibold tabular-nums">{activeLessonIdx}</p>
+                        <p className="text-[11px] text-muted-foreground">of {lessons.length}</p>
                       </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-[11px] text-muted-foreground">In progress · 24 min</span>
-                        <button onClick={() => setMainTab("resources")} className="text-[11px] font-medium text-primary hover:underline">Open</button>
+                      <div className="mt-2 h-1 rounded-full bg-muted overflow-hidden">
+                        <div className="h-full bg-success" style={{ width: `${lessons.length ? (activeLessonIdx / lessons.length) * 100 : 0}%` }} />
                       </div>
+                      <div className="mt-3 space-y-1 max-h-32 overflow-auto">
+                        {lessons.slice(0, activeLessonIdx).map((l) => (
+                          <div key={l.id} className="flex items-center gap-1.5 text-[11px]">
+                            <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
+                            <span className="truncate text-muted-foreground">{l.title}</span>
+                          </div>
+                        ))}
+                        {activeLessonIdx === 0 && (
+                          <p className="text-[11px] text-muted-foreground italic">No lessons completed yet</p>
+                        )}
+                      </div>
+                      <button onClick={() => setMainTab("resources")} className="mt-2 text-[11px] font-medium text-primary hover:underline">Open course</button>
                     </div>
                   </RailSection>
 
@@ -419,6 +431,40 @@ export default function LiveTraining() {
           {mainTab === "analytics" && (
             <AnalyticsView grid={grid} lessons={lessons} sessionTimer={sessionTimer} />
           )}
+          {mainTab === "split" && !splitFullscreen && (
+            <SplitView
+              batchName={batch.name}
+              sessionTimer={sessionTimer}
+              sessionActive={sessionActive}
+              mainTab={mainTab}
+              setMainTab={setMainTab}
+              gridLength={grid.length}
+              splitSide={splitSide}
+              setSplitSide={setSplitSide}
+              students={filtered}
+              search={search}
+              setSearch={setSearch}
+              onSelectStudent={(id) => setSelectedStudentId(id)}
+              messages={messages}
+              chatInput={chatInput}
+              setChatInput={setChatInput}
+              onSendChat={sendChat}
+              lessons={lessons}
+              activeLessonIdx={activeLessonIdx}
+              setActiveLessonIdx={setActiveLessonIdx}
+              courseName={linkedCourse?.name || "Course"}
+              trainerVmRunning={trainerVmRunning}
+              setTrainerVmRunning={setTrainerVmRunning}
+              micOn={micOn} setMicOn={setMicOn}
+              camOn={camOn} setCamOn={setCamOn}
+              shareOn={shareOn} setShareOn={setShareOn}
+              onOpenConsole={() => setConsoleOpen(true)}
+              onSnapshot={() => { createSnapshot(batch.id, `Session ${formatTimer(sessionTimer)}`, "Live snapshot"); toast({ title: "Snapshot created" }); }}
+              onEnd={() => setEndOpen(true)}
+              fullscreen={false}
+              setFullscreen={setSplitFullscreen}
+            />
+          )}
         </main>
       </div>
 
@@ -438,7 +484,7 @@ export default function LiveTraining() {
       )}
 
       {/* SPLIT VIEW (fullscreen overlay) */}
-      {mainTab === "split" && (
+      {mainTab === "split" && splitFullscreen && (
         <SplitView
           batchName={batch.name}
           sessionTimer={sessionTimer}
@@ -468,6 +514,8 @@ export default function LiveTraining() {
           onOpenConsole={() => setConsoleOpen(true)}
           onSnapshot={() => { createSnapshot(batch.id, `Session ${formatTimer(sessionTimer)}`, "Live snapshot"); toast({ title: "Snapshot created" }); }}
           onEnd={() => setEndOpen(true)}
+          fullscreen
+          setFullscreen={setSplitFullscreen}
         />
       )}
 
@@ -752,8 +800,51 @@ function ResourcesView({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-        {/* Curriculum */}
+        {/* Curriculum + active lesson preview */}
         <div className="space-y-5">
+          {lessons[activeLessonIdx] && (
+            <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wider text-primary font-medium">Now teaching</p>
+                  <h3 className="text-base font-semibold tracking-tight truncate mt-0.5">{lessons[activeLessonIdx].title}</h3>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{lessons[activeLessonIdx].module}{lessons[activeLessonIdx].duration ? ` · ${lessons[activeLessonIdx].duration}` : ""}</p>
+                </div>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 ring-1 ring-primary/20 shrink-0">
+                  <Play className="h-3 w-3 text-primary" />
+                  <span className="text-[10px] font-semibold tracking-wider text-primary">LIVE</span>
+                </span>
+              </div>
+              <div className="px-5 py-5 space-y-4">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  This lesson covers the key concepts and hands-on exercises for <span className="text-foreground font-medium">{lessons[activeLessonIdx].title}</span>. Students follow along on their own lab VMs while you walk through the material.
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-xl border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Lesson</p>
+                    <p className="text-sm font-semibold mt-1">{activeLessonIdx + 1} / {lessons.length}</p>
+                  </div>
+                  <div className="rounded-xl border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Completed</p>
+                    <p className="text-sm font-semibold mt-1 text-success">{activeLessonIdx}</p>
+                  </div>
+                  <div className="rounded-xl border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Remaining</p>
+                    <p className="text-sm font-semibold mt-1">{Math.max(0, lessons.length - activeLessonIdx - 1)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <Button size="sm" variant="outline" onClick={() => setActiveLessonIdx(Math.max(0, activeLessonIdx - 1))} disabled={activeLessonIdx === 0}>
+                    <ChevronLeft className="h-3.5 w-3.5" /> Previous
+                  </Button>
+                  <Button size="sm" onClick={() => setActiveLessonIdx(Math.min(lessons.length - 1, activeLessonIdx + 1))} disabled={activeLessonIdx >= lessons.length - 1}>
+                    Mark complete & next <ChevronRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {grouped.map(([module, items]) => (
             <div key={module} className="rounded-2xl border border-border bg-card overflow-hidden">
               <div className="px-5 py-3 border-b border-border flex items-center justify-between">
@@ -1227,59 +1318,9 @@ function TrainerView({
   const current = trainerVMs.find(v => v.id === activeVm)!;
   return (
     <div className="-mx-6 lg:-mx-8 -mt-8 -mb-24">
-      <div className="flex h-[calc(100vh-64px)]">
-        {/* LEFT ACTIONS */}
-        <aside className="w-[220px] shrink-0 border-r border-border bg-card overflow-y-auto">
-          <div className="px-4 py-4 border-b border-border">
-            <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Trainer</p>
-            <p className="text-sm font-semibold mt-1 truncate">trainer-master-vm</p>
-            <div className="mt-2 flex items-center gap-1.5">
-              <span className={cn("h-1.5 w-1.5 rounded-full", vmRunning ? "bg-success animate-pulse" : "bg-muted-foreground")} />
-              <span className="text-[11px] text-muted-foreground">{vmRunning ? "Running" : "Stopped"}</span>
-            </div>
-          </div>
-
-          <TVSection title="Presence">
-            <div className="grid grid-cols-3 gap-1.5">
-              <PresenceBtn active={micOn} onClick={() => setMicOn(v => !v)} icon={<Mic className="h-3.5 w-3.5" />} label="Mic" />
-              <PresenceBtn active={camOn} onClick={() => setCamOn(v => !v)} icon={<Video className="h-3.5 w-3.5" />} label="Cam" />
-              <PresenceBtn active={shareOn} onClick={() => setShareOn(v => !v)} icon={<ScreenShare className="h-3.5 w-3.5" />} label="Share" />
-            </div>
-          </TVSection>
-
-          <TVSection title="VM controls">
-            <div className="grid grid-cols-2 gap-1.5">
-              {vmRunning ? (
-                <RailAction icon={<Square className="h-3.5 w-3.5" />} label="Stop" onClick={() => { setVmRunning(false); toast({ title: "VM stopped" }); }} />
-              ) : (
-                <RailAction icon={<Play className="h-3.5 w-3.5" />} label="Start" onClick={() => { setVmRunning(true); toast({ title: "VM starting" }); }} />
-              )}
-              <RailAction icon={<RotateCcw className="h-3.5 w-3.5" />} label="Restart" onClick={() => toast({ title: "VM restarting" })} />
-              <RailAction icon={<Camera className="h-3.5 w-3.5" />} label="Snapshot" onClick={() => toast({ title: "Snapshot saved" })} />
-              <RailAction icon={<RefreshCw className="h-3.5 w-3.5" />} label="Reset" onClick={() => toast({ title: "VM reset to template" })} />
-              <RailAction icon={<ScreenShare className="h-3.5 w-3.5" />} label="Share VM" onClick={() => toast({ title: "VM shared with class" })} />
-              <RailAction icon={<Maximize2 className="h-3.5 w-3.5" />} label="Fullscreen" onClick={() => setFullscreen(f => !f)} />
-            </div>
-          </TVSection>
-
-          <TVSection title="Quick tools">
-            <div className="space-y-1">
-              <RailRow icon={<FileText className="h-3.5 w-3.5" />} label="Push file" onClick={() => toast({ title: "Push file" })} />
-              <RailRow icon={<Link2 className="h-3.5 w-3.5" />} label="Share link" onClick={() => toast({ title: "Link shared" })} />
-              <RailRow icon={<Megaphone className="h-3.5 w-3.5" />} label="Broadcast" onClick={() => toast({ title: "Broadcast" })} />
-              <RailRow icon={<Sparkles className="h-3.5 w-3.5" />} label="AI assist" onClick={() => toast({ title: "AI assistant" })} />
-            </div>
-          </TVSection>
-
-          <TVSection title="Specs">
-            <div className="space-y-1.5 text-[11px] text-muted-foreground">
-              <div className="flex justify-between"><span>vCPU</span><span className="text-foreground">4</span></div>
-              <div className="flex justify-between"><span>Memory</span><span className="text-foreground">8 GB</span></div>
-              <div className="flex justify-between"><span>Disk</span><span className="text-foreground">120 GB</span></div>
-              <div className="flex justify-between"><span>IP</span><span className="text-foreground font-mono">10.0.4.21</span></div>
-            </div>
-          </TVSection>
-        </aside>
+      <ResizablePanelGroup direction="horizontal" className="h-[calc(100vh-64px)]">
+        <ResizablePanel defaultSize={chatOpen ? 75 : 100} minSize={40}>
+          <div className="h-full flex flex-col">
 
         {/* CENTER CONSOLE */}
         <section className="flex-1 min-w-0 bg-muted/30 flex flex-col">
@@ -1353,28 +1394,34 @@ function TrainerView({
             </div>
           </div>
         </section>
+          </div>
+        </ResizablePanel>
 
-        {/* RIGHT CHAT */}
         {chatOpen && (
-          <aside className="w-[320px] shrink-0 border-l border-border bg-card flex flex-col">
-            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold">Live chat</p>
-                <p className="text-[11px] text-muted-foreground">Class conversation</p>
-              </div>
-              <button onClick={() => setChatOpen(false)} className="h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted" aria-label="Collapse chat">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-            <ScrollArea className="flex-1">
-              <div className="px-5 py-4 space-y-3">
-                {messages.map(m => <ChatBubble key={m.id} {...m} />)}
-              </div>
-            </ScrollArea>
-            <ChatInput value={chatInput} onChange={setChatInput} onSend={onSendChat} />
-          </aside>
+          <>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={25} minSize={15} maxSize={50}>
+              <aside className="h-full border-l border-border bg-card flex flex-col">
+                <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold">Live chat</p>
+                    <p className="text-[11px] text-muted-foreground">Class conversation</p>
+                  </div>
+                  <button onClick={() => setChatOpen(false)} className="h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted" aria-label="Collapse chat">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <ScrollArea className="flex-1">
+                  <div className="px-5 py-4 space-y-3">
+                    {messages.map(m => <ChatBubble key={m.id} {...m} />)}
+                  </div>
+                </ScrollArea>
+                <ChatInput value={chatInput} onChange={setChatInput} onSend={onSendChat} />
+              </aside>
+            </ResizablePanel>
+          </>
         )}
-      </div>
+      </ResizablePanelGroup>
     </div>
   );
 }
@@ -1486,6 +1533,8 @@ function SplitView(props: {
   onOpenConsole: () => void;
   onSnapshot: () => void;
   onEnd: () => void;
+  fullscreen?: boolean;
+  setFullscreen?: (v: boolean) => void;
 }) {
   const {
     batchName, sessionTimer, sessionActive, setMainTab, gridLength,
@@ -1494,12 +1543,17 @@ function SplitView(props: {
     lessons, activeLessonIdx, setActiveLessonIdx, courseName,
     trainerVmRunning, setTrainerVmRunning, micOn, setMicOn, camOn, setCamOn,
     shareOn, setShareOn, onOpenConsole, onSnapshot, onEnd,
+    fullscreen = false, setFullscreen,
   } = props;
 
   const sideOpen = splitSide !== null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div className={cn(
+      fullscreen
+        ? "fixed inset-0 z-50 bg-background flex flex-col"
+        : "-mx-6 lg:-mx-8 -mt-8 -mb-24 h-[calc(100vh-64px)] flex flex-col bg-background"
+    )}>
       {/* Slim top bar */}
       <header className="h-[44px] shrink-0 border-b border-border bg-card flex items-center justify-between px-3 gap-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -1530,15 +1584,20 @@ function SplitView(props: {
           <button onClick={() => setShareOn(!shareOn)} className={cn("h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted", shareOn && "text-primary")} title="Share"><ScreenShare className="h-3.5 w-3.5" /></button>
           <div className="w-px h-5 bg-border mx-1" />
           <button onClick={onSnapshot} className="h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted" title="Snapshot"><Camera className="h-3.5 w-3.5" /></button>
-          <button onClick={() => setMainTab("students")} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md hover:bg-muted text-[11px]" title="Exit split"><Minimize2 className="h-3.5 w-3.5" /> Exit</button>
+          {fullscreen ? (
+            <button onClick={() => setFullscreen?.(false)} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md hover:bg-muted text-[11px]" title="Exit fullscreen"><Minimize2 className="h-3.5 w-3.5" /> Exit</button>
+          ) : (
+            <button onClick={() => setFullscreen?.(true)} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md hover:bg-muted text-[11px]" title="Fullscreen"><Maximize2 className="h-3.5 w-3.5" /> Fullscreen</button>
+          )}
           <button onClick={onEnd} className="h-7 px-2 inline-flex items-center gap-1.5 rounded-md text-destructive hover:bg-destructive/10 text-[11px]"><Power className="h-3.5 w-3.5" /> End</button>
         </div>
       </header>
 
       {/* Body: console | LMS | side panel */}
-      <div className="flex-1 flex min-h-0">
+      <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
+        <ResizablePanel defaultSize={40} minSize={20}>
         {/* CONSOLE */}
-        <section className="flex-1 min-w-0 flex flex-col border-r border-border bg-zinc-950">
+        <section className="h-full min-w-0 flex flex-col border-r border-border bg-zinc-950">
           <div className="h-9 shrink-0 px-3 flex items-center justify-between border-b border-zinc-800 bg-zinc-900/60">
             <div className="flex items-center gap-2 min-w-0">
               <Monitor className="h-3.5 w-3.5 text-zinc-400" />
@@ -1583,9 +1642,11 @@ function SplitView(props: {
             )}
           </div>
         </section>
-
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={40} minSize={20}>
         {/* LMS */}
-        <section className="flex-1 min-w-0 flex flex-col bg-card">
+        <section className="h-full min-w-0 flex flex-col bg-card">
           <div className="h-9 shrink-0 px-3 flex items-center justify-between border-b border-border">
             <div className="flex items-center gap-2 min-w-0">
               <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1629,9 +1690,11 @@ function SplitView(props: {
             </ul>
           </ScrollArea>
         </section>
-
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={20} minSize={5} maxSize={45}>
         {/* SIDE PANEL: students / chat */}
-        <aside className={cn("shrink-0 border-l border-border bg-card flex flex-col transition-all duration-200", sideOpen ? "w-[320px]" : "w-[44px]")}>
+        <aside className={cn("h-full border-l border-border bg-card flex flex-col transition-all duration-200")}>
           {/* tab switcher */}
           <div className="h-9 shrink-0 border-b border-border flex items-center">
             <SidePanelTab
@@ -1710,7 +1773,8 @@ function SplitView(props: {
             </div>
           )}
         </aside>
-      </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }
