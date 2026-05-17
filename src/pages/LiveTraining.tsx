@@ -71,7 +71,8 @@ export default function LiveTraining() {
   const [camOn, setCamOn] = useState(true);
   const [shareOn, setShareOn] = useState(false);
   const [trainerVmRunning, setTrainerVmRunning] = useState(true);
-  const [mainTab, setMainTab] = useState<MainTab>("split");
+  const [mainTab, setMainTab] = useState<MainTab>("students");
+  const [splitFullscreen, setSplitFullscreen] = useState(false);
   const [splitSide, setSplitSide] = useState<SplitSide>("students");
 
   const [messages, setMessages] = useState<{ id: string; from: string; text: string; t: string; kind: "msg" | "q" | "sys" }[]>([
