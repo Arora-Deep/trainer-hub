@@ -396,54 +396,64 @@ export default function StudentLiveClass() {
 
       {/* ===== DEFAULT VIEW ===== */}
       {viewMode === "default" && (
-        <div className={`grid gap-4 ${labExpanded ? "grid-cols-1" : "lg:grid-cols-5"}`}>
+        <ResizablePanelGroup direction="horizontal" className="min-h-[820px]">
           {!labExpanded && (
-            <div className="lg:col-span-3 space-y-4 flex flex-col">
-              {/* Course Content — extended to fill area down to chat */}
-              <Card className="overflow-hidden flex-1">
-                <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold">Course Content</span>
-                    <Badge variant="outline" className="text-[10px]">Synced with instructor</Badge>
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-7 w-7"><Settings className="h-3.5 w-3.5" /></Button>
+            <>
+              <ResizablePanel defaultSize={60} minSize={30}>
+                <div className="h-full pr-2">
+                  <ResizablePanelGroup direction="vertical">
+                    <ResizablePanel defaultSize={65} minSize={20}>
+                      <Card className="overflow-hidden h-full">
+                        <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <BookOpen className="h-4 w-4 text-primary" />
+                            <span className="text-sm font-semibold">Course Content</span>
+                            <Badge variant="outline" className="text-[10px]">Synced with instructor</Badge>
+                          </div>
+                          <Button variant="ghost" size="icon" className="h-7 w-7"><Settings className="h-3.5 w-3.5" /></Button>
+                        </div>
+                        <div className="h-[calc(100%-44px)]"><CourseContentPanel /></div>
+                      </Card>
+                    </ResizablePanel>
+                    <ResizableHandle withHandle />
+                    <ResizablePanel defaultSize={35} minSize={15}>
+                      <Card className="h-full">
+                        <CardContent className="py-0 px-0 h-full">
+                          <div className="h-full"><ChatPanel chatInput={chatInput} setChatInput={setChatInput} /></div>
+                        </CardContent>
+                      </Card>
+                    </ResizablePanel>
+                  </ResizablePanelGroup>
                 </div>
-                <div className="h-[520px]"><CourseContentPanel /></div>
-              </Card>
-
-              {/* Chat */}
-              <Card>
-                <CardContent className="py-0 px-0">
-                  <div className="h-[280px]"><ChatPanel chatInput={chatInput} setChatInput={setChatInput} /></div>
-                </CardContent>
-              </Card>
-            </div>
+              </ResizablePanel>
+              <ResizableHandle withHandle />
+            </>
           )}
 
-          {/* Right: Lab Console */}
-          <div className={labExpanded ? "" : "lg:col-span-2"}>
-            <Card className="h-full">
-              <div className="flex items-center justify-between border-b border-border px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <Monitor className="h-4 w-4 text-success" />
-                  <span className="text-sm font-semibold">Lab Console</span>
+          <ResizablePanel defaultSize={labExpanded ? 100 : 40} minSize={20}>
+            <div className="h-full pl-2">
+              <Card className="h-full overflow-hidden flex flex-col">
+                <div className="flex items-center justify-between border-b border-border px-3 py-2 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <Monitor className="h-4 w-4 text-success" />
+                    <span className="text-sm font-semibold">Lab Console</span>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setLabExpanded(!labExpanded)}>
+                    {labExpanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+                  </Button>
                 </div>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setLabExpanded(!labExpanded)}>
-                  {labExpanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-                </Button>
-              </div>
-              <ConsolePanel terminalInput={terminalInput} setTerminalInput={setTerminalInput} />
-            </Card>
-          </div>
-        </div>
+                <div className="flex-1 min-h-0"><ConsolePanel terminalInput={terminalInput} setTerminalInput={setTerminalInput} /></div>
+              </Card>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       )}
 
       {/* ===== CONTENT VIEW ===== */}
       {viewMode === "content" && (
-        <div className="grid gap-3 transition-all" style={{
-          gridTemplateColumns: `${contentLeftCollapsed ? "44px" : "320px"} 1fr`,
-        }}>
+        <ResizablePanelGroup direction="horizontal" className="min-h-[760px]">
+          <ResizablePanel defaultSize={contentLeftCollapsed ? 5 : 25} minSize={4} maxSize={50}>
+          <div className="h-full pr-2">
           {/* Left: Console & Actions rail (matches Split-view "You" rail) */}
           <Card className="overflow-hidden flex flex-col">
             <div className="flex items-center justify-between border-b border-border px-2 py-1.5 shrink-0">
@@ -548,9 +558,13 @@ export default function StudentLiveClass() {
               </ScrollArea>
             )}
           </Card>
-
+          </div>
+          </ResizablePanel>
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize={75} minSize={30}>
+          <div className="h-full pl-2">
           {/* Right: Full course content */}
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden h-full">
             <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
               <BookOpen className="h-4 w-4 text-primary" />
               <span className="text-sm font-semibold">VPC Deep Dive — Lesson Material</span>
@@ -584,16 +598,18 @@ export default function StudentLiveClass() {
               </div>
             </ScrollArea>
           </Card>
-        </div>
+          </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       )}
 
       {/* ===== LAB VIEW ===== */}
       {viewMode === "lab" && (
-        <div className="grid gap-3 transition-all" style={{
-          gridTemplateColumns: `1fr ${labRailCollapsed ? "44px" : "340px"}`,
-        }}>
+        <ResizablePanelGroup direction="horizontal" className="min-h-[760px]">
+          <ResizablePanel defaultSize={70} minSize={30}>
+          <div className="h-full pr-2">
           {/* Console — primary */}
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden h-full">
             <div className="flex items-center justify-between border-b border-border px-3 py-2">
               <div className="flex items-center gap-2">
                 <Terminal className="h-4 w-4 text-success" />
@@ -607,9 +623,13 @@ export default function StudentLiveClass() {
             </div>
             <div className="h-[700px]"><ConsolePanel terminalInput={terminalInput} setTerminalInput={setTerminalInput} /></div>
           </Card>
-
+          </div>
+          </ResizablePanel>
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize={labRailCollapsed ? 6 : 30} minSize={4} maxSize={50}>
+          <div className="h-full pl-2">
           {/* Right rail: lab instructions / VM info */}
-          <Card className="overflow-hidden flex flex-col">
+          <Card className="overflow-hidden flex flex-col h-full">
             <div className="flex items-center justify-between border-b border-border px-2 py-1.5 shrink-0">
               {!labRailCollapsed && <span className="text-xs font-semibold px-1 text-muted-foreground uppercase tracking-wider">Lab Guide</span>}
               <Button variant="ghost" size="icon" className="h-6 w-6 ml-auto" onClick={() => setLabRailCollapsed(!labRailCollapsed)}>
@@ -679,7 +699,9 @@ export default function StudentLiveClass() {
               </ScrollArea>
             )}
           </Card>
-        </div>
+          </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       )}
 
 
