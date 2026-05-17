@@ -110,6 +110,22 @@ export interface Announcement {
   date: string;
 }
 
+export type DeliveryMode = "live" | "self-paced";
+export type AccessModel = "full-course" | "lesson-unlock";
+export type EnrollmentMode = "fixed" | "floating";
+
+export interface LessonVMAccess {
+  id: string;
+  chapterId: string;
+  chapterTitle?: string;
+  lessonId: string;
+  lessonTitle?: string;
+  vmTemplateId: string;
+  instanceName: string;
+  hours: number;
+  unlockOn: "lesson-start" | "lesson-complete" | "previous-complete";
+}
+
 export interface Batch {
   id: string;
   name: string;
@@ -135,6 +151,13 @@ export interface Batch {
   announcements: Announcement[];
   vmConfig?: VMConfig;
   labConfigs: VMConfig[];
+  // Self-paced support (optional, additive)
+  deliveryMode?: DeliveryMode;
+  accessModel?: AccessModel;
+  totalAccessHours?: number;
+  lessonVMAccess?: LessonVMAccess[];
+  enrollmentMode?: EnrollmentMode;
+  enrolledCount?: number;
 }
 
 interface BatchStore {
