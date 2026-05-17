@@ -380,6 +380,7 @@ const initialBatches: Batch[] = [
     assignedLabs: [],
     announcements: [],
     labConfigs: [],
+  },
   {
     id: "7",
     name: "Python for Data Science — Self-Paced",
@@ -407,6 +408,8 @@ const initialBatches: Batch[] = [
     enrolledCount: 47,
   },
 ];
+
+export const useBatchStore = create<BatchStore>((set, get) => ({
   batches: initialBatches,
 
   addBatch: (batch, vmConfig) => {
