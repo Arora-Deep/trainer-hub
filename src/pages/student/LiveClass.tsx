@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useBatchStore } from "@/stores/batchStore";
 
 /* ── Data ── */
 const courseModules = [
@@ -277,6 +278,16 @@ function StudentsRail() {
 }
 
 export default function StudentLiveClass() {
+  const allBatches = useBatchStore((s) => s.batches);
+  // Mock: treat the first 3 batches as the student's enrolments
+  const enrolledBatches = allBatches.slice(0, 3);
+  const [selectedBatchId, setSelectedBatchId] = useState<string>(
+    enrolledBatches.find((b) => b.deliveryMode === "self-paced")?.id ?? enrolledBatches[0]?.id ?? ""
+  );
+  const selectedBatch = enrolledBatches.find((b) => b.id === selectedBatchId);
+  const isSelfPaced = selectedBatch?.deliveryMode === "self-paced";
+  const hoursLeft = selectedBatch?.totalAccessHours ?? 0;
+
   const [viewMode, setViewMode] = useState<ViewMode>("default");
   const [labExpanded, setLabExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState("video");
