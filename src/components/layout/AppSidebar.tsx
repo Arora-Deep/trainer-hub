@@ -16,6 +16,7 @@ import { useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useRoleStore, type Role } from "@/stores/roleStore";
 import { useNotificationCounts } from "@/stores/notificationStore";
+import { useSidebarStore } from "@/stores/sidebarStore";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface NavItemDef {
@@ -162,7 +163,8 @@ const badgeCountMap: Record<string, number> = {
 };
 
 export function AppSidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const collapsed = useSidebarStore((s) => s.collapsed);
+  const setCollapsed = useSidebarStore((s) => s.setCollapsed);
   const location = useLocation();
   const { role } = useRoleStore();
   const config = navConfigs[role];
