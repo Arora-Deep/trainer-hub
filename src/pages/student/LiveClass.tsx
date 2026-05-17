@@ -21,6 +21,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useBatchStore } from "@/stores/batchStore";
+import { cn } from "@/lib/utils";
 
 /* ── Data ── */
 const courseModules = [
