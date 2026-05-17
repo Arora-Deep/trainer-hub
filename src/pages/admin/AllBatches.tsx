@@ -19,14 +19,14 @@ import {
 } from "lucide-react";
 
 const batchData = [
-  { id: "B-001", batch: "DevOps Bootcamp Jan", customer: "Acme Training", template: "Linux DevOps Lab", seats: 30, runningLabs: 28, failedLabs: 1, assignedStudents: 29, start: "2026-01-05", end: "2026-01-20", status: "running" },
-  { id: "B-002", batch: "K8s Batch #14", customer: "DevOps Academy", template: "Kubernetes Lab v2", seats: 30, runningLabs: 28, failedLabs: 0, assignedStudents: 30, start: "2026-02-15", end: "2026-03-15", status: "running" },
-  { id: "B-003", batch: "ML Cohort #5", customer: "DataScience Bootcamp", template: "ML GPU Lab v1", seats: 25, runningLabs: 0, failedLabs: 0, assignedStudents: 18, start: "2026-03-20", end: "2026-04-20", status: "scheduled" },
-  { id: "B-004", batch: "Linux Fundamentals #8", customer: "Corporate L&D Co", template: "Linux + Networking", seats: 40, runningLabs: 38, failedLabs: 2, assignedStudents: 40, start: "2026-02-10", end: "2026-03-10", status: "running" },
-  { id: "B-005", batch: "Docker Batch #3", customer: "SkillBridge Labs", template: "Docker Compose", seats: 20, runningLabs: 0, failedLabs: 0, assignedStudents: 20, start: "2026-01-05", end: "2026-02-05", status: "completed" },
-  { id: "B-006", batch: "AWS Batch #6", customer: "DevOps Academy", template: "AWS Simulation", seats: 35, runningLabs: 32, failedLabs: 1, assignedStudents: 34, start: "2026-02-25", end: "2026-03-25", status: "running" },
-  { id: "B-007", batch: "Terraform Batch #2", customer: "SkillBridge Labs", template: "Linux + Networking", seats: 15, runningLabs: 0, failedLabs: 0, assignedStudents: 8, start: "2026-03-10", end: "2026-04-10", status: "scheduled" },
-  { id: "B-008", batch: "Python ML #4", customer: "DataScience Bootcamp", template: "ML GPU Lab v1", seats: 25, runningLabs: 0, failedLabs: 0, assignedStudents: 25, start: "2025-12-01", end: "2026-01-15", status: "completed" },
+  { id: "B-001", batch: "DevOps Bootcamp Jan", customer: "Acme Training", template: "Linux DevOps Lab", seats: 30, runningLabs: 28, failedLabs: 1, assignedStudents: 29, start: "2026-01-05", end: "2026-01-20", status: "running", mode: "live" as const },
+  { id: "B-002", batch: "K8s Batch #14", customer: "DevOps Academy", template: "Kubernetes Lab v2", seats: 30, runningLabs: 28, failedLabs: 0, assignedStudents: 30, start: "2026-02-15", end: "2026-03-15", status: "running", mode: "live" as const },
+  { id: "B-003", batch: "ML Cohort #5", customer: "DataScience Bootcamp", template: "ML GPU Lab v1", seats: 25, runningLabs: 0, failedLabs: 0, assignedStudents: 18, start: "2026-03-20", end: "2026-04-20", status: "scheduled", mode: "live" as const },
+  { id: "B-004", batch: "Linux Fundamentals #8", customer: "Corporate L&D Co", template: "Linux + Networking", seats: 40, runningLabs: 38, failedLabs: 2, assignedStudents: 40, start: "2026-02-10", end: "2026-03-10", status: "running", mode: "live" as const },
+  { id: "B-005", batch: "Docker Batch #3", customer: "SkillBridge Labs", template: "Docker Compose", seats: 20, runningLabs: 0, failedLabs: 0, assignedStudents: 20, start: "2026-01-05", end: "2026-02-05", status: "completed", mode: "live" as const },
+  { id: "B-006", batch: "AWS Batch #6", customer: "DevOps Academy", template: "AWS Simulation", seats: 35, runningLabs: 32, failedLabs: 1, assignedStudents: 34, start: "2026-02-25", end: "2026-03-25", status: "running", mode: "self-paced" as const },
+  { id: "B-007", batch: "Terraform Batch #2", customer: "SkillBridge Labs", template: "Linux + Networking", seats: 15, runningLabs: 0, failedLabs: 0, assignedStudents: 8, start: "2026-03-10", end: "2026-04-10", status: "scheduled", mode: "live" as const },
+  { id: "B-008", batch: "Python ML #4", customer: "DataScience Bootcamp", template: "ML GPU Lab v1", seats: 25, runningLabs: 0, failedLabs: 0, assignedStudents: 25, start: "2025-12-01", end: "2026-01-15", status: "completed", mode: "self-paced" as const },
 ];
 
 const statusConfig: Record<string, { dot: string; bg: string; text: string; label: string }> = {
@@ -41,6 +41,7 @@ export default function AllBatches() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [customerFilter, setCustomerFilter] = useState("all");
   const [templateFilter, setTemplateFilter] = useState("all");
+  const [modeFilter, setModeFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [selectedBatch, setSelectedBatch] = useState<typeof batchData[0] | null>(null);
@@ -53,6 +54,7 @@ export default function AllBatches() {
     if (statusFilter !== "all" && b.status !== statusFilter) return false;
     if (customerFilter !== "all" && b.customer !== customerFilter) return false;
     if (templateFilter !== "all" && b.template !== templateFilter) return false;
+    if (modeFilter !== "all" && b.mode !== modeFilter) return false;
     if (search && !b.batch.toLowerCase().includes(search.toLowerCase()) && !b.customer.toLowerCase().includes(search.toLowerCase())) return false;
     if (dateRange?.from && new Date(b.start) < dateRange.from) return false;
     if (dateRange?.to && new Date(b.end) > dateRange.to) return false;
@@ -114,6 +116,14 @@ export default function AllBatches() {
                 {templates.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={modeFilter} onValueChange={setModeFilter}>
+              <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Mode" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Modes</SelectItem>
+                <SelectItem value="live">Live</SelectItem>
+                <SelectItem value="self-paced">Self-paced</SelectItem>
+              </SelectContent>
+            </Select>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1.5 h-9">
@@ -141,6 +151,7 @@ export default function AllBatches() {
             <TableHeader>
               <TableRow>
                 <TableHead>Batch</TableHead>
+                <TableHead>Mode</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Template</TableHead>
                 <TableHead className="text-center">Seats</TableHead>
@@ -153,10 +164,11 @@ export default function AllBatches() {
             </TableHeader>
             <TableBody>
               {filtered.length === 0 && (
-                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-12">No batches match your filters</TableCell></TableRow>
+                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-12">No batches match your filters</TableCell></TableRow>
               )}
               {filtered.map(b => {
                 const sc = statusConfig[b.status];
+                const isSelfPaced = b.mode === "self-paced";
                 return (
                   <TableRow key={b.id} className="group">
                     <TableCell>
@@ -164,9 +176,14 @@ export default function AllBatches() {
                         {b.batch}
                       </button>
                     </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className={cn("text-[10px]", isSelfPaced ? "bg-amber-500/10 text-amber-600" : "bg-blue-500/10 text-blue-600")}>
+                        {isSelfPaced ? "Self-paced" : "Live"}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-sm">{b.customer}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{b.template}</TableCell>
-                    <TableCell className="text-sm text-center">{b.seats}</TableCell>
+                    <TableCell className="text-sm text-center">{isSelfPaced ? <span className="text-muted-foreground">Floating</span> : b.seats}</TableCell>
                     <TableCell className="text-sm text-center font-mono">{b.runningLabs}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{b.start}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{b.end}</TableCell>
