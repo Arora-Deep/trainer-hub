@@ -362,18 +362,28 @@ export default function LiveTraining() {
                     </div>
                   </RailSection>
 
-                  {/* Now playing */}
-                  <RailSection title="Now playing">
+                  {/* Completed lessons */}
+                  <RailSection title="Completed">
                     <div className="rounded-xl border border-border p-3">
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{lessons[activeLessonIdx]?.module}</p>
-                      <p className="text-sm font-medium mt-0.5 truncate">{lessons[activeLessonIdx]?.title}</p>
-                      <div className="mt-2.5 h-1 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full bg-primary" style={{ width: "40%" }} />
+                      <div className="flex items-baseline justify-between">
+                        <p className="text-2xl font-semibold tabular-nums">{activeLessonIdx}</p>
+                        <p className="text-[11px] text-muted-foreground">of {lessons.length}</p>
                       </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-[11px] text-muted-foreground">In progress · 24 min</span>
-                        <button onClick={() => setMainTab("resources")} className="text-[11px] font-medium text-primary hover:underline">Open</button>
+                      <div className="mt-2 h-1 rounded-full bg-muted overflow-hidden">
+                        <div className="h-full bg-success" style={{ width: `${lessons.length ? (activeLessonIdx / lessons.length) * 100 : 0}%` }} />
                       </div>
+                      <div className="mt-3 space-y-1 max-h-32 overflow-auto">
+                        {lessons.slice(0, activeLessonIdx).map((l) => (
+                          <div key={l.id} className="flex items-center gap-1.5 text-[11px]">
+                            <CheckCircle2 className="h-3 w-3 text-success shrink-0" />
+                            <span className="truncate text-muted-foreground">{l.title}</span>
+                          </div>
+                        ))}
+                        {activeLessonIdx === 0 && (
+                          <p className="text-[11px] text-muted-foreground italic">No lessons completed yet</p>
+                        )}
+                      </div>
+                      <button onClick={() => setMainTab("resources")} className="mt-2 text-[11px] font-medium text-primary hover:underline">Open course</button>
                     </div>
                   </RailSection>
 
