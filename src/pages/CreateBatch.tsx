@@ -321,6 +321,27 @@ export default function CreateBatch() {
         {/* Step 1: Basic Info */}
         {currentStep === 1 && (
           <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
+          <div className="space-y-6">
+            {/* Delivery Mode */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Delivery Mode</CardTitle>
+                <CardDescription>How will participants experience this batch?</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <button type="button" onClick={() => setDeliveryMode("live")} className={cn("p-4 rounded-xl border-2 text-left transition-all", deliveryMode === "live" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40")}>
+                    <div className="flex items-center gap-2 mb-1.5"><Users className="h-4 w-4 text-primary" /><span className="font-semibold text-sm">Live Instructor-led</span></div>
+                    <p className="text-xs text-muted-foreground">Scheduled sessions, fixed seat count, classroom-style VMs.</p>
+                  </button>
+                  <button type="button" onClick={() => setDeliveryMode("self-paced")} className={cn("p-4 rounded-xl border-2 text-left transition-all", deliveryMode === "self-paced" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40")}>
+                    <div className="flex items-center gap-2 mb-1.5"><Clock className="h-4 w-4 text-primary" /><span className="font-semibold text-sm">Self-paced</span></div>
+                    <p className="text-xs text-muted-foreground">Open enrolment, hour-budget VM access, learners progress at their own pace.</p>
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
