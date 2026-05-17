@@ -92,7 +92,7 @@ const statusIndicators: Record<string, { color: string; label: string }> = {
   away: { color: "bg-muted-foreground/40", label: "Away" },
 };
 
-type ViewMode = "default" | "split" | "content" | "notes";
+type ViewMode = "default" | "content" | "lab" | "notes";
 type SideRail = "materials" | "chat" | "students" | null;
 
 const sessionMaterials = [
@@ -354,21 +354,11 @@ export default function StudentLiveClass() {
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
           <TabsList className="h-9">
             <TabsTrigger value="default" className="text-xs gap-1.5"><LayoutGrid className="h-3.5 w-3.5" /> Default</TabsTrigger>
-            <TabsTrigger value="split" className="text-xs gap-1.5"><Columns2 className="h-3.5 w-3.5" /> Split View</TabsTrigger>
             <TabsTrigger value="content" className="text-xs gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Content View</TabsTrigger>
+            <TabsTrigger value="lab" className="text-xs gap-1.5"><Terminal className="h-3.5 w-3.5" /> Lab View</TabsTrigger>
             <TabsTrigger value="notes" className="text-xs gap-1.5"><StickyNote className="h-3.5 w-3.5" /> Notes</TabsTrigger>
           </TabsList>
         </Tabs>
-        {viewMode === "split" && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 text-xs"
-            onClick={() => setFullscreen(true)}
-          >
-            <Maximize2 className="h-3.5 w-3.5" /> Fullscreen
-          </Button>
-        )}
       </div>
 
       {/* Recording Notice */}
