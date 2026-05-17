@@ -1239,58 +1239,6 @@ function TrainerView({
   return (
     <div className="-mx-6 lg:-mx-8 -mt-8 -mb-24">
       <div className="flex h-[calc(100vh-64px)]">
-        {/* LEFT ACTIONS */}
-        <aside className="w-[220px] shrink-0 border-r border-border bg-card overflow-y-auto">
-          <div className="px-4 py-4 border-b border-border">
-            <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Trainer</p>
-            <p className="text-sm font-semibold mt-1 truncate">trainer-master-vm</p>
-            <div className="mt-2 flex items-center gap-1.5">
-              <span className={cn("h-1.5 w-1.5 rounded-full", vmRunning ? "bg-success animate-pulse" : "bg-muted-foreground")} />
-              <span className="text-[11px] text-muted-foreground">{vmRunning ? "Running" : "Stopped"}</span>
-            </div>
-          </div>
-
-          <TVSection title="Presence">
-            <div className="grid grid-cols-3 gap-1.5">
-              <PresenceBtn active={micOn} onClick={() => setMicOn(v => !v)} icon={<Mic className="h-3.5 w-3.5" />} label="Mic" />
-              <PresenceBtn active={camOn} onClick={() => setCamOn(v => !v)} icon={<Video className="h-3.5 w-3.5" />} label="Cam" />
-              <PresenceBtn active={shareOn} onClick={() => setShareOn(v => !v)} icon={<ScreenShare className="h-3.5 w-3.5" />} label="Share" />
-            </div>
-          </TVSection>
-
-          <TVSection title="VM controls">
-            <div className="grid grid-cols-2 gap-1.5">
-              {vmRunning ? (
-                <RailAction icon={<Square className="h-3.5 w-3.5" />} label="Stop" onClick={() => { setVmRunning(false); toast({ title: "VM stopped" }); }} />
-              ) : (
-                <RailAction icon={<Play className="h-3.5 w-3.5" />} label="Start" onClick={() => { setVmRunning(true); toast({ title: "VM starting" }); }} />
-              )}
-              <RailAction icon={<RotateCcw className="h-3.5 w-3.5" />} label="Restart" onClick={() => toast({ title: "VM restarting" })} />
-              <RailAction icon={<Camera className="h-3.5 w-3.5" />} label="Snapshot" onClick={() => toast({ title: "Snapshot saved" })} />
-              <RailAction icon={<RefreshCw className="h-3.5 w-3.5" />} label="Reset" onClick={() => toast({ title: "VM reset to template" })} />
-              <RailAction icon={<ScreenShare className="h-3.5 w-3.5" />} label="Share VM" onClick={() => toast({ title: "VM shared with class" })} />
-              <RailAction icon={<Maximize2 className="h-3.5 w-3.5" />} label="Fullscreen" onClick={() => setFullscreen(f => !f)} />
-            </div>
-          </TVSection>
-
-          <TVSection title="Quick tools">
-            <div className="space-y-1">
-              <RailRow icon={<FileText className="h-3.5 w-3.5" />} label="Push file" onClick={() => toast({ title: "Push file" })} />
-              <RailRow icon={<Link2 className="h-3.5 w-3.5" />} label="Share link" onClick={() => toast({ title: "Link shared" })} />
-              <RailRow icon={<Megaphone className="h-3.5 w-3.5" />} label="Broadcast" onClick={() => toast({ title: "Broadcast" })} />
-              <RailRow icon={<Sparkles className="h-3.5 w-3.5" />} label="AI assist" onClick={() => toast({ title: "AI assistant" })} />
-            </div>
-          </TVSection>
-
-          <TVSection title="Specs">
-            <div className="space-y-1.5 text-[11px] text-muted-foreground">
-              <div className="flex justify-between"><span>vCPU</span><span className="text-foreground">4</span></div>
-              <div className="flex justify-between"><span>Memory</span><span className="text-foreground">8 GB</span></div>
-              <div className="flex justify-between"><span>Disk</span><span className="text-foreground">120 GB</span></div>
-              <div className="flex justify-between"><span>IP</span><span className="text-foreground font-mono">10.0.4.21</span></div>
-            </div>
-          </TVSection>
-        </aside>
 
         {/* CENTER CONSOLE */}
         <section className="flex-1 min-w-0 bg-muted/30 flex flex-col">
