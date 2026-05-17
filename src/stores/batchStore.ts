@@ -380,10 +380,33 @@ const initialBatches: Batch[] = [
     assignedLabs: [],
     announcements: [],
     labConfigs: [],
+  {
+    id: "7",
+    name: "Python for Data Science — Self-Paced",
+    description: "Self-paced Python journey with hands-on labs available on-demand.",
+    courseId: "2",
+    courseName: "Python Data Science",
+    instructors: ["Mentor: Sarah Wilson"],
+    settings: { published: true, allowSelfEnrollment: true, certification: true },
+    startDate: "2024-02-01",
+    endDate: "2024-12-31",
+    evaluationEndDate: "2024-12-31",
+    additionalDetails: "Open enrolment, 120 hours of lab access per learner.",
+    seatCount: 0,
+    medium: "online",
+    status: "live",
+    createdAt: "Feb 1, 2024",
+    participants: [],
+    assignedLabs: [],
+    announcements: [],
+    labConfigs: [],
+    deliveryMode: "self-paced",
+    accessModel: "full-course",
+    totalAccessHours: 120,
+    enrollmentMode: "floating",
+    enrolledCount: 47,
   },
 ];
-
-export const useBatchStore = create<BatchStore>((set, get) => ({
   batches: initialBatches,
 
   addBatch: (batch, vmConfig) => {
