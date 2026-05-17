@@ -1315,28 +1315,34 @@ function TrainerView({
             </div>
           </div>
         </section>
+          </div>
+        </ResizablePanel>
 
-        {/* RIGHT CHAT */}
         {chatOpen && (
-          <aside className="w-[320px] shrink-0 border-l border-border bg-card flex flex-col">
-            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold">Live chat</p>
-                <p className="text-[11px] text-muted-foreground">Class conversation</p>
-              </div>
-              <button onClick={() => setChatOpen(false)} className="h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted" aria-label="Collapse chat">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-            <ScrollArea className="flex-1">
-              <div className="px-5 py-4 space-y-3">
-                {messages.map(m => <ChatBubble key={m.id} {...m} />)}
-              </div>
-            </ScrollArea>
-            <ChatInput value={chatInput} onChange={setChatInput} onSend={onSendChat} />
-          </aside>
+          <>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={25} minSize={15} maxSize={50}>
+              <aside className="h-full border-l border-border bg-card flex flex-col">
+                <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold">Live chat</p>
+                    <p className="text-[11px] text-muted-foreground">Class conversation</p>
+                  </div>
+                  <button onClick={() => setChatOpen(false)} className="h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted" aria-label="Collapse chat">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <ScrollArea className="flex-1">
+                  <div className="px-5 py-4 space-y-3">
+                    {messages.map(m => <ChatBubble key={m.id} {...m} />)}
+                  </div>
+                </ScrollArea>
+                <ChatInput value={chatInput} onChange={setChatInput} onSend={onSendChat} />
+              </aside>
+            </ResizablePanel>
+          </>
         )}
-      </div>
+      </ResizablePanelGroup>
     </div>
   );
 }
