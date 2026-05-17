@@ -1551,9 +1551,10 @@ function SplitView(props: {
       </header>
 
       {/* Body: console | LMS | side panel */}
-      <div className="flex-1 flex min-h-0">
+      <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
+        <ResizablePanel defaultSize={40} minSize={20}>
         {/* CONSOLE */}
-        <section className="flex-1 min-w-0 flex flex-col border-r border-border bg-zinc-950">
+        <section className="h-full min-w-0 flex flex-col border-r border-border bg-zinc-950">
           <div className="h-9 shrink-0 px-3 flex items-center justify-between border-b border-zinc-800 bg-zinc-900/60">
             <div className="flex items-center gap-2 min-w-0">
               <Monitor className="h-3.5 w-3.5 text-zinc-400" />
@@ -1598,9 +1599,11 @@ function SplitView(props: {
             )}
           </div>
         </section>
-
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={40} minSize={20}>
         {/* LMS */}
-        <section className="flex-1 min-w-0 flex flex-col bg-card">
+        <section className="h-full min-w-0 flex flex-col bg-card">
           <div className="h-9 shrink-0 px-3 flex items-center justify-between border-b border-border">
             <div className="flex items-center gap-2 min-w-0">
               <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1644,9 +1647,11 @@ function SplitView(props: {
             </ul>
           </ScrollArea>
         </section>
-
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={20} minSize={5} maxSize={45}>
         {/* SIDE PANEL: students / chat */}
-        <aside className={cn("shrink-0 border-l border-border bg-card flex flex-col transition-all duration-200", sideOpen ? "w-[320px]" : "w-[44px]")}>
+        <aside className={cn("h-full border-l border-border bg-card flex flex-col transition-all duration-200")}>
           {/* tab switcher */}
           <div className="h-9 shrink-0 border-b border-border flex items-center">
             <SidePanelTab
@@ -1725,7 +1730,8 @@ function SplitView(props: {
             </div>
           )}
         </aside>
-      </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }
