@@ -208,7 +208,9 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
       {batch.participants.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Total Participants", value: `${batch.participants.length}/${batch.seatCount}`, icon: Users },
+            batch.deliveryMode === "self-paced" || batch.enrollmentMode === "floating"
+              ? { label: "Enrolled (Floating)", value: `${batch.enrolledCount ?? batch.participants.length}`, icon: Users }
+              : { label: "Total Participants", value: `${batch.participants.length}/${batch.seatCount}`, icon: Users },
             { label: "VMs Running", value: vmCounts.running, icon: Monitor },
             { label: "Avg Quiz Score", value: avgScore !== null ? `${avgScore}%` : "—", icon: GraduationCap },
             { label: "Avg Attendance", value: avgAttendance !== null ? `${avgAttendance}%` : "—", icon: CalendarCheck },
