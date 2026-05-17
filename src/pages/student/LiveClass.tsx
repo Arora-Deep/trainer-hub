@@ -296,6 +296,7 @@ export default function StudentLiveClass() {
 
   // Content view state
   const [contentLeftCollapsed, setContentLeftCollapsed] = useState(false);
+  const [labRailCollapsed, setLabRailCollapsed] = useState(false);
 
   // Notes view state
   const [notesRailCollapsed, setNotesRailCollapsed] = useState(false);
