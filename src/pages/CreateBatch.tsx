@@ -76,6 +76,12 @@ export default function CreateBatch() {
 
   const [currentStep, setCurrentStep] = useState(1);
 
+  // Step 0: Delivery mode (rendered inside Step 1)
+  const [deliveryMode, setDeliveryMode] = useState<"live" | "self-paced">("live");
+  const [accessModel, setAccessModel] = useState<"full-course" | "lesson-unlock">("full-course");
+  const [totalAccessHours, setTotalAccessHours] = useState(120);
+  const [estimatedEnrollment, setEstimatedEnrollment] = useState(20);
+
   // Step 1: Basic Information
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
