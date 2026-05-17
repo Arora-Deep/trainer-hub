@@ -281,6 +281,47 @@ export default function AdminCreateBatch() {
           {/* Step 2: Basic */}
           {currentStep === 2 && (
             <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Delivery Mode</CardTitle>
+                  <CardDescription>How will participants experience this batch?</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <button type="button" onClick={() => setDeliveryMode("live")} className={cn("p-4 rounded-xl border-2 text-left transition-all", deliveryMode === "live" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40")}>
+                    <div className="flex items-center gap-2 mb-1.5"><Users className="h-4 w-4 text-primary" /><span className="font-semibold text-sm">Live Instructor-led</span></div>
+                    <p className="text-xs text-muted-foreground">Scheduled sessions, fixed seats, classroom-style VMs.</p>
+                  </button>
+                  <button type="button" onClick={() => setDeliveryMode("self-paced")} className={cn("p-4 rounded-xl border-2 text-left transition-all", deliveryMode === "self-paced" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40")}>
+                    <div className="flex items-center gap-2 mb-1.5"><Clock className="h-4 w-4 text-primary" /><span className="font-semibold text-sm">Self-paced</span></div>
+                    <p className="text-xs text-muted-foreground">Floating enrolment, hour-based VM access.</p>
+                  </button>
+                </CardContent>
+              </Card>
+              {deliveryMode === "self-paced" && (
+                <Card>
+                  <CardHeader><CardTitle className="text-base">Self-paced settings</CardTitle></CardHeader>
+                  <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2"><Label>Access model</Label>
+                      <Select value={accessModel} onValueChange={(v) => setAccessModel(v as any)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="full-course">Full-course access</SelectItem>
+                          <SelectItem value="lesson-unlock">Lesson-based unlock</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {accessModel === "full-course" && (
+                      <div className="space-y-2"><Label>Total hours / learner</Label>
+                        <Input type="number" min={1} value={totalAccessHours} onChange={(e) => setTotalAccessHours(parseInt(e.target.value) || 120)} />
+                      </div>
+                    )}
+                    <div className="space-y-2"><Label>Estimated enrolment</Label>
+                      <Input type="number" min={1} value={estimatedEnrollment} onChange={(e) => setEstimatedEnrollment(parseInt(e.target.value) || 0)} />
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
               <div className="grid gap-6 lg:grid-cols-2">
                 <Card>
                   <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> Basic Information</CardTitle></CardHeader>
