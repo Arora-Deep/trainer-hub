@@ -389,21 +389,25 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
   addBatch: (batch, vmConfig) => {
     const id = Date.now().toString();
     const status = determineStatus(batch.startDate, batch.endDate);
-    // Auto-generate participants based on seat count
-    const autoParticipants: Participant[] = Array.from({ length: batch.seatCount }, (_, i) => ({
-      id: `p-${Date.now()}-${i}`,
-      name: `Participant ${i + 1}`,
-      email: `participant${i + 1}@example.com`,
-      quizScore: null,
-      currentModule: "Not Started",
-      lastActive: "Never",
-      attendance: { present: 0, total: 0 },
-      vmStatus: "not_assigned" as const,
-    }));
+    const isFloating = batch.enrollmentMode === "floating" || batch.deliveryMode === "self-paced";
+    // Skip auto-generation for floating / self-paced batches
+    const autoParticipants: Participant[] = isFloating
+      ? []
+      : Array.from({ length: batch.seatCount }, (_, i) => ({
+          id: `p-${Date.now()}-${i}`,
+          name: `Participant ${i + 1}`,
+          email: `participant${i + 1}@example.com`,
+          quizScore: null,
+          currentModule: "Not Started",
+          lastActive: "Never",
+          attendance: { present: 0, total: 0 },
+          vmStatus: "not_assigned" as const,
+        }));
     const newBatch: Batch = {
       ...batch, id, status,
       createdAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
       participants: autoParticipants, assignedLabs: [], announcements: [], vmConfig, labConfigs: [],
+      enrolledCount: isFloating ? 0 : batch.seatCount,
     };
     set((state) => ({ batches: [...state.batches, newBatch] }));
     return id;
