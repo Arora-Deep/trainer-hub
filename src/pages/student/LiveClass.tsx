@@ -510,7 +510,7 @@ export default function StudentLiveClass() {
                           </div>
                           <Button variant="ghost" size="icon" className="h-7 w-7"><Settings className="h-3.5 w-3.5" /></Button>
                         </div>
-                        <div className="h-[calc(100%-44px)]"><CourseContentPanel /></div>
+                        <div className="h-[calc(100%-44px)]"><CourseContentPanel course={selectedCourse} currentLessonId={currentLesson?.id} /></div>
                       </Card>
                     </ResizablePanel>
                     <ResizableHandle withHandle />
@@ -685,7 +685,7 @@ export default function StudentLiveClass() {
                 <div className="mt-6 grid grid-cols-2 gap-3">
                   <div className="p-3 rounded-lg border border-border bg-muted/30">
                     <h4 className="text-xs font-semibold mb-1">Module list</h4>
-                    <CourseContentPanel />
+                    <CourseContentPanel course={selectedCourse} currentLessonId={currentLesson?.id} />
                   </div>
                   <div className="p-3 rounded-lg border border-primary/30 bg-primary/5">
                     <h4 className="text-xs font-semibold mb-1">Try it in your lab</h4>
@@ -834,7 +834,7 @@ export default function StudentLiveClass() {
                 {notesRailCollapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelRightClose className="h-3.5 w-3.5" />}
               </Button>
             </div>
-            {!notesRailCollapsed && <div className="h-[640px]"><CourseContentPanel /></div>}
+            {!notesRailCollapsed && <div className="h-[640px]"><CourseContentPanel course={selectedCourse} currentLessonId={currentLesson?.id} /></div>}
           </Card>
         </div>
       )}
