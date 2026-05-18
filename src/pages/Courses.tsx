@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import {
   Table,
   TableBody,
@@ -11,9 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, MoreHorizontal, BookOpen, Users, Plus, ArrowUpRight } from "lucide-react";
+import { Search, MoreHorizontal, BookOpen, Users, Plus, ArrowUpRight, Video, FileText, Award, ChevronRight, Clock, Edit } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCourseStore } from "@/stores/courseStore";
+
+const lessonIcons: Record<string, any> = { video: Video, document: FileText, quiz: Award, assignment: FileText };
 
 const statusConfig: Record<string, { status: "success" | "warning" | "default"; label: string }> = {
   active: { status: "success", label: "Active" },
