@@ -82,10 +82,21 @@ import AdminSettings from "./pages/admin/Settings";
 // Student pages
 import StudentDashboard from "./pages/student/Dashboard";
 import StudentLabs from "./pages/student/Labs";
+import StudentLabDetail from "./pages/student/LabDetail";
 import StudentCourses from "./pages/student/Courses";
+import StudentCourseDetail from "./pages/student/CourseDetail";
+import CoursePlayer from "./pages/student/CoursePlayer";
+import CourseResources from "./pages/student/CourseResources";
+import CourseDiscussion from "./pages/student/CourseDiscussion";
 import StudentAssessments from "./pages/student/Assessments";
+import AssessmentDetail from "./pages/student/AssessmentDetail";
+import AssessmentAttempt from "./pages/student/AssessmentAttempt";
+import AssessmentResult from "./pages/student/AssessmentResult";
 import StudentCertificates from "./pages/student/Certificates";
+import CertificateDetail from "./pages/student/CertificateDetail";
+import CertificateVerify from "./pages/student/CertificateVerify";
 import StudentSchedule from "./pages/student/Schedule";
+import SessionDetail from "./pages/student/SessionDetail";
 import StudentLiveClass from "./pages/student/LiveClass";
 import StudentSupport from "./pages/student/Support";
 
@@ -178,10 +189,21 @@ const App = () => (
             {/* Student routes */}
             <Route path="/student/dashboard" element={<StudentDashboard />} />
             <Route path="/student/labs" element={<StudentLabs />} />
+            <Route path="/student/labs/:id" element={<StudentLabDetail />} />
             <Route path="/student/courses" element={<StudentCourses />} />
+            <Route path="/student/courses/:id" element={<StudentCourseDetail />} />
+            <Route path="/student/courses/:id/learn/:lessonId" element={<CoursePlayer />} />
+            <Route path="/student/courses/:id/resources" element={<CourseResources />} />
+            <Route path="/student/courses/:id/discussion" element={<CourseDiscussion />} />
             <Route path="/student/assessments" element={<StudentAssessments />} />
+            <Route path="/student/assessments/:id" element={<AssessmentDetail />} />
+            <Route path="/student/assessments/:id/attempt" element={<AssessmentAttempt />} />
+            <Route path="/student/assessments/:id/result" element={<AssessmentResult />} />
             <Route path="/student/certificates" element={<StudentCertificates />} />
+            <Route path="/student/certificates/:id" element={<CertificateDetail />} />
+            <Route path="/student/certificates/:id/verify" element={<CertificateVerify />} />
             <Route path="/student/schedule" element={<StudentSchedule />} />
+            <Route path="/student/schedule/:id" element={<SessionDetail />} />
             <Route path="/student/live-class" element={<StudentLiveClass />} />
             <Route path="/student/support" element={<StudentSupport />} />
           </Route>

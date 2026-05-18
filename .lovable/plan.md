@@ -1,152 +1,89 @@
-## Goal
+# Student Portal Production Polish
 
-Today the platform is built end-to-end around live instructor-led batches: fixed dates, fixed schedules, fixed seat count, single live class page. We will add **self-paced** as a first-class delivery mode (alongside live and hybrid) and propagate it through Course → Batch → Student experience across the Admin, Trainer, and Student portals.
+Make the student-facing experience demo-ready: each top-level page gets proper sub-pages, real interactions, and a mix of live + self-paced data so both Trainer and Student portals reflect both modes.
 
-The change is data-model + UX, no backend work — everything stays in the existing Zustand stores.
+## 1. Seed self-paced data (shared)
 
----
+Add 2–3 self-paced courses + matching batches so they show up across Trainer Courses, Trainer Batches, Student Courses, Student Dashboard, Student Schedule, Student Labs.
 
-## 1. Data model (stores)
+- **courseStore.ts**: add `Python for Data Science (self-paced)`, `Linux Server Hardening (self-paced)`, `GenAI Prompt Engineering (hybrid)` with chapters/lessons.
+- **batchStore.ts**: add 2 more self-paced batches tied to those courses (floating enrolment, totalAccessHours, lessonVMAccess samples) in addition to existing Batch 7.
+- Student-side mock arrays in Labs / Courses / Schedule / Assessments will reference these so the demo shows mixed modes.
 
-### `src/stores/courseStore.ts`
-`deliveryType` already exists on `Course`. Normalize values to `"live" | "self-paced" | "hybrid"` and surface it as a required choice in `CreateCourse` (radio group). Courses where `deliveryType === "hybrid"` are eligible for either batch mode.
+## 2. My Labs — `/student/labs`
 
-### `src/stores/batchStore.ts`
-Add to `Batch`:
+Add real filtering + per-VM control surface.
+
+- Filter bar: **Batch** select, **Status** select, **Mode** chip (Live / Self-paced), search.
+- Each lab card extends current actions with a "Commands & Actions" popover:
+  - Power: Start / Stop / Restart / Reset to snapshot
+  - Connect: SSH cmd, RDP cmd, copy IP, copy password, download .pem
+  - Snapshots: list + Restore
+  - Self-paced labs show remaining-hours meter + "Extend hours" CTA instead of "Extend time".
+- New sub-route **`/student/labs/:id`** — full lab detail page (console, metrics history, session log, snapshots tab, commands tab). Card click navigates there.
+
+## 3. My Courses — `/student/courses` + sub-pages
+
+Replace drawer-only flow with real pages.
+
+- List page: keep filtered grid; clicking a course routes to detail.
+- **`/student/courses/:id`** — Course overview: hero, instructor, progress, chapters accordion, "Continue learning" CTA.
+- **`/student/courses/:id/learn/:lessonId`** — Learning Player: left sidebar (chapter/lesson outline with lock states), main area video/reading/quiz/lab launcher, right notes & resources panel, bottom "Mark complete + Next" bar.
+- **`/student/courses/:id/resources`** — downloadable PDFs, slides, links.
+- **`/student/courses/:id/discussion`** — Q&A thread (mock).
+- Self-paced courses show "Lab Access: X / Y hrs" meter; live courses show "Next live session" chip.
+
+## 4. Schedule — `/student/schedule`
+
+- Add view toggle: **List / Week / Month** (week + month = simple calendar grid, mock).
+- Filter chips: All / Live / Lab / Self-paced / Assessment.
+- Each session card → click opens **`/student/schedule/:id`** session detail page with: agenda, instructor, prep checklist, join/launch buttons, related lab + materials, ICS download.
+- Self-paced "session" cards rendered as "Recommended this week" with Start CTA (no time pressure).
+
+## 5. Assessments — `/student/assessments` + sub-pages
+
+- List page: keep summary + filters, add **Course** filter and **Type** filter.
+- **`/student/assessments/:id`** — Assessment overview: instructions, time-limit, attempts, syllabus, Start CTA.
+- **`/student/assessments/:id/attempt`** — Attempt flow:
+  - Quiz: question-by-question with timer, progress, mark-for-review, submit.
+  - Assignment: instructions + file upload / text submission.
+  - Exercise: code editor placeholder + run/submit.
+- **`/student/assessments/:id/result`** — Score, per-question breakdown, feedback, retry/back CTA.
+
+## 6. Certificates — `/student/certificates` + sub-pages
+
+- List page: keep grid, add filter (Earned / In Progress / Expired) + search.
+- **`/student/certificates/:id`** — Certificate detail: full-size cert preview, issuer info, credential ID, verify URL, skills, related courses, **Download PDF / Share LinkedIn / Copy verify link** actions.
+- **`/student/certificates/:id/verify`** — public-style verify view (read-only summary).
+- In-progress entries deep-link to the course's continue page.
+
+## 7. Routing (App.tsx)
+
+Add the new student sub-routes:
 ```
-deliveryMode: "live" | "self-paced"
-accessModel?: "full-course" | "lesson-unlock"   // self-paced only
-totalAccessHours?: number                        // self-paced only, floating
-lessonVMAccess?: Array<{                         // self-paced + lesson-unlock
-  chapterId: string
-  lessonId: string
-  vmTemplateId: string
-  instanceName: string
-  hours: number               // access window once unlocked
-  unlockOn: "lesson-start" | "lesson-complete" | "previous-complete"
-}>
-enrollmentMode: "fixed" | "floating"             // self-paced defaults to floating
-```
-- `seatCount` becomes optional (`floating` mode hides it; no auto-generated participants).
-- For self-paced batches, `vmConfig.dateRange` is replaced by an open-ended window (start date + optional hard expiry); schedules/day-grids are skipped.
-- New helpers: `enrollSelfPacedStudent`, `unlockLessonVM(batchId, participantId, lessonId)`, `consumeAccessHours(batchId, participantId, vmId, minutes)`.
-
-No changes to the existing live flow — those batches keep `deliveryMode: "live"` and behave exactly as today.
-
----
-
-## 2. Course creation (Trainer + Admin)
-
-`src/pages/CreateCourse.tsx`: add a "Delivery type" step with three cards: **Live instructor-led**, **Self-paced**, **Hybrid**. Show a short blurb under each. This value flows into every batch built from the course.
-
-`src/pages/CourseDetails.tsx` / `Courses.tsx`: surface a small chip (`Live` / `Self-paced` / `Hybrid`) next to the course name everywhere it's listed.
-
----
-
-## 3. Batch creation — branched wizard
-
-Rewrite `src/pages/CreateBatch.tsx` and mirror in `src/pages/admin/AdminCreateBatch.tsx` so both share a step-based shell with a new **Step 1: Delivery Mode**.
-
-```text
-Step 1  Delivery mode
-        ┌─ Live instructor-led ──► existing steps (Basic → Schedule → VMs → Review)
-        └─ Self-paced ─────────► new steps below
+/student/labs/:id
+/student/courses/:id
+/student/courses/:id/learn/:lessonId
+/student/courses/:id/resources
+/student/courses/:id/discussion
+/student/schedule/:id
+/student/assessments/:id
+/student/assessments/:id/attempt
+/student/assessments/:id/result
+/student/certificates/:id
+/student/certificates/:id/verify
 ```
 
-When the parent course's `deliveryType` is `"live"` or `"self-paced"`, the mode is locked to that value (no picker shown). For `hybrid` courses, the user chooses.
+## Technical notes
 
-### Self-paced steps
-
-1. **Basics** — name, description, instructor (optional mentor), tags. No fixed seat count; toggle reads "Floating enrollment" (default on).
-2. **VM Access Model** — radio:
-   - *Full-course access*: VMs are available the entire time the student is enrolled, governed by a total hour budget.
-   - *Lesson-based access*: VMs unlock per lesson/module with a per-unlock hour budget.
-3. **VMs**
-   - Full-course access: pick one or more templates, set **Total access hours per student** (default 120), set hard expiry date (optional).
-   - Lesson-based access: render the course curriculum (chapters → lessons from `courseStore`) as a tree; on each lesson the trainer can attach a VM template, pick `unlockOn` (`lesson-start` / `lesson-complete` / `previous-complete`), and set hours of access. Multiple lessons can share or differ in VMs.
-4. **Review** — show pricing computed per active hour × estimated enrollments slider (since seats are floating) instead of per-seat × days.
-
-Submit → `addBatch({ ..., deliveryMode: "self-paced", accessModel, totalAccessHours, lessonVMAccess, enrollmentMode: "floating" })`.
-
----
-
-## 4. Batch detail (Trainer + Admin)
-
-`src/pages/BatchDetails.tsx` and `src/pages/admin/AdminBatchDetail.tsx`:
-
-- Header chip shows `Live` or `Self-paced`.
-- **Participants tab**: for self-paced + floating, replace the "X / Y seats" meter with a live enrolled count and an "Invite link / enroll students" CTA. Columns change: drop attendance, add `Hours used / Total`, `Last lesson`, `Last active`.
-- **VM tab**: 
-  - Live → unchanged.
-  - Self-paced + full-course → single VM template panel with aggregate hour-usage gauge and per-participant breakdown.
-  - Self-paced + lesson-unlock → **curriculum tree view**: each chapter/lesson row shows attached VM template, unlock rule, hours, and per-student unlock status (locked / unlocked / consumed). Trainer can edit attachments inline.
-- **Schedule tab**: hidden for self-paced.
-- **Course tab**: for self-paced, show curriculum progress per student instead of session calendar.
-
----
-
-## 5. Student portal
-
-### Rename + scope
-Rename `src/pages/student/LiveClass.tsx` and its route (`/student/live` or current path) to **Learning Centre** (`/student/learning`). Update `AppSidebar` label and icon. Keep the existing Default / Content / Lab / Notes view tabs and the resizable layout — they work for both modes.
-
-### Course switcher
-At the top of Learning Centre, add a sticky **course picker**:
-- Lists every batch the student is enrolled in.
-- Live batches show a `Live now` / `Next session …` badge and behave exactly as today when selected.
-- Self-paced batches show `Self-paced • {hoursRemaining}h left`.
-- Selecting a course swaps the curriculum, VM context, and chat panel (chat hidden for self-paced; replaced by a "Mentor inbox" panel).
-
-### Self-paced view differences
-- **Default view**: removes live-only widgets (live chat, class pulse). Shows the curriculum on the left, a "Resume" hero card with the last lesson, and an hour-budget meter.
-- **Content view**: same layout, but the sidebar shows `Hours remaining`, `Next unlock at: Lesson X`, and a Mentor message box instead of live chat.
-- **Lab view**: VM console is only available for the currently unlocked lesson; if locked, show a "Complete `Lesson Y` to unlock this VM (Z hours of access)" empty state with a CTA.
-- **Notes**: unchanged.
-
-`src/pages/student/Dashboard.tsx`: the existing "Resume Lab" / "Continue Course" cards already work — just respect `deliveryMode` so self-paced cards show "Hours left" instead of "Next live session", and link into `/student/learning?batchId=…`.
-
-### Student labs list
-`src/pages/student/Labs.tsx`: split into "Always-on labs" (self-paced full-course) and "Lesson-locked labs" (self-paced lesson-unlock) so students see exactly what's available now.
-
----
-
-## 6. Admin portal reflection
-
-The Zustand stores are shared, so these pages pick up the new fields automatically; we only adjust columns/filters:
-
-- `AllBatches.tsx`, `CustomerDetail.tsx` Batches tab — add a `Mode` column (Live / Self-paced) and a filter.
-- `Students.tsx`, `Approvals.tsx`, `BatchProvisioning.tsx` — show `Mode` chip; for self-paced rows the "Schedule" / "Seat" columns render `Floating` and `{hoursRemaining}h`.
-- `ResetLab.tsx`, `AssignVM.tsx`, `ReplaceVM.tsx`, `VMManagement.tsx` — keep working as today; for lesson-unlock VMs the picker shows the lesson it's tied to.
-
----
-
-## Files to change
-
-**Stores**
-- `src/stores/courseStore.ts` — normalize `deliveryType` values
-- `src/stores/batchStore.ts` — extend `Batch`, add helpers
-
-**Course flow**
-- `src/pages/CreateCourse.tsx`, `src/pages/CourseDetails.tsx`, `src/pages/Courses.tsx`
-
-**Batch flow**
-- `src/pages/CreateBatch.tsx`, `src/pages/admin/AdminCreateBatch.tsx`
-- `src/pages/BatchDetails.tsx`, `src/pages/admin/AdminBatchDetail.tsx`
-- `src/components/batches/ParticipantsTab.tsx`, `BatchSettingsTab.tsx`
-- `src/pages/admin/AllBatches.tsx`, `src/pages/admin/CustomerDetail.tsx`, `src/pages/admin/ModifyBatch.tsx`
-
-**Student**
-- Rename `src/pages/student/LiveClass.tsx` → `src/pages/student/LearningCentre.tsx`; update route + sidebar
-- `src/pages/student/Dashboard.tsx`, `src/pages/student/Labs.tsx`
-- `src/components/layout/AppSidebar.tsx`, `src/App.tsx` (route)
-
-**Admin polish (column/chip only)**
-- `src/pages/admin/Students.tsx`, `Approvals.tsx`, `BatchProvisioning.tsx`, `VMManagement.tsx`, `AssignVM.tsx`, `ResetLab.tsx`, `ReplaceVM.tsx`
-
----
+- All new pages use existing semantic tokens + shadcn primitives (Card, Tabs, Sheet, Dialog, Progress, Badge, Button). No new design system.
+- Mock data lives next to each page (or extended into existing stores where reused across pages — courses, batches).
+- Self-paced detection driven by `batch.deliveryMode === "self-paced"` and `course.deliveryType === "self-paced" | "hybrid"`.
+- No backend/auth changes — pure frontend + mock state, persists via existing Zustand stores.
+- Reuse `PageHeader`, `StatCard`, `StatusBadge`, `ResourceMeter` where applicable.
 
 ## Out of scope
 
-- No backend wiring; access-hour consumption is mocked in the store (decrement when "Start VM" is clicked).
-- No billing/invoicing changes beyond a display tweak on the Review step.
-- Existing live batches keep their current UI verbatim — no regressions.
+- Real video playback, real code execution, real PDF generation.
+- Auth, payments, server APIs.
+- Admin / Trainer page changes beyond the shared store seed data.
