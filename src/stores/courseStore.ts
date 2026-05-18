@@ -66,11 +66,13 @@ const initialCourses: Course[] = [
       }
     ]
   },
-  { id: "2", name: "Kubernetes Fundamentals", deliveryType: "self-paced", batches: 3, lastUpdated: "Jan 10, 2024", status: "active", chapters: [] },
+  { id: "2", name: "Kubernetes Fundamentals", deliveryType: "instructor-led", batches: 3, lastUpdated: "Jan 10, 2024", status: "active", chapters: [] },
   { id: "3", name: "Docker Masterclass", deliveryType: "instructor-led", batches: 4, lastUpdated: "Jan 8, 2024", status: "active", chapters: [] },
   { id: "4", name: "Terraform for AWS", deliveryType: "self-paced", batches: 2, lastUpdated: "Jan 5, 2024", status: "draft", chapters: [] },
   { id: "5", name: "Azure DevOps Pipeline", deliveryType: "instructor-led", batches: 1, lastUpdated: "Dec 28, 2023", status: "archived", chapters: [] },
-  { id: "6", name: "Linux Administration", deliveryType: "self-paced", batches: 6, lastUpdated: "Dec 20, 2023", status: "active", chapters: [] },
+  { id: "6", name: "Linux Server Hardening", deliveryType: "self-paced", category: "Security", description: "Self-paced hands-on Linux hardening.", batches: 1, lastUpdated: "Mar 1, 2024", status: "active", chapters: [] },
+  { id: "7", name: "GenAI Prompt Engineering", deliveryType: "hybrid", category: "AI", description: "Hybrid weekly live + self-paced labs.", batches: 1, lastUpdated: "Feb 10, 2024", status: "active", chapters: [] },
+  { id: "8", name: "Python for Data Science", deliveryType: "self-paced", category: "Data Science", description: "Self-paced Python journey to data science.", batches: 1, lastUpdated: "Feb 1, 2024", status: "active", chapters: [] },
 ];
 
 export const useCourseStore = create<CourseStore>((set, get) => ({
