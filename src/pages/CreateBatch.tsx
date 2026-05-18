@@ -713,15 +713,19 @@ export default function CreateBatch() {
                     type="button"
                     size="lg"
                     className="w-full"
-                    disabled={!vmDateRange.from || !vmDateRange.to || !vmTemplates[0]?.templateId}
+                    disabled={(deliveryMode !== "self-paced" && (!vmDateRange.from || !vmDateRange.to)) || !vmTemplates[0]?.templateId}
                     onClick={() => {
+                      const isSelfPaced = deliveryMode === "self-paced";
+                      const fromDate = isSelfPaced ? new Date() : vmDateRange.from!;
+                      const toDate = isSelfPaced ? new Date() : vmDateRange.to!;
                       // Build daily schedules – fill in defaults for days not explicitly set
-                      const days = eachDayOfInterval({ start: vmDateRange.from!, end: vmDateRange.to! });
-                      const finalSchedules = days.map((day: Date) => {
-                        const dateStr = format(day, "yyyy-MM-dd");
-                        const existing = vmDailySchedules.find(s => s.date === dateStr);
-                        return existing || { date: dateStr, startTime: "09:00", endTime: "18:00" };
-                      });
+                      const finalSchedules = isSelfPaced
+                        ? []
+                        : eachDayOfInterval({ start: fromDate, end: toDate }).map((day: Date) => {
+                            const dateStr = format(day, "yyyy-MM-dd");
+                            const existing = vmDailySchedules.find(s => s.date === dateStr);
+                            return existing || { date: dateStr, startTime: "09:00", endTime: "18:00" };
+                          });
 
                       const newVM: VMEntry = {
                         id: `vme-${Date.now()}`,
@@ -729,8 +733,8 @@ export default function CreateBatch() {
                         instanceName: vmTemplates[0]?.instanceName || "",
                         vmType,
                         dateRange: {
-                          from: vmDateRange.from!.toISOString(),
-                          to: vmDateRange.to!.toISOString(),
+                          from: fromDate.toISOString(),
+                          to: toDate.toISOString(),
                         },
                         dailySchedules: finalSchedules,
                       };
