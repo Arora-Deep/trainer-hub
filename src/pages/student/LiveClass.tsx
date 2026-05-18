@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Progress } from "@/components/ui/progress";
@@ -16,28 +17,26 @@ import {
   ChevronDown, ChevronUp, Circle, LayoutGrid, Columns2,
   PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen,
   RotateCw, Power, Save, StickyNote, Mic, Camera, Share2,
-  Download, Link2, Image as ImageIcon, X,
+  Download, Link2, Image as ImageIcon, X, CheckCircle, Lock, Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { useBatchStore } from "@/stores/batchStore";
 import { cn } from "@/lib/utils";
+import { studentCourses, type StudentCourse, type StudentLesson } from "@/data/studentMockData";
 
 /* ── Data ── */
-const courseModules = [
-  { name: "Introduction to AWS", completed: true },
-  { name: "IAM & Security", completed: true },
-  { name: "EC2 Fundamentals", completed: true },
-  { name: "EC2 Hands-on Lab", completed: true },
-  { name: "S3 & Storage", completed: true },
-  { name: "S3 Quiz", completed: true },
-  { name: "Networking Basics", completed: true },
-  { name: "VPC Overview", completed: true },
-  { name: "VPC Deep Dive", completed: false, current: true },
-  { name: "VPC Lab", completed: false },
-  { name: "Route 53 & CDN", completed: false },
-  { name: "Final Assessment", completed: false },
-];
+const lessonIcons: Record<StudentLesson["type"], typeof Video> = {
+  video: Video,
+  reading: FileText,
+  lab: Terminal,
+  quiz: HelpCircle,
+  assignment: FileText,
+};
+
+const getCurrentLesson = (course: StudentCourse) => {
+  const lessons = course.chapters.flatMap((chapter) => chapter.lessons);
+  return lessons.find((lesson) => lesson.id === course.nextLessonId) ?? lessons.find((lesson) => !lesson.completed && !lesson.locked) ?? lessons[0];
+};
 
 const chatMessages = [
   { user: "Instructor", message: "Welcome to today's VPC Deep Dive session!", time: "2:00 PM", isInstructor: true },
