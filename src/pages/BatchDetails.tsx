@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -30,7 +31,7 @@ import {
   Monitor, Loader2, ExternalLink, Copy, CheckCircle2, Terminal, Mail,
   ClipboardList, Settings, GraduationCap, TrendingUp, Zap, BarChart3,
   AlertCircle, Globe, Building2, MoreVertical, RotateCcw, Power, PowerOff,
-  Camera, Trash2, Star, Eye, EyeOff, Clipboard, Video,
+  Camera, Trash2, Star, Eye, EyeOff, Clipboard, Video, FileText, Award, ChevronRight, Edit,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBatchStore } from "@/stores/batchStore";
@@ -813,19 +814,84 @@ export default function BatchDetails() {
               </Dialog>
             </CardHeader>
             <CardContent>
-              {batch.courseName ? (
-                <div className="rounded-xl border border-border p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <GraduationCap className="h-6 w-6 text-primary" />
+              {batch.courseName ? (() => {
+                const assignedCourse = courses.find((c) => c.id === batch.courseId) || courses.find((c) => c.name === batch.courseName);
+                const lessonIcons: Record<string, any> = { video: Video, document: FileText, quiz: Award, assignment: FileText };
+                const totalLessons = assignedCourse?.chapters.reduce((s, ch) => s + ch.lessons.length, 0) || 0;
+                return (
+                  <div className="space-y-4">
+                    <div className="rounded-xl border border-border p-6">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <GraduationCap className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold">{batch.courseName}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {assignedCourse ? `${assignedCourse.chapters.length} chapters · ${totalLessons} lessons` : "Assigned to this batch"}
+                            </p>
+                          </div>
+                        </div>
+                        {assignedCourse && (
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => navigate(`/courses/${assignedCourse.id}/builder`)}>
+                              <Edit className="h-3.5 w-3.5 mr-1" /> Edit content
+                            </Button>
+                            <Button size="sm" onClick={() => navigate(`/courses/${assignedCourse.id}`)}>
+                              Open course <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-lg font-semibold">{batch.courseName}</h4>
-                      <p className="text-sm text-muted-foreground">Assigned to this batch</p>
-                    </div>
+
+                    {assignedCourse && (
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm">Course Content</CardTitle>
+                          <CardDescription>Chapters and lessons in this course</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {assignedCourse.chapters.length === 0 ? (
+                            <div className="py-8 text-center text-sm text-muted-foreground">
+                              No content added yet. <button onClick={() => navigate(`/courses/${assignedCourse.id}/builder`)} className="text-primary hover:underline">Add chapters</button>
+                            </div>
+                          ) : (
+                            <Accordion type="multiple" defaultValue={assignedCourse.chapters.map((ch) => ch.id)}>
+                              {assignedCourse.chapters.map((ch, ci) => (
+                                <AccordionItem key={ch.id} value={ch.id}>
+                                  <AccordionTrigger className="text-sm">
+                                    <span className="flex items-center gap-2">
+                                      <span className="text-muted-foreground">Chapter {ci + 1}</span> · {ch.title}
+                                      <Badge variant="outline" className="text-[10px] ml-2">{ch.lessons.length} lessons</Badge>
+                                    </span>
+                                  </AccordionTrigger>
+                                  <AccordionContent>
+                                    <div className="space-y-1 pl-2">
+                                      {ch.lessons.map((l) => {
+                                        const Icon = lessonIcons[l.type] || BookOpen;
+                                        return (
+                                          <div key={l.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted transition-colors">
+                                            <Icon className="h-4 w-4 text-muted-foreground" />
+                                            <span className="text-sm flex-1">{l.title}</span>
+                                            <Badge variant="outline" className="text-[10px] capitalize">{l.type}</Badge>
+                                            <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{l.duration}</span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              ))}
+                            </Accordion>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
-                </div>
-              ) : (
+                );
+              })() : (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
                     <BookOpen className="h-8 w-8 text-muted-foreground/50" />
