@@ -21,10 +21,10 @@ interface TemplatePickerGridProps {
 }
 
 const cloudProviderIcons: Record<string, { icon: React.ReactNode; color: string }> = {
+  cloudadda: { icon: <Cloud className="h-3.5 w-3.5" />, color: "text-primary" },
   aws: { icon: <Cloud className="h-3.5 w-3.5" />, color: "text-orange-500" },
   azure: { icon: <Cloud className="h-3.5 w-3.5" />, color: "text-blue-500" },
   gcp: { icon: <Cloud className="h-3.5 w-3.5" />, color: "text-red-500" },
-  digitalocean: { icon: <Cloud className="h-3.5 w-3.5" />, color: "text-blue-400" },
 };
 
 const osIcons: Record<string, React.ReactNode> = {
