@@ -348,31 +348,36 @@ export default function StudentLiveClass() {
     toast(handRaised ? "Hand lowered" : "✋ Hand raised — instructor notified");
   };
 
+  if (!selectedCourse) {
+    return <div className="text-sm text-muted-foreground">No courses assigned yet.</div>;
+  }
+
   return (
     <div className="space-y-4">
       {/* Course Switcher */}
-      {enrolledBatches.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">My Courses</span>
-          {enrolledBatches.map((b) => {
-            const active = b.id === selectedBatchId;
-            const sp = b.deliveryMode === "self-paced";
-            return (
-              <button
-                key={b.id}
-                onClick={() => setSelectedBatchId(b.id)}
-                className={cn(
-                  "shrink-0 flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-colors",
-                  active ? "border-primary bg-primary/10 text-foreground" : "border-border bg-card hover:border-primary/40 text-muted-foreground"
-                )}
-              >
-                <span className="font-medium truncate max-w-[180px]">{b.name}</span>
-                <Badge variant="secondary" className={cn("text-[9px]", sp ? "bg-amber-500/10 text-amber-600" : "bg-blue-500/10 text-blue-600")}>
-                  {sp ? `Self-paced • ${b.totalAccessHours ?? 0}h left` : "Live"}
-                </Badge>
-              </button>
-            );
-          })}
+      {studentCourses.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 pb-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">Choose training</span>
+          <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
+            <SelectTrigger className="h-10 w-full max-w-md min-w-[280px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {studentCourses.map((course) => (
+                <SelectItem key={course.id} value={course.id}>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{course.name}</span>
+                    <span className="text-[10px] text-muted-foreground capitalize">· {course.deliveryMode}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {isSelfPaced && (
+            <Badge className="bg-amber-500/10 text-amber-600 text-[10px] gap-1">
+              <Sparkles className="h-3 w-3" /> Self-paced course
+            </Badge>
+          )}
         </div>
       )}
 
@@ -381,7 +386,7 @@ export default function StudentLiveClass() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight">
-              {isSelfPaced ? selectedBatch?.name : "AWS VPC Deep Dive"}
+              {currentLesson?.title ?? selectedCourse.name}
             </h1>
             {isSelfPaced ? (
               <Badge className="bg-amber-500/10 text-amber-600 text-[10px]">SELF-PACED</Badge>
@@ -393,9 +398,7 @@ export default function StudentLiveClass() {
             )}
           </div>
           <p className="text-muted-foreground text-xs mt-0.5">
-            {isSelfPaced
-              ? `${selectedBatch?.courseName ?? "Course"} · Mentor: ${selectedBatch?.instructors?.[0] ?? "—"}`
-              : "AWS Cloud Practitioner — Batch 12 · Instructor: James Wilson"}
+            {selectedCourse.name} · {isSelfPaced ? "Self-paced" : selectedCourse.batch} · Instructor: {selectedCourse.instructor}
           </p>
         </div>
         <div className="flex items-center gap-2">
