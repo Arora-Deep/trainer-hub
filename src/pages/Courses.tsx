@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import {
   Table,
   TableBody,
@@ -11,9 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, MoreHorizontal, BookOpen, Users, Plus, ArrowUpRight } from "lucide-react";
+import { Search, MoreHorizontal, BookOpen, Users, Plus, ArrowUpRight, Video, FileText, Award, ChevronRight, Clock, Edit } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCourseStore } from "@/stores/courseStore";
+
+const lessonIcons: Record<string, any> = { video: Video, document: FileText, quiz: Award, assignment: FileText };
 
 const statusConfig: Record<string, { status: "success" | "warning" | "default"; label: string }> = {
   active: { status: "success", label: "Active" },
@@ -24,6 +30,10 @@ const statusConfig: Record<string, { status: "success" | "warning" | "default"; 
 export default function Courses() {
   const navigate = useNavigate();
   const courses = useCourseStore((state) => state.courses);
+  const defaultActiveId = courses.find((c) => c.chapters.length > 0)?.id || courses[0]?.id || "";
+  const [activeId, setActiveId] = useState(defaultActiveId);
+  const active = courses.find((c) => c.id === activeId) || courses[0];
+  const totalLessons = active?.chapters.reduce((sum, ch) => sum + ch.lessons.length, 0) || 0;
 
   return (
     <div className="space-y-6 animate-in-up">
@@ -38,6 +48,77 @@ export default function Courses() {
           </Button>
         }
       />
+
+      {active && (
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 shrink-0">
+                <BookOpen className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs font-medium text-muted-foreground">Currently viewing</span>
+              </div>
+              <Select value={activeId} onValueChange={setActiveId}>
+                <SelectTrigger className="h-10 flex-1 min-w-[260px] max-w-[480px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {courses.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{c.name}</span>
+                        <span className="text-[10px] text-muted-foreground capitalize">· {c.deliveryType}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button asChild variant="outline" size="sm" className="ml-auto">
+                <Link to={`/courses/${active.id}/builder`}><Edit className="h-3.5 w-3.5 mr-1" /> Edit content</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link to={`/courses/${active.id}`}>Open course <ChevronRight className="h-3.5 w-3.5 ml-0.5" /></Link>
+              </Button>
+            </div>
+
+            <div className="pt-2 border-t">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold">Course Content</h3>
+                <span className="text-[11px] text-muted-foreground">{active.chapters.length} chapters · {totalLessons} lessons</span>
+              </div>
+              {active.chapters.length === 0 ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                  No content added yet. <Link to={`/courses/${active.id}/builder`} className="text-primary hover:underline">Add chapters</Link>
+                </div>
+              ) : (
+                <Accordion type="multiple" defaultValue={active.chapters.map((ch) => ch.id)}>
+                  {active.chapters.map((ch, ci) => (
+                    <AccordionItem key={ch.id} value={ch.id}>
+                      <AccordionTrigger className="text-sm">
+                        <span className="flex items-center gap-2"><span className="text-muted-foreground">Chapter {ci + 1}</span> · {ch.title}<Badge variant="outline" className="text-[10px] ml-2">{ch.lessons.length} lessons</Badge></span>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-1 pl-2">
+                          {ch.lessons.map((l) => {
+                            const Icon = lessonIcons[l.type] || BookOpen;
+                            return (
+                              <div key={l.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted transition-colors">
+                                <Icon className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm flex-1">{l.title}</span>
+                                <Badge variant="outline" className="text-[10px] capitalize">{l.type}</Badge>
+                                <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{l.duration}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-border/50">
