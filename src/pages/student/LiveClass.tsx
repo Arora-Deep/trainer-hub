@@ -230,25 +230,51 @@ function ChatPanel({ chatInput, setChatInput }: { chatInput: string; setChatInpu
 }
 
 /* ── Reusable Course Content Panel ── */
-function CourseContentPanel() {
+function CourseContentPanel({ course, currentLessonId }: { course: StudentCourse; currentLessonId?: string }) {
   return (
     <ScrollArea className="h-full">
-      <div className="p-4 space-y-1">
-        <h3 className="text-sm font-semibold mb-3">Course Modules</h3>
-        {courseModules.map((m, i) => (
-          <div
-            key={i}
-            className={`flex items-center gap-3 py-2 px-3 rounded-md text-sm cursor-pointer transition-colors ${
-              m.current ? "bg-primary/10 border border-primary/30" : m.completed ? "text-muted-foreground" : "hover:bg-muted/50"
-            }`}
-          >
-            <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
-              m.completed ? "bg-success/10 text-success" : m.current ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-            }`}>
-              {m.completed ? "✓" : i + 1}
+      <div className="p-4 space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold">{course.name}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">{course.chapters.length} chapters · {course.modules} lessons</p>
+        </div>
+        {course.chapters.map((chapter, chapterIndex) => (
+          <div key={chapter.id} className="space-y-1">
+            <div className="flex items-center justify-between px-1">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Chapter {chapterIndex + 1}</p>
+              <span className="text-[10px] text-muted-foreground">{chapter.lessons.length} lessons</span>
             </div>
-            <span className={`flex-1 text-xs ${m.completed ? "line-through" : ""}`}>{m.name}</span>
-            {m.current && <Badge className="text-[10px] bg-primary/20 text-primary">Current</Badge>}
+            <div className="space-y-1">
+              {chapter.lessons.map((lesson, lessonIndex) => {
+                const current = lesson.id === currentLessonId;
+                const Icon = lessonIcons[lesson.type] ?? BookOpen;
+                return (
+                  <div
+                    key={lesson.id}
+                    className={cn(
+                      "flex items-center gap-3 py-2 px-3 rounded-md text-sm transition-colors border",
+                      current
+                        ? "bg-primary/10 border-primary/30"
+                        : lesson.completed
+                          ? "border-transparent text-muted-foreground"
+                          : "border-transparent hover:bg-muted/50",
+                      lesson.locked && "opacity-60"
+                    )}
+                  >
+                    <div className={cn(
+                      "h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0",
+                      lesson.completed ? "bg-success/10 text-success" : current ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                    )}>
+                      {lesson.completed ? <CheckCircle className="h-3.5 w-3.5" /> : lesson.locked ? <Lock className="h-3.5 w-3.5" /> : lessonIndex + 1}
+                    </div>
+                    <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className={cn("flex-1 text-xs min-w-0", lesson.completed && "line-through")}>{lesson.title}</span>
+                    {current && <Badge className="text-[10px] bg-primary/20 text-primary">Current</Badge>}
+                    <span className="text-[10px] text-muted-foreground shrink-0">{lesson.duration}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ))}
       </div>
@@ -278,15 +304,13 @@ function StudentsRail() {
 }
 
 export default function StudentLiveClass() {
-  const allBatches = useBatchStore((s) => s.batches);
-  // Mock: treat the first 3 batches as the student's enrolments
-  const enrolledBatches = allBatches.slice(0, 3);
-  const [selectedBatchId, setSelectedBatchId] = useState<string>(
-    enrolledBatches.find((b) => b.deliveryMode === "self-paced")?.id ?? enrolledBatches[0]?.id ?? ""
+  const [selectedCourseId, setSelectedCourseId] = useState<string>(
+    studentCourses.find((course) => course.deliveryMode === "self-paced")?.id ?? studentCourses[0]?.id ?? ""
   );
-  const selectedBatch = enrolledBatches.find((b) => b.id === selectedBatchId);
-  const isSelfPaced = selectedBatch?.deliveryMode === "self-paced";
-  const hoursLeft = selectedBatch?.totalAccessHours ?? 0;
+  const selectedCourse = studentCourses.find((course) => course.id === selectedCourseId) ?? studentCourses[0];
+  const currentLesson = selectedCourse ? getCurrentLesson(selectedCourse) : undefined;
+  const isSelfPaced = selectedCourse?.deliveryMode === "self-paced";
+  const hoursLeft = Math.max(0, (selectedCourse?.totalAccessHours ?? 0) - (selectedCourse?.usedAccessHours ?? 0));
 
   const [viewMode, setViewMode] = useState<ViewMode>("default");
   const [labExpanded, setLabExpanded] = useState(false);
