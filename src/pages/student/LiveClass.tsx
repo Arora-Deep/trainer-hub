@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Progress } from "@/components/ui/progress";
@@ -16,28 +17,26 @@ import {
   ChevronDown, ChevronUp, Circle, LayoutGrid, Columns2,
   PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen,
   RotateCw, Power, Save, StickyNote, Mic, Camera, Share2,
-  Download, Link2, Image as ImageIcon, X,
+  Download, Link2, Image as ImageIcon, X, CheckCircle, Lock, Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { useBatchStore } from "@/stores/batchStore";
 import { cn } from "@/lib/utils";
+import { studentCourses, type StudentCourse, type StudentLesson } from "@/data/studentMockData";
 
 /* ── Data ── */
-const courseModules = [
-  { name: "Introduction to AWS", completed: true },
-  { name: "IAM & Security", completed: true },
-  { name: "EC2 Fundamentals", completed: true },
-  { name: "EC2 Hands-on Lab", completed: true },
-  { name: "S3 & Storage", completed: true },
-  { name: "S3 Quiz", completed: true },
-  { name: "Networking Basics", completed: true },
-  { name: "VPC Overview", completed: true },
-  { name: "VPC Deep Dive", completed: false, current: true },
-  { name: "VPC Lab", completed: false },
-  { name: "Route 53 & CDN", completed: false },
-  { name: "Final Assessment", completed: false },
-];
+const lessonIcons: Record<StudentLesson["type"], typeof Video> = {
+  video: Video,
+  reading: FileText,
+  lab: Terminal,
+  quiz: HelpCircle,
+  assignment: FileText,
+};
+
+const getCurrentLesson = (course: StudentCourse) => {
+  const lessons = course.chapters.flatMap((chapter) => chapter.lessons);
+  return lessons.find((lesson) => lesson.id === course.nextLessonId) ?? lessons.find((lesson) => !lesson.completed && !lesson.locked) ?? lessons[0];
+};
 
 const chatMessages = [
   { user: "Instructor", message: "Welcome to today's VPC Deep Dive session!", time: "2:00 PM", isInstructor: true },
@@ -231,25 +230,51 @@ function ChatPanel({ chatInput, setChatInput }: { chatInput: string; setChatInpu
 }
 
 /* ── Reusable Course Content Panel ── */
-function CourseContentPanel() {
+function CourseContentPanel({ course, currentLessonId }: { course: StudentCourse; currentLessonId?: string }) {
   return (
     <ScrollArea className="h-full">
-      <div className="p-4 space-y-1">
-        <h3 className="text-sm font-semibold mb-3">Course Modules</h3>
-        {courseModules.map((m, i) => (
-          <div
-            key={i}
-            className={`flex items-center gap-3 py-2 px-3 rounded-md text-sm cursor-pointer transition-colors ${
-              m.current ? "bg-primary/10 border border-primary/30" : m.completed ? "text-muted-foreground" : "hover:bg-muted/50"
-            }`}
-          >
-            <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
-              m.completed ? "bg-success/10 text-success" : m.current ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-            }`}>
-              {m.completed ? "✓" : i + 1}
+      <div className="p-4 space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold">{course.name}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">{course.chapters.length} chapters · {course.modules} lessons</p>
+        </div>
+        {course.chapters.map((chapter, chapterIndex) => (
+          <div key={chapter.id} className="space-y-1">
+            <div className="flex items-center justify-between px-1">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Chapter {chapterIndex + 1}</p>
+              <span className="text-[10px] text-muted-foreground">{chapter.lessons.length} lessons</span>
             </div>
-            <span className={`flex-1 text-xs ${m.completed ? "line-through" : ""}`}>{m.name}</span>
-            {m.current && <Badge className="text-[10px] bg-primary/20 text-primary">Current</Badge>}
+            <div className="space-y-1">
+              {chapter.lessons.map((lesson, lessonIndex) => {
+                const current = lesson.id === currentLessonId;
+                const Icon = lessonIcons[lesson.type] ?? BookOpen;
+                return (
+                  <div
+                    key={lesson.id}
+                    className={cn(
+                      "flex items-center gap-3 py-2 px-3 rounded-md text-sm transition-colors border",
+                      current
+                        ? "bg-primary/10 border-primary/30"
+                        : lesson.completed
+                          ? "border-transparent text-muted-foreground"
+                          : "border-transparent hover:bg-muted/50",
+                      lesson.locked && "opacity-60"
+                    )}
+                  >
+                    <div className={cn(
+                      "h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0",
+                      lesson.completed ? "bg-success/10 text-success" : current ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                    )}>
+                      {lesson.completed ? <CheckCircle className="h-3.5 w-3.5" /> : lesson.locked ? <Lock className="h-3.5 w-3.5" /> : lessonIndex + 1}
+                    </div>
+                    <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className={cn("flex-1 text-xs min-w-0", lesson.completed && "line-through")}>{lesson.title}</span>
+                    {current && <Badge className="text-[10px] bg-primary/20 text-primary">Current</Badge>}
+                    <span className="text-[10px] text-muted-foreground shrink-0">{lesson.duration}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ))}
       </div>
@@ -279,15 +304,13 @@ function StudentsRail() {
 }
 
 export default function StudentLiveClass() {
-  const allBatches = useBatchStore((s) => s.batches);
-  // Mock: treat the first 3 batches as the student's enrolments
-  const enrolledBatches = allBatches.slice(0, 3);
-  const [selectedBatchId, setSelectedBatchId] = useState<string>(
-    enrolledBatches.find((b) => b.deliveryMode === "self-paced")?.id ?? enrolledBatches[0]?.id ?? ""
+  const [selectedCourseId, setSelectedCourseId] = useState<string>(
+    studentCourses.find((course) => course.deliveryMode === "self-paced")?.id ?? studentCourses[0]?.id ?? ""
   );
-  const selectedBatch = enrolledBatches.find((b) => b.id === selectedBatchId);
-  const isSelfPaced = selectedBatch?.deliveryMode === "self-paced";
-  const hoursLeft = selectedBatch?.totalAccessHours ?? 0;
+  const selectedCourse = studentCourses.find((course) => course.id === selectedCourseId) ?? studentCourses[0];
+  const currentLesson = selectedCourse ? getCurrentLesson(selectedCourse) : undefined;
+  const isSelfPaced = selectedCourse?.deliveryMode === "self-paced";
+  const hoursLeft = Math.max(0, (selectedCourse?.totalAccessHours ?? 0) - (selectedCourse?.usedAccessHours ?? 0));
 
   const [viewMode, setViewMode] = useState<ViewMode>("default");
   const [labExpanded, setLabExpanded] = useState(false);
@@ -325,31 +348,36 @@ export default function StudentLiveClass() {
     toast(handRaised ? "Hand lowered" : "✋ Hand raised — instructor notified");
   };
 
+  if (!selectedCourse) {
+    return <div className="text-sm text-muted-foreground">No courses assigned yet.</div>;
+  }
+
   return (
     <div className="space-y-4">
       {/* Course Switcher */}
-      {enrolledBatches.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">My Courses</span>
-          {enrolledBatches.map((b) => {
-            const active = b.id === selectedBatchId;
-            const sp = b.deliveryMode === "self-paced";
-            return (
-              <button
-                key={b.id}
-                onClick={() => setSelectedBatchId(b.id)}
-                className={cn(
-                  "shrink-0 flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-colors",
-                  active ? "border-primary bg-primary/10 text-foreground" : "border-border bg-card hover:border-primary/40 text-muted-foreground"
-                )}
-              >
-                <span className="font-medium truncate max-w-[180px]">{b.name}</span>
-                <Badge variant="secondary" className={cn("text-[9px]", sp ? "bg-amber-500/10 text-amber-600" : "bg-blue-500/10 text-blue-600")}>
-                  {sp ? `Self-paced • ${b.totalAccessHours ?? 0}h left` : "Live"}
-                </Badge>
-              </button>
-            );
-          })}
+      {studentCourses.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 pb-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">Choose training</span>
+          <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
+            <SelectTrigger className="h-10 w-full max-w-md min-w-[280px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {studentCourses.map((course) => (
+                <SelectItem key={course.id} value={course.id}>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{course.name}</span>
+                    <span className="text-[10px] text-muted-foreground capitalize">· {course.deliveryMode}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {isSelfPaced && (
+            <Badge className="bg-amber-500/10 text-amber-600 text-[10px] gap-1">
+              <Sparkles className="h-3 w-3" /> Self-paced course
+            </Badge>
+          )}
         </div>
       )}
 
@@ -358,7 +386,7 @@ export default function StudentLiveClass() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight">
-              {isSelfPaced ? selectedBatch?.name : "AWS VPC Deep Dive"}
+              {currentLesson?.title ?? selectedCourse.name}
             </h1>
             {isSelfPaced ? (
               <Badge className="bg-amber-500/10 text-amber-600 text-[10px]">SELF-PACED</Badge>
@@ -370,9 +398,7 @@ export default function StudentLiveClass() {
             )}
           </div>
           <p className="text-muted-foreground text-xs mt-0.5">
-            {isSelfPaced
-              ? `${selectedBatch?.courseName ?? "Course"} · Mentor: ${selectedBatch?.instructors?.[0] ?? "—"}`
-              : "AWS Cloud Practitioner — Batch 12 · Instructor: James Wilson"}
+            {selectedCourse.name} · {isSelfPaced ? "Self-paced" : selectedCourse.batch} · Instructor: {selectedCourse.instructor}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -484,7 +510,7 @@ export default function StudentLiveClass() {
                           </div>
                           <Button variant="ghost" size="icon" className="h-7 w-7"><Settings className="h-3.5 w-3.5" /></Button>
                         </div>
-                        <div className="h-[calc(100%-44px)]"><CourseContentPanel /></div>
+                        <div className="h-[calc(100%-44px)]"><CourseContentPanel course={selectedCourse} currentLessonId={currentLesson?.id} /></div>
                       </Card>
                     </ResizablePanel>
                     <ResizableHandle withHandle />
@@ -639,27 +665,28 @@ export default function StudentLiveClass() {
           <Card className="overflow-hidden h-full">
             <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
               <BookOpen className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold">VPC Deep Dive — Lesson Material</span>
+              <span className="text-sm font-semibold">{currentLesson?.title ?? selectedCourse.name} — Lesson Material</span>
               <Badge variant="outline" className="text-[10px] ml-auto">Current</Badge>
             </div>
             <ScrollArea className="h-[700px]">
               <div className="p-6 max-w-3xl space-y-4">
-                <h2 className="text-lg font-semibold">VPC Deep Dive</h2>
+                <h2 className="text-lg font-semibold">{currentLesson?.title ?? selectedCourse.name}</h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  A Virtual Private Cloud (VPC) is an isolated section of the AWS cloud where you can launch
-                  resources in a virtual network you define. In this lesson we cover CIDR ranges, subnets,
-                  route tables, NACLs, security groups, and inter-region peering.
+                  {currentLesson?.body ?? selectedCourse.description}
                 </p>
-                <h3 className="text-sm font-semibold mt-4">1. CIDR &amp; Subnetting</h3>
-                <p className="text-xs text-muted-foreground">A /16 VPC gives you 65,536 IPs. Subdivide into /24 subnets for AZ-level isolation.</p>
-                <h3 className="text-sm font-semibold mt-4">2. Route Tables</h3>
-                <p className="text-xs text-muted-foreground">Every subnet is associated with a route table that controls traffic direction.</p>
-                <h3 className="text-sm font-semibold mt-4">3. Security Layers</h3>
-                <p className="text-xs text-muted-foreground">Security Groups are stateful, NACLs are stateless. Use both for defense-in-depth.</p>
+                <h3 className="text-sm font-semibold mt-4">Course focus</h3>
+                <p className="text-xs text-muted-foreground">{selectedCourse.category} · {selectedCourse.totalHours}h total · {selectedCourse.modules} lessons</p>
+                <h3 className="text-sm font-semibold mt-4">Next step</h3>
+                <p className="text-xs text-muted-foreground">Continue from the highlighted lesson in the course outline below.</p>
+                {isSelfPaced && (
+                  <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-700 dark:text-amber-400">
+                    Self-paced access is active. You can move through lessons independently with {hoursLeft}h lab access remaining.
+                  </div>
+                )}
                 <div className="mt-6 grid grid-cols-2 gap-3">
                   <div className="p-3 rounded-lg border border-border bg-muted/30">
                     <h4 className="text-xs font-semibold mb-1">Module list</h4>
-                    <CourseContentPanel />
+                    <CourseContentPanel course={selectedCourse} currentLessonId={currentLesson?.id} />
                   </div>
                   <div className="p-3 rounded-lg border border-primary/30 bg-primary/5">
                     <h4 className="text-xs font-semibold mb-1">Try it in your lab</h4>
@@ -808,7 +835,7 @@ export default function StudentLiveClass() {
                 {notesRailCollapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelRightClose className="h-3.5 w-3.5" />}
               </Button>
             </div>
-            {!notesRailCollapsed && <div className="h-[640px]"><CourseContentPanel /></div>}
+            {!notesRailCollapsed && <div className="h-[640px]"><CourseContentPanel course={selectedCourse} currentLessonId={currentLesson?.id} /></div>}
           </Card>
         </div>
       )}
