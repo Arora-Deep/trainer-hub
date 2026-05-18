@@ -665,23 +665,24 @@ export default function StudentLiveClass() {
           <Card className="overflow-hidden h-full">
             <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
               <BookOpen className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold">VPC Deep Dive — Lesson Material</span>
+              <span className="text-sm font-semibold">{currentLesson?.title ?? selectedCourse.name} — Lesson Material</span>
               <Badge variant="outline" className="text-[10px] ml-auto">Current</Badge>
             </div>
             <ScrollArea className="h-[700px]">
               <div className="p-6 max-w-3xl space-y-4">
-                <h2 className="text-lg font-semibold">VPC Deep Dive</h2>
+                <h2 className="text-lg font-semibold">{currentLesson?.title ?? selectedCourse.name}</h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  A Virtual Private Cloud (VPC) is an isolated section of the AWS cloud where you can launch
-                  resources in a virtual network you define. In this lesson we cover CIDR ranges, subnets,
-                  route tables, NACLs, security groups, and inter-region peering.
+                  {currentLesson?.body ?? selectedCourse.description}
                 </p>
-                <h3 className="text-sm font-semibold mt-4">1. CIDR &amp; Subnetting</h3>
-                <p className="text-xs text-muted-foreground">A /16 VPC gives you 65,536 IPs. Subdivide into /24 subnets for AZ-level isolation.</p>
-                <h3 className="text-sm font-semibold mt-4">2. Route Tables</h3>
-                <p className="text-xs text-muted-foreground">Every subnet is associated with a route table that controls traffic direction.</p>
-                <h3 className="text-sm font-semibold mt-4">3. Security Layers</h3>
-                <p className="text-xs text-muted-foreground">Security Groups are stateful, NACLs are stateless. Use both for defense-in-depth.</p>
+                <h3 className="text-sm font-semibold mt-4">Course focus</h3>
+                <p className="text-xs text-muted-foreground">{selectedCourse.category} · {selectedCourse.totalHours}h total · {selectedCourse.modules} lessons</p>
+                <h3 className="text-sm font-semibold mt-4">Next step</h3>
+                <p className="text-xs text-muted-foreground">Continue from the highlighted lesson in the course outline below.</p>
+                {isSelfPaced && (
+                  <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-700 dark:text-amber-400">
+                    Self-paced access is active. You can move through lessons independently with {hoursLeft}h lab access remaining.
+                  </div>
+                )}
                 <div className="mt-6 grid grid-cols-2 gap-3">
                   <div className="p-3 rounded-lg border border-border bg-muted/30">
                     <h4 className="text-xs font-semibold mb-1">Module list</h4>
