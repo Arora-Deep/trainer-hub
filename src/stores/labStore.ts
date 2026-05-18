@@ -32,7 +32,7 @@ export interface LabTemplate {
   type: "Linux" | "Windows";
   os: string;
   osVersion: string;
-  cloudProvider: "aws" | "azure" | "gcp" | "digitalocean";
+  cloudProvider: "cloudadda" | "aws" | "azure" | "gcp";
   region: string;
   vcpus: number;
   memory: number; // in GB
@@ -181,8 +181,8 @@ const initialTemplates: LabTemplate[] = [
     type: "Linux",
     os: "CentOS",
     osVersion: "8 Stream",
-    cloudProvider: "digitalocean",
-    region: "nyc1",
+    cloudProvider: "cloudadda",
+    region: "in-mum-1",
     vcpus: 2,
     memory: 2,
     storage: 20,
