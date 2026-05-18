@@ -668,37 +668,39 @@ export default function CreateBatch() {
                     </CardContent>
                   </Card>
 
-                  {/* VM Date Range Calendar */}
-                  <Card>
-                    <CardContent className="pt-8 pb-6 flex flex-col items-center">
-                      <div className="text-center mb-6">
-                        <h2 className="text-lg font-semibold text-foreground">Choose VM availability dates</h2>
-                        {vmDateRange.from && vmDateRange.to ? (
-                          <div className="flex items-center justify-center gap-2 mt-2">
-                            <p className="text-sm text-muted-foreground">
-                              {format(vmDateRange.from, "MMM d, yyyy")} — {format(vmDateRange.to, "MMM d, yyyy")} ({differenceInDays(vmDateRange.to, vmDateRange.from) + 1} days)
-                            </p>
-                            <Button type="button" variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto py-0.5 px-1.5" onClick={() => setVmDateRange({ from: undefined, to: undefined })}>
-                              Clear
-                            </Button>
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground mt-1">Select a start date, then an end date</p>
-                        )}
-                      </div>
-                      <Calendar
-                        mode="range"
-                        selected={vmDateRange as DateRange}
-                        onSelect={(range) => setVmDateRange({ from: range?.from, to: range?.to })}
-                        numberOfMonths={2}
-                        className="p-4 pointer-events-auto"
-                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                      />
-                    </CardContent>
-                  </Card>
+                  {/* VM Date Range Calendar - hidden for self-paced (governed by access hours) */}
+                  {deliveryMode !== "self-paced" && (
+                    <Card>
+                      <CardContent className="pt-8 pb-6 flex flex-col items-center">
+                        <div className="text-center mb-6">
+                          <h2 className="text-lg font-semibold text-foreground">Choose VM availability dates</h2>
+                          {vmDateRange.from && vmDateRange.to ? (
+                            <div className="flex items-center justify-center gap-2 mt-2">
+                              <p className="text-sm text-muted-foreground">
+                                {format(vmDateRange.from, "MMM d, yyyy")} — {format(vmDateRange.to, "MMM d, yyyy")} ({differenceInDays(vmDateRange.to, vmDateRange.from) + 1} days)
+                              </p>
+                              <Button type="button" variant="ghost" size="sm" className="text-xs text-muted-foreground h-auto py-0.5 px-1.5" onClick={() => setVmDateRange({ from: undefined, to: undefined })}>
+                                Clear
+                              </Button>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground mt-1">Select a start date, then an end date</p>
+                          )}
+                        </div>
+                        <Calendar
+                          mode="range"
+                          selected={vmDateRange as DateRange}
+                          onSelect={(range) => setVmDateRange({ from: range?.from, to: range?.to })}
+                          numberOfMonths={2}
+                          className="p-4 pointer-events-auto"
+                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
 
-                  {/* Per-Day Timings */}
-                  {vmDateRange.from && vmDateRange.to && (
+                  {/* Per-Day Timings - not applicable for self-paced */}
+                  {deliveryMode !== "self-paced" && vmDateRange.from && vmDateRange.to && (
                     <VMDaySchedule
                       dateRange={{ from: vmDateRange.from, to: vmDateRange.to }}
                       dailySchedules={vmDailySchedules}
