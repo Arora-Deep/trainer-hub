@@ -30,6 +30,10 @@ const statusConfig: Record<string, { status: "success" | "warning" | "default"; 
 export default function Courses() {
   const navigate = useNavigate();
   const courses = useCourseStore((state) => state.courses);
+  const defaultActiveId = courses.find((c) => c.chapters.length > 0)?.id || courses[0]?.id || "";
+  const [activeId, setActiveId] = useState(defaultActiveId);
+  const active = courses.find((c) => c.id === activeId) || courses[0];
+  const totalLessons = active?.chapters.reduce((sum, ch) => sum + ch.lessons.length, 0) || 0;
 
   return (
     <div className="space-y-6 animate-in-up">
