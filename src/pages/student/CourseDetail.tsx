@@ -93,10 +93,12 @@ export default function StudentCourseDetail() {
       <Tabs defaultValue="content">
         <TabsList>
           <TabsTrigger value="content" className="text-xs">Course Content</TabsTrigger>
-          <TabsTrigger value="resources" className="text-xs" asChild><Link to={`/student/courses/${c.id}/resources`}>Resources</Link></TabsTrigger>
-          <TabsTrigger value="discussion" className="text-xs" asChild><Link to={`/student/courses/${c.id}/discussion`}>Discussion</Link></TabsTrigger>
           <TabsTrigger value="progress" className="text-xs">Progress</TabsTrigger>
         </TabsList>
+        <div className="mt-2 flex gap-2">
+          <Button asChild variant="ghost" size="sm"><Link to={`/student/courses/${c.id}/resources`}>Resources →</Link></Button>
+          <Button asChild variant="ghost" size="sm"><Link to={`/student/courses/${c.id}/discussion`}>Discussion →</Link></Button>
+        </div>
 
         <TabsContent value="content" className="mt-4">
           <Card>
