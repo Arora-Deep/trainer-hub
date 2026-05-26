@@ -13,6 +13,7 @@ import { useNotificationStore, useNotificationCounts } from "@/stores/notificati
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { LevelChip } from "@/components/gamification/LevelChip";
 
 const roleIcons: Record<Role, typeof Shield> = { cloudadda: Shield, trainer: GraduationCap, student: Users };
 const roleColors: Record<Role, string> = {
@@ -141,6 +142,8 @@ export function AppHeader() {
             </DropdownMenuContent>
           </DropdownMenu>
         )}
+        {role === "student" && <LevelChip />}
+
 
         <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" onClick={toggleTheme}>
           {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
