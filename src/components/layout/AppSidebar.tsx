@@ -121,6 +121,7 @@ const trainerNav: NavConfig = {
       { title: "Quizzes", icon: FileQuestion, path: "/quizzes" },
       { title: "Exercises", icon: Code2, path: "/exercises" },
       { title: "Certifications", icon: Award, path: "/certifications" },
+      { title: "Engagement", icon: Zap, path: "/engagement" },
       { title: "Request Lab / Quote", icon: MessageSquarePlus, path: "/request-lab" },
     ]},
   ],
@@ -141,7 +142,13 @@ const studentNav: NavConfig = {
       { title: "My Courses", icon: BookOpen, path: "/student/courses" },
       { title: "Schedule", icon: Calendar, path: "/student/schedule" },
       { title: "Assessments", icon: FileText, path: "/student/assessments" },
-      { title: "Certificates", icon: Trophy, path: "/student/certificates" },
+    ]},
+    { label: "Progression", icon: Zap, items: [
+      { title: "My Progress", icon: Activity, path: "/student/progress" },
+      { title: "Skill Trees", icon: Workflow, path: "/student/skill-tree" },
+      { title: "Challenges", icon: Flag, path: "/student/challenges" },
+      { title: "Leaderboards", icon: Trophy, path: "/student/leaderboard" },
+      { title: "Certificates", icon: Award, path: "/student/certificates" },
     ]},
   ],
   bottom: [
