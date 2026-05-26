@@ -9,6 +9,8 @@ import {
   Pause, RotateCcw, ChevronRight, Download,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { DailyMissionsCard } from "@/components/gamification/DailyMissionsCard";
+import { StreakMomentumCard } from "@/components/gamification/StreakMomentumCard";
 
 const activeCourse = {
   title: "AWS DevOps Bootcamp",
@@ -108,6 +110,12 @@ export default function StudentDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Gamification — daily missions + streak/momentum */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
+        <DailyMissionsCard />
+        <StreakMomentumCard />
+      </div>
 
       {/* Continue learning */}
       <section className="space-y-3">
