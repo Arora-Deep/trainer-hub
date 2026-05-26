@@ -99,6 +99,11 @@ import StudentSchedule from "./pages/student/Schedule";
 import SessionDetail from "./pages/student/SessionDetail";
 import StudentLiveClass from "./pages/student/LiveClass";
 import StudentSupport from "./pages/student/Support";
+import StudentProgress from "./pages/student/Progress";
+import StudentSkillTree from "./pages/student/SkillTree";
+import StudentChallenges from "./pages/student/Challenges";
+import StudentLeaderboard from "./pages/student/Leaderboard";
+import Engagement from "./pages/Engagement";
 
 const queryClient = new QueryClient();
 
@@ -206,6 +211,11 @@ const App = () => (
             <Route path="/student/schedule/:id" element={<SessionDetail />} />
             <Route path="/student/live-class" element={<StudentLiveClass />} />
             <Route path="/student/support" element={<StudentSupport />} />
+            <Route path="/student/progress" element={<StudentProgress />} />
+            <Route path="/student/skill-tree" element={<StudentSkillTree />} />
+            <Route path="/student/challenges" element={<StudentChallenges />} />
+            <Route path="/student/leaderboard" element={<StudentLeaderboard />} />
+            <Route path="/engagement" element={<Engagement />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
