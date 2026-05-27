@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGamificationStore, type LeaderboardEntry } from "@/stores/gamificationStore";
 import { TrendingUp, TrendingDown, Minus, Crown, Flame } from "lucide-react";
+import { SeasonBanner } from "@/components/gamification/SeasonBanner";
+import { RivalCallout } from "@/components/gamification/RivalCallout";
 
 export default function Leaderboard() {
   const { leaderboard } = useGamificationStore();
@@ -14,6 +16,12 @@ export default function Leaderboard() {
         title="Leaderboards"
         description="See where you stand — your weekly XP, your batch, and skill-specific rankings."
       />
+
+      <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6">
+        <SeasonBanner />
+        <RivalCallout />
+      </div>
+
 
       <Tabs defaultValue="weekly">
         <TabsList>

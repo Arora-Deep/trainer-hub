@@ -11,6 +11,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { DailyMissionsCard } from "@/components/gamification/DailyMissionsCard";
 import { StreakMomentumCard } from "@/components/gamification/StreakMomentumCard";
+import { SeasonBanner } from "@/components/gamification/SeasonBanner";
+import { RivalCallout } from "@/components/gamification/RivalCallout";
 
 const activeCourse = {
   title: "AWS DevOps Bootcamp",
@@ -111,11 +113,18 @@ export default function StudentDashboard() {
         </CardContent>
       </Card>
 
+      {/* Season banner + rival */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6">
+        <SeasonBanner />
+        <RivalCallout />
+      </div>
+
       {/* Gamification — daily missions + streak/momentum */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
         <DailyMissionsCard />
         <StreakMomentumCard />
       </div>
+
 
       {/* Continue learning */}
       <section className="space-y-3">
