@@ -15,12 +15,17 @@ export interface Skill {
   percentile: number;    // 0-100
 }
 
+export type Tier = "bronze" | "silver" | "gold" | "platinum" | "diamond" | "architect";
+export type Rarity = "common" | "rare" | "epic" | "legendary";
+
 export interface Achievement {
   id: string;
   title: string;
   description: string;
   category: "milestone" | "lab" | "streak" | "challenge" | "mastery";
   tier: "bronze" | "silver" | "gold" | "platinum";
+  rarity?: Rarity;
+  holdersPct?: number; // % of students who hold it
   unlocked: boolean;
   unlockedAt?: string;
   progress?: { current: number; total: number };
