@@ -15,12 +15,17 @@ export interface Skill {
   percentile: number;    // 0-100
 }
 
+export type Tier = "bronze" | "silver" | "gold" | "platinum" | "diamond" | "architect";
+export type Rarity = "common" | "rare" | "epic" | "legendary";
+
 export interface Achievement {
   id: string;
   title: string;
   description: string;
   category: "milestone" | "lab" | "streak" | "challenge" | "mastery";
   tier: "bronze" | "silver" | "gold" | "platinum";
+  rarity?: Rarity;
+  holdersPct?: number; // % of students who hold it
   unlocked: boolean;
   unlockedAt?: string;
   progress?: { current: number; total: number };
@@ -240,24 +245,104 @@ const skillTracks: SkillTrack[] = [
 ];
 
 // ---------- Store ----------
+// ---------- Season, Heatmap, Titles, Rival ----------
+export interface Season {
+  id: string;
+  name: string;
+  theme: string;
+  startsAt: string;
+  endsAt: string;
+  weeklyXpCap: number;
+  weeklyXpEarned: number;
+  rank: number;
+  totalParticipants: number;
+}
+
+export interface Title {
+  id: string;
+  name: string;
+  description: string;
+  active: boolean;
+  earnedAt?: string;
+  locked?: boolean;
+}
+
+// 6 months of contribution intensities (0-4) by day
+function seedHeatmap(): number[] {
+  const days = 26 * 7; // 26 weeks
+  const arr: number[] = [];
+  for (let i = 0; i < days; i++) {
+    // bias toward more recent activity
+    const recency = i / days;
+    const r = Math.random();
+    if (r < 0.30 - recency * 0.18) arr.push(0);
+    else if (r < 0.55) arr.push(1);
+    else if (r < 0.80) arr.push(2);
+    else if (r < 0.95) arr.push(3);
+    else arr.push(4);
+  }
+  return arr;
+}
+
+const season: Season = {
+  id: "s7",
+  name: "Season 7 · Cluster Forge",
+  theme: "Kubernetes & platform engineering",
+  startsAt: "2026-05-12",
+  endsAt: "2026-06-22",
+  weeklyXpCap: 6000,
+  weeklyXpEarned: 3820,
+  rank: 138,
+  totalParticipants: 2412,
+};
+
+const titles: Title[] = [
+  { id: "t1", name: "Cluster Initiate",  description: "Complete the 'Deploy Your First Cluster' quest.", active: true,  earnedAt: "2026-04-22" },
+  { id: "t2", name: "Linux Survivor",    description: "Finish 25 Linux labs without resetting.",        active: false, earnedAt: "2026-03-02" },
+  { id: "t3", name: "Night Operator",    description: "Complete 20 labs between 10pm and 2am.",         active: false, locked: true },
+  { id: "t4", name: "Platform Builder",  description: "Reach Architect tier on the DevOps track.",      active: false, locked: true },
+  { id: "t5", name: "Cloud Sentinel",    description: "Operate workloads across 3 cloud providers.",    active: false, locked: true },
+];
+
+const rival = {
+  name: "Marcus Lee",
+  handle: "@marcus",
+  identity: "Kubernetes Engineer",
+  level: 27,
+  xpAhead: 240,
+};
+
+const heatmap = seedHeatmap();
+
+const streakFreezes = { available: 2, max: 3, nextRefillIn: "3d" };
+
+const rarityByTier: Record<Achievement["tier"], Rarity> = {
+  bronze: "common", silver: "rare", gold: "epic", platinum: "legendary",
+};
+const enrichedAchievements: Achievement[] = achievements.map((a) => ({
+  ...a,
+  rarity: rarityByTier[a.tier],
+  holdersPct: a.unlocked ? Math.round(20 + Math.random() * 50) : Math.round(2 + Math.random() * 18),
+}));
+
+const tierForLevel = (level: number): Tier => {
+  if (level >= 35) return "architect";
+  if (level >= 28) return "diamond";
+  if (level >= 22) return "platinum";
+  if (level >= 16) return "gold";
+  if (level >= 8)  return "silver";
+  return "bronze";
+};
+
 interface GamificationState {
   profile: {
-    name: string;
-    handle: string;
-    identity: string;     // e.g. "DevOps Engineer"
-    level: number;
-    totalXp: number;
-    nextLevelXp: number;
-    percentile: number;
-    specialization: SkillKey;
-    topSkills: SkillKey[];
-    totalLabHours: number;
-    completedTracks: number;
-    certifications: number;
-    joinedAt: string;
+    name: string; handle: string; identity: string; activeTitle: string; tier: Tier;
+    level: number; totalXp: number; nextLevelXp: number; percentile: number;
+    specialization: SkillKey; topSkills: SkillKey[]; totalLabHours: number;
+    completedTracks: number; certifications: number; joinedAt: string;
   };
   skills: Skill[];
-  streak: { current: number; longest: number; weeklyDays: boolean[]; lastActive: string };
+  streak: { current: number; longest: number; weeklyDays: boolean[]; lastActive: string; freezes: typeof streakFreezes };
   momentum: { value: number; multiplier: number; trend: "up" | "down" | "flat"; decayInHours: number };
   achievements: Achievement[];
   dailyMissions: Mission[];
@@ -266,46 +351,47 @@ interface GamificationState {
   xpFeed: XPEvent[];
   leaderboard: typeof leaderboard;
   skillTracks: SkillTrack[];
+  season: Season;
+  titles: Title[];
+  rival: typeof rival;
+  heatmap: number[];
+  feedback: { sound: boolean; haptics: boolean; bursts: boolean };
+  setFeedback: (k: keyof GamificationState["feedback"], v: boolean) => void;
+  addXpEvent: (e: Omit<XPEvent, "id" | "ts"> & { ts?: string }) => void;
+  setActiveTitle: (id: string) => void;
 }
 
-export const useGamificationStore = create<GamificationState>(() => ({
+export const useGamificationStore = create<GamificationState>((set) => ({
   profile: {
-    name: "Sarah Johnson",
-    handle: "@sarah",
-    identity: "DevOps Engineer",
-    level: overallLevel,
-    totalXp,
-    nextLevelXp: nextLevelTotal,
-    percentile: 92,
-    specialization: "kubernetes",
-    topSkills: ["linux", "kubernetes", "cloud"],
-    totalLabHours: 78,
-    completedTracks: 3,
-    certifications: 2,
-    joinedAt: "2026-01-08",
+    name: "Sarah Johnson", handle: "@sarah", identity: "DevOps Engineer",
+    activeTitle: "Cluster Initiate", tier: tierForLevel(overallLevel),
+    level: overallLevel, totalXp, nextLevelXp: nextLevelTotal, percentile: 92,
+    specialization: "kubernetes", topSkills: ["linux", "kubernetes", "cloud"],
+    totalLabHours: 78, completedTracks: 3, certifications: 2, joinedAt: "2026-01-08",
   },
   skills,
-  streak: { current: 14, longest: 28, weeklyDays: [true, true, true, true, true, true, false], lastActive: "2026-05-26T09:14:00Z" },
+  streak: { current: 14, longest: 28, weeklyDays: [true, true, true, true, true, true, false], lastActive: "2026-05-26T09:14:00Z", freezes: streakFreezes },
   momentum: { value: 72, multiplier: 1.4, trend: "up", decayInHours: 36 },
-  achievements,
-  dailyMissions,
-  weeklyMissions,
-  challenges,
-  xpFeed,
-  leaderboard,
-  skillTracks,
+  achievements: enrichedAchievements,
+  dailyMissions, weeklyMissions, challenges, xpFeed, leaderboard, skillTracks,
+  season, titles, rival, heatmap,
+  feedback: { sound: true, haptics: true, bursts: true },
+  setFeedback: (k, v) => set((s) => ({ feedback: { ...s.feedback, [k]: v } })),
+  addXpEvent: (e) => set((s) => ({
+    xpFeed: [{ id: `x${Date.now()}`, ts: e.ts ?? new Date().toISOString(), label: e.label, amount: e.amount, skill: e.skill }, ...s.xpFeed].slice(0, 30),
+    profile: { ...s.profile, totalXp: s.profile.totalXp + e.amount },
+    season: { ...s.season, weeklyXpEarned: Math.min(s.season.weeklyXpCap, s.season.weeklyXpEarned + e.amount) },
+  })),
+  setActiveTitle: (id) => set((s) => ({
+    profile: { ...s.profile, activeTitle: s.titles.find(t => t.id === id)?.name ?? s.profile.activeTitle },
+    titles: s.titles.map(t => ({ ...t, active: t.id === id })),
+  })),
 }));
 
 export const skillColor: Record<SkillKey, string> = {
-  cloud: "hsl(210 90% 56%)",
-  linux: "hsl(28 90% 55%)",
-  kubernetes: "hsl(220 85% 60%)",
-  security: "hsl(0 75% 58%)",
-  networking: "hsl(160 70% 45%)",
-  devops: "hsl(265 70% 60%)",
-  ai: "hsl(290 70% 60%)",
-  python: "hsl(48 90% 55%)",
-  infra: "hsl(190 70% 50%)",
+  cloud: "hsl(210 90% 56%)", linux: "hsl(28 90% 55%)", kubernetes: "hsl(220 85% 60%)",
+  security: "hsl(0 75% 58%)", networking: "hsl(160 70% 45%)", devops: "hsl(265 70% 60%)",
+  ai: "hsl(290 70% 60%)", python: "hsl(48 90% 55%)", infra: "hsl(190 70% 50%)",
 };
 
 export const tierStyle: Record<Achievement["tier"], string> = {
@@ -321,3 +407,31 @@ export const difficultyStyle: Record<Challenge["difficulty"], string> = {
   Advanced: "text-warning bg-warning/10 border-warning/20",
   Expert: "text-destructive bg-destructive/10 border-destructive/20",
 };
+
+export const tierGradient: Record<Tier, string> = {
+  bronze:    "from-[hsl(28_70%_50%)] to-[hsl(28_70%_38%)]",
+  silver:    "from-[hsl(220_9%_64%)] to-[hsl(220_9%_46%)]",
+  gold:      "from-[hsl(43_88%_55%)] to-[hsl(38_92%_42%)]",
+  platinum:  "from-[hsl(195_60%_60%)] to-[hsl(210_60%_42%)]",
+  diamond:   "from-[hsl(188_85%_60%)] to-[hsl(220_85%_55%)]",
+  architect: "from-[hsl(270_75%_62%)] to-[hsl(295_75%_48%)]",
+};
+
+export const tierLabel: Record<Tier, string> = {
+  bronze: "Bronze", silver: "Silver", gold: "Gold",
+  platinum: "Platinum", diamond: "Diamond", architect: "Architect",
+};
+
+export const tierColor: Record<Tier, string> = {
+  bronze: "hsl(28 70% 50%)", silver: "hsl(220 9% 56%)", gold: "hsl(43 88% 52%)",
+  platinum: "hsl(195 60% 55%)", diamond: "hsl(188 85% 58%)", architect: "hsl(270 75% 60%)",
+};
+
+export const rarityStyle: Record<Rarity, string> = {
+  common:    "text-muted-foreground bg-muted/40 border-border",
+  rare:      "text-primary bg-primary/10 border-primary/30",
+  epic:      "text-[hsl(270,75%,55%)] bg-[hsl(270,75%,60%)/0.1] border-[hsl(270,75%,60%)/0.3]",
+  legendary: "text-[hsl(43,88%,42%)] bg-[hsl(43,88%,55%)/0.12] border-[hsl(43,88%,55%)/0.35]",
+};
+
+

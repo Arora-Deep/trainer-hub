@@ -79,6 +79,18 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        xp: {
+          DEFAULT: "hsl(var(--xp))",
+          foreground: "hsl(var(--xp-foreground))",
+        },
+        tier: {
+          bronze: "hsl(var(--tier-bronze))",
+          silver: "hsl(var(--tier-silver))",
+          gold: "hsl(var(--tier-gold))",
+          platinum: "hsl(var(--tier-platinum))",
+          diamond: "hsl(var(--tier-diamond))",
+          architect: "hsl(var(--tier-architect))",
+        },
       },
       borderRadius: {
         "2xl": "1rem",
