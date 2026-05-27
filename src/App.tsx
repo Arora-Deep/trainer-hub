@@ -221,7 +221,6 @@ const App = () => (
             <Route path="/student/quests" element={<StudentQuests />} />
             <Route path="/engagement" element={<Engagement />} />
           </Route>
-          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
