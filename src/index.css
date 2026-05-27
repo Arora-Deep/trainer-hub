@@ -184,4 +184,41 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Gamification motion */
+  @keyframes xp-pop {
+    0%   { transform: translateY(6px) scale(0.9); opacity: 0; }
+    20%  { transform: translateY(0)   scale(1.05); opacity: 1; }
+    80%  { transform: translateY(-10px) scale(1); opacity: 1; }
+    100% { transform: translateY(-22px) scale(0.95); opacity: 0; }
+  }
+  @keyframes level-up-burst {
+    0%   { transform: scale(0.6); opacity: 0; }
+    40%  { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+  @keyframes streak-flame-pulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 hsl(var(--warning) / 0)); }
+    50%      { transform: scale(1.08); filter: drop-shadow(0 0 6px hsl(var(--warning) / 0.55)); }
+  }
+  @keyframes rank-shimmer {
+    0%   { background-position: -200% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+  @keyframes node-unlock {
+    0%   { box-shadow: 0 0 0 0 hsl(var(--xp) / 0.6); transform: scale(1); }
+    60%  { box-shadow: 0 0 0 12px hsl(var(--xp) / 0); transform: scale(1.08); }
+    100% { box-shadow: 0 0 0 0 hsl(var(--xp) / 0); transform: scale(1); }
+  }
+
+  .animate-xp-pop          { animation: xp-pop 1.6s cubic-bezier(.2,.8,.2,1) forwards; }
+  .animate-level-up-burst  { animation: level-up-burst 0.9s ease-out forwards; }
+  .animate-flame-pulse     { animation: streak-flame-pulse 2s ease-in-out infinite; }
+  .animate-node-unlock     { animation: node-unlock 0.8s ease-out; }
+
+  .tier-shimmer {
+    background-image: linear-gradient(110deg, transparent 35%, hsl(0 0% 100% / 0.35) 50%, transparent 65%);
+    background-size: 200% 100%;
+    animation: rank-shimmer 3.2s linear infinite;
+  }
 }
