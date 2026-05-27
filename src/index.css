@@ -43,6 +43,16 @@
     --input: 0 0% 90%;
     --ring: 211 100% 50%;
 
+    /* Gamification */
+    --xp: 248 90% 62%;
+    --xp-foreground: 0 0% 100%;
+    --tier-bronze: 28 70% 50%;
+    --tier-silver: 220 9% 56%;
+    --tier-gold: 43 88% 52%;
+    --tier-platinum: 195 60% 55%;
+    --tier-diamond: 188 85% 58%;
+    --tier-architect: 270 75% 60%;
+
     --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
