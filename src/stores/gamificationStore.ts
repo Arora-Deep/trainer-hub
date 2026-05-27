@@ -245,84 +245,74 @@ const skillTracks: SkillTrack[] = [
 ];
 
 // ---------- Store ----------
-interface GamificationState {
-  profile: {
-    name: string;
-    handle: string;
-    identity: string;     // e.g. "DevOps Engineer"
-    level: number;
-    totalXp: number;
-    nextLevelXp: number;
-    percentile: number;
-    specialization: SkillKey;
-    topSkills: SkillKey[];
-    totalLabHours: number;
-    completedTracks: number;
-    certifications: number;
-    joinedAt: string;
-  };
-  skills: Skill[];
-  streak: { current: number; longest: number; weeklyDays: boolean[]; lastActive: string };
-  momentum: { value: number; multiplier: number; trend: "up" | "down" | "flat"; decayInHours: number };
-  achievements: Achievement[];
-  dailyMissions: Mission[];
-  weeklyMissions: Mission[];
-  challenges: Challenge[];
-  xpFeed: XPEvent[];
-  leaderboard: typeof leaderboard;
-  skillTracks: SkillTrack[];
+// ---------- Season, Heatmap, Titles, Rival ----------
+export interface Season {
+  id: string;
+  name: string;
+  theme: string;
+  startsAt: string;
+  endsAt: string;
+  weeklyXpCap: number;
+  weeklyXpEarned: number;
+  rank: number;
+  totalParticipants: number;
 }
 
-export const useGamificationStore = create<GamificationState>(() => ({
-  profile: {
-    name: "Sarah Johnson",
-    handle: "@sarah",
-    identity: "DevOps Engineer",
-    level: overallLevel,
-    totalXp,
-    nextLevelXp: nextLevelTotal,
-    percentile: 92,
-    specialization: "kubernetes",
-    topSkills: ["linux", "kubernetes", "cloud"],
-    totalLabHours: 78,
-    completedTracks: 3,
-    certifications: 2,
-    joinedAt: "2026-01-08",
-  },
-  skills,
-  streak: { current: 14, longest: 28, weeklyDays: [true, true, true, true, true, true, false], lastActive: "2026-05-26T09:14:00Z" },
-  momentum: { value: 72, multiplier: 1.4, trend: "up", decayInHours: 36 },
-  achievements,
-  dailyMissions,
-  weeklyMissions,
-  challenges,
-  xpFeed,
-  leaderboard,
-  skillTracks,
-}));
+export interface Title {
+  id: string;
+  name: string;
+  description: string;
+  active: boolean;
+  earnedAt?: string;
+  locked?: boolean;
+}
 
-export const skillColor: Record<SkillKey, string> = {
-  cloud: "hsl(210 90% 56%)",
-  linux: "hsl(28 90% 55%)",
-  kubernetes: "hsl(220 85% 60%)",
-  security: "hsl(0 75% 58%)",
-  networking: "hsl(160 70% 45%)",
-  devops: "hsl(265 70% 60%)",
-  ai: "hsl(290 70% 60%)",
-  python: "hsl(48 90% 55%)",
-  infra: "hsl(190 70% 50%)",
+// 6 months of contribution intensities (0-4) by day
+function seedHeatmap(): number[] {
+  const days = 26 * 7; // 26 weeks
+  const arr: number[] = [];
+  for (let i = 0; i < days; i++) {
+    // bias toward more recent activity
+    const recency = i / days;
+    const r = Math.random();
+    if (r < 0.30 - recency * 0.18) arr.push(0);
+    else if (r < 0.55) arr.push(1);
+    else if (r < 0.80) arr.push(2);
+    else if (r < 0.95) arr.push(3);
+    else arr.push(4);
+  }
+  return arr;
+}
+
+const season: Season = {
+  id: "s7",
+  name: "Season 7 · Cluster Forge",
+  theme: "Kubernetes & platform engineering",
+  startsAt: "2026-05-12",
+  endsAt: "2026-06-22",
+  weeklyXpCap: 6000,
+  weeklyXpEarned: 3820,
+  rank: 138,
+  totalParticipants: 2412,
 };
 
-export const tierStyle: Record<Achievement["tier"], string> = {
-  bronze: "text-amber-700 bg-amber-500/10 border-amber-600/20",
-  silver: "text-slate-500 bg-slate-400/10 border-slate-400/20",
-  gold: "text-yellow-600 bg-yellow-500/10 border-yellow-500/20",
-  platinum: "text-primary bg-primary/10 border-primary/20",
+const titles: Title[] = [
+  { id: "t1", name: "Cluster Initiate",  description: "Complete the 'Deploy Your First Cluster' quest.", active: true,  earnedAt: "2026-04-22" },
+  { id: "t2", name: "Linux Survivor",    description: "Finish 25 Linux labs without resetting.",        active: false, earnedAt: "2026-03-02" },
+  { id: "t3", name: "Night Operator",    description: "Complete 20 labs between 10pm and 2am.",         active: false, locked: true },
+  { id: "t4", name: "Platform Builder",  description: "Reach Architect tier on the DevOps track.",      active: false, locked: true },
+  { id: "t5", name: "Cloud Sentinel",    description: "Operate workloads across 3 cloud providers.",    active: false, locked: true },
+];
+
+const rival = {
+  name: "Marcus Lee",
+  handle: "@marcus",
+  identity: "Kubernetes Engineer",
+  level: 27,
+  xpAhead: 240,
 };
 
-export const difficultyStyle: Record<Challenge["difficulty"], string> = {
-  Beginner: "text-success bg-success/10 border-success/20",
-  Intermediate: "text-primary bg-primary/10 border-primary/20",
-  Advanced: "text-warning bg-warning/10 border-warning/20",
-  Expert: "text-destructive bg-destructive/10 border-destructive/20",
-};
+const heatmap = seedHeatmap();
+
+const streakFreezes = { available: 2, max: 3, nextRefillIn: "3d" };
+
