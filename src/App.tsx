@@ -103,6 +103,8 @@ import StudentProgress from "./pages/student/Progress";
 import StudentSkillTree from "./pages/student/SkillTree";
 import StudentChallenges from "./pages/student/Challenges";
 import StudentLeaderboard from "./pages/student/Leaderboard";
+import StudentProfile from "./pages/student/Profile";
+import StudentQuests from "./pages/student/Quests";
 import Engagement from "./pages/Engagement";
 
 const queryClient = new QueryClient();
@@ -215,7 +217,10 @@ const App = () => (
             <Route path="/student/skill-tree" element={<StudentSkillTree />} />
             <Route path="/student/challenges" element={<StudentChallenges />} />
             <Route path="/student/leaderboard" element={<StudentLeaderboard />} />
+            <Route path="/student/profile" element={<StudentProfile />} />
+            <Route path="/student/quests" element={<StudentQuests />} />
             <Route path="/engagement" element={<Engagement />} />
+          </Route>
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

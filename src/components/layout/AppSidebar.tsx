@@ -144,9 +144,11 @@ const studentNav: NavConfig = {
       { title: "Assessments", icon: FileText, path: "/student/assessments" },
     ]},
     { label: "Progression", icon: Zap, items: [
+      { title: "My Profile", icon: UserCog, path: "/student/profile" },
+      { title: "Quests", icon: Flag, path: "/student/quests" },
       { title: "My Progress", icon: Activity, path: "/student/progress" },
       { title: "Skill Trees", icon: Workflow, path: "/student/skill-tree" },
-      { title: "Challenges", icon: Flag, path: "/student/challenges" },
+      { title: "Challenges", icon: Boxes, path: "/student/challenges" },
       { title: "Leaderboards", icon: Trophy, path: "/student/leaderboard" },
       { title: "Certificates", icon: Award, path: "/student/certificates" },
     ]},
