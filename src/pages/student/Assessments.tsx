@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Clock, CheckCircle, AlertCircle, Search, Award, Code2, ClipboardList, Timer, TrendingUp, ArrowRight, Sparkles } from "lucide-react";
+import { FileText, Clock, CheckCircle, AlertCircle, Search, Award, Code2, ClipboardList, Timer, TrendingUp, ArrowRight, Sparkles, Target } from "lucide-react";
 import { studentAssessments } from "@/data/studentMockData";
+import { StudentPageHero } from "@/components/gamification/StudentPageHero";
 
 const statusConfig: Record<string, { color: string; icon: any }> = {
   pending: { color: "bg-warning/10 text-warning", icon: Clock },
@@ -40,10 +41,19 @@ export default function StudentAssessments() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Assessments</h1>
-        <p className="text-muted-foreground text-sm mt-1">Quizzes, assignments, and exercises across your courses</p>
-      </div>
+      <StudentPageHero
+        variant="amber"
+        eyebrow="Proving Ground"
+        icon={Target}
+        title={<>Test what you <span className="text-white/95">know</span>.</>}
+        description="Quizzes, assignments, and exercises across your courses — score, retake, master."
+        stats={[
+          { icon: TrendingUp, label: "Avg", value: `${avg}%` },
+          { icon: CheckCircle, label: "Done", value: completed },
+          { icon: AlertCircle, label: "Due", value: due },
+        ]}
+      />
+
 
       <div className="grid gap-4 md:grid-cols-4">
         {[

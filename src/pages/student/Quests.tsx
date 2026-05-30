@@ -1,4 +1,3 @@
-import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,8 +7,9 @@ import { QuestTimeline } from "@/components/gamification/QuestTimeline";
 import { useState } from "react";
 import {
   Cloud, Terminal, Boxes, Shield, Network, Workflow, Brain, Code, Server,
-  Sparkles, Lock, Trophy, ArrowRight,
+  Sparkles, Lock, Trophy, ArrowRight, Compass, CheckCircle2,
 } from "lucide-react";
+import { StudentPageHero } from "@/components/gamification/StudentPageHero";
 
 const skillIcons: Record<SkillKey, typeof Cloud> = {
   cloud: Cloud, linux: Terminal, kubernetes: Boxes, security: Shield,
@@ -26,10 +26,19 @@ export default function Quests() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Quests"
-        description="Multi-step storylines that chain real labs, lessons, and challenges into proof-of-skill."
+      <StudentPageHero
+        variant="violet"
+        eyebrow="Storylines"
+        icon={Compass}
+        title={<>Chain labs into <span className="text-white/95">proof-of-skill</span>.</>}
+        description="Multi-step quests that thread real labs, lessons, and challenges into one journey."
+        stats={[
+          { icon: Compass, label: "Active", value: quests.filter(q => q.status === "in_progress").length },
+          { icon: CheckCircle2, label: "Cleared", value: quests.filter(q => q.status === "completed").length },
+          { icon: Lock, label: "Locked", value: quests.filter(q => q.status === "locked").length },
+        ]}
       />
+
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
         {/* Quest list */}

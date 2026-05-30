@@ -8,9 +8,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
-import { BookOpen, Play, CheckCircle, Search, Star, Clock, Timer, ChevronRight, Sparkles, Radio, Video, FileText, FlaskConical, Award, Lock, User } from "lucide-react";
+import { BookOpen, Play, CheckCircle, Search, Star, Clock, Timer, ChevronRight, Sparkles, Radio, Video, FileText, FlaskConical, Award, Lock, User, GraduationCap, Trophy, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { studentCourses } from "@/data/studentMockData";
+import { StudentPageHero } from "@/components/gamification/StudentPageHero";
 
 const moduleIcons: Record<string, any> = { video: Video, reading: FileText, lab: FlaskConical, quiz: Award, assignment: FileText };
 
@@ -45,15 +46,19 @@ export default function StudentCourses() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Learning Centre</h1>
-          <p className="text-muted-foreground text-sm mt-1">Live, self-paced and hybrid trainings you're enrolled in</p>
-        </div>
-        <div className="text-sm text-muted-foreground">
-          {studentCourses.filter((c) => c.status === "completed").length}/{studentCourses.length} completed
-        </div>
-      </div>
+      <StudentPageHero
+        variant="violet"
+        eyebrow="Learning Centre"
+        icon={GraduationCap}
+        title={<>Level up your <span className="text-white/95">craft</span>.</>}
+        description="Live, self-paced and hybrid trainings — every module you finish powers up your profile."
+        stats={[
+          { icon: Trophy, label: "Completed", value: `${studentCourses.filter((c) => c.status === "completed").length}/${studentCourses.length}` },
+          { icon: Zap, label: "In progress", value: studentCourses.filter((c) => c.status === "in_progress").length },
+          { icon: Sparkles, label: "Modules", value: studentCourses.reduce((s, c) => s + c.modules, 0) },
+        ]}
+      />
+
 
       {/* Active training selector */}
       {active && (

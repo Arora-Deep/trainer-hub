@@ -1,4 +1,4 @@
-import { PageHeader } from "@/components/ui/PageHeader";
+import { StudentPageHero } from "@/components/gamification/StudentPageHero";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,15 +55,19 @@ export default function Profile() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Public Profile"
+      <StudentPageHero
+        variant="violet"
+        eyebrow="Identity"
+        icon={Trophy}
+        title={<>Your <span className="text-white/95">card</span>. Your story.</>}
         description="Your technical identity, mastery, and proof of work."
         actions={
-          <Button variant="outline" onClick={handleShare} className="gap-1.5">
+          <Button onClick={handleShare} className="gap-1.5 bg-white text-foreground hover:bg-white/90">
             <Share2 className="h-4 w-4" /> Share rank card
           </Button>
         }
       />
+
 
       {/* Identity */}
       <Card className="relative overflow-hidden">

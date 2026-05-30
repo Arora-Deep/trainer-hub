@@ -1,4 +1,3 @@
-import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +11,7 @@ import {
 } from "lucide-react";
 import { StreakMomentumCard } from "@/components/gamification/StreakMomentumCard";
 import { useNavigate } from "react-router-dom";
+import { StudentPageHero } from "@/components/gamification/StudentPageHero";
 
 const skillIcons: Record<SkillKey, typeof Cloud> = {
   cloud: Cloud, linux: Terminal, kubernetes: Boxes, security: Shield,
@@ -29,10 +29,14 @@ export default function Progress_Page() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Progression"
-        description="Your technical identity, skill mastery, and momentum across CloudAdda."
+      <StudentPageHero
+        variant="cyan"
+        eyebrow="Progression"
+        icon={TrendingUp}
+        title={<>Momentum is <span className="text-white/95">everything</span>.</>}
+        description="Skill mastery, streaks, and your trajectory across CloudAdda."
       />
+
 
       {/* Identity Card */}
       <Card>

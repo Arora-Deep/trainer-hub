@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Trophy, Calendar, Clock, Shield, Award, Search, ExternalLink, ChevronRight, BookOpen } from "lucide-react";
+import { Trophy, Calendar, Clock, Shield, Award, Search, ExternalLink, ChevronRight, BookOpen, Medal } from "lucide-react";
 import { studentCertificates } from "@/data/studentMockData";
+import { StudentPageHero } from "@/components/gamification/StudentPageHero";
 
 export default function StudentCertificates() {
   const [tab, setTab] = useState("all");
@@ -24,16 +25,19 @@ export default function StudentCertificates() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Certificates</h1>
-          <p className="text-muted-foreground text-sm mt-1">Your earned certifications and progress</p>
-        </div>
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1.5 text-success"><Award className="h-4 w-4" /><span className="font-medium">{issued} Earned</span></div>
-          <div className="flex items-center gap-1.5 text-muted-foreground"><Clock className="h-4 w-4" /><span>{inProgress} In Progress</span></div>
-        </div>
-      </div>
+      <StudentPageHero
+        variant="amber"
+        eyebrow="Trophy Room"
+        icon={Medal}
+        title={<>Receipts. <span className="text-white/95">Proof.</span> Bragging rights.</>}
+        description="Every certificate earned is a public, verifiable badge on your record."
+        stats={[
+          { icon: Award, label: "Earned", value: issued },
+          { icon: Clock, label: "In progress", value: inProgress },
+          { icon: Shield, label: "Total", value: studentCertificates.length },
+        ]}
+      />
+
 
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
