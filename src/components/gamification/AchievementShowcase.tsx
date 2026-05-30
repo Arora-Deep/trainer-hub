@@ -1,4 +1,4 @@
-import { useGamificationStore, tierStyle, rarityStyle } from "@/stores/gamificationStore";
+import { useGamificationStore, rarityStyle } from "@/stores/gamificationStore";
 import { Card } from "@/components/ui/card";
 import * as Icons from "lucide-react";
 import { ChevronRight, Lock } from "lucide-react";
@@ -8,25 +8,22 @@ export function AchievementShowcase() {
   const all = useGamificationStore((s) => s.achievements);
   const navigate = useNavigate();
 
-  // Show 3 unlocked + 1 in-progress
   const unlocked = all.filter((a) => a.unlocked).slice(0, 3);
   const next = all.find((a) => !a.unlocked && a.progress);
   const display = next ? [...unlocked, next] : unlocked;
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-4">
       <div className="flex items-end justify-between">
         <div>
-          <div className="text-[11px] uppercase tracking-widest text-muted-foreground font-semibold">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             Achievements
           </div>
-          <h2 className="text-base font-semibold tracking-tight mt-0.5">
-            Earned through real engineering
-          </h2>
+          <h2 className="text-base font-semibold tracking-tight mt-1">Earned through engineering</h2>
         </div>
         <button
           onClick={() => navigate("/student/profile")}
-          className="text-xs text-primary font-semibold inline-flex items-center gap-1 hover:gap-1.5 transition-all"
+          className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-colors"
         >
           View all <ChevronRight className="h-3 w-3" />
         </button>
@@ -37,58 +34,31 @@ export function AchievementShowcase() {
           const Icon = (Icons as any)[a.icon] ?? Icons.Award;
           const locked = !a.unlocked;
           return (
-            <Card
-              key={a.id}
-              className={`sp-card relative overflow-hidden p-4 ${locked ? "opacity-90" : ""}`}
-            >
-              {/* Tier ribbon */}
-              <div
-                aria-hidden
-                className="absolute inset-x-0 top-0 h-0.5"
-                style={{
-                  background:
-                    a.tier === "platinum"
-                      ? "linear-gradient(90deg, hsl(var(--xp)), hsl(var(--tier-architect)))"
-                      : a.tier === "gold"
-                      ? "linear-gradient(90deg, hsl(var(--tier-gold)), hsl(var(--warning)))"
-                      : a.tier === "silver"
-                      ? "linear-gradient(90deg, hsl(var(--tier-silver)), hsl(var(--muted-foreground)))"
-                      : "linear-gradient(90deg, hsl(var(--tier-bronze)), hsl(28 70% 38%))",
-                }}
-              />
+            <Card key={a.id} className={`sp-card p-4 ${locked ? "opacity-70" : ""}`}>
               <div className="flex items-start justify-between gap-2">
-                <div
-                  className={`h-10 w-10 rounded-xl border flex items-center justify-center ${tierStyle[a.tier]}`}
-                >
-                  {locked ? <Lock className="h-4 w-4" /> : <Icon className="h-5 w-5" />}
+                <div className="h-9 w-9 rounded-xl border border-border flex items-center justify-center bg-muted/40">
+                  {locked ? <Lock className="h-4 w-4 text-muted-foreground" /> : <Icon className="h-4 w-4" />}
                 </div>
                 {a.rarity && (
-                  <span
-                    className={`text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded border ${rarityStyle[a.rarity]}`}
-                  >
+                  <span className={`text-[9px] uppercase tracking-[0.14em] font-medium px-1.5 py-0.5 rounded border ${rarityStyle[a.rarity]}`}>
                     {a.rarity}
                   </span>
                 )}
               </div>
-              <h4 className={`mt-3 text-sm font-semibold truncate ${locked ? "text-muted-foreground" : ""}`}>
-                {a.title}
-              </h4>
+              <h4 className="mt-3 text-sm font-semibold truncate">{a.title}</h4>
               <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{a.description}</p>
               {locked && a.progress ? (
                 <div className="mt-3">
-                  <div className="h-1 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-primary to-[hsl(var(--xp))]"
-                      style={{ width: `${(a.progress.current / a.progress.total) * 100}%` }}
-                    />
+                  <div className="h-0.5 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full bg-foreground" style={{ width: `${(a.progress.current / a.progress.total) * 100}%` }} />
                   </div>
-                  <p className="mt-1 text-[10px] text-muted-foreground tabular-nums">
+                  <p className="mt-1.5 text-[10px] text-muted-foreground tabular-nums">
                     {a.progress.current} / {a.progress.total}
                   </p>
                 </div>
               ) : (
                 <p className="mt-3 text-[10px] text-muted-foreground tabular-nums">
-                  {a.holdersPct}% of engineers hold this
+                  Held by {a.holdersPct}% of engineers
                 </p>
               )}
             </Card>
