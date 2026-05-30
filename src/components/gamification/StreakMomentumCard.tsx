@@ -10,48 +10,47 @@ export function StreakMomentumCard() {
   return (
     <Card>
       <CardContent className="p-5 space-y-5">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-6">
           <div>
-            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-              <Flame className="h-3 w-3 text-warning" /> Streak
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              <Flame className="h-3 w-3" /> Streak
             </div>
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <span className="text-3xl font-semibold tabular-nums">{streak.current}</span>
+            <div className="mt-2 flex items-baseline gap-1.5">
+              <span className="text-3xl font-semibold tabular-nums leading-none">{streak.current}</span>
               <span className="text-xs text-muted-foreground">days</span>
             </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Longest: {streak.longest} days</p>
+            <p className="text-[11px] text-muted-foreground mt-1.5">Longest: {streak.longest}</p>
           </div>
           <div>
-            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-              <Zap className="h-3 w-3 text-primary" /> Momentum
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              <Zap className="h-3 w-3" /> Momentum
             </div>
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <span className="text-3xl font-semibold tabular-nums">{momentum.multiplier}×</span>
+            <div className="mt-2 flex items-baseline gap-1.5">
+              <span className="text-3xl font-semibold tabular-nums leading-none">{momentum.multiplier}×</span>
               <span className="text-xs text-success inline-flex items-center gap-0.5">
                 <TrendingUp className="h-3 w-3" /> {momentum.value}
               </span>
             </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">XP boost · decays in {momentum.decayInHours}h</p>
+            <p className="text-[11px] text-muted-foreground mt-1.5">Decays in {momentum.decayInHours}h</p>
           </div>
         </div>
 
         <div>
-          <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
+          <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
             <span>This week</span>
-            <span>Lvl {profile.level} · {profile.identity}</span>
+            <span>Lvl {profile.level}</span>
           </div>
           <div className="grid grid-cols-7 gap-1.5">
             {streak.weeklyDays.map((active, i) => (
               <div
                 key={i}
-                className={`h-9 rounded-md border flex flex-col items-center justify-center text-[10px] font-medium ${
+                className={`h-9 rounded-md border flex items-center justify-center text-[10px] font-medium ${
                   active
-                    ? "border-warning/40 bg-warning/10 text-warning"
+                    ? "border-foreground bg-foreground text-background"
                     : "border-border bg-muted/30 text-muted-foreground"
                 }`}
               >
-                <span>{DAYS[i]}</span>
-                {active && <Flame className="h-2.5 w-2.5 mt-0.5" />}
+                {DAYS[i]}
               </div>
             ))}
           </div>

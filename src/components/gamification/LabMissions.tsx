@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Zap, Clock, Cpu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { difficultyStyle } from "@/stores/gamificationStore";
+
 
 type LabMission = {
   name: string;
@@ -61,9 +61,9 @@ export function LabMissions() {
               {/* Status dot */}
               <div className="pt-1 shrink-0">
                 <span
-                  className={`block h-2.5 w-2.5 rounded-full ${
+                  className={`block h-2 w-2 rounded-full ${
                     l.status === "Running"
-                      ? "bg-success shadow-[0_0_10px_hsl(var(--success))]"
+                      ? "bg-success"
                       : l.status === "Paused"
                       ? "bg-warning"
                       : "bg-muted-foreground/40"
@@ -88,29 +88,17 @@ export function LabMissions() {
                 </div>
 
                 {/* Meta strip */}
-                <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-                  <span
-                    className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border ${difficultyStyle[l.difficulty]}`}
-                  >
-                    <Cpu className="h-3 w-3" />
-                    {l.difficulty}
+                <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 tabular-nums">
+                    <Cpu className="h-3 w-3" /> {l.difficulty}
                   </span>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border border-[hsl(var(--xp)/0.25)] bg-[hsl(var(--xp)/0.08)] text-[hsl(var(--xp))]">
-                    <Zap className="h-3 w-3" />
-                    +{l.xp.toLocaleString()} XP
+                  <span className="inline-flex items-center gap-1 tabular-nums">
+                    <Zap className="h-3 w-3" /> +{l.xp.toLocaleString()} XP
                   </span>
-                  <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground px-2 py-0.5 rounded border border-border/70">
-                    <Clock className="h-3 w-3" />
-                    {l.estimated}
+                  <span className="inline-flex items-center gap-1 tabular-nums">
+                    <Clock className="h-3 w-3" /> {l.estimated}
                   </span>
-                  {l.skills.map((s) => (
-                    <span
-                      key={s}
-                      className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/60"
-                    >
-                      {s}
-                    </span>
-                  ))}
+                  <span className="text-muted-foreground/70">{l.skills.join(" · ")}</span>
                 </div>
               </div>
             </div>

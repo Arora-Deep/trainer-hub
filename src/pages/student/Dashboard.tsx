@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+
 import {
   Play, Clock, BookOpen, FileText, Github, Video,
   ChevronRight, Download, Cloud, Terminal, Container, Zap, Target,
@@ -43,7 +43,7 @@ const missions: Mission[] = [
     nextMilestone: "Configure pod-to-pod networking",
     lastActive: "2h ago",
     icon: Cloud,
-    gradient: "from-[#FF9F43] via-[#FF6B6B] to-[#A855F7]",
+    gradient: "",
   },
   {
     title: "Infrastructure Automation Fundamentals",
@@ -55,7 +55,7 @@ const missions: Mission[] = [
     nextMilestone: "Write a systemd unit from scratch",
     lastActive: "Yesterday",
     icon: Terminal,
-    gradient: "from-[#10B981] via-[#06B6D4] to-[#3B82F6]",
+    gradient: "",
   },
   {
     title: "Enterprise Container Networking",
@@ -67,7 +67,7 @@ const missions: Mission[] = [
     nextMilestone: "Build a multi-host overlay",
     lastActive: "3d ago",
     icon: Container,
-    gradient: "from-[#3B82F6] via-[#6366F1] to-[#A855F7]",
+    gradient: "",
   },
 ];
 
@@ -84,11 +84,6 @@ const resources = [
   { name: "Session Recording · Nov 10", type: "Video", icon: Video },
 ];
 
-const difficultyTone: Record<Mission["difficulty"], string> = {
-  Beginner: "text-success bg-success/10 border-success/20",
-  Intermediate: "text-primary bg-primary/10 border-primary/20",
-  Advanced: "text-warning bg-warning/10 border-warning/20",
-};
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -141,42 +136,44 @@ export default function StudentDashboard() {
                 className="overflow-hidden cursor-pointer group"
                 onClick={() => navigate("/student/courses")}
               >
-                <div className={`sp-cover bg-gradient-to-br ${m.gradient} h-24 relative flex items-center justify-between px-5`}>
-                  <Icon className="h-10 w-10 text-white/95 drop-shadow-lg relative z-10 group-hover:scale-110 transition-transform" />
-                  <div className="relative z-10 text-right">
-                    <div className="text-[10px] uppercase tracking-widest text-white/80 font-semibold">Progress</div>
-                    <div className="text-2xl font-bold text-white tabular-nums leading-none">{m.progress}%</div>
+                <CardContent className="p-5 space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="h-10 w-10 rounded-xl border border-border bg-muted/40 flex items-center justify-center shrink-0">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Progress</div>
+                      <div className="text-xl font-semibold tabular-nums leading-none mt-1">{m.progress}%</div>
+                    </div>
                   </div>
-                </div>
 
-                <CardContent className="p-5 space-y-3">
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                       {m.course}
                     </p>
-                    <h3 className="text-sm font-semibold leading-snug mt-0.5">{m.title}</h3>
+                    <h3 className="text-sm font-semibold leading-snug mt-1">{m.title}</h3>
                   </div>
 
-                  <Progress value={m.progress} className="h-1.5" />
+                  <div className="h-0.5 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full bg-foreground transition-all" style={{ width: `${m.progress}%` }} />
+                  </div>
 
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border ${difficultyTone[m.difficulty]}`}>
-                      {m.difficulty}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border border-[hsl(var(--xp)/0.25)] bg-[hsl(var(--xp)/0.08)] text-[hsl(var(--xp))]">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                    <span className="tabular-nums">{m.difficulty}</span>
+                    <span className="inline-flex items-center gap-1 tabular-nums">
                       <Zap className="h-3 w-3" /> +{m.xpReward.toLocaleString()} XP
                     </span>
                   </div>
 
-                  <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground border-t border-border/60 pt-2.5">
-                    <Target className="h-3 w-3 mt-0.5 shrink-0 text-primary" />
-                    <span className="truncate"><span className="text-foreground font-medium">Next:</span> {m.nextMilestone}</span>
+                  <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground border-t border-border/60 pt-3">
+                    <Target className="h-3 w-3 mt-0.5 shrink-0" />
+                    <span className="truncate"><span className="text-foreground">Next:</span> {m.nextMilestone}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground inline-flex items-center gap-1">
                       <Clock className="h-3 w-3" /> {m.lastActive}
                     </span>
-                    <span className="font-medium inline-flex items-center gap-1 text-primary group-hover:gap-2 transition-all">
+                    <span className="font-medium inline-flex items-center gap-1 group-hover:gap-1.5 transition-all">
                       Resume <ChevronRight className="h-3.5 w-3.5" />
                     </span>
                   </div>
@@ -244,8 +241,8 @@ export default function StudentDashboard() {
             {resources.map((r) => (
               <Card key={r.name} className="cursor-pointer">
                 <CardContent className="flex items-center gap-3 p-4">
-                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary/15 to-[hsl(var(--xp)/0.15)] flex items-center justify-center">
-                    <r.icon className="h-4 w-4 text-primary" />
+                  <div className="h-9 w-9 rounded-lg border border-border bg-muted/40 flex items-center justify-center">
+                    <r.icon className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{r.name}</p>

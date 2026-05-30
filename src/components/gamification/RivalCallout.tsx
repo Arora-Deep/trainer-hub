@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Swords, TrendingUp } from "lucide-react";
+import { Swords, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGamificationStore } from "@/stores/gamificationStore";
 import { useNavigate } from "react-router-dom";
@@ -8,21 +8,22 @@ export function RivalCallout() {
   const { rival } = useGamificationStore();
   const navigate = useNavigate();
   return (
-    <Card className="border-primary/15">
-      <CardContent className="p-4 flex items-center gap-3">
-        <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+    <Card>
+      <CardContent className="p-5 flex items-center gap-4 h-full">
+        <div className="h-10 w-10 rounded-xl border border-border bg-muted/40 flex items-center justify-center shrink-0">
           <Swords className="h-4 w-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate">
-            {rival.xpAhead} XP behind <span className="text-primary">{rival.name}</span>
+          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Rival</div>
+          <p className="mt-1 text-sm font-medium truncate">
+            <span className="tabular-nums">{rival.xpAhead}</span> XP behind {rival.name}
           </p>
           <p className="text-[11px] text-muted-foreground truncate">
-            Lvl {rival.level} · {rival.identity} · close it before week's end
+            Lvl {rival.level} · {rival.identity}
           </p>
         </div>
-        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => navigate("/student/challenges")}>
-          <TrendingUp className="h-3 w-3" /> Catch up
+        <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-muted-foreground" onClick={() => navigate("/student/challenges")}>
+          Catch up <ArrowRight className="h-3 w-3" />
         </Button>
       </CardContent>
     </Card>
