@@ -1,6 +1,6 @@
-import { useGamificationStore, skillColor } from "@/stores/gamificationStore";
+import { useGamificationStore } from "@/stores/gamificationStore";
 import { Card, CardContent } from "@/components/ui/card";
-import { Check, Play, Lock, ChevronRight, GitBranch } from "lucide-react";
+import { Check, Play, Lock, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function SkillProgressionPath() {
@@ -8,130 +8,77 @@ export function SkillProgressionPath() {
   const profile = useGamificationStore((s) => s.profile);
   const navigate = useNavigate();
 
-  // Show the user's specialization track
   const active = tracks.find((t) => t.key === profile.specialization) ?? tracks[0];
-  const color = skillColor[active.key];
 
   return (
     <Card
-      className="sp-card overflow-hidden cursor-pointer"
+      className="sp-card cursor-pointer"
       onClick={() => navigate("/student/skill-tree")}
     >
-      <div
-        className="h-1 w-full"
-        style={{ background: `linear-gradient(90deg, ${color}, hsl(var(--xp)))` }}
-      />
-      <CardContent className="p-5 space-y-4">
+      <CardContent className="p-5 space-y-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-muted-foreground font-semibold">
-              <GitBranch className="h-3 w-3" />
-              <span>Active progression path</span>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              Active progression
             </div>
             <h3 className="mt-1 text-base font-semibold tracking-tight">{active.name}</h3>
             <p className="text-xs text-muted-foreground mt-0.5">{active.tagline}</p>
           </div>
           <div className="text-right shrink-0">
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Mastery</div>
-            <div className="text-2xl font-bold tabular-nums leading-none" style={{ color }}>
-              {active.mastery}%
-            </div>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Mastery</div>
+            <div className="mt-1 text-2xl font-semibold tabular-nums leading-none">{active.mastery}%</div>
           </div>
         </div>
 
-        {/* Mastery bar */}
-        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full rounded-full relative overflow-hidden"
-            style={{
-              width: `${active.mastery}%`,
-              background: `linear-gradient(90deg, ${color}, hsl(var(--xp)))`,
-              boxShadow: `0 0 10px ${color}`,
-            }}
-          >
-            <span className="absolute inset-0 tier-shimmer" />
-          </div>
+        <div className="h-0.5 rounded-full bg-muted overflow-hidden">
+          <div className="h-full bg-foreground transition-all" style={{ width: `${active.mastery}%` }} />
         </div>
 
-        {/* Nodes ladder */}
-        <ol className="space-y-1.5">
+        <ol className="space-y-0.5">
           {active.nodes.map((node, i) => {
             const isMastered = node.status === "mastered";
             const isInProgress = node.status === "in_progress";
             const isLocked = node.status === "locked";
-            const isAvailable = node.status === "available";
 
             return (
               <li
                 key={node.id}
-                className={`group flex items-center gap-3 rounded-lg px-2.5 py-2 transition-colors ${
-                  isInProgress ? "bg-[hsl(var(--xp)/0.06)]" : "hover:bg-muted/50"
-                }`}
+                className="group flex items-center gap-3 rounded-lg px-2 py-2 -mx-2 transition-colors hover:bg-muted/40"
               >
-                {/* Status node */}
-                <div className="relative">
-                  <span
-                    className={`flex h-7 w-7 items-center justify-center rounded-full border ${
-                      isMastered
-                        ? "bg-success text-success-foreground border-success"
-                        : isInProgress
-                        ? "border-[hsl(var(--xp))] text-[hsl(var(--xp))] bg-[hsl(var(--xp)/0.1)]"
-                        : isAvailable
-                        ? "border-border text-muted-foreground bg-card"
-                        : "border-dashed border-border text-muted-foreground/60 bg-muted/40"
-                    }`}
-                  >
-                    {isMastered ? (
-                      <Check className="h-3.5 w-3.5" />
-                    ) : isInProgress ? (
-                      <Play className="h-3 w-3 fill-current" />
-                    ) : isLocked ? (
-                      <Lock className="h-3 w-3" />
-                    ) : (
-                      <span className="text-[10px] font-semibold tabular-nums">{i + 1}</span>
-                    )}
-                  </span>
-                  {isInProgress && (
-                    <span
-                      className="absolute inset-0 rounded-full animate-ping"
-                      style={{ background: `${color}25` }}
-                    />
+                <span
+                  className={`flex h-6 w-6 items-center justify-center rounded-full border text-[10px] tabular-nums shrink-0 ${
+                    isMastered
+                      ? "bg-foreground text-background border-foreground"
+                      : isInProgress
+                      ? "border-foreground text-foreground"
+                      : isLocked
+                      ? "border-dashed border-border text-muted-foreground/60"
+                      : "border-border text-muted-foreground"
+                  }`}
+                >
+                  {isMastered ? (
+                    <Check className="h-3 w-3" />
+                  ) : isInProgress ? (
+                    <Play className="h-2.5 w-2.5 fill-current" />
+                  ) : isLocked ? (
+                    <Lock className="h-2.5 w-2.5" />
+                  ) : (
+                    i + 1
                   )}
-                </div>
-
-                {/* Connector */}
-                {i !== active.nodes.length - 1 && (
-                  <span
-                    aria-hidden
-                    className="absolute left-[26px] mt-7 h-3 w-px bg-border"
-                  />
-                )}
-
-                {/* Label */}
+                </span>
                 <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p
-                      className={`text-sm truncate ${
-                        isMastered
-                          ? "text-foreground"
-                          : isInProgress
-                          ? "font-semibold text-foreground"
-                          : isLocked
-                          ? "text-muted-foreground/70"
-                          : "text-foreground"
-                      }`}
-                    >
+                    <p className={`text-sm truncate ${isInProgress ? "font-semibold" : isLocked ? "text-muted-foreground/70" : ""}`}>
                       {node.name}
                     </p>
                     <p className="text-[10px] text-muted-foreground tabular-nums mt-0.5">
                       +{node.xp} XP
-                      {isInProgress && <span className="ml-2 text-[hsl(var(--xp))] font-semibold">· In progress</span>}
-                      {isMastered && <span className="ml-2 text-success font-semibold">· Mastered</span>}
-                      {isLocked && <span className="ml-2 text-muted-foreground/60">· Locked</span>}
+                      {isInProgress && <span className="ml-2 text-foreground">· In progress</span>}
+                      {isMastered && <span className="ml-2">· Mastered</span>}
                     </p>
                   </div>
-                  {(isAvailable || isInProgress) && (
-                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
+                  {!isLocked && (
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-foreground transition-colors" />
                   )}
                 </div>
               </li>
