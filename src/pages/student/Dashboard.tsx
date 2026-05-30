@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import {
-  Play, ArrowRight, Clock, BookOpen, FileText, Github, Video,
+  Play, Clock, BookOpen, FileText, Github, Video,
   Pause, RotateCcw, ChevronRight, Download, Cloud, Terminal, Container,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
