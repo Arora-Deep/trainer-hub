@@ -246,8 +246,8 @@ export default function StudentDashboard() {
             {resources.map((r) => (
               <Card key={r.name} className="cursor-pointer">
                 <CardContent className="flex items-center gap-3 p-4">
-                  <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary/15 to-[hsl(var(--xp)/0.15)] flex items-center justify-center">
-                    <r.icon className="h-4 w-4 text-primary" />
+                  <div className="h-9 w-9 rounded-lg border border-border bg-muted/40 flex items-center justify-center">
+                    <r.icon className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{r.name}</p>
