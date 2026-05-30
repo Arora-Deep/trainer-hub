@@ -1,145 +1,76 @@
+# Student Portal Visual Overhaul — "Arcade Premium"
 
-# Gamification Overhaul — Student Portal
+Repaint the entire student portal to match the reference: deep dark surfaces, vibrant purple → cyan → magenta gradients, neon donut/ring charts, glow-edged cards, rounded-2xl tiles, illustrative hero banner. Full light-mode counterpart so users can toggle. Trainer and admin portals stay untouched.
 
-Goal: make students *want* to return daily. Blend Apple-minimal restraint, Duolingo's warmth, GitHub's proof-of-skill, and esports ranking — without ever looking childish.
+## Visual language (locked tokens)
 
----
+Scoped under `.student-portal` only.
 
-## 1. Design language (the "feel")
+**Dark mode (default for student)**
+- Canvas: `#0B0B14` → `#11121C` (subtle vertical fade)
+- Card surface: `#161826` with 1px inner stroke `rgba(255,255,255,0.04)` and soft outer glow `0 8px 32px rgba(120,80,255,0.10)`
+- Primary gradient: `linear-gradient(135deg, #8B5CF6 0%, #6366F1 50%, #22D3EE 100%)` (hero, CTA)
+- Accent gradients: magenta `#EC4899→#8B5CF6`, cyan `#22D3EE→#3B82F6`, lime `#A3E635→#22D3EE`
+- Ring/donut colors: violet `#8B5CF6`, magenta `#EC4899`, cyan `#22D3EE`, lime `#A3E635`
+- Text: `#F4F4F8` primary, `#8B8FA7` muted
 
-A single visual layer reused everywhere so gamification feels native, not bolted on.
+**Light mode**
+- Canvas: `#F6F7FB`, cards `#FFFFFF` with `0 4px 20px rgba(99,102,241,0.08)`
+- Same gradient family but slightly desaturated (-10% lightness on stops); donut tracks become `#EEF0F7`
 
-- **XP color**: electric indigo `--xp` (primary-adjacent) + warning amber for streaks + emerald for mastery gains.
-- **Tier ramp** (used for ranks, rarity, skill mastery): Bronze → Silver → Gold → Platinum → Diamond → Architect. Each gets a token (`--tier-bronze` … `--tier-architect`) with paired foreground/glow.
-- **Motion primitives** (added to `tailwind.config.ts` + `index.css`):
-  - `xp-pop` (number ticks up, +XP chip floats and fades)
-  - `level-up-burst` (radial glow, soft confetti — *one* burst, never spam)
-  - `streak-flame-pulse` (subtle, 2s)
-  - `rank-shimmer` (slow gradient sweep on tier badges)
-  - `node-unlock` (skill tree node fills + ring expands)
-- **Sound/haptic layer** (opt-in, default ON, toggle in Settings): tasteful clicks for XP gain, level up, mission complete. Web Audio + `navigator.vibrate` fallback. Muted by default on first visit until user opts in via toast.
+All values land in `index.css` under `.student-portal` and `.student-portal.dark` (or default if portal forces dark). User toggles via existing theme switch.
 
-Result: every reward across the portal uses the same chip, same easing, same sound. Reads as one system.
+## Scope (entire student portal)
 
----
+Pages repainted:
+- `/student/dashboard` — hero banner + reward unlock card + stat grid (donut + bar tiles)
+- `/student/labs`, `/student/courses`, `/student/leaderboard`, `/student/quests`, `/student/profile`, `/student/skill-tree`, `/student/certificates`, `/student/assessments`, `/student/challenges`, `/student/progress`, `/student/schedule`
+- Shell: `AppSidebar` (student variant) + `AppHeader` (student variant)
 
-## 2. Core systems (new + upgraded)
+## Component work
 
-### A. Seasons (6-week cycles)
-- `gamificationStore` gains `season: { id, name, startsAt, endsAt, weeklyXpCap, theme }`.
-- Season banner on Dashboard + Progress page with countdown.
-- Season-end recap modal: top skill, XP earned, rank delta, shareable card.
+**Shell**
+- `AppLayout.tsx` — when role=student, apply `.student-portal` + force-dark or respect theme toggle; render soft mesh background (two radial blurs: violet top-left, cyan bottom-right)
+- `AppSidebar.tsx` — student variant: dark sidebar card, avatar ring with gradient stroke + XP label under it (`200/300 XP`), gradient-pill active item
+- `AppHeader.tsx` — student variant: large page title, right-side icon cluster (apps grid, bell with dot, avatar pill with name)
 
-### B. Quests / Storylines
-- New `questStore` with multi-step quests chaining existing entities:
-  - `steps[]`: each references a course lesson, lab, quiz, or challenge id.
-  - Example seeded quests: *"Deploy Your First Cluster"*, *"Linux Black Belt"*, *"From Zero to DevOps"*.
-- Quest progress shown as a vertical timeline with locked/active/done states.
-- Completing a quest awards a **Title** (e.g., "Cluster Initiate") that appears on profile.
+**New / rebuilt gamification components**
+- `HeroDashboard.tsx` — full-width gradient banner (violet→indigo→cyan), greeting headline, sub-copy, gradient pill CTA "Resume lab", decorative illustration slot on right
+- `RewardUnlockCard.tsx` (new) — companion card on right of hero, cyan→teal gradient, progress bar, toggle pill, "X / Y" counter
+- `StatDonutCard.tsx` (new) — reusable: neon donut (SVG, gradient stroke, rounded cap, glow filter), big % label center, title, secondary metric, "X% until next benefit" sub-line, top-right glyph
+- `StatBarCard.tsx` (new) — big number, label, mini gradient bar chart (Recharts, rounded tops, SVG linearGradient), trend chevron
+- `TierListCard.tsx` (new) — list rows with right-aligned % values (replaces simple leaderboard tile on dashboard)
 
-### C. Public Profile + Shareable Rank Card
-- New route `/student/profile/:handle` (own profile reachable from header avatar).
-- Sections: identity (level, title, tier), skill rings (Cloud/Linux/K8s/…), achievement wall, recent XP feed, active quests, contribution heatmap (GitHub-style, last 6 months).
-- "Share rank card" → renders a 1200×630 PNG via canvas (tier gradient, avatar, level, top skill, season rank). Download + copy-link.
+**Repainted existing**
+- `MasteryTracks`, `MiniLeaderboard`, `AchievementShowcase`, `WeeklyChallengeFeature`, `SkillProgressionPath`, `LabMissions`, `StreakMomentumCard`, `SeasonBanner`, `RivalCallout`, `LevelChip`, `TierBadge` — restyle to new card surface, gradient accents, neon ring/bar visuals; no logic changes
+- `Dashboard.tsx` — recompose to mirror reference: row 1 = HeroDashboard (2/3) + RewardUnlockCard (1/3); section header "Your performance"; row 2 = 3× StatDonutCard; row 3 = 2× StatBarCard + 1× TierListCard
 
-### D. Squads-lite (optional, ships disabled-by-default flag)
-- Cohort = squad. Squad XP pool aggregated from batch members. Squad row on leaderboard. No chat — just shared progress.
+**Charts**
+Recharts with `<defs><linearGradient/></defs>` for violet→magenta, cyan→indigo, lime→cyan; donut = `PieChart` with `cornerRadius`, single-segment gradient + faint track segment, drop-shadow SVG filter.
 
-### E. Daily return loop (upgrade)
-- Streak freeze tokens (earn 1 per 7-day streak, max 2). One-tap apply.
-- Comeback bonus if returning after a break (no shame messaging — "Welcome back, +50 XP").
-- Daily missions get a 4th "wildcard" slot tied to weakest skill.
+## Light/Dark toggle
 
----
+- Add small theme toggle in student `AppHeader` (sun/moon)
+- Persist in existing theme system; `.student-portal` defines both palettes so switch is instant
+- Reference image is dark — dark is the default the first time a student lands
 
-## 3. Weaving XP into every page
+## Files touched
 
-Every existing student page gets a thin, consistent gamification layer. No page rewrites — additive only.
+Created:
+- `src/components/gamification/RewardUnlockCard.tsx`
+- `src/components/gamification/StatDonutCard.tsx`
+- `src/components/gamification/StatBarCard.tsx`
+- `src/components/gamification/TierListCard.tsx`
 
-| Page | Addition |
-|------|----------|
-| `Dashboard` | Season banner, active quest card, contribution heatmap row, "Today's edge" (weakest skill nudge) |
-| `Courses` / `CourseDetail` / `CoursePlayer` | Lesson-complete = `+XP` toast with skill attribution; chapter completion = mini level-up; sidebar shows skill XP gained this session |
-| `Labs` / `LabDetail` | Lab finish = XP + possible achievement unlock; difficulty multiplier visible before start |
-| `Assessments` / `AssessmentResult` | Score → XP formula shown; perfect score = rare achievement; result page gets shareable card |
-| `Challenges` | Already exists — add difficulty-tier visuals (Bronze→Diamond), first-blood bonus, timer-based XP |
-| `LiveClass` | Attendance streak chip; "engaged" XP for asking questions (trainer-grantable); end-of-class recap with XP earned |
-| `Leaderboard` | Add seasonal view, squad view, skill-specific tabs polished; rival callout ("You're 240 XP behind @arjun") |
-| `SkillTree` | Animated node unlocks, mastery tier rings, prerequisite paths visible on hover |
-| `Progress` | Heatmap, season recap, title gallery, quest progress, XP feed timeline (richer) |
-| `Certificates` | Tie certificate issuance to mastery tier; show on public profile |
-| `AppHeader` | LevelChip upgraded: tier ring around avatar, hover reveals streak/momentum/season rank |
-| `Sidebar` | New "Profile" + "Quests" + "Season" entries under Progression group |
+Edited (style-only, no logic changes):
+- `src/index.css` (full `.student-portal` token block, dark + light, gradients, glows, mesh background)
+- `tailwind.config.ts` (add gradient utilities if needed)
+- `src/components/layout/AppLayout.tsx`, `AppSidebar.tsx`, `AppHeader.tsx`
+- `src/components/gamification/*` (all listed above)
+- `src/pages/student/Dashboard.tsx` (recompose)
+- `src/pages/student/{Labs,Courses,Leaderboard,Quests,Profile,SkillTree,Certificates,Assessments,Challenges,Progress,Schedule}.tsx` (apply new card surfaces, hero strips, gradient CTAs — content unchanged)
 
-A single `useXpReward()` hook centralizes: animate chip → update store → play sound → toast → check for level/achievement/quest progress.
-
----
-
-## 4. Identity & status
-
-- **Titles** (earned via quests/achievements): displayed under name on profile + header hover. Examples: "Cluster Initiate", "Linux Sensei", "Security Sentinel".
-- **Technical identity** evolves with dominant skill: e.g., "Cloud Engineer" → "Cloud Architect" at level 30+.
-- **Rarity tiers on achievements**: Common / Rare / Epic / Legendary — visible glow + percentage of students who hold it.
-- **Season banner** on profile (current + past seasons archived).
-
----
-
-## 5. Pages/files to add or edit
-
-**New files**
-- `src/stores/questStore.ts`
-- `src/stores/seasonStore.ts` (or extend `gamificationStore`)
-- `src/hooks/useXpReward.ts`
-- `src/lib/feedback.ts` (sound + haptic primitives)
-- `src/lib/rankCard.ts` (canvas PNG renderer)
-- `src/components/gamification/XpToast.tsx`
-- `src/components/gamification/LevelUpBurst.tsx`
-- `src/components/gamification/ContributionHeatmap.tsx`
-- `src/components/gamification/TierBadge.tsx`
-- `src/components/gamification/QuestTimeline.tsx`
-- `src/components/gamification/SeasonBanner.tsx`
-- `src/components/gamification/RankCardPreview.tsx`
-- `src/pages/student/Profile.tsx`
-- `src/pages/student/Quests.tsx`
-- `src/pages/student/Season.tsx` (optional; could be a tab on Progress)
-
-**Edits**
-- `tailwind.config.ts`, `src/index.css` — tier tokens + new keyframes
-- `src/stores/gamificationStore.ts` — season, titles, streak freezes, rarity, weekly cap
-- `src/components/layout/AppHeader.tsx`, `AppSidebar.tsx` — new nav + tier ring on avatar
-- `src/App.tsx` — register new routes
-- Every student page in the table above — wire `useXpReward()` + display elements
-
----
-
-## 6. Build order (so you see value quickly)
-
-1. **Foundation**: tokens, keyframes, `useXpReward`, `XpToast`, `LevelUpBurst`, sound layer + Settings toggle.
-2. **Store upgrades**: seasons, titles, freezes, rarity, weekly cap in `gamificationStore`; new `questStore`.
-3. **Public Profile + Rank Card** (high "wow" deliverable).
-4. **Quests page + timeline** + seed 3 quests.
-5. **Season banner + recap** on Dashboard and Progress.
-6. **Weave XP into every page** (Courses → Labs → Assessments → LiveClass → Challenges).
-7. **Polish**: contribution heatmap, rival callouts on Leaderboard, tier rings on SkillTree, micro-animations sweep.
-8. **Squads-lite** behind a flag (last, optional).
-
----
-
-## 7. Guardrails (so it never feels childish)
-
-- No mascots. No cartoon illustrations. No exclamation-heavy copy.
-- One celebration per event, never stacked. Level-up burst is ≤900ms.
-- XP numbers are tabular, monospaced where shown next to identity.
-- All gamification respects the existing Apple-minimal grid, 1px borders, soft shadows.
-- Sound + bursts can be disabled in Settings; preference persisted.
-- No dark patterns: no "you'll lose your streak!" red alerts — calm, factual nudges.
-
----
-
-## Technical notes
-
-- All new state is client-side via Zustand (consistent with existing stores). Seasons/quests seeded from mock data, ready to swap to Cloud later.
-- Rank card uses `OffscreenCanvas` where available, falls back to `<canvas>`; exported via `toBlob`.
-- Heatmap is a pure SVG component, no chart lib needed.
-- Sound assets: 3 short WAVs base64-inlined in `feedback.ts` to avoid network cost.
-- `useXpReward({ amount, skills, source })` is the single funnel — guarantees consistent toast, sound, store update, level/quest/achievement checks. Every page calls it the same way.
+## Out of scope
+- Trainer + admin portals (untouched)
+- Any data, store, or routing changes
+- New features beyond visuals
