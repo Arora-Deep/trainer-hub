@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+
 import {
   Play, Clock, BookOpen, FileText, Github, Video,
   ChevronRight, Download, Cloud, Terminal, Container, Zap, Target,
@@ -84,11 +84,6 @@ const resources = [
   { name: "Session Recording · Nov 10", type: "Video", icon: Video },
 ];
 
-const difficultyTone: Record<Mission["difficulty"], string> = {
-  Beginner: "text-success bg-success/10 border-success/20",
-  Intermediate: "text-primary bg-primary/10 border-primary/20",
-  Advanced: "text-warning bg-warning/10 border-warning/20",
-};
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
