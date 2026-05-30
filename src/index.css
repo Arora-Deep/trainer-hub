@@ -222,47 +222,158 @@
     animation: rank-shimmer 3.2s linear infinite;
   }
 
-  /* ================= STUDENT PORTAL — Apple-minimal, quietly gamified ================= */
+  /* ================= STUDENT PORTAL — "Arcade Premium" ================= */
   @keyframes float-soft {
     0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-4px); }
+    50%      { transform: translateY(-6px); }
+  }
+  @keyframes sp-gradient-pan {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes sp-sheen-pass {
+    0%   { transform: translateX(-120%) skewX(-12deg); }
+    100% { transform: translateX(220%)  skewX(-12deg); }
   }
 
   .student-portal {
-    background: hsl(var(--background));
+    --sp-bg-1: 240 30% 98%;
+    --sp-bg-2: 240 25% 96%;
+    --sp-card: 0 0% 100%;
+    --sp-card-2: 240 20% 98%;
+    --sp-border: 240 15% 90%;
+    --sp-text: 240 15% 12%;
+    --sp-text-muted: 240 8% 46%;
+
+    --sp-violet: 258 90% 66%;
+    --sp-indigo: 238 84% 67%;
+    --sp-cyan:   189 94% 55%;
+    --sp-magenta: 322 84% 60%;
+    --sp-lime:   150 80% 50%;
+    --sp-amber:  38 95% 60%;
+
+    --sp-grad-hero:   linear-gradient(120deg, hsl(258 90% 66%) 0%, hsl(238 84% 67%) 45%, hsl(189 94% 55%) 100%);
+    --sp-grad-reward: linear-gradient(135deg, hsl(195 95% 55%) 0%, hsl(189 94% 55%) 55%, hsl(168 80% 55%) 100%);
+    --sp-grad-violet: linear-gradient(135deg, hsl(258 90% 66%), hsl(322 84% 60%));
+    --sp-grad-magenta:linear-gradient(135deg, hsl(322 84% 60%), hsl(258 90% 66%));
+    --sp-grad-cyan:   linear-gradient(135deg, hsl(189 94% 55%), hsl(238 84% 67%));
+    --sp-grad-lime:   linear-gradient(135deg, hsl(150 80% 50%), hsl(189 94% 55%));
+    --sp-grad-amber:  linear-gradient(135deg, hsl(38 95% 60%), hsl(322 84% 60%));
+
+    --sp-glow-violet: 0 18px 40px -12px hsl(258 90% 66% / 0.35);
+    --sp-glow-cyan:   0 18px 40px -12px hsl(189 94% 55% / 0.35);
+    --sp-shadow-card:  0 1px 0 0 hsl(240 15% 90% / 1), 0 10px 30px -18px hsl(240 30% 30% / 0.18);
+    --sp-shadow-hover: 0 1px 0 0 hsl(240 15% 88% / 1), 0 18px 40px -16px hsl(258 60% 40% / 0.22);
+
+    background:
+      radial-gradient(900px 600px at 12% -10%, hsl(258 90% 66% / 0.10), transparent 60%),
+      radial-gradient(900px 600px at 90% 10%, hsl(189 94% 55% / 0.10), transparent 55%),
+      linear-gradient(180deg, hsl(var(--sp-bg-1)) 0%, hsl(var(--sp-bg-2)) 100%);
+    color: hsl(var(--sp-text));
+    min-height: 100vh;
   }
 
-  /* Subtle lift on cards — no glow, no color wash */
-  .student-portal [data-slot="card"],
-  .student-portal .sp-card {
-    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-  }
-  .student-portal [data-slot="card"]:hover,
-  .student-portal .sp-card:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-card-hover);
+  .dark .student-portal {
+    --sp-bg-1: 240 25% 5%;
+    --sp-bg-2: 240 30% 8%;
+    --sp-card: 240 22% 10%;
+    --sp-card-2: 240 22% 12%;
+    --sp-border: 240 15% 18%;
+    --sp-text: 240 20% 96%;
+    --sp-text-muted: 240 10% 64%;
+
+    --sp-shadow-card:  0 0 0 1px hsl(240 20% 100% / 0.04), 0 12px 32px -14px hsl(258 90% 30% / 0.45);
+    --sp-shadow-hover: 0 0 0 1px hsl(258 90% 66% / 0.18), 0 22px 50px -18px hsl(258 90% 50% / 0.55);
+
+    background:
+      radial-gradient(700px 500px at 8% -10%, hsl(258 90% 50% / 0.22), transparent 60%),
+      radial-gradient(700px 500px at 95% 5%, hsl(189 94% 45% / 0.18), transparent 60%),
+      radial-gradient(800px 600px at 50% 110%, hsl(322 84% 50% / 0.12), transparent 60%),
+      linear-gradient(180deg, hsl(var(--sp-bg-1)) 0%, hsl(var(--sp-bg-2)) 100%);
+    color: hsl(var(--sp-text));
   }
 
-  /* Quiet hero surface — card-tinted, single soft seam */
+  .student-portal .sp-card,
+  .student-portal [data-slot="card"] {
+    background: hsl(var(--sp-card));
+    border: 1px solid hsl(var(--sp-border));
+    border-radius: 1.25rem;
+    box-shadow: var(--sp-shadow-card);
+    color: hsl(var(--sp-text));
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  }
+  .student-portal .sp-card:hover,
+  .student-portal [data-slot="card"]:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sp-shadow-hover);
+  }
+
   .sp-hero {
     position: relative;
     overflow: hidden;
-    border-radius: 1.25rem;
-    background: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
-    box-shadow: var(--shadow-card);
+    border-radius: 1.5rem;
+    background: var(--sp-grad-hero);
+    background-size: 200% 200%;
+    animation: sp-gradient-pan 14s ease-in-out infinite;
+    color: white;
+    box-shadow: var(--sp-glow-violet);
+    border: 1px solid hsl(0 0% 100% / 0.10);
   }
-
-  /* Neutral cover used on mission tiles — uses semantic surface */
-  .sp-cover {
+  .sp-hero::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(600px 200px at 20% 0%, hsl(0 0% 100% / 0.18), transparent 60%),
+      radial-gradient(500px 200px at 90% 100%, hsl(322 84% 60% / 0.35), transparent 60%);
+    pointer-events: none;
+  }
+  .sp-reward {
     position: relative;
     overflow: hidden;
-    background: hsl(var(--muted));
+    border-radius: 1.5rem;
+    background: var(--sp-grad-reward);
+    background-size: 180% 180%;
+    animation: sp-gradient-pan 16s ease-in-out infinite;
+    color: white;
+    box-shadow: var(--sp-glow-cyan);
+    border: 1px solid hsl(0 0% 100% / 0.10);
   }
 
-  /* Kept utilities used elsewhere — neutralized */
+  .sp-gradient-text {
+    background: var(--sp-grad-violet);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sp-gradient-cyan-text {
+    background: var(--sp-grad-cyan);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  .sp-sheen { position: relative; overflow: hidden; }
+  .sp-sheen::before {
+    content: "";
+    position: absolute; top: 0; left: 0; height: 100%; width: 40%;
+    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.35), transparent);
+    transform: translateX(-120%) skewX(-12deg);
+    animation: sp-sheen-pass 4.5s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .sp-donut-track { stroke: hsl(var(--sp-border)); }
+  .dark .student-portal .sp-donut-track { stroke: hsl(240 20% 18%); }
+
+  .sp-pill {
+    background: hsl(0 0% 100% / 0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid hsl(0 0% 100% / 0.25);
+    color: white;
+  }
+  .sp-pill:hover { background: hsl(0 0% 100% / 0.22); }
+
   .sp-orb { display: none; }
   .sp-hero-glow, .sp-hero-sheen { display: none; }
-  .sp-gradient-text { color: hsl(var(--foreground)); }
-  .animate-float-soft { animation: float-soft 4s ease-in-out infinite; }
+  .sp-cover { position: relative; overflow: hidden; background: hsl(var(--sp-card-2)); }
+  .animate-float-soft { animation: float-soft 5s ease-in-out infinite; }
+
+  .student-portal .text-muted-foreground { color: hsl(var(--sp-text-muted)); }
 }
