@@ -376,4 +376,31 @@
   .animate-float-soft { animation: float-soft 5s ease-in-out infinite; }
 
   .student-portal .text-muted-foreground { color: hsl(var(--sp-text-muted)); }
+
+  /* Sidebar + header re-skin inside student portal */
+  .student-portal aside {
+    background: hsl(var(--sp-card)) !important;
+    border-right-color: hsl(var(--sp-border)) !important;
+    color: hsl(var(--sp-text));
+  }
+  .dark .student-portal aside {
+    background: linear-gradient(180deg, hsl(240 25% 7%), hsl(240 25% 5%)) !important;
+  }
+  .student-portal aside .border-sidebar-border { border-color: hsl(var(--sp-border)) !important; }
+
+  /* Active nav item gets a gradient pill */
+  .student-portal aside a.bg-primary,
+  .student-portal aside a[class*="bg-primary"] {
+    background: var(--sp-grad-violet) !important;
+    color: white !important;
+    box-shadow: 0 6px 18px -8px hsl(258 90% 60% / 0.55);
+  }
+
+  .student-portal header {
+    background: hsl(var(--sp-card) / 0.85) !important;
+    backdrop-filter: saturate(140%) blur(8px);
+    border-bottom-color: hsl(var(--sp-border)) !important;
+    color: hsl(var(--sp-text));
+  }
 }
+
