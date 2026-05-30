@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   HelpCircle, MessageSquare, BookOpen, Search, ExternalLink,
-  Clock, CheckCircle, AlertCircle,
+  Clock, CheckCircle, AlertCircle, LifeBuoy,
 } from "lucide-react";
+import { StudentPageHero } from "@/components/gamification/StudentPageHero";
 
 const tickets = [
   { id: "TK-1042", title: "VPC Lab not launching", status: "open", priority: "high", created: "2h ago", lastUpdate: "1h ago" },
@@ -28,13 +29,17 @@ const statusConfig: Record<string, { color: string; icon: typeof Clock }> = {
 export default function StudentSupport() {
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Help & Support</h1>
-          <p className="text-muted-foreground text-sm mt-1">Get help with labs, courses, and account issues</p>
-        </div>
-        <Button size="sm" className="gap-1.5"><MessageSquare className="h-3.5 w-3.5" /> New Ticket</Button>
-      </div>
+      <StudentPageHero
+        variant="cyan"
+        eyebrow="Support"
+        icon={LifeBuoy}
+        title={<>Stuck? <span className="text-white/95">We've got you.</span></>}
+        description="Get help with labs, courses, and account issues."
+        actions={
+          <Button size="sm" className="gap-1.5 bg-white text-foreground hover:bg-white/90"><MessageSquare className="h-3.5 w-3.5" /> New Ticket</Button>
+        }
+      />
+
 
       {/* Quick Search */}
       <Card>

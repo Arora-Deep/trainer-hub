@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGamificationStore, difficultyStyle, skillColor, type SkillKey } from "@/stores/gamificationStore";
-import { Filter, Users, Clock, Cloud, Terminal, Boxes, Shield, Network, Workflow, Brain, Code, Server, Play, CheckCircle2 } from "lucide-react";
+import { Filter, Users, Clock, Cloud, Terminal, Boxes, Shield, Network, Workflow, Brain, Code, Server, Play, CheckCircle2, Swords, Target } from "lucide-react";
+import { StudentPageHero } from "@/components/gamification/StudentPageHero";
 
 const skillIcons: Record<SkillKey, typeof Cloud> = {
   cloud: Cloud, linux: Terminal, kubernetes: Boxes, security: Shield,
@@ -20,10 +20,18 @@ export default function Challenges() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Challenges & Missions"
-        description="Push your edge. Real technical scenarios that prove your skill."
+      <StudentPageHero
+        variant="magenta"
+        eyebrow="Battle Mode"
+        icon={Swords}
+        title={<>Push your <span className="text-white/95">edge</span>.</>}
+        description="Real technical scenarios that prove your skill. Daily, weekly, and endgame."
+        stats={[
+          { icon: Target, label: "Active", value: challenges.filter((c) => c.status === "in_progress").length },
+          { icon: CheckCircle2, label: "Cleared", value: challenges.filter((c) => c.status === "completed").length },
+        ]}
       />
+
 
       <Tabs defaultValue="missions">
         <TabsList>

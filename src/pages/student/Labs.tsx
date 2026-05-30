@@ -17,6 +17,8 @@ import {
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { studentLabs } from "@/data/studentMockData";
+import { StudentPageHero } from "@/components/gamification/StudentPageHero";
+import { FlaskConical } from "lucide-react";
 
 const statusColors: Record<string, string> = {
   running: "bg-success/10 text-success",
@@ -57,16 +59,19 @@ export default function StudentLabs() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">My Labs</h1>
-          <p className="text-muted-foreground text-sm mt-1">Hands-on environments across your enrolled batches</p>
-        </div>
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <span className="flex items-center gap-1.5"><Activity className="h-4 w-4 text-success" />{running} running</span>
-          <span className="flex items-center gap-1.5"><Monitor className="h-4 w-4" />{studentLabs.length} total</span>
-        </div>
-      </div>
+      <StudentPageHero
+        variant="cyan"
+        eyebrow="Mission Control"
+        icon={FlaskConical}
+        title={<>Spin up. Break things. <span className="text-white/95">Earn XP.</span></>}
+        description="Hands-on environments across your enrolled batches — every minute in a live lab counts."
+        stats={[
+          { icon: Activity, label: "Running", value: running },
+          { icon: Monitor, label: "Total", value: studentLabs.length },
+          { icon: Timer, label: "Completed", value: studentLabs.filter((l) => l.status === "completed").length },
+        ]}
+      />
+
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[240px] max-w-sm">

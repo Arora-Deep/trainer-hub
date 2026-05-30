@@ -1,9 +1,9 @@
-import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useGamificationStore, skillColor, type SkillKey, type SkillNode } from "@/stores/gamificationStore";
-import { Lock, CheckCircle2, Circle, Loader2, Cloud, Terminal, Boxes, Shield, Network, Workflow, Brain, Code, Server } from "lucide-react";
+import { Lock, CheckCircle2, Circle, Loader2, Cloud, Terminal, Boxes, Shield, Network, Workflow, Brain, Code, Server, GitBranch } from "lucide-react";
+import { StudentPageHero } from "@/components/gamification/StudentPageHero";
 
 const skillIcons: Record<SkillKey, typeof Cloud> = {
   cloud: Cloud, linux: Terminal, kubernetes: Boxes, security: Shield,
@@ -22,10 +22,14 @@ export default function SkillTree() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Skill Trees"
+      <StudentPageHero
+        variant="violet"
+        eyebrow="Skill Tree"
+        icon={GitBranch}
+        title={<>Unlock your <span className="text-white/95">tech tree</span>.</>}
         description="Visual mastery paths across the technical tracks you're building."
       />
+
 
       <div className="space-y-6">
         {skillTracks.map((track) => {

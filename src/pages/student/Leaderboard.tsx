@@ -1,21 +1,25 @@
-import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGamificationStore, type LeaderboardEntry } from "@/stores/gamificationStore";
-import { TrendingUp, TrendingDown, Minus, Crown, Flame } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Crown, Flame, Trophy } from "lucide-react";
 import { SeasonBanner } from "@/components/gamification/SeasonBanner";
 import { RivalCallout } from "@/components/gamification/RivalCallout";
+import { StudentPageHero } from "@/components/gamification/StudentPageHero";
 
 export default function Leaderboard() {
   const { leaderboard } = useGamificationStore();
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Leaderboards"
-        description="See where you stand — your weekly XP, your batch, and skill-specific rankings."
+      <StudentPageHero
+        variant="magenta"
+        eyebrow="Arena"
+        icon={Trophy}
+        title={<>Where do you <span className="text-white/95">rank?</span></>}
+        description="Weekly XP, your batch, and skill-specific rankings. Climb the ladder."
       />
+
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6">
         <SeasonBanner />

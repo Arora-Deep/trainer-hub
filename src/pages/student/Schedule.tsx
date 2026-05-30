@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, Monitor, Play, Video, BookOpen, Award, Sparkles } from "lucide-react";
 import { studentSchedule } from "@/data/studentMockData";
+import { StudentPageHero } from "@/components/gamification/StudentPageHero";
 
 const typeConfig: Record<string, { icon: any; color: string; bg: string; label: string }> = {
   live: { icon: Video, color: "text-destructive", bg: "bg-destructive/10", label: "Live Class" },
@@ -23,19 +24,28 @@ export default function StudentSchedule() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">My Schedule</h1>
-          <p className="text-muted-foreground text-sm mt-1">Live sessions, labs, assessments and self-paced recommendations</p>
-        </div>
-        <Tabs value={view} onValueChange={setView}>
-          <TabsList>
-            <TabsTrigger value="list" className="text-xs">List</TabsTrigger>
-            <TabsTrigger value="week" className="text-xs">Week</TabsTrigger>
-            <TabsTrigger value="month" className="text-xs">Month</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+      <StudentPageHero
+        variant="lime"
+        eyebrow="Game Plan"
+        icon={Calendar}
+        title={<>Show up. <span className="text-white/95">Win the week.</span></>}
+        description="Live sessions, labs, assessments and self-paced recommendations."
+        stats={[
+          { icon: Video, label: "Live", value: studentSchedule.filter(s => s.type === "live").length },
+          { icon: Monitor, label: "Labs", value: studentSchedule.filter(s => s.type === "lab").length },
+          { icon: Award, label: "Tests", value: studentSchedule.filter(s => s.type === "assessment").length },
+        ]}
+        actions={
+          <Tabs value={view} onValueChange={setView}>
+            <TabsList className="bg-white/15 border border-white/25 backdrop-blur">
+              <TabsTrigger value="list" className="text-xs text-white data-[state=active]:bg-white data-[state=active]:text-foreground">List</TabsTrigger>
+              <TabsTrigger value="week" className="text-xs text-white data-[state=active]:bg-white data-[state=active]:text-foreground">Week</TabsTrigger>
+              <TabsTrigger value="month" className="text-xs text-white data-[state=active]:bg-white data-[state=active]:text-foreground">Month</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        }
+      />
+
 
       <div className="flex items-center gap-2 flex-wrap">
         {[
