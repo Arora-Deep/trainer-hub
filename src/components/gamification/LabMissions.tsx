@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Zap, Clock, Cpu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { difficultyStyle } from "@/stores/gamificationStore";
+import { useNavigate as _unused } from "react-router-dom";
 
 type LabMission = {
   name: string;
