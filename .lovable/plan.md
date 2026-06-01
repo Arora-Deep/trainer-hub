@@ -1,76 +1,114 @@
-# Student Portal Visual Overhaul — "Arcade Premium"
+# Student Gamification Restructure
 
-Repaint the entire student portal to match the reference: deep dark surfaces, vibrant purple → cyan → magenta gradients, neon donut/ring charts, glow-edged cards, rounded-2xl tiles, illustrative hero banner. Full light-mode counterpart so users can toggle. Trainer and admin portals stay untouched.
+Strip the slot-machine layer (XP, levels, momentum, badges, achievements). Keep streaks (lightweight habit signal) plus what proves actual learning: completion, mastery, ranking inside your batch, and a public portfolio worth sharing.
 
-## Visual language (locked tokens)
+## 1. Information architecture changes
 
-Scoped under `.student-portal` only.
+Sidebar group "Progression" becomes:
 
-**Dark mode (default for student)**
-- Canvas: `#0B0B14` → `#11121C` (subtle vertical fade)
-- Card surface: `#161826` with 1px inner stroke `rgba(255,255,255,0.04)` and soft outer glow `0 8px 32px rgba(120,80,255,0.10)`
-- Primary gradient: `linear-gradient(135deg, #8B5CF6 0%, #6366F1 50%, #22D3EE 100%)` (hero, CTA)
-- Accent gradients: magenta `#EC4899→#8B5CF6`, cyan `#22D3EE→#3B82F6`, lime `#A3E635→#22D3EE`
-- Ring/donut colors: violet `#8B5CF6`, magenta `#EC4899`, cyan `#22D3EE`, lime `#A3E635`
-- Text: `#F4F4F8` primary, `#8B8FA7` muted
+```text
+Before                          After
+─────────                       ─────────
+My Profile         /profile     Portfolio          /portfolio   (+ public /p/:handle)
+Quests             /quests      Challenges         /challenges  (merged)
+My Progress        /progress    My Progress        /progress    (cleaned)
+Skill Trees        /skill-tree  Learning Paths     /paths
+Challenges         /challenges  ─ merged into above ─
+Leaderboards       /leaderboard Leaderboard        /leaderboard (batch-only)
+Certificates       /certificates Certificates      /certificates (unchanged)
+```
 
-**Light mode**
-- Canvas: `#F6F7FB`, cards `#FFFFFF` with `0 4px 20px rgba(99,102,241,0.08)`
-- Same gradient family but slightly desaturated (-10% lightness on stops); donut tracks become `#EEF0F7`
+Old routes redirect to new ones so deep links don't break.
 
-All values land in `index.css` under `.student-portal` and `.student-portal.dark` (or default if portal forces dark). User toggles via existing theme switch.
+## 2. What gets deleted
 
-## Scope (entire student portal)
+- All XP totals, level numbers, level rings, "next level in N XP" bars
+- "Momentum multiplier", weekly XP race, rival callouts, reward-unlock cards
+- Badges and achievement shelves (incl. `AchievementShowcase`, badge tabs on Profile)
+- Global / cross-batch leaderboards
+- `HeroDashboard` XP banner, `RivalCallout`, `RewardUnlockCard`, `MiniLeaderboard` (global), `WeeklyChallengeFeature` (XP-based)
+- Mock data in store: `xp`, `level`, `xpFeed`, `achievements`, `momentum`, `leaderboard.weekly/streaks/kubernetes`
 
-Pages repainted:
-- `/student/dashboard` — hero banner + reward unlock card + stat grid (donut + bar tiles)
-- `/student/labs`, `/student/courses`, `/student/leaderboard`, `/student/quests`, `/student/profile`, `/student/skill-tree`, `/student/certificates`, `/student/assessments`, `/student/challenges`, `/student/progress`, `/student/schedule`
-- Shell: `AppSidebar` (student variant) + `AppHeader` (student variant)
+## 3. What stays (lean gamification)
 
-## Component work
+- **Streaks** — daily activity counter, current + longest. One small streak chip in the page hero and a streak calendar on Progress. No streak leaderboard.
+- **Gradient heroes, animations, "Arcade Premium" look** — visual game feel without points
+- **Completion %, mastery %, batch rank** — concrete progress
 
-**Shell**
-- `AppLayout.tsx` — when role=student, apply `.student-portal` + force-dark or respect theme toggle; render soft mesh background (two radial blurs: violet top-left, cyan bottom-right)
-- `AppSidebar.tsx` — student variant: dark sidebar card, avatar ring with gradient stroke + XP label under it (`200/300 XP`), gradient-pill active item
-- `AppHeader.tsx` — student variant: large page title, right-side icon cluster (apps grid, bell with dot, avatar pill with name)
+## 4. Page-by-page
 
-**New / rebuilt gamification components**
-- `HeroDashboard.tsx` — full-width gradient banner (violet→indigo→cyan), greeting headline, sub-copy, gradient pill CTA "Resume lab", decorative illustration slot on right
-- `RewardUnlockCard.tsx` (new) — companion card on right of hero, cyan→teal gradient, progress bar, toggle pill, "X / Y" counter
-- `StatDonutCard.tsx` (new) — reusable: neon donut (SVG, gradient stroke, rounded cap, glow filter), big % label center, title, secondary metric, "X% until next benefit" sub-line, top-right glyph
-- `StatBarCard.tsx` (new) — big number, label, mini gradient bar chart (Recharts, rounded tops, SVG linearGradient), trend chevron
-- `TierListCard.tsx` (new) — list rows with right-aligned % values (replaces simple leaderboard tile on dashboard)
+### Portfolio (`/student/portfolio`) — replaces Profile
+Public-shareable, GitHub-profile-style. Renders at internal `/student/portfolio` (editable) and public `/p/:handle` (read-only, no auth, shareable URL with Copy Link + OG image meta tags).
 
-**Repainted existing**
-- `MasteryTracks`, `MiniLeaderboard`, `AchievementShowcase`, `WeeklyChallengeFeature`, `SkillProgressionPath`, `LabMissions`, `StreakMomentumCard`, `SeasonBanner`, `RivalCallout`, `LevelChip`, `TierBadge` — restyle to new card surface, gradient accents, neon ring/bar visuals; no logic changes
-- `Dashboard.tsx` — recompose to mirror reference: row 1 = HeroDashboard (2/3) + RewardUnlockCard (1/3); section header "Your performance"; row 2 = 3× StatDonutCard; row 3 = 2× StatBarCard + 1× TierListCard
+Sections, in order:
+1. Header — avatar, name, headline, batch, "Share portfolio" button (copies `/p/:handle`)
+2. Top Skills — top 5 skills by mastery %, horizontal bars
+3. Completed Learning Paths — cards with path name, % mastery, completion date
+4. Certificates — grid pulling from existing certificates store
+5. Labs Shipped — list of completed labs with date + short outcome
+6. Challenges Won — completed challenges with date
 
-**Charts**
-Recharts with `<defs><linearGradient/></defs>` for violet→magenta, cyan→indigo, lime→cyan; donut = `PieChart` with `cornerRadius`, single-segment gradient + faint track segment, drop-shadow SVG filter.
+Streaks are NOT shown publicly (private signal). Settings (handle, visibility toggle, headline) live in a right-side drawer from the Portfolio header.
 
-## Light/Dark toggle
+### Learning Paths (`/student/paths`) — replaces Skill Tree
+Reframe existing skill-tree data as ordered learning journeys.
 
-- Add small theme toggle in student `AppHeader` (sun/moon)
-- Persist in existing theme system; `.student-portal` defines both palettes so switch is instant
-- Reference image is dark — dark is the default the first time a student lands
+- List page: cards showing path name, # modules, % complete, est. hours, "Continue" CTA
+- Detail page: linear/branching module sequence rendered top-down with clear "next up"; each node links to its course/lab/assessment
+- Progress = % of modules completed. Nodes unlock by prerequisite completion only — no XP gates.
 
-## Files touched
+### Challenges (`/student/challenges`) — absorbs Quests
+One page, two tabs:
+- **Active** — challenges currently joinable or in progress (multi-step storylines from old Quests + one-offs from old Challenges, unified as "Challenge" with optional `steps[]`)
+- **Completed** — history with outcome + date
 
-Created:
-- `src/components/gamification/RewardUnlockCard.tsx`
-- `src/components/gamification/StatDonutCard.tsx`
-- `src/components/gamification/StatBarCard.tsx`
-- `src/components/gamification/TierListCard.tsx`
+Rewards are concrete: certificate, lab credit, mentor session — no XP/badges.
 
-Edited (style-only, no logic changes):
-- `src/index.css` (full `.student-portal` token block, dark + light, gradients, glows, mesh background)
-- `tailwind.config.ts` (add gradient utilities if needed)
-- `src/components/layout/AppLayout.tsx`, `AppSidebar.tsx`, `AppHeader.tsx`
-- `src/components/gamification/*` (all listed above)
-- `src/pages/student/Dashboard.tsx` (recompose)
-- `src/pages/student/{Labs,Courses,Leaderboard,Quests,Profile,SkillTree,Certificates,Assessments,Challenges,Progress,Schedule}.tsx` (apply new card surfaces, hero strips, gradient CTAs — content unchanged)
+### My Progress (`/student/progress`) — cleaned
+Keep only what a learner acts on:
+1. Current batch progress — % of program complete, weeks elapsed / total
+2. Streak — current + longest + 30-day calendar
+3. Active courses — list with % complete + last-activity date
+4. Active learning paths — same shape
+5. Skill mastery — bar list (skill → % from assessments/labs)
+6. Upcoming deadlines — assessments, live sessions, challenge end dates
 
-## Out of scope
-- Trainer + admin portals (untouched)
-- Any data, store, or routing changes
-- New features beyond visuals
+Remove: XP graph, momentum chart, badge progress, weekly XP goal.
+
+### Leaderboard (`/student/leaderboard`) — batch-only
+- Tab per batch the student is enrolled in
+- Single ranking inside each batch
+- Rank metric: composite of completion % + assessment scores + labs shipped. Breakdown shown on row hover for transparency.
+- No global, no cross-batch, no streak leaderboard, no weekly XP race
+
+## 5. Data / store changes
+
+`gamificationStore` shrinks and is renamed `progressStore`:
+- Remove: `xp`, `level`, `momentum`, `achievements`, `xpFeed`, global `leaderboard` slices
+- Keep: `streak` (current, longest, activity dates)
+- Keep & rename: `skillTracks` → `learningPaths`, `challenges` (merge `quests` array in)
+- Add: `batchLeaderboard(batchId)` selector returning composite-ranked entries for that batch only
+- Add: `portfolio` slice — handle, headline, visibility, derived getters for top skills / completed paths / shipped labs
+
+`questStore` merges into `progressStore.challenges` then is deleted.
+
+Components touched:
+- Delete: `AchievementShowcase`, `RivalCallout`, `RewardUnlockCard`, `WeeklyChallengeFeature`, `MiniLeaderboard`
+- Keep but refactor: `StreakMomentumCard` → `StreakCard` (drop momentum half)
+- Rewrite: `HeroDashboard` (drop XP bar/level ring, keep gradient + streak chip), `StudentPageHero` (replace Level/Momentum stats with Path %, Active Challenges, Batch Rank — keep Streak), `Dashboard.tsx`, `Profile.tsx` → `Portfolio.tsx`, `SkillTree.tsx` → `Paths.tsx` + `PathDetail.tsx`, `Challenges.tsx`, `Leaderboard.tsx`, `Progress.tsx`; delete `Quests.tsx`
+- Update: `AppSidebar.tsx` student nav, `App.tsx` routes + redirects
+
+## 6. Build order
+
+1. Store refactor (`progressStore`, delete `questStore`, redirect imports)
+2. Sidebar + routes + redirects in `App.tsx`
+3. Rewrite `StudentPageHero` and `Dashboard` (unblocks every other page visually)
+4. Portfolio page + public `/p/:handle` route
+5. Learning Paths list + detail
+6. Merged Challenges page
+7. Batch-only Leaderboard
+8. Cleaned Progress page (with streak)
+9. Delete dead components and unused mock data
+
+## Out of scope (later passes)
+Courses, Labs, Assessments, Schedule, Support, Certificates internals — visual sweep already done, no logic changes this round.
