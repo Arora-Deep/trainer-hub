@@ -227,6 +227,8 @@ const App = () => (
             <Route path="/student/skill-tree" element={<Navigate to="/student/paths" replace />} />
             <Route path="/engagement" element={<Engagement />} />
           </Route>
+          {/* Public portfolio (no auth, no layout) */}
+          <Route path="/p/:handle" element={<PortfolioPublic />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
