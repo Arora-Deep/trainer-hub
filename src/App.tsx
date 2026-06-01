@@ -100,11 +100,13 @@ import SessionDetail from "./pages/student/SessionDetail";
 import StudentLiveClass from "./pages/student/LiveClass";
 import StudentSupport from "./pages/student/Support";
 import StudentProgress from "./pages/student/Progress";
-import StudentSkillTree from "./pages/student/SkillTree";
+import StudentPaths from "./pages/student/Paths";
+import StudentPathDetail from "./pages/student/PathDetail";
 import StudentChallenges from "./pages/student/Challenges";
 import StudentLeaderboard from "./pages/student/Leaderboard";
-import StudentProfile from "./pages/student/Profile";
-import StudentQuests from "./pages/student/Quests";
+import StudentPortfolio from "./pages/student/Portfolio";
+import PortfolioPublic from "./pages/student/PortfolioPublic";
+import { Navigate } from "react-router-dom";
 import Engagement from "./pages/Engagement";
 
 const queryClient = new QueryClient();
@@ -214,11 +216,15 @@ const App = () => (
             <Route path="/student/live-class" element={<StudentLiveClass />} />
             <Route path="/student/support" element={<StudentSupport />} />
             <Route path="/student/progress" element={<StudentProgress />} />
-            <Route path="/student/skill-tree" element={<StudentSkillTree />} />
+            <Route path="/student/paths" element={<StudentPaths />} />
+            <Route path="/student/paths/:slug" element={<StudentPathDetail />} />
             <Route path="/student/challenges" element={<StudentChallenges />} />
             <Route path="/student/leaderboard" element={<StudentLeaderboard />} />
-            <Route path="/student/profile" element={<StudentProfile />} />
-            <Route path="/student/quests" element={<StudentQuests />} />
+            <Route path="/student/portfolio" element={<StudentPortfolio />} />
+            {/* Redirects from old routes */}
+            <Route path="/student/profile" element={<Navigate to="/student/portfolio" replace />} />
+            <Route path="/student/quests" element={<Navigate to="/student/challenges" replace />} />
+            <Route path="/student/skill-tree" element={<Navigate to="/student/paths" replace />} />
             <Route path="/engagement" element={<Engagement />} />
           </Route>
           <Route path="*" element={<NotFound />} />
