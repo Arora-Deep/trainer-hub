@@ -1,106 +1,108 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useGamificationStore, type LeaderboardEntry } from "@/stores/gamificationStore";
-import { TrendingUp, TrendingDown, Minus, Crown, Flame, Trophy } from "lucide-react";
-import { SeasonBanner } from "@/components/gamification/SeasonBanner";
-import { RivalCallout } from "@/components/gamification/RivalCallout";
+import { useGamificationStore, type BatchLeaderboardEntry } from "@/stores/gamificationStore";
+import { Crown, Trophy } from "lucide-react";
 import { StudentPageHero } from "@/components/gamification/StudentPageHero";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function Leaderboard() {
-  const { leaderboard } = useGamificationStore();
+  const { profile, getBatchLeaderboard } = useGamificationStore();
+  const batches = profile.enrolledBatches;
 
   return (
     <div className="space-y-6">
       <StudentPageHero
         variant="magenta"
-        eyebrow="Arena"
+        eyebrow="Batch Leaderboard"
         icon={Trophy}
-        title={<>Where do you <span className="text-white/95">rank?</span></>}
-        description="Weekly XP, your batch, and skill-specific rankings. Climb the ladder."
+        title={<>Where you stand in <span className="text-white/95">your batch</span>.</>}
+        description="Ranking inside your own cohort — no global ladders. Climb by shipping work, scoring on assessments, and finishing modules."
       />
 
-
-      <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6">
-        <SeasonBanner />
-        <RivalCallout />
-      </div>
-
-
-      <Tabs defaultValue="weekly">
-        <TabsList>
-          <TabsTrigger value="weekly">Weekly XP</TabsTrigger>
-          <TabsTrigger value="batch">My Batch</TabsTrigger>
-          <TabsTrigger value="streaks">Streak Leaders</TabsTrigger>
-          <TabsTrigger value="kubernetes">Kubernetes Track</TabsTrigger>
+      <Tabs defaultValue={batches[0]?.id}>
+        <TabsList className="flex-wrap h-auto">
+          {batches.map((b) => (
+            <TabsTrigger key={b.id} value={b.id}>{b.name}</TabsTrigger>
+          ))}
         </TabsList>
 
-        <TabsContent value="weekly" className="mt-4">
-          <Board entries={leaderboard.weekly} unit="XP this week" />
-        </TabsContent>
-        <TabsContent value="batch" className="mt-4">
-          <Board entries={leaderboard.batch} unit="XP this week" />
-        </TabsContent>
-        <TabsContent value="streaks" className="mt-4">
-          <Board entries={leaderboard.streaks} unit="days" streakMode />
-        </TabsContent>
-        <TabsContent value="kubernetes" className="mt-4">
-          <Board entries={leaderboard.kubernetes} unit="Kubernetes XP" />
-        </TabsContent>
+        {batches.map((b) => (
+          <TabsContent key={b.id} value={b.id} className="mt-4">
+            <Board entries={getBatchLeaderboard(b.id)} />
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );
 }
 
-function Board({ entries, unit, streakMode }: { entries: LeaderboardEntry[]; unit: string; streakMode?: boolean }) {
+function Board({ entries }: { entries: BatchLeaderboardEntry[] }) {
   return (
     <Card>
       <CardContent className="p-2">
-        {entries.map((e, i) => (
-          <div
-            key={e.rank + e.handle}
-            className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${
-              e.you ? "bg-primary/[0.06] border border-primary/20" : "hover:bg-muted/40"
-            } ${i !== entries.length - 1 ? "mb-1" : ""}`}
-          >
-            <div className="w-8 flex items-center justify-center">
-              {e.rank === 1 ? (
-                <Crown className="h-4 w-4 text-yellow-500" />
-              ) : (
-                <span className="text-sm font-semibold tabular-nums text-muted-foreground">#{e.rank}</span>
-              )}
-            </div>
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-              {e.name.split(" ").map(p => p[0]).slice(0, 2).join("")}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium truncate">{e.name}</p>
-                {e.you && <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-primary/30 text-primary">You</Badge>}
-              </div>
-              <p className="text-[11px] text-muted-foreground truncate">
-                {streakMode ? e.identity : `Lvl ${e.level} · ${e.identity}`}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-semibold tabular-nums inline-flex items-center gap-1">
-                {streakMode && <Flame className="h-3.5 w-3.5 text-warning" />}
-                {e.xp.toLocaleString()}
-              </p>
-              <p className="text-[10px] text-muted-foreground">{unit}</p>
-            </div>
-            <div className="w-12 flex justify-end">
-              {e.delta > 0 ? (
-                <span className="text-[11px] font-medium text-success inline-flex items-center gap-0.5"><TrendingUp className="h-3 w-3" />{e.delta}</span>
-              ) : e.delta < 0 ? (
-                <span className="text-[11px] font-medium text-destructive inline-flex items-center gap-0.5"><TrendingDown className="h-3 w-3" />{Math.abs(e.delta)}</span>
-              ) : (
-                <span className="text-[11px] text-muted-foreground inline-flex items-center gap-0.5"><Minus className="h-3 w-3" />0</span>
-              )}
-            </div>
-          </div>
-        ))}
+        <div className="px-3 py-2 grid grid-cols-[40px_1fr_auto] gap-4 text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border/50">
+          <span>Rank</span>
+          <span>Student</span>
+          <span className="text-right">Score</span>
+        </div>
+        <TooltipProvider delayDuration={150}>
+          {entries.map((e, i) => (
+            <Tooltip key={e.handle}>
+              <TooltipTrigger asChild>
+                <div
+                  className={`grid grid-cols-[40px_1fr_auto] items-center gap-4 px-3 py-3 rounded-lg transition-colors ${
+                    e.you ? "bg-primary/[0.06] border border-primary/20" : "hover:bg-muted/40"
+                  } ${i !== entries.length - 1 ? "mb-1" : ""}`}
+                >
+                  <div className="flex items-center justify-center">
+                    {e.rank === 1 ? (
+                      <Crown className="h-4 w-4 text-yellow-500" />
+                    ) : (
+                      <span className="text-sm font-semibold tabular-nums text-muted-foreground">#{e.rank}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                      {e.initials}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium truncate">{e.name}</p>
+                        {e.you && <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-primary/30 text-primary">You</Badge>}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground truncate">@{e.handle}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-base font-semibold tabular-nums">{e.score}</p>
+                    <p className="text-[10px] text-muted-foreground">composite</p>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="text-xs">
+                <div className="space-y-1">
+                  <Row label="Completion" value={`${e.completionPct}%`} />
+                  <Row label="Avg score" value={`${e.avgScore}%`} />
+                  <Row label="Labs shipped" value={`${e.labsShipped}`} />
+                  <div className="pt-1 mt-1 border-t border-border/30 text-[10px] text-muted-foreground">
+                    50% completion · 35% score · 15% labs
+                  </div>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </TooltipProvider>
       </CardContent>
     </Card>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-4 tabular-nums">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium">{value}</span>
+    </div>
   );
 }

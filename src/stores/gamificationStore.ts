@@ -5,41 +5,28 @@ export type SkillKey =
   | "cloud" | "linux" | "kubernetes" | "security"
   | "networking" | "devops" | "ai" | "python" | "infra";
 
-export interface Skill {
-  key: SkillKey;
-  label: string;
-  xp: number;
-  level: number;
-  nextLevelXp: number;
-  rank: string;          // e.g. "Operator", "Engineer"
-  percentile: number;    // 0-100
-}
+export type Difficulty = "Beginner" | "Intermediate" | "Advanced" | "Expert";
 
-export type Tier = "bronze" | "silver" | "gold" | "platinum" | "diamond" | "architect";
-export type Rarity = "common" | "rare" | "epic" | "legendary";
-
-export interface Achievement {
+export interface ModuleNode {
   id: string;
-  title: string;
-  description: string;
-  category: "milestone" | "lab" | "streak" | "challenge" | "mastery";
-  tier: "bronze" | "silver" | "gold" | "platinum";
-  rarity?: Rarity;
-  holdersPct?: number; // % of students who hold it
-  unlocked: boolean;
-  unlockedAt?: string;
-  progress?: { current: number; total: number };
-  icon: string; // lucide icon name
-}
-
-export interface Mission {
-  id: string;
-  title: string;
+  name: string;
+  kind: "course" | "lesson" | "lab" | "challenge" | "assessment";
   detail: string;
-  xp: number;
-  target: number;
-  progress: number;
-  skill?: SkillKey;
+  link: string;
+  status: "locked" | "available" | "in_progress" | "completed";
+  estMinutes?: number;
+  prerequisiteIds?: string[];
+}
+
+export interface LearningPath {
+  key: SkillKey;
+  slug: string;
+  name: string;
+  tagline: string;
+  description: string;
+  estHours: number;
+  modules: ModuleNode[];
+  mastery: number; // 0-100
 }
 
 export interface Challenge {
@@ -47,391 +34,376 @@ export interface Challenge {
   title: string;
   brief: string;
   category: SkillKey;
-  difficulty: "Beginner" | "Intermediate" | "Advanced" | "Expert";
-  xp: number;
+  difficulty: Difficulty;
   duration: string;
   status: "available" | "in_progress" | "completed";
   participants: number;
+  // Optional multi-step storyline (absorbed from old Quests)
+  steps?: Array<{
+    id: string;
+    title: string;
+    detail: string;
+    link: string;
+    completed: boolean;
+  }>;
+  reward?: string;            // e.g. "Certificate of Cluster Initiate"
+  completedAt?: string;
+  // kept for backward-compat with the trainer Engagement page
+  xp?: number;
 }
 
-export interface XPEvent {
+export interface CompletedLab {
   id: string;
-  ts: string;           // ISO
-  label: string;
-  amount: number;
+  title: string;
+  completedAt: string;
+  outcome: string;
   skill: SkillKey;
 }
 
-export interface LeaderboardEntry {
+export interface SkillMastery {
+  key: SkillKey;
+  label: string;
+  mastery: number; // 0-100, derived from assessments + labs
+}
+
+export interface Streak {
+  current: number;
+  longest: number;
+  weeklyDays: boolean[];           // last 7 days
+  activity: Record<string, number>;// YYYY-MM-DD -> intensity 0-4 (last 30+ days)
+  lastActive: string;
+}
+
+export interface Portfolio {
+  handle: string;
+  headline: string;
+  isPublic: boolean;
+  links: { label: string; url: string }[];
+}
+
+export interface BatchLeaderboardEntry {
   rank: number;
   name: string;
   handle: string;
-  level: number;
-  xp: number;
-  delta: number;        // rank change
-  identity: string;
+  initials: string;
+  completionPct: number;  // % of program completed
+  avgScore: number;       // average assessment score
+  labsShipped: number;
+  score: number;          // composite
   you?: boolean;
 }
 
-export interface SkillNode {
+export interface BatchInfo {
   id: string;
   name: string;
-  xp: number;
-  status: "locked" | "available" | "in_progress" | "mastered";
-  children?: SkillNode[];
-}
-
-export interface SkillTrack {
-  key: SkillKey;
-  name: string;
-  tagline: string;
-  mastery: number; // 0-100
-  nodes: SkillNode[];
 }
 
 // ---------- Helpers ----------
-const skillRank = (level: number) => {
-  if (level >= 35) return "Architect";
-  if (level >= 25) return "Specialist";
-  if (level >= 15) return "Engineer";
-  if (level >= 8)  return "Operator";
-  if (level >= 3)  return "Apprentice";
-  return "Initiate";
-};
+function seedActivity(): Record<string, number> {
+  const out: Record<string, number> = {};
+  const today = new Date();
+  for (let i = 0; i < 35; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const recency = 1 - i / 35;
+    const r = Math.random();
+    if (r < 0.25 - recency * 0.15) out[key] = 0;
+    else if (r < 0.55) out[key] = 1;
+    else if (r < 0.82) out[key] = 2;
+    else if (r < 0.95) out[key] = 3;
+    else out[key] = 4;
+  }
+  return out;
+}
 
 // ---------- Seed data ----------
-const skills: Skill[] = [
-  { key: "kubernetes", label: "Kubernetes", xp: 4820, level: 18, nextLevelXp: 5400, rank: skillRank(18), percentile: 94 },
-  { key: "linux",      label: "Linux",      xp: 6210, level: 22, nextLevelXp: 7000, rank: skillRank(22), percentile: 88 },
-  { key: "devops",     label: "DevOps",     xp: 3950, level: 15, nextLevelXp: 4500, rank: skillRank(15), percentile: 82 },
-  { key: "cloud",      label: "Cloud",      xp: 5120, level: 19, nextLevelXp: 5800, rank: skillRank(19), percentile: 79 },
-  { key: "networking", label: "Networking", xp: 2140, level: 11, nextLevelXp: 2600, rank: skillRank(11), percentile: 64 },
-  { key: "security",   label: "Security",   xp: 1280, level: 7,  nextLevelXp: 1800, rank: skillRank(7),  percentile: 52 },
-  { key: "infra",      label: "Infrastructure", xp: 3340, level: 14, nextLevelXp: 4000, rank: skillRank(14), percentile: 71 },
-  { key: "python",     label: "Python",     xp: 980,  level: 6,  nextLevelXp: 1400, rank: skillRank(6),  percentile: 41 },
-  { key: "ai",         label: "AI / ML",    xp: 320,  level: 3,  nextLevelXp: 600,  rank: skillRank(3),  percentile: 22 },
+const skillLabel: Record<SkillKey, string> = {
+  cloud: "Cloud", linux: "Linux", kubernetes: "Kubernetes",
+  security: "Security", networking: "Networking", devops: "DevOps",
+  ai: "AI / ML", python: "Python", infra: "Infrastructure",
+};
+
+const skillMastery: SkillMastery[] = [
+  { key: "linux",      label: skillLabel.linux,      mastery: 84 },
+  { key: "kubernetes", label: skillLabel.kubernetes, mastery: 72 },
+  { key: "cloud",      label: skillLabel.cloud,      mastery: 68 },
+  { key: "devops",     label: skillLabel.devops,     mastery: 61 },
+  { key: "networking", label: skillLabel.networking, mastery: 54 },
+  { key: "infra",      label: skillLabel.infra,      mastery: 49 },
+  { key: "security",   label: skillLabel.security,   mastery: 38 },
+  { key: "python",     label: skillLabel.python,     mastery: 32 },
+  { key: "ai",         label: skillLabel.ai,         mastery: 14 },
 ];
 
-const totalXp = skills.reduce((s, k) => s + k.xp, 0);
-const overallLevel = 24;            // derived
-const nextLevelTotal = 32000;
-
-const achievements: Achievement[] = [
-  { id: "a1", title: "First Deployment", description: "Deploy your first production-grade workload.", category: "milestone", tier: "bronze", unlocked: true, unlockedAt: "2026-02-14", icon: "Rocket" },
-  { id: "a2", title: "Linux Survivor", description: "Complete 25 Linux labs without resetting.", category: "lab", tier: "silver", unlocked: true, unlockedAt: "2026-03-02", icon: "Terminal" },
-  { id: "a3", title: "Kubernetes Builder", description: "Stand up a multi-node cluster from scratch.", category: "lab", tier: "gold", unlocked: true, unlockedAt: "2026-04-11", icon: "Boxes" },
-  { id: "a4", title: "Packet Hunter", description: "Diagnose 10 real-world networking issues.", category: "challenge", tier: "silver", unlocked: true, unlockedAt: "2026-04-21", icon: "Network" },
-  { id: "a5", title: "Cloud Commander", description: "Operate workloads across 3 cloud providers.", category: "mastery", tier: "gold", unlocked: false, progress: { current: 2, total: 3 }, icon: "Cloud" },
-  { id: "a6", title: "100 Hours in Labs", description: "Spend 100 hands-on hours in CloudAdda labs.", category: "milestone", tier: "gold", unlocked: false, progress: { current: 78, total: 100 }, icon: "Clock" },
-  { id: "a7", title: "Night Shift Engineer", description: "Complete 20 labs between 10pm and 2am.", category: "streak", tier: "silver", unlocked: false, progress: { current: 13, total: 20 }, icon: "Moon" },
-  { id: "a8", title: "Cluster Architect", description: "Design and deploy a production-grade HA cluster.", category: "mastery", tier: "platinum", unlocked: false, progress: { current: 0, total: 1 }, icon: "Server" },
-  { id: "a9", title: "DevOps Specialist", description: "Reach Level 20 on the DevOps skill track.", category: "mastery", tier: "platinum", unlocked: false, progress: { current: 15, total: 20 }, icon: "Workflow" },
-  { id: "a10", title: "Infrastructure Operator", description: "Maintain 99% lab uptime over 30 days.", category: "milestone", tier: "gold", unlocked: false, progress: { current: 27, total: 30 }, icon: "Activity" },
-];
-
-const dailyMissions: Mission[] = [
-  { id: "d1", title: "Complete 1 lab", detail: "Any lab counts — finish today's task.", xp: 150, target: 1, progress: 0, skill: "infra" },
-  { id: "d2", title: "Spend 60 minutes hands-on", detail: "Active terminal time in any environment.", xp: 100, target: 60, progress: 32 },
-  { id: "d3", title: "Attempt today's challenge", detail: "Debug-the-cluster · Intermediate", xp: 200, target: 1, progress: 0, skill: "kubernetes" },
-];
-
-const weeklyMissions: Mission[] = [
-  { id: "w1", title: "Finish 5 labs this week", detail: "Across any skill track.", xp: 600, target: 5, progress: 3 },
-  { id: "w2", title: "Attend 2 live sessions", detail: "Stay engaged with your cohort.", xp: 400, target: 2, progress: 1 },
-  { id: "w3", title: "Complete 1 Advanced challenge", detail: "Push your edge.", xp: 800, target: 1, progress: 0, skill: "devops" },
-  { id: "w4", title: "Maintain a 7-day streak", detail: "Show up every day.", xp: 500, target: 7, progress: 5 },
+const learningPaths: LearningPath[] = [
+  {
+    key: "linux", slug: "linux-fundamentals",
+    name: "Linux Fundamentals",
+    tagline: "From the shell to systemd internals.",
+    description: "Become fluent at the Linux command line and confident running production workloads. Covers process management, networking, scripting, and security.",
+    estHours: 24, mastery: 84,
+    modules: [
+      { id: "l1", name: "Terminal Basics",     kind: "course",     detail: "Course · 6 lessons",    link: "/student/courses", status: "completed", estMinutes: 90 },
+      { id: "l2", name: "File Systems",        kind: "lab",        detail: "Lab · 45m",             link: "/student/labs",    status: "completed", estMinutes: 45 },
+      { id: "l3", name: "Process Management",  kind: "lab",        detail: "Lab · 1h",              link: "/student/labs",    status: "completed", estMinutes: 60 },
+      { id: "l4", name: "Networking",          kind: "lab",        detail: "Lab · 1h",              link: "/student/labs",    status: "in_progress", estMinutes: 60 },
+      { id: "l5", name: "Shell Scripting",     kind: "course",     detail: "Course · 4 lessons",    link: "/student/courses", status: "available", estMinutes: 75 },
+      { id: "l6", name: "Permissions & SELinux", kind: "lab",      detail: "Lab · 1.5h",            link: "/student/labs",    status: "locked", estMinutes: 90, prerequisiteIds: ["l5"] },
+      { id: "l7", name: "Linux Mastery Check", kind: "assessment", detail: "15 questions",          link: "/student/assessments", status: "locked", estMinutes: 30, prerequisiteIds: ["l6"] },
+    ],
+  },
+  {
+    key: "kubernetes", slug: "kubernetes-track",
+    name: "Kubernetes Track",
+    tagline: "From pods to production clusters.",
+    description: "Stand up real clusters, deploy stateful workloads, and run production-grade Kubernetes — including HA control planes and cluster admin.",
+    estHours: 38, mastery: 72,
+    modules: [
+      { id: "k1", name: "Pods & Deployments",      kind: "course", detail: "Course · 5 lessons", link: "/student/courses", status: "completed" },
+      { id: "k2", name: "Services & Ingress",      kind: "lab",    detail: "Lab · 1h",           link: "/student/labs",    status: "completed" },
+      { id: "k3", name: "ConfigMaps & Secrets",    kind: "lab",    detail: "Lab · 45m",          link: "/student/labs",    status: "completed" },
+      { id: "k4", name: "Networking Deep Dive",    kind: "lab",    detail: "Lab · 1.5h",         link: "/student/labs",    status: "in_progress" },
+      { id: "k5", name: "Stateful Workloads",      kind: "lab",    detail: "Lab · 1.5h",         link: "/student/labs",    status: "available" },
+      { id: "k6", name: "Cluster Administration",  kind: "lab",    detail: "Lab · 2h",           link: "/student/labs",    status: "locked", prerequisiteIds: ["k5"] },
+      { id: "k7", name: "Production HA",           kind: "challenge", detail: "Challenge · 2h",  link: "/student/challenges", status: "locked", prerequisiteIds: ["k6"] },
+    ],
+  },
+  {
+    key: "devops", slug: "devops-track",
+    name: "DevOps Track",
+    tagline: "Pipelines, observability, and platform thinking.",
+    description: "Build a complete CI/CD pipeline — Git, containers, IaC, observability, and platform engineering practices.",
+    estHours: 32, mastery: 61,
+    modules: [
+      { id: "d1", name: "Git & GitHub Workflows", kind: "course", detail: "Course · 4 lessons", link: "/student/courses", status: "completed" },
+      { id: "d2", name: "CI Pipelines",           kind: "lab",    detail: "Lab · 1h",           link: "/student/labs",    status: "completed" },
+      { id: "d3", name: "Containerization",       kind: "lab",    detail: "Lab · 1h",           link: "/student/labs",    status: "in_progress" },
+      { id: "d4", name: "Infrastructure as Code", kind: "lab",    detail: "Lab · 1.5h",         link: "/student/labs",    status: "available" },
+      { id: "d5", name: "Observability Stack",    kind: "lab",    detail: "Lab · 1.5h",         link: "/student/labs",    status: "locked", prerequisiteIds: ["d4"] },
+      { id: "d6", name: "Platform Engineering",   kind: "challenge", detail: "Challenge · 2h",  link: "/student/challenges", status: "locked", prerequisiteIds: ["d5"] },
+    ],
+  },
+  {
+    key: "security", slug: "security-track",
+    name: "Security Track",
+    tagline: "Defend, detect, and respond.",
+    description: "Harden systems, design network security, and respond to real incidents across hybrid environments.",
+    estHours: 28, mastery: 38,
+    modules: [
+      { id: "s1", name: "System Hardening",  kind: "lab", detail: "Lab · 1h",   link: "/student/labs", status: "completed" },
+      { id: "s2", name: "Network Security",  kind: "lab", detail: "Lab · 1h",   link: "/student/labs", status: "in_progress" },
+      { id: "s3", name: "Identity & Access", kind: "lab", detail: "Lab · 1.5h", link: "/student/labs", status: "available" },
+      { id: "s4", name: "Threat Detection",  kind: "lab", detail: "Lab · 2h",   link: "/student/labs", status: "locked", prerequisiteIds: ["s3"] },
+      { id: "s5", name: "Incident Response", kind: "challenge", detail: "Challenge · 1.5h", link: "/student/challenges", status: "locked", prerequisiteIds: ["s4"] },
+    ],
+  },
 ];
 
 const challenges: Challenge[] = [
-  { id: "c1", title: "Deploy a Highly-Available Kubernetes Cluster", brief: "Provision a 3-master / 5-worker cluster with etcd quorum and validate failover.", category: "kubernetes", difficulty: "Advanced", xp: 1200, duration: "~2h", status: "available", participants: 184 },
-  { id: "c2", title: "Debug Broken Infrastructure",                brief: "Diagnose and recover a misconfigured Terraform stack within the time limit.",      category: "infra",      difficulty: "Intermediate", xp: 650,  duration: "45m", status: "in_progress", participants: 312 },
-  { id: "c3", title: "Secure a Vulnerable Server",                  brief: "Harden a Linux box, close exposed services, configure auditd.",                     category: "security",   difficulty: "Intermediate", xp: 700,  duration: "1h",  status: "available", participants: 241 },
-  { id: "c4", title: "Configure a CI/CD Pipeline",                  brief: "End-to-end pipeline: build, test, container scan, blue/green deploy.",              category: "devops",     difficulty: "Advanced", xp: 1100, duration: "~2h", status: "available", participants: 156 },
-  { id: "c5", title: "Fix the Networking Issue",                    brief: "Two VPCs can't talk. Find the misconfig — without resetting the lab.",              category: "networking", difficulty: "Beginner",     xp: 300,  duration: "20m", status: "completed", participants: 472 },
-  { id: "c6", title: "Build a Multi-Cloud Disaster Recovery Plan",  brief: "Failover workloads from AWS to GCP and validate RPO/RTO targets.",                 category: "cloud",      difficulty: "Expert",       xp: 2200, duration: "~4h", status: "available", participants: 38 },
+  {
+    id: "c1",
+    title: "Deploy Your First Cluster",
+    brief: "From bare nodes to a running Kubernetes cluster — then prove it survives a node failure.",
+    category: "kubernetes", difficulty: "Intermediate",
+    duration: "~3h", status: "in_progress", participants: 184,
+    reward: "Certificate · Cluster Initiate",
+    steps: [
+      { id: "c1s1", title: "Kubernetes Architecture",   detail: "Course · Module 2", link: "/student/courses",     completed: true },
+      { id: "c1s2", title: "Provision a 3-node cluster", detail: "Lab · 45m",        link: "/student/labs",        completed: true },
+      { id: "c1s3", title: "Deploy your first workload", detail: "Lab · 30m",        link: "/student/labs",        completed: true },
+      { id: "c1s4", title: "Survive a node failure",     detail: "Challenge · 45m",  link: "/student/challenges",  completed: false },
+      { id: "c1s5", title: "Cluster readiness check",    detail: "Assessment · 10q", link: "/student/assessments", completed: false },
+    ],
+    xp: 2400,
+  },
+  {
+    id: "c2",
+    title: "Debug Broken Infrastructure",
+    brief: "Diagnose and recover a misconfigured Terraform stack within the time limit.",
+    category: "infra", difficulty: "Intermediate",
+    duration: "45m", status: "in_progress", participants: 312,
+    reward: "Lab credit · 4 hours",
+    xp: 650,
+  },
+  {
+    id: "c3",
+    title: "Secure a Vulnerable Server",
+    brief: "Harden a Linux box, close exposed services, configure auditd.",
+    category: "security", difficulty: "Intermediate",
+    duration: "1h", status: "available", participants: 241,
+    reward: "Certificate · Linux Hardening",
+    xp: 700,
+  },
+  {
+    id: "c4",
+    title: "Build an End-to-End CI/CD Pipeline",
+    brief: "Build, test, container scan, blue/green deploy to a real cluster — then roll back safely.",
+    category: "devops", difficulty: "Advanced",
+    duration: "~2h", status: "available", participants: 156,
+    reward: "Mentor session · 30 minutes",
+    steps: [
+      { id: "c4s1", title: "Git workflows that scale", detail: "Course · Module 1", link: "/student/courses", completed: false },
+      { id: "c4s2", title: "Build & push containers",  detail: "Lab · 45m",         link: "/student/labs",    completed: false },
+      { id: "c4s3", title: "GitHub Actions pipeline",  detail: "Lab · 1h",          link: "/student/labs",    completed: false },
+      { id: "c4s4", title: "Blue/green deploy to K8s", detail: "Lab · 1h",          link: "/student/labs",    completed: false },
+      { id: "c4s5", title: "Ship & roll back safely",  detail: "Challenge · 45m",   link: "/student/challenges", completed: false },
+    ],
+    xp: 1100,
+  },
+  {
+    id: "c5",
+    title: "Fix the Networking Issue",
+    brief: "Two VPCs can't talk. Find the misconfig — without resetting the lab.",
+    category: "networking", difficulty: "Beginner",
+    duration: "20m", status: "completed", participants: 472,
+    completedAt: "2026-05-25",
+    reward: "Lab credit · 1 hour",
+    xp: 300,
+  },
+  {
+    id: "c6",
+    title: "Multi-Cloud Disaster Recovery",
+    brief: "Failover workloads from AWS to GCP and validate RPO/RTO targets.",
+    category: "cloud", difficulty: "Expert",
+    duration: "~4h", status: "available", participants: 38,
+    reward: "Certificate · Cloud Sentinel",
+    xp: 2200,
+  },
 ];
 
-const xpFeed: XPEvent[] = [
-  { id: "x1", ts: "2026-05-26T09:14:00Z", label: "Lab completed · Kubernetes Networking Deep Dive", amount: 350, skill: "kubernetes" },
-  { id: "x2", ts: "2026-05-26T08:02:00Z", label: "Live session attended · CI/CD with GitHub Actions", amount: 120, skill: "devops" },
-  { id: "x3", ts: "2026-05-25T22:40:00Z", label: "Daily streak bonus · Day 14",                       amount: 80,  skill: "infra" },
-  { id: "x4", ts: "2026-05-25T19:11:00Z", label: "Challenge completed · Fix the Networking Issue",    amount: 300, skill: "networking" },
-  { id: "x5", ts: "2026-05-25T15:30:00Z", label: "Assessment passed · Linux Process Management",      amount: 220, skill: "linux" },
-  { id: "x6", ts: "2026-05-24T20:01:00Z", label: "Lab completed · Terraform State Recovery",          amount: 280, skill: "infra" },
+const completedLabs: CompletedLab[] = [
+  { id: "lab-1", title: "Kubernetes Networking Deep Dive", completedAt: "2026-05-26", outcome: "Configured pod-to-pod CNI with Calico", skill: "kubernetes" },
+  { id: "lab-2", title: "Terraform State Recovery",        completedAt: "2026-05-22", outcome: "Recovered from corrupted backend, zero downtime", skill: "infra" },
+  { id: "lab-3", title: "nftables Firewall Design",        completedAt: "2026-05-18", outcome: "Hardened a multi-zone perimeter", skill: "linux" },
+  { id: "lab-4", title: "CI/CD with GitHub Actions",       completedAt: "2026-05-12", outcome: "End-to-end build, test, deploy", skill: "devops" },
+  { id: "lab-5", title: "Linux Process Management",        completedAt: "2026-05-04", outcome: "Wrote a production-grade systemd unit", skill: "linux" },
+  { id: "lab-6", title: "VPC Segmentation",                completedAt: "2026-04-29", outcome: "3-tier network with private subnets", skill: "cloud" },
 ];
 
-const leaderboard: { weekly: LeaderboardEntry[]; batch: LeaderboardEntry[]; streaks: LeaderboardEntry[]; kubernetes: LeaderboardEntry[] } = {
-  weekly: [
-    { rank: 1, name: "Aarav Mehta",   handle: "@aarav",   level: 31, xp: 4820, delta:  2, identity: "Cloud Architect" },
-    { rank: 2, name: "Priya Sharma",  handle: "@priya",   level: 29, xp: 4510, delta: -1, identity: "DevOps Engineer" },
-    { rank: 3, name: "Sarah Johnson", handle: "@sarah",   level: 24, xp: 4180, delta:  4, identity: "DevOps Engineer", you: true },
-    { rank: 4, name: "Marcus Lee",    handle: "@marcus",  level: 27, xp: 4020, delta:  0, identity: "Kubernetes Engineer" },
-    { rank: 5, name: "Diego Alvarez", handle: "@diego",   level: 26, xp: 3890, delta: -2, identity: "Linux Operator" },
-    { rank: 6, name: "Ananya Iyer",   handle: "@ananya",  level: 22, xp: 3640, delta:  1, identity: "Security Specialist" },
-    { rank: 7, name: "Kenji Watanabe",handle: "@kenji",   level: 25, xp: 3520, delta: -1, identity: "Infrastructure Engineer" },
-    { rank: 8, name: "Fatima Noor",   handle: "@fatima",  level: 21, xp: 3310, delta:  3, identity: "Cloud Apprentice" },
+const batchInfo: BatchInfo[] = [
+  { id: "batch-aws-2026", name: "AWS DevOps Bootcamp · Spring 2026" },
+  { id: "batch-k8s-2026", name: "Kubernetes Mastery · 2026" },
+];
+
+const batchLeaderboards: Record<string, BatchLeaderboardEntry[]> = {
+  "batch-aws-2026": [
+    { rank: 1, name: "Aarav Mehta",   handle: "aarav",  initials: "AM", completionPct: 78, avgScore: 92, labsShipped: 24, score: 0 },
+    { rank: 2, name: "Priya Sharma",  handle: "priya",  initials: "PS", completionPct: 74, avgScore: 91, labsShipped: 22, score: 0 },
+    { rank: 3, name: "Sarah Johnson", handle: "sarah",  initials: "SJ", completionPct: 71, avgScore: 88, labsShipped: 21, score: 0, you: true },
+    { rank: 4, name: "Marcus Lee",    handle: "marcus", initials: "ML", completionPct: 68, avgScore: 86, labsShipped: 19, score: 0 },
+    { rank: 5, name: "Diego Alvarez", handle: "diego",  initials: "DA", completionPct: 64, avgScore: 84, labsShipped: 18, score: 0 },
+    { rank: 6, name: "Ananya Iyer",   handle: "ananya", initials: "AI", completionPct: 60, avgScore: 82, labsShipped: 17, score: 0 },
+    { rank: 7, name: "Kenji Watanabe",handle: "kenji",  initials: "KW", completionPct: 58, avgScore: 80, labsShipped: 16, score: 0 },
+    { rank: 8, name: "Fatima Noor",   handle: "fatima", initials: "FN", completionPct: 52, avgScore: 78, labsShipped: 14, score: 0 },
   ],
-  batch: [
-    { rank: 1, name: "Sarah Johnson", handle: "@sarah",  level: 24, xp: 4180, delta: 1, identity: "DevOps Engineer", you: true },
-    { rank: 2, name: "Ananya Iyer",   handle: "@ananya", level: 22, xp: 3640, delta: 0, identity: "Security Specialist" },
-    { rank: 3, name: "Rohan Kapoor",  handle: "@rohan",  level: 19, xp: 3120, delta: 2, identity: "Cloud Operator" },
-    { rank: 4, name: "Sneha Patel",   handle: "@sneha",  level: 18, xp: 2870, delta: -1, identity: "Linux Operator" },
-    { rank: 5, name: "Vikram Singh",  handle: "@vikram", level: 16, xp: 2410, delta: 0, identity: "DevOps Apprentice" },
-  ],
-  streaks: [
-    { rank: 1, name: "Priya Sharma",  handle: "@priya",  level: 29, xp: 92,  delta: 0, identity: "92-day streak" },
-    { rank: 2, name: "Aarav Mehta",   handle: "@aarav",  level: 31, xp: 78,  delta: 0, identity: "78-day streak" },
-    { rank: 3, name: "Sarah Johnson", handle: "@sarah",  level: 24, xp: 14,  delta: 1, identity: "14-day streak", you: true },
-    { rank: 4, name: "Diego Alvarez", handle: "@diego",  level: 26, xp: 11,  delta: -1, identity: "11-day streak" },
-  ],
-  kubernetes: [
-    { rank: 1, name: "Marcus Lee",    handle: "@marcus", level: 27, xp: 6210, delta: 0, identity: "Kubernetes Engineer" },
-    { rank: 2, name: "Sarah Johnson", handle: "@sarah",  level: 24, xp: 4820, delta: 1, identity: "Kubernetes Engineer", you: true },
-    { rank: 3, name: "Aarav Mehta",   handle: "@aarav",  level: 31, xp: 4640, delta: -1, identity: "Cloud Architect" },
-    { rank: 4, name: "Ananya Iyer",   handle: "@ananya", level: 22, xp: 3210, delta: 0, identity: "Security Specialist" },
+  "batch-k8s-2026": [
+    { rank: 1, name: "Marcus Lee",    handle: "marcus", initials: "ML", completionPct: 81, avgScore: 94, labsShipped: 26, score: 0 },
+    { rank: 2, name: "Sarah Johnson", handle: "sarah",  initials: "SJ", completionPct: 76, avgScore: 90, labsShipped: 23, score: 0, you: true },
+    { rank: 3, name: "Aarav Mehta",   handle: "aarav",  initials: "AM", completionPct: 72, avgScore: 89, labsShipped: 22, score: 0 },
+    { rank: 4, name: "Rohan Kapoor",  handle: "rohan",  initials: "RK", completionPct: 65, avgScore: 85, labsShipped: 19, score: 0 },
+    { rank: 5, name: "Sneha Patel",   handle: "sneha",  initials: "SP", completionPct: 60, avgScore: 83, labsShipped: 17, score: 0 },
   ],
 };
 
-const skillTracks: SkillTrack[] = [
-  {
-    key: "linux", name: "Linux Fundamentals", tagline: "From the shell to systemd internals.", mastery: 72,
-    nodes: [
-      { id: "l1", name: "Terminal Basics",  xp: 200, status: "mastered" },
-      { id: "l2", name: "File Systems",     xp: 350, status: "mastered" },
-      { id: "l3", name: "Process Management", xp: 400, status: "mastered" },
-      { id: "l4", name: "Networking",       xp: 500, status: "in_progress",
-        children: [
-          { id: "l4a", name: "iproute2 deep dive", xp: 220, status: "mastered" },
-          { id: "l4b", name: "nftables & firewalls", xp: 260, status: "in_progress" },
-        ]
-      },
-      { id: "l5", name: "Shell Scripting",  xp: 450, status: "available" },
-      { id: "l6", name: "Permissions & SELinux", xp: 500, status: "locked" },
-    ]
-  },
-  {
-    key: "kubernetes", name: "Kubernetes Track", tagline: "From pods to production clusters.", mastery: 58,
-    nodes: [
-      { id: "k1", name: "Pods & Deployments", xp: 300, status: "mastered" },
-      { id: "k2", name: "Services & Ingress", xp: 350, status: "mastered" },
-      { id: "k3", name: "ConfigMaps & Secrets", xp: 300, status: "mastered" },
-      { id: "k4", name: "Networking Deep Dive", xp: 500, status: "in_progress" },
-      { id: "k5", name: "Stateful Workloads", xp: 600, status: "available" },
-      { id: "k6", name: "Cluster Administration", xp: 800, status: "locked" },
-      { id: "k7", name: "Production HA", xp: 1200, status: "locked" },
-    ]
-  },
-  {
-    key: "devops", name: "DevOps Track", tagline: "Pipelines, observability, and platform thinking.", mastery: 49,
-    nodes: [
-      { id: "d1", name: "Git & GitHub Workflows", xp: 250, status: "mastered" },
-      { id: "d2", name: "CI Pipelines",           xp: 400, status: "mastered" },
-      { id: "d3", name: "Containerization",       xp: 400, status: "in_progress" },
-      { id: "d4", name: "Infrastructure as Code", xp: 600, status: "available" },
-      { id: "d5", name: "Observability Stack",    xp: 700, status: "locked" },
-      { id: "d6", name: "Platform Engineering",   xp: 1000, status: "locked" },
-    ]
-  },
-  {
-    key: "security", name: "Security Track", tagline: "Defend, detect, and respond.", mastery: 28,
-    nodes: [
-      { id: "s1", name: "System Hardening",     xp: 300, status: "mastered" },
-      { id: "s2", name: "Network Security",     xp: 400, status: "in_progress" },
-      { id: "s3", name: "Identity & Access",    xp: 400, status: "available" },
-      { id: "s4", name: "Threat Detection",     xp: 600, status: "locked" },
-      { id: "s5", name: "Incident Response",    xp: 800, status: "locked" },
-    ]
-  },
-];
+// composite score: 50% completion + 35% avg score + 15% labs (normalized to 30)
+function computeComposite(e: BatchLeaderboardEntry): number {
+  const labsNorm = Math.min(100, (e.labsShipped / 30) * 100);
+  return Math.round(e.completionPct * 0.5 + e.avgScore * 0.35 + labsNorm * 0.15);
+}
+
+Object.values(batchLeaderboards).forEach((list) => {
+  list.forEach((e) => (e.score = computeComposite(e)));
+  list.sort((a, b) => b.score - a.score);
+  list.forEach((e, i) => (e.rank = i + 1));
+});
 
 // ---------- Store ----------
-// ---------- Season, Heatmap, Titles, Rival ----------
-export interface Season {
-  id: string;
-  name: string;
-  theme: string;
-  startsAt: string;
-  endsAt: string;
-  weeklyXpCap: number;
-  weeklyXpEarned: number;
-  rank: number;
-  totalParticipants: number;
-}
-
-export interface Title {
-  id: string;
-  name: string;
-  description: string;
-  active: boolean;
-  earnedAt?: string;
-  locked?: boolean;
-}
-
-// 6 months of contribution intensities (0-4) by day
-function seedHeatmap(): number[] {
-  const days = 26 * 7; // 26 weeks
-  const arr: number[] = [];
-  for (let i = 0; i < days; i++) {
-    // bias toward more recent activity
-    const recency = i / days;
-    const r = Math.random();
-    if (r < 0.30 - recency * 0.18) arr.push(0);
-    else if (r < 0.55) arr.push(1);
-    else if (r < 0.80) arr.push(2);
-    else if (r < 0.95) arr.push(3);
-    else arr.push(4);
-  }
-  return arr;
-}
-
-const season: Season = {
-  id: "s7",
-  name: "Season 7 · Cluster Forge",
-  theme: "Kubernetes & platform engineering",
-  startsAt: "2026-05-12",
-  endsAt: "2026-06-22",
-  weeklyXpCap: 6000,
-  weeklyXpEarned: 3820,
-  rank: 138,
-  totalParticipants: 2412,
-};
-
-const titles: Title[] = [
-  { id: "t1", name: "Cluster Initiate",  description: "Complete the 'Deploy Your First Cluster' quest.", active: true,  earnedAt: "2026-04-22" },
-  { id: "t2", name: "Linux Survivor",    description: "Finish 25 Linux labs without resetting.",        active: false, earnedAt: "2026-03-02" },
-  { id: "t3", name: "Night Operator",    description: "Complete 20 labs between 10pm and 2am.",         active: false, locked: true },
-  { id: "t4", name: "Platform Builder",  description: "Reach Architect tier on the DevOps track.",      active: false, locked: true },
-  { id: "t5", name: "Cloud Sentinel",    description: "Operate workloads across 3 cloud providers.",    active: false, locked: true },
-];
-
-const rival = {
-  name: "Marcus Lee",
-  handle: "@marcus",
-  identity: "Kubernetes Engineer",
-  level: 27,
-  xpAhead: 240,
-};
-
-const heatmap = seedHeatmap();
-
-const streakFreezes = { available: 2, max: 3, nextRefillIn: "3d" };
-
-const rarityByTier: Record<Achievement["tier"], Rarity> = {
-  bronze: "common", silver: "rare", gold: "epic", platinum: "legendary",
-};
-const enrichedAchievements: Achievement[] = achievements.map((a) => ({
-  ...a,
-  rarity: rarityByTier[a.tier],
-  holdersPct: a.unlocked ? Math.round(20 + Math.random() * 50) : Math.round(2 + Math.random() * 18),
-}));
-
-const tierForLevel = (level: number): Tier => {
-  if (level >= 35) return "architect";
-  if (level >= 28) return "diamond";
-  if (level >= 22) return "platinum";
-  if (level >= 16) return "gold";
-  if (level >= 8)  return "silver";
-  return "bronze";
-};
-
 interface GamificationState {
   profile: {
-    name: string; handle: string; identity: string; activeTitle: string; tier: Tier;
-    level: number; totalXp: number; nextLevelXp: number; percentile: number;
-    specialization: SkillKey; topSkills: SkillKey[]; totalLabHours: number;
-    completedTracks: number; certifications: number; joinedAt: string;
+    name: string;
+    handle: string;
+    headline: string;
+    avatarInitials: string;
+    batchId: string;
+    batchName: string;
+    enrolledBatches: BatchInfo[];
+    joinedAt: string;
   };
-  skills: Skill[];
-  streak: { current: number; longest: number; weeklyDays: boolean[]; lastActive: string; freezes: typeof streakFreezes };
-  momentum: { value: number; multiplier: number; trend: "up" | "down" | "flat"; decayInHours: number };
-  achievements: Achievement[];
-  dailyMissions: Mission[];
-  weeklyMissions: Mission[];
+  streak: Streak;
+  skillMastery: SkillMastery[];
+  learningPaths: LearningPath[];
   challenges: Challenge[];
-  xpFeed: XPEvent[];
-  leaderboard: typeof leaderboard;
-  skillTracks: SkillTrack[];
-  season: Season;
-  titles: Title[];
-  rival: typeof rival;
-  heatmap: number[];
-  feedback: { sound: boolean; haptics: boolean; bursts: boolean };
-  setFeedback: (k: keyof GamificationState["feedback"], v: boolean) => void;
-  addXpEvent: (e: Omit<XPEvent, "id" | "ts"> & { ts?: string }) => void;
-  setActiveTitle: (id: string) => void;
+  completedLabs: CompletedLab[];
+  portfolio: Portfolio;
+  setPortfolio: (p: Partial<Portfolio>) => void;
+  getBatchLeaderboard: (batchId: string) => BatchLeaderboardEntry[];
 }
 
-export const useGamificationStore = create<GamificationState>((set) => ({
+export const useGamificationStore = create<GamificationState>((set, get) => ({
   profile: {
-    name: "Sarah Johnson", handle: "@sarah", identity: "DevOps Engineer",
-    activeTitle: "Cluster Initiate", tier: tierForLevel(overallLevel),
-    level: overallLevel, totalXp, nextLevelXp: nextLevelTotal, percentile: 92,
-    specialization: "kubernetes", topSkills: ["linux", "kubernetes", "cloud"],
-    totalLabHours: 78, completedTracks: 3, certifications: 2, joinedAt: "2026-01-08",
+    name: "Sarah Johnson",
+    handle: "sarah",
+    headline: "DevOps & Kubernetes engineer in training",
+    avatarInitials: "SJ",
+    batchId: "batch-aws-2026",
+    batchName: batchInfo[0].name,
+    enrolledBatches: batchInfo,
+    joinedAt: "2026-01-08",
   },
-  skills,
-  streak: { current: 14, longest: 28, weeklyDays: [true, true, true, true, true, true, false], lastActive: "2026-05-26T09:14:00Z", freezes: streakFreezes },
-  momentum: { value: 72, multiplier: 1.4, trend: "up", decayInHours: 36 },
-  achievements: enrichedAchievements,
-  dailyMissions, weeklyMissions, challenges, xpFeed, leaderboard, skillTracks,
-  season, titles, rival, heatmap,
-  feedback: { sound: true, haptics: true, bursts: true },
-  setFeedback: (k, v) => set((s) => ({ feedback: { ...s.feedback, [k]: v } })),
-  addXpEvent: (e) => set((s) => ({
-    xpFeed: [{ id: `x${Date.now()}`, ts: e.ts ?? new Date().toISOString(), label: e.label, amount: e.amount, skill: e.skill }, ...s.xpFeed].slice(0, 30),
-    profile: { ...s.profile, totalXp: s.profile.totalXp + e.amount },
-    season: { ...s.season, weeklyXpEarned: Math.min(s.season.weeklyXpCap, s.season.weeklyXpEarned + e.amount) },
-  })),
-  setActiveTitle: (id) => set((s) => ({
-    profile: { ...s.profile, activeTitle: s.titles.find(t => t.id === id)?.name ?? s.profile.activeTitle },
-    titles: s.titles.map(t => ({ ...t, active: t.id === id })),
-  })),
+  streak: {
+    current: 14,
+    longest: 28,
+    weeklyDays: [true, true, true, true, true, true, false],
+    activity: seedActivity(),
+    lastActive: new Date().toISOString(),
+  },
+  skillMastery,
+  learningPaths,
+  challenges,
+  completedLabs,
+  portfolio: {
+    handle: "sarah",
+    headline: "DevOps & Kubernetes engineer in training",
+    isPublic: true,
+    links: [
+      { label: "GitHub", url: "https://github.com/sarah" },
+      { label: "LinkedIn", url: "https://linkedin.com/in/sarah" },
+    ],
+  },
+  setPortfolio: (p) => set((s) => ({ portfolio: { ...s.portfolio, ...p } })),
+  getBatchLeaderboard: (batchId) => batchLeaderboards[batchId] ?? [],
 }));
 
+// ---------- Style maps (kept for shared UI) ----------
 export const skillColor: Record<SkillKey, string> = {
   cloud: "hsl(210 90% 56%)", linux: "hsl(28 90% 55%)", kubernetes: "hsl(220 85% 60%)",
   security: "hsl(0 75% 58%)", networking: "hsl(160 70% 45%)", devops: "hsl(265 70% 60%)",
   ai: "hsl(290 70% 60%)", python: "hsl(48 90% 55%)", infra: "hsl(190 70% 50%)",
 };
 
-export const tierStyle: Record<Achievement["tier"], string> = {
-  bronze: "text-amber-700 bg-amber-500/10 border-amber-600/20",
-  silver: "text-slate-500 bg-slate-400/10 border-slate-400/20",
-  gold: "text-yellow-600 bg-yellow-500/10 border-yellow-500/20",
-  platinum: "text-primary bg-primary/10 border-primary/20",
-};
-
-export const difficultyStyle: Record<Challenge["difficulty"], string> = {
+export const difficultyStyle: Record<Difficulty, string> = {
   Beginner: "text-success bg-success/10 border-success/20",
   Intermediate: "text-primary bg-primary/10 border-primary/20",
   Advanced: "text-warning bg-warning/10 border-warning/20",
   Expert: "text-destructive bg-destructive/10 border-destructive/20",
 };
 
-export const tierGradient: Record<Tier, string> = {
-  bronze:    "from-[hsl(28_70%_50%)] to-[hsl(28_70%_38%)]",
-  silver:    "from-[hsl(220_9%_64%)] to-[hsl(220_9%_46%)]",
-  gold:      "from-[hsl(43_88%_55%)] to-[hsl(38_92%_42%)]",
-  platinum:  "from-[hsl(195_60%_60%)] to-[hsl(210_60%_42%)]",
-  diamond:   "from-[hsl(188_85%_60%)] to-[hsl(220_85%_55%)]",
-  architect: "from-[hsl(270_75%_62%)] to-[hsl(295_75%_48%)]",
+export const statusStyle: Record<ModuleNode["status"], string> = {
+  completed: "text-success bg-success/10 border-success/20",
+  in_progress: "text-primary bg-primary/10 border-primary/20",
+  available: "text-muted-foreground bg-muted/40 border-border",
+  locked: "text-muted-foreground/60 bg-muted/20 border-border opacity-60",
 };
 
-export const tierLabel: Record<Tier, string> = {
-  bronze: "Bronze", silver: "Silver", gold: "Gold",
-  platinum: "Platinum", diamond: "Diamond", architect: "Architect",
+// derived helpers
+export const pathProgress = (p: LearningPath) => {
+  const done = p.modules.filter((m) => m.status === "completed").length;
+  return { done, total: p.modules.length, pct: Math.round((done / p.modules.length) * 100) };
 };
 
-export const tierColor: Record<Tier, string> = {
-  bronze: "hsl(28 70% 50%)", silver: "hsl(220 9% 56%)", gold: "hsl(43 88% 52%)",
-  platinum: "hsl(195 60% 55%)", diamond: "hsl(188 85% 58%)", architect: "hsl(270 75% 60%)",
+export const challengeProgress = (c: Challenge) => {
+  if (!c.steps?.length) return { done: 0, total: 0, pct: c.status === "completed" ? 100 : 0 };
+  const done = c.steps.filter((s) => s.completed).length;
+  return { done, total: c.steps.length, pct: Math.round((done / c.steps.length) * 100) };
 };
-
-export const rarityStyle: Record<Rarity, string> = {
-  common:    "text-muted-foreground bg-muted/40 border-border",
-  rare:      "text-primary bg-primary/10 border-primary/30",
-  epic:      "text-[hsl(270,75%,55%)] bg-[hsl(270,75%,60%)/0.1] border-[hsl(270,75%,60%)/0.3]",
-  legendary: "text-[hsl(43,88%,42%)] bg-[hsl(43,88%,55%)/0.12] border-[hsl(43,88%,55%)/0.35]",
-};
-
-
