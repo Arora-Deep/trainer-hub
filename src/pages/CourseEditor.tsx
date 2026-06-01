@@ -1,263 +1,473 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useParams, Link } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import {
-  ChevronDown,
-  ChevronRight,
-  Plus,
-  GripVertical,
-  FileText,
-  PlayCircle,
-  HelpCircle,
-  FlaskConical,
-  Save,
-  Eye,
-  Settings,
-  Trash2,
+  ChevronDown, ChevronRight, Plus, GripVertical, FileText, PlayCircle, HelpCircle,
+  FlaskConical, Save, Eye, Settings as SettingsIcon, Trash2, Code2, Flag, ShieldCheck,
+  ClipboardCheck, Send, Sparkles,
 } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { useCourseStore, type LessonType, type LabMode, DEFAULT_COURSE_SETTINGS } from "@/stores/courseStore";
+import { useLabStore } from "@/stores/labStore";
+import { toast } from "sonner";
 
-// Mock data for a course
-const courseData = {
-  id: 1,
-  name: "AWS Solutions Architect Professional",
-  description: "Comprehensive training for AWS Solutions Architect certification",
-  modules: [
-    {
-      id: 1,
-      title: "Introduction to AWS",
-      expanded: true,
-      lessons: [
-        { id: 1, title: "What is Cloud Computing?", type: "video" },
-        { id: 2, title: "AWS Global Infrastructure", type: "text" },
-        { id: 3, title: "Quiz: AWS Basics", type: "quiz" },
-      ],
-    },
-    {
-      id: 2,
-      title: "EC2 Deep Dive",
-      expanded: false,
-      lessons: [
-        { id: 4, title: "EC2 Instance Types", type: "video" },
-        { id: 5, title: "Hands-on: Launch EC2", type: "lab" },
-        { id: 6, title: "EC2 Pricing Models", type: "text" },
-      ],
-    },
-    {
-      id: 3,
-      title: "S3 Storage Solutions",
-      expanded: false,
-      lessons: [
-        { id: 7, title: "S3 Bucket Basics", type: "video" },
-        { id: 8, title: "S3 Security & Policies", type: "text" },
-        { id: 9, title: "Lab: S3 Configuration", type: "lab" },
-      ],
-    },
-  ],
-};
-
-const lessonIcons: Record<string, any> = {
-  video: PlayCircle,
-  text: FileText,
-  quiz: HelpCircle,
-  lab: FlaskConical,
+const lessonTypeMeta: Record<LessonType, { label: string; icon: any; hint: string }> = {
+  video: { label: "Video", icon: PlayCircle, hint: "Recorded lecture or screencast" },
+  reading: { label: "Reading", icon: FileText, hint: "Rich text / markdown content" },
+  quiz: { label: "Quiz", icon: HelpCircle, hint: "Knowledge check (multiple choice)" },
+  assignment: { label: "Assignment", icon: ClipboardCheck, hint: "File submission" },
+  "code-exercise": { label: "Code Exercise", icon: Code2, hint: "Inline editor with auto-grading (Judge0)" },
+  lab: { label: "Lab", icon: FlaskConical, hint: "Attached VM blueprint" },
+  "ctf-scenario": { label: "CTF Scenario", icon: Flag, hint: "Capture-the-flag with flag submission" },
+  exam: { label: "Exam", icon: ShieldCheck, hint: "Timed / proctored — gates certification" },
 };
 
 export default function CourseEditor() {
-  const { id } = useParams();
-  const [modules, setModules] = useState(courseData.modules);
-  const [selectedLesson, setSelectedLesson] = useState<number | null>(1);
+  const { id = "" } = useParams();
+  const { courses, updateCourse, updateSettings, submitForReview, addChapter, addLesson, updateLesson, deleteLesson, deleteChapter } = useCourseStore();
+  const course = courses.find((c) => c.id === id) ?? courses[0];
+  const settings = course?.settings ?? DEFAULT_COURSE_SETTINGS;
 
-  const toggleModule = (moduleId: number) => {
-    setModules(modules.map(m => 
-      m.id === moduleId ? { ...m, expanded: !m.expanded } : m
-    ));
-  };
+  const [tab, setTab] = useState<"content" | "settings">("content");
+  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(course?.chapters[0]?.lessons[0]?.id ?? null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState<{ chapterId: string } | null>(null);
+
+  const { selectedLesson, selectedChapterId } = useMemo(() => {
+    if (!course || !selectedLessonId) return { selectedLesson: undefined, selectedChapterId: undefined };
+    for (const ch of course.chapters) {
+      const l = ch.lessons.find((x) => x.id === selectedLessonId);
+      if (l) return { selectedLesson: l, selectedChapterId: ch.id };
+    }
+    return { selectedLesson: undefined, selectedChapterId: undefined };
+  }, [course, selectedLessonId]);
+
+  if (!course) return <div className="p-6 text-sm text-muted-foreground">Course not found.</div>;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={courseData.name}
-        description="Edit course content and structure"
-        breadcrumbs={[
-          { label: "Course Builder", href: "/course-builder" },
-          { label: courseData.name },
-        ]}
+        title={course.name}
+        description={course.description ?? "Edit course content, settings, and lab attachments"}
+        breadcrumbs={[{ label: "Courses", href: "/courses" }, { label: course.name }]}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline">
-              <Eye className="mr-2 h-4 w-4" />
-              Preview
+            <Badge variant="outline" className="text-[10px] capitalize">{course.moderation ?? "draft"}</Badge>
+            <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
+              <SettingsIcon className="mr-2 h-4 w-4" /> Settings
             </Button>
-            <Button variant="outline">
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
+            <Button variant="outline" size="sm" asChild>
+              <Link to={`/courses/${course.id}`}><Eye className="mr-2 h-4 w-4" /> Preview</Link>
             </Button>
-            <Button>
-              <Save className="mr-2 h-4 w-4" />
-              Save Changes
+            {settings.visibility === "marketplace" && course.moderation !== "approved" && (
+              <Button variant="outline" size="sm" onClick={() => { submitForReview(course.id); toast.success("Submitted for review"); }}>
+                <Send className="mr-2 h-4 w-4" /> Submit for review
+              </Button>
+            )}
+            <Button size="sm" onClick={() => toast.success("Course saved")}>
+              <Save className="mr-2 h-4 w-4" /> Save
             </Button>
           </div>
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
-        {/* Left Sidebar - Module Tree */}
-        <Card className="h-fit">
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base">Modules</CardTitle>
-            <Button variant="ghost" size="sm">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {modules.map((module) => (
-              <div key={module.id} className="space-y-1">
-                <button
-                  onClick={() => toggleModule(module.id)}
-                  className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm font-medium hover:bg-muted transition-colors"
-                >
-                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
-                  {module.expanded ? (
-                    <ChevronDown className="h-4 w-4" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4" />
-                  )}
-                  <span className="flex-1 truncate">{module.title}</span>
-                </button>
-                {module.expanded && (
-                  <div className="ml-8 space-y-1">
-                    {module.lessons.map((lesson) => {
-                      const Icon = lessonIcons[lesson.type];
-                      return (
-                        <button
-                          key={lesson.id}
-                          onClick={() => setSelectedLesson(lesson.id)}
-                          className={cn(
-                            "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors",
-                            selectedLesson === lesson.id
-                              ? "bg-primary/10 text-primary"
-                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                          )}
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span className="truncate">{lesson.title}</span>
-                        </button>
-                      );
-                    })}
-                    <button className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted transition-colors">
-                      <Plus className="h-4 w-4" />
-                      <span>Add Lesson</span>
-                    </button>
-                  </div>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
+        <TabsList>
+          <TabsTrigger value="content" className="text-xs">Content</TabsTrigger>
+          <TabsTrigger value="settings" className="text-xs">Settings</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="content" className="mt-4">
+          <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+            {/* Module tree */}
+            <Card className="h-fit">
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <CardTitle className="text-sm">Modules</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => { addChapter(course.id, `New module ${course.chapters.length + 1}`); }}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                {course.chapters.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-6">No modules yet.<br />Click + to add one.</p>
                 )}
-              </div>
-            ))}
-            <Button variant="outline" className="w-full mt-4">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Module
-            </Button>
-          </CardContent>
-        </Card>
+                {course.chapters.map((ch, ci) => (
+                  <ChapterNode
+                    key={ch.id}
+                    index={ci}
+                    chapter={ch}
+                    selectedLessonId={selectedLessonId}
+                    onSelectLesson={setSelectedLessonId}
+                    onAddLesson={() => setPickerOpen({ chapterId: ch.id })}
+                    onDeleteLesson={(lid) => deleteLesson(course.id, ch.id, lid)}
+                    onDeleteChapter={() => deleteChapter(course.id, ch.id)}
+                  />
+                ))}
+              </CardContent>
+            </Card>
 
-        {/* Main Content Area */}
-        <div className="space-y-4">
-          {/* Moodle Integration Note */}
-          <Card className="border-info/30 bg-info/5">
-            <CardContent className="flex items-center gap-3 py-4">
-              <div className="rounded-full bg-info/10 p-2">
-                <FileText className="h-5 w-5 text-info" />
-              </div>
-              <div>
-                <p className="font-medium text-sm">Moodle LMS Integration</p>
-                <p className="text-sm text-muted-foreground">
-                  Course content from Moodle LMS is embedded and synced here.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Content Editor */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Lesson Editor</CardTitle>
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Lesson Title</label>
-                <Input defaultValue="What is Cloud Computing?" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Lesson Type</label>
-                <div className="flex gap-2">
-                  {Object.entries(lessonIcons).map(([type, Icon]) => (
-                    <Button
-                      key={type}
-                      variant={type === "video" ? "default" : "outline"}
-                      size="sm"
-                      className="gap-2"
-                    >
-                      <Icon className="h-4 w-4" />
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Content</label>
-                <Textarea
-                  placeholder="Enter lesson content here..."
-                  className="min-h-[200px]"
-                  defaultValue="Cloud computing is the on-demand delivery of IT resources over the Internet with pay-as-you-go pricing. Instead of buying, owning, and maintaining physical data centers and servers, you can access technology services, such as computing power, storage, and databases, on an as-needed basis from a cloud provider like Amazon Web Services (AWS)."
+            {/* Lesson editor */}
+            <div className="space-y-4">
+              {selectedLesson && selectedChapterId ? (
+                <LessonEditor
+                  key={selectedLesson.id}
+                  courseId={course.id}
+                  chapterId={selectedChapterId}
+                  lesson={selectedLesson}
+                  onChange={(updates) => updateLesson(course.id, selectedChapterId, selectedLesson.id, updates)}
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Attach Lab (Optional)</label>
-                <Button variant="outline" className="w-full justify-start">
-                  <FlaskConical className="mr-2 h-4 w-4" />
-                  Select a lab template...
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              ) : (
+                <Card>
+                  <CardContent className="py-16 text-center text-sm text-muted-foreground">
+                    <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    Select a lesson on the left, or add one to a module.
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        </TabsContent>
 
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Quick Add</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Module
-                </Button>
-                <Button variant="outline" size="sm">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Add Lesson
-                </Button>
-                <Button variant="outline" size="sm">
-                  <HelpCircle className="mr-2 h-4 w-4" />
-                  Add Quiz
-                </Button>
-                <Button variant="outline" size="sm">
-                  <FlaskConical className="mr-2 h-4 w-4" />
-                  Attach Lab
+        <TabsContent value="settings" className="mt-4">
+          <CourseSettingsForm
+            settings={settings}
+            onChange={(updates) => updateSettings(course.id, updates)}
+          />
+        </TabsContent>
+      </Tabs>
+
+      {/* Add-lesson picker */}
+      <Sheet open={!!pickerOpen} onOpenChange={(o) => !o && setPickerOpen(null)}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Add a lesson</SheetTitle>
+            <SheetDescription>Pick the block type to add to this module.</SheetDescription>
+          </SheetHeader>
+          <div className="grid gap-2 mt-4">
+            {Object.entries(lessonTypeMeta).map(([type, meta]) => {
+              const Icon = meta.icon;
+              return (
+                <button
+                  key={type}
+                  onClick={() => {
+                    if (!pickerOpen) return;
+                    addLesson(course.id, pickerOpen.chapterId, {
+                      title: `New ${meta.label}`,
+                      type: type as LessonType,
+                      duration: type === "video" ? "10 min" : type === "lab" || type === "ctf-scenario" ? "open" : "15 min",
+                    });
+                    setPickerOpen(null);
+                  }}
+                  className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-muted/40 transition-all text-left"
+                >
+                  <div className="h-9 w-9 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{meta.label}</p>
+                    <p className="text-xs text-muted-foreground">{meta.hint}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Settings drawer */}
+      <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Course settings</SheetTitle>
+            <SheetDescription>Delivery, lab policy, prerequisites, completion & certification rules.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-5">
+            <CourseSettingsForm
+              settings={settings}
+              onChange={(updates) => updateSettings(course.id, updates)}
+            />
+          </div>
+          <SheetFooter className="mt-6">
+            <Button onClick={() => { setSettingsOpen(false); toast.success("Settings updated"); }}>Done</Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
+
+function ChapterNode({ index, chapter, selectedLessonId, onSelectLesson, onAddLesson, onDeleteLesson, onDeleteChapter }: any) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="space-y-0.5">
+      <div className="flex items-center gap-1 rounded-md px-2 py-1.5 hover:bg-muted group">
+        <GripVertical className="h-3.5 w-3.5 text-muted-foreground cursor-grab" />
+        <button onClick={() => setOpen((o) => !o)} className="flex-1 flex items-center gap-1.5 text-left text-sm font-medium">
+          {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+          <span className="truncate">{index + 1}. {chapter.title}</span>
+        </button>
+        <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive" onClick={onDeleteChapter}>
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+      {open && (
+        <div className="ml-5 space-y-0.5">
+          {chapter.lessons.map((l: any) => {
+            const meta = lessonTypeMeta[l.type as LessonType];
+            const Icon = meta?.icon ?? FileText;
+            const active = l.id === selectedLessonId;
+            return (
+              <div key={l.id} className={cn("flex items-center gap-1 rounded-md px-2 py-1 group", active ? "bg-primary/10 text-primary" : "hover:bg-muted")}>
+                <button onClick={() => onSelectLesson(l.id)} className="flex-1 flex items-center gap-2 text-left text-xs">
+                  <Icon className="h-3.5 w-3.5" />
+                  <span className="truncate flex-1">{l.title}</span>
+                  <span className="text-[10px] text-muted-foreground capitalize">{meta?.label}</span>
+                </button>
+                <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive" onClick={() => onDeleteLesson(l.id)}>
+                  <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            );
+          })}
+          <button onClick={onAddLesson} className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
+            <Plus className="h-3.5 w-3.5" /> Add lesson
+          </button>
         </div>
-      </div>
+      )}
+    </div>
+  );
+}
+
+function LessonEditor({ courseId, chapterId, lesson, onChange }: any) {
+  const { templates } = useLabStore();
+  const meta = lessonTypeMeta[lesson.type as LessonType];
+  const Icon = meta?.icon ?? FileText;
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-md bg-primary/10 text-primary flex items-center justify-center"><Icon className="h-4 w-4" /></div>
+          <div>
+            <CardTitle className="text-sm">{meta.label}</CardTitle>
+            <p className="text-[11px] text-muted-foreground">{meta.hint}</p>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Title">
+            <Input value={lesson.title} onChange={(e) => onChange({ title: e.target.value })} />
+          </Field>
+          <Field label="Estimated duration">
+            <Input value={lesson.duration} onChange={(e) => onChange({ duration: e.target.value })} placeholder="e.g. 15 min" />
+          </Field>
+        </div>
+
+        {lesson.type === "video" && (
+          <Field label="Video URL">
+            <Input value={lesson.videoUrl ?? ""} onChange={(e) => onChange({ videoUrl: e.target.value })} placeholder="https://..." />
+          </Field>
+        )}
+
+        {lesson.type === "reading" && (
+          <Field label="Reading content">
+            <Textarea rows={6} value={lesson.body ?? ""} onChange={(e) => onChange({ body: e.target.value })} placeholder="Write the lesson body…" />
+          </Field>
+        )}
+
+        {lesson.type === "code-exercise" && (
+          <Field label="Language">
+            <Select value={lesson.language ?? "python"} onValueChange={(v) => onChange({ language: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {["python", "javascript", "typescript", "java", "go", "rust", "cpp"].map((l) => (
+                  <SelectItem key={l} value={l}>{l}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        )}
+
+        {(lesson.type === "lab" || lesson.type === "ctf-scenario") && (
+          <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Lab attachment</p>
+            <Field label="Blueprint">
+              <Select
+                value={lesson.lab?.templateId ?? ""}
+                onValueChange={(v) => {
+                  const tpl = templates.find((t) => t.id === v);
+                  onChange({ lab: { ...(lesson.lab ?? { mode: "on-demand" as LabMode }), templateId: v, templateName: tpl?.name ?? v } });
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Pick a lab template…" /></SelectTrigger>
+                <SelectContent>
+                  {templates.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="Mode">
+              <Select
+                value={lesson.lab?.mode ?? "on-demand"}
+                onValueChange={(v) => onChange({ lab: { ...(lesson.lab ?? { templateId: "", templateName: "" }), mode: v as LabMode } })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="on-demand">On-demand — student launches, auto-suspends</SelectItem>
+                  <SelectItem value="persistent">Persistent — VM stays for the entire course validity</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+            {lesson.lab?.mode === "on-demand" && (
+              <Field label="Estimated hours per session">
+                <Input
+                  type="number"
+                  step="0.5"
+                  value={lesson.lab?.estimatedHours ?? 1}
+                  onChange={(e) => onChange({ lab: { ...(lesson.lab ?? { templateId: "", templateName: "", mode: "on-demand" }), estimatedHours: Number(e.target.value) } })}
+                />
+              </Field>
+            )}
+          </div>
+        )}
+
+        {lesson.type === "exam" && (
+          <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
+            <div>
+              <p className="text-sm font-medium">Proctored exam</p>
+              <p className="text-xs text-muted-foreground">Camera + lockdown browser required during attempt.</p>
+            </div>
+            <Switch checked={!!lesson.proctored} onCheckedChange={(v) => onChange({ proctored: v })} />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CourseSettingsForm({ settings, onChange }: any) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      <Card>
+        <CardHeader><CardTitle className="text-sm">Delivery & validity</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <Field label="Delivery type">
+            <Select value={settings.deliveryType} onValueChange={(v) => onChange({ deliveryType: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="self-paced">Self-paced</SelectItem>
+                <SelectItem value="instructor-led">Instructor-led (live)</SelectItem>
+                <SelectItem value="hybrid">Hybrid</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Validity model">
+            <Select value={settings.validityModel} onValueChange={(v) => onChange({ validityModel: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="days-from-enrollment">Fixed days from enrollment</SelectItem>
+                <SelectItem value="fixed-end-date">Fixed end date</SelectItem>
+                <SelectItem value="cohort">Rolling cohort</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          {settings.validityModel === "days-from-enrollment" && (
+            <Field label="Validity (days)">
+              <Input type="number" value={settings.validityDays ?? 90} onChange={(e) => onChange({ validityDays: Number(e.target.value) })} />
+            </Field>
+          )}
+          {settings.validityModel === "fixed-end-date" && (
+            <Field label="End date">
+              <Input type="date" value={settings.endDate ?? ""} onChange={(e) => onChange({ endDate: e.target.value })} />
+            </Field>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-sm">Lab policy</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <Field label="Lab access model">
+            <Select value={settings.labPolicy} onValueChange={(v) => onChange({ labPolicy: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="hourly-wallet">Hourly wallet — N hours per student</SelectItem>
+                <SelectItem value="unlimited-during-validity">Unlimited during course validity</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Hourly wallet applies only to on-demand labs. Persistent labs are always-on for the validity window regardless of policy.
+            </p>
+          </Field>
+          {settings.labPolicy === "hourly-wallet" && (
+            <Field label="Lab wallet hours per student">
+              <Input type="number" value={settings.labWalletHours ?? 20} onChange={(e) => onChange({ labWalletHours: Number(e.target.value) })} />
+            </Field>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-sm">Completion & certification</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <Field label={`Minimum lesson completion (${settings.completionMinPct}%)`}>
+            <Input type="range" min={50} max={100} value={settings.completionMinPct} onChange={(e) => onChange({ completionMinPct: Number(e.target.value) })} />
+          </Field>
+          <Field label={`Minimum quiz score (${settings.completionMinQuizScore}%)`}>
+            <Input type="range" min={0} max={100} value={settings.completionMinQuizScore} onChange={(e) => onChange({ completionMinQuizScore: Number(e.target.value) })} />
+          </Field>
+          <ToggleRow label="Require final exam to pass" checked={settings.requireExam} onChange={(v) => onChange({ requireExam: v })} />
+          <ToggleRow label="Issue certificate on completion" checked={settings.issuesCertificate} onChange={(v) => onChange({ issuesCertificate: v })} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-sm">Structure & visibility</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <ToggleRow label="Sequential — must complete lessons in order" checked={settings.sequential} onChange={(v) => onChange({ sequential: v })} />
+          <ToggleRow label="Enable course discussion" checked={settings.discussionEnabled} onChange={(v) => onChange({ discussionEnabled: v })} />
+          <Separator />
+          <Field label="Visibility">
+            <Select value={settings.visibility} onValueChange={(v) => onChange({ visibility: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="private">Private — assigned batches only</SelectItem>
+                <SelectItem value="customer">Customer — anyone in my organization</SelectItem>
+                <SelectItem value="marketplace">Marketplace — public (requires CloudAdda approval)</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      {children}
+    </div>
+  );
+}
+
+function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="flex items-center justify-between">
+      <Label className="text-sm">{label}</Label>
+      <Switch checked={checked} onCheckedChange={onChange} />
     </div>
   );
 }
