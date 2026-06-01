@@ -70,7 +70,7 @@ export default function CourseModeration() {
                       <Badge variant="outline" className="text-[10px]">{c.category ?? "Uncategorized"}</Badge>
                       {c.moderation === "pending-review" && <StatusBadge status="warning" label="Pending review" />}
                       {c.moderation === "approved" && <StatusBadge status="success" label="Approved" />}
-                      {c.moderation === "rejected" && <StatusBadge status="danger" label="Rejected" />}
+                      {c.moderation === "rejected" && <StatusBadge status="error" label="Rejected" />}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">{c.description ?? "No description provided."}</p>
                     <div className="flex items-center gap-4 mt-2 text-[11px] text-muted-foreground">
