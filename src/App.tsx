@@ -78,6 +78,8 @@ import BatchReports from "./pages/admin/BatchReports";
 import SystemLogs from "./pages/admin/SystemLogs";
 import AdminAuditLogs from "./pages/admin/AuditLogs";
 import AdminSettings from "./pages/admin/Settings";
+import CourseModeration from "./pages/admin/CourseModeration";
+import PlansAndPricing from "./pages/admin/PlansAndPricing";
 
 // Student pages
 import StudentDashboard from "./pages/student/Dashboard";
@@ -194,6 +196,8 @@ const App = () => (
             <Route path="/admin/system/logs" element={<SystemLogs />} />
             <Route path="/admin/system/audit" element={<AdminAuditLogs />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/catalog/moderation" element={<CourseModeration />} />
+            <Route path="/admin/billing/plans" element={<PlansAndPricing />} />
 
             {/* Student routes */}
             <Route path="/student/dashboard" element={<StudentDashboard />} />

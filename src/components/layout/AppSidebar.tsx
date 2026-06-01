@@ -68,6 +68,10 @@ const adminNav: NavConfig = {
       { title: "Lab Templates", icon: Boxes, path: "/admin/labs/templates" },
       { title: "ISO Library", icon: Image, path: "/admin/labs/iso" },
     ]},
+    { label: "Catalog", icon: BookMarked, items: [
+      { title: "Course Moderation", icon: ClipboardCheck, path: "/admin/catalog/moderation" },
+      { title: "Plans & Bundles", icon: CreditCard, path: "/admin/billing/plans" },
+    ]},
     { label: "Users", icon: Users, items: [
       { title: "Platform Users", icon: UserCog, path: "/admin/users/platform" },
       { title: "Customer Users", icon: Building2, path: "/admin/users/customer" },
