@@ -1,13 +1,12 @@
 import { ReactNode } from "react";
-import { useGamificationStore } from "@/stores/gamificationStore";
-import { Flame, Zap, Trophy, Sparkles } from "lucide-react";
+import { useGamificationStore, pathProgress } from "@/stores/gamificationStore";
+import { Flame, Sparkles, Route, Swords } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
 interface Stat {
   icon: LucideIcon;
   label: string;
   value: string | number;
-  accent?: "violet" | "cyan" | "amber" | "lime" | "magenta";
 }
 
 interface StudentPageHeroProps {
@@ -17,7 +16,6 @@ interface StudentPageHeroProps {
   icon?: LucideIcon;
   stats?: Stat[];
   actions?: ReactNode;
-  /** "violet" (default), "cyan", "amber", "magenta", "lime" */
   variant?: "violet" | "cyan" | "amber" | "magenta" | "lime";
 }
 
@@ -38,12 +36,15 @@ export function StudentPageHero({
   actions,
   variant = "violet",
 }: StudentPageHeroProps) {
-  const { profile, streak, momentum } = useGamificationStore();
+  const { streak, learningPaths, challenges } = useGamificationStore();
 
+  // Defaults: things that prove progress (streak + active path + active challenges)
+  const activePath = learningPaths.find((p) => p.modules.some((m) => m.status === "in_progress")) ?? learningPaths[0];
+  const activeChallenges = challenges.filter((c) => c.status === "in_progress").length;
   const defaultStats: Stat[] = [
-    { icon: Trophy, label: "Level", value: profile.level },
     { icon: Flame, label: "Streak", value: `${streak.current}d` },
-    { icon: Zap, label: "Momentum", value: `${momentum.multiplier}×` },
+    { icon: Route, label: activePath ? activePath.name.split(" ")[0] : "Path", value: `${pathProgress(activePath).pct}%` },
+    { icon: Swords, label: "Active", value: activeChallenges },
   ];
   const renderStats = stats ?? defaultStats;
 
