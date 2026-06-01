@@ -2,15 +2,30 @@
 
 export type DeliveryMode = "live" | "self-paced" | "hybrid";
 
+export type StudentLessonType =
+  | "video"
+  | "reading"
+  | "lab"
+  | "quiz"
+  | "assignment"
+  | "code-exercise"
+  | "ctf-scenario"
+  | "exam";
+
 export interface StudentLesson {
   id: string;
   title: string;
-  type: "video" | "reading" | "lab" | "quiz" | "assignment";
+  type: StudentLessonType;
   duration: string;
   completed: boolean;
   locked: boolean;
   videoUrl?: string;
   body?: string;
+  labMode?: "on-demand" | "persistent";
+  labTemplate?: string;
+  estimatedHours?: number;
+  language?: string;
+  proctored?: boolean;
 }
 
 export interface StudentChapter {

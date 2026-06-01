@@ -8,7 +8,7 @@ import {
   Cpu, HardDrive, Network, Activity, LifeBuoy, Receipt, Lock, FileBarChart,
   Gauge, AlertTriangle, Clock, Wrench, BookMarked, Zap, Globe, Eye,
   DollarSign, Scale, Key, Database, Send, Flag, Workflow, Container,
-  Video, Calendar, Radio, MessageSquarePlus,
+  Video, Calendar, Radio, MessageSquarePlus, ClipboardCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +67,10 @@ const adminNav: NavConfig = {
       { title: "Reset Lab", icon: Zap, path: "/admin/labs/reset" },
       { title: "Lab Templates", icon: Boxes, path: "/admin/labs/templates" },
       { title: "ISO Library", icon: Image, path: "/admin/labs/iso" },
+    ]},
+    { label: "Catalog", icon: BookMarked, items: [
+      { title: "Course Moderation", icon: ClipboardCheck, path: "/admin/catalog/moderation" },
+      { title: "Plans & Bundles", icon: CreditCard, path: "/admin/billing/plans" },
     ]},
     { label: "Users", icon: Users, items: [
       { title: "Platform Users", icon: UserCog, path: "/admin/users/platform" },

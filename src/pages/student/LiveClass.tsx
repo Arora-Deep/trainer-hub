@@ -31,6 +31,9 @@ const lessonIcons: Record<StudentLesson["type"], typeof Video> = {
   lab: Terminal,
   quiz: HelpCircle,
   assignment: FileText,
+  "code-exercise": FileText,
+  "ctf-scenario": Terminal,
+  exam: HelpCircle,
 };
 
 const getCurrentLesson = (course: StudentCourse) => {
