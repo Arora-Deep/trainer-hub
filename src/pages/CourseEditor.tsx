@@ -47,6 +47,19 @@ export default function CourseEditor() {
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(course?.chapters[0]?.lessons[0]?.id ?? null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState<{ chapterId: string } | null>(null);
+  const [pickerStage, setPickerStage] = useState<{ type: LessonType; source: "inline" | "library"; refId: string } | null>(null);
+
+  const { quizzes } = useQuizStore();
+  const { assignments } = useAssignmentStore();
+  const { exercises } = useExerciseStore();
+
+  const pickerLibOptions = (() => {
+    if (!pickerStage) return [];
+    if (pickerStage.type === "quiz") return quizzes.map((q) => ({ id: q.id, label: q.title }));
+    if (pickerStage.type === "assignment") return assignments.map((a) => ({ id: a.id, label: a.title }));
+    if (pickerStage.type === "code-exercise") return exercises.map((e) => ({ id: e.id, label: e.title }));
+    return [];
+  })();
 
   const { selectedLesson, selectedChapterId } = useMemo(() => {
     if (!course || !selectedLessonId) return { selectedLesson: undefined, selectedChapterId: undefined };
