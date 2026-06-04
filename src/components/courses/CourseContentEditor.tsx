@@ -333,9 +333,16 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
                                   <Icon className="h-4 w-4 text-primary" />
                                 </div>
                                 <div>
-                                  <p className="font-medium text-sm">
-                                    {index + 1}.{lessonIndex + 1} {lesson.title}
-                                  </p>
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-medium text-sm">
+                                      {index + 1}.{lessonIndex + 1} {lesson.title}
+                                    </p>
+                                    {lesson.source === "library" && (
+                                      <Badge variant="outline" className="text-[10px] gap-1 py-0">
+                                        <Library className="h-2.5 w-2.5" /> Library
+                                      </Badge>
+                                    )}
+                                  </div>
                                   <p className="text-xs text-muted-foreground">
                                     {lessonTypeLabels[lesson.type]} • {lesson.duration}
                                   </p>
