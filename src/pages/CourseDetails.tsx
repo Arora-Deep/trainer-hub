@@ -14,21 +14,14 @@ import {
 import {
   BookOpen,
   Users,
-  FlaskConical,
   Clock,
   Edit,
+  ClipboardCheck,
 } from "lucide-react";
 import { useParams, Link, Navigate } from "react-router-dom";
 import { useCourseStore } from "@/stores/courseStore";
 import { CourseContentEditor } from "@/components/courses/CourseContentEditor";
-
-// Mock data for labs and batches (these could also be in stores later)
-const attachedLabs = [
-  { id: 1, name: "EC2 Instance Setup", type: "Linux", duration: "60 min" },
-  { id: 2, name: "S3 Bucket Configuration", type: "AWS Console", duration: "45 min" },
-  { id: 3, name: "VPC Network Design", type: "AWS Console", duration: "90 min" },
-  { id: 4, name: "Lambda Functions", type: "AWS Console", duration: "60 min" },
-];
+import { CourseAssessmentsTab } from "@/components/courses/CourseAssessmentsTab";
 
 const enrolledBatches = [
   { id: 1, name: "AWS SA - Batch 12", trainer: "John Smith", students: 24, status: "live" },
