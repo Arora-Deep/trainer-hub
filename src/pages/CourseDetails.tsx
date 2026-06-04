@@ -19,7 +19,7 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import { useParams, Link, Navigate } from "react-router-dom";
-import { useCourseStore } from "@/stores/courseStore";
+import { useCourseStore, getCourseAssessments } from "@/stores/courseStore";
 import { CourseContentEditor } from "@/components/courses/CourseContentEditor";
 import { CourseAssessmentsTab } from "@/components/courses/CourseAssessmentsTab";
 
