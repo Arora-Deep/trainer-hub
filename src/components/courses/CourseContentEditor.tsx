@@ -45,7 +45,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useCourseStore, type Lesson, type Chapter, type LessonType } from "@/stores/courseStore";
+import { Badge } from "@/components/ui/badge";
+import { Library } from "lucide-react";
+import { useCourseStore, type Lesson, type Chapter, type LessonType, isAssessmentLesson } from "@/stores/courseStore";
+import { useQuizStore } from "@/stores/quizStore";
+import { useAssignmentStore } from "@/stores/assignmentStore";
+import { useExerciseStore } from "@/stores/exerciseStore";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
