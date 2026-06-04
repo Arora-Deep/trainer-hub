@@ -114,7 +114,7 @@ export default function CourseDetails() {
                 <ClipboardCheck className="h-5 w-5 text-warning" />
               </div>
               <div>
-                <p className="text-2xl font-semibold">{(course.assessments ?? []).length}</p>
+                <p className="text-2xl font-semibold">{getCourseAssessments(course).length}</p>
                 <p className="text-sm text-muted-foreground">Assessments</p>
               </div>
             </div>
