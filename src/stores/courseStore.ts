@@ -62,6 +62,24 @@ export interface CourseSettings {
   visibility: CourseVisibility;
 }
 
+export type AssessmentKind = 'quiz' | 'assignment' | 'exercise';
+
+export type AssessmentPlacement =
+  | { type: 'course-start' }
+  | { type: 'course-end' }
+  | { type: 'after-module'; chapterId: string }
+  | { type: 'after-lesson'; chapterId: string; lessonId: string };
+
+export interface CourseAssessment {
+  id: string;
+  kind: AssessmentKind;
+  refId: string; // id in quizStore/assignmentStore/exerciseStore
+  title: string; // snapshot for display
+  placement: AssessmentPlacement;
+  required: boolean; // gate progression
+  weight: number; // % toward course grade
+}
+
 export interface Course {
   id: string;
   name: string;
@@ -75,6 +93,7 @@ export interface Course {
   settings?: CourseSettings;
   owner?: { type: CourseOwnerType; id: string; name: string };
   moderation?: CourseModerationStatus;
+  assessments?: CourseAssessment[];
 }
 
 const defaultSettings: CourseSettings = {
@@ -107,6 +126,9 @@ interface CourseStore {
   addLesson: (courseId: string, chapterId: string, lesson: Omit<Lesson, 'id'>) => void;
   updateLesson: (courseId: string, chapterId: string, lessonId: string, updates: Partial<Lesson>) => void;
   deleteLesson: (courseId: string, chapterId: string, lessonId: string) => void;
+  addAssessment: (courseId: string, assessment: Omit<CourseAssessment, 'id'>) => void;
+  updateAssessment: (courseId: string, assessmentId: string, updates: Partial<CourseAssessment>) => void;
+  deleteAssessment: (courseId: string, assessmentId: string) => void;
 }
 
 const initialCourses: Course[] = [
@@ -254,6 +276,33 @@ export const useCourseStore = create<CourseStore>((set, get) => ({
           ? { ...c, chapters: c.chapters.map(ch => ch.id === chapterId ? { ...ch, lessons: ch.lessons.filter(l => l.id !== lessonId) } : ch) }
           : c
       )
+    }));
+  },
+
+  addAssessment: (courseId, assessment) => {
+    const id = `as-${Date.now()}`;
+    set((state) => ({
+      courses: state.courses.map(c =>
+        c.id === courseId ? { ...c, assessments: [...(c.assessments ?? []), { ...assessment, id }] } : c
+      ),
+    }));
+  },
+
+  updateAssessment: (courseId, assessmentId, updates) => {
+    set((state) => ({
+      courses: state.courses.map(c =>
+        c.id === courseId
+          ? { ...c, assessments: (c.assessments ?? []).map(a => a.id === assessmentId ? { ...a, ...updates } : a) }
+          : c
+      ),
+    }));
+  },
+
+  deleteAssessment: (courseId, assessmentId) => {
+    set((state) => ({
+      courses: state.courses.map(c =>
+        c.id === courseId ? { ...c, assessments: (c.assessments ?? []).filter(a => a.id !== assessmentId) } : c
+      ),
     }));
   },
 }));

@@ -14,21 +14,14 @@ import {
 import {
   BookOpen,
   Users,
-  FlaskConical,
   Clock,
   Edit,
+  ClipboardCheck,
 } from "lucide-react";
 import { useParams, Link, Navigate } from "react-router-dom";
 import { useCourseStore } from "@/stores/courseStore";
 import { CourseContentEditor } from "@/components/courses/CourseContentEditor";
-
-// Mock data for labs and batches (these could also be in stores later)
-const attachedLabs = [
-  { id: 1, name: "EC2 Instance Setup", type: "Linux", duration: "60 min" },
-  { id: 2, name: "S3 Bucket Configuration", type: "AWS Console", duration: "45 min" },
-  { id: 3, name: "VPC Network Design", type: "AWS Console", duration: "90 min" },
-  { id: 4, name: "Lambda Functions", type: "AWS Console", duration: "60 min" },
-];
+import { CourseAssessmentsTab } from "@/components/courses/CourseAssessmentsTab";
 
 const enrolledBatches = [
   { id: 1, name: "AWS SA - Batch 12", trainer: "John Smith", students: 24, status: "live" },
@@ -118,11 +111,11 @@ export default function CourseDetails() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <div className="rounded-lg bg-warning/10 p-3">
-                <FlaskConical className="h-5 w-5 text-warning" />
+                <ClipboardCheck className="h-5 w-5 text-warning" />
               </div>
               <div>
-                <p className="text-2xl font-semibold">{attachedLabs.length}</p>
-                <p className="text-sm text-muted-foreground">Labs</p>
+                <p className="text-2xl font-semibold">{(course.assessments ?? []).length}</p>
+                <p className="text-sm text-muted-foreground">Assessments</p>
               </div>
             </div>
           </CardContent>
@@ -134,9 +127,8 @@ export default function CourseDetails() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="content">Content</TabsTrigger>
-          <TabsTrigger value="labs">Attached Labs</TabsTrigger>
-          <TabsTrigger value="batches">Enrolled Batches</TabsTrigger>
           <TabsTrigger value="assessments">Assessments</TabsTrigger>
+          <TabsTrigger value="batches">Enrolled Batches</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
@@ -208,34 +200,8 @@ export default function CourseDetails() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="labs">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Attached Labs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Lab Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Duration</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {attachedLabs.map((lab) => (
-                    <TableRow key={lab.id}>
-                      <TableCell className="font-medium">{lab.name}</TableCell>
-                      <TableCell>
-                        <StatusBadge status="info" label={lab.type} />
-                      </TableCell>
-                      <TableCell>{lab.duration}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+        <TabsContent value="assessments">
+          <CourseAssessmentsTab course={course} />
         </TabsContent>
 
         <TabsContent value="batches">
@@ -277,22 +243,6 @@ export default function CourseDetails() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="assessments">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Assessments</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="text-4xl mb-4">📝</div>
-                <h3 className="text-lg font-medium">No assessments configured</h3>
-                <p className="text-sm text-muted-foreground max-w-sm mt-1">
-                  Assessments for this course will appear here once configured.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="reports">
           <Card>
