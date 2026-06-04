@@ -96,7 +96,20 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
     title: "",
     type: "video" as Lesson["type"],
     duration: "",
+    source: "inline" as "inline" | "library",
+    refId: "",
   });
+
+  const { quizzes } = useQuizStore();
+  const { assignments } = useAssignmentStore();
+  const { exercises } = useExerciseStore();
+
+  const libraryOptions = (() => {
+    if (lessonForm.type === "quiz") return quizzes.map((q) => ({ id: q.id, label: q.title }));
+    if (lessonForm.type === "assignment") return assignments.map((a) => ({ id: a.id, label: a.title }));
+    if (lessonForm.type === "code-exercise") return exercises.map((e) => ({ id: e.id, label: e.title }));
+    return [];
+  })();
 
   const toggleChapter = (chapterId: string) => {
     setExpandedChapters(prev => 
