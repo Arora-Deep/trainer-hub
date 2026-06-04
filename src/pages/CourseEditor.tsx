@@ -327,6 +327,9 @@ function ChapterNode({ index, chapter, selectedLessonId, onSelectLesson, onAddLe
                 <button onClick={() => onSelectLesson(l.id)} className="flex-1 flex items-center gap-2 text-left text-xs">
                   <Icon className="h-3.5 w-3.5" />
                   <span className="truncate flex-1">{l.title}</span>
+                  {l.source === "library" && (
+                    <Library className="h-3 w-3 text-primary/70" />
+                  )}
                   <span className="text-[10px] text-muted-foreground capitalize">{meta?.label}</span>
                 </button>
                 <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive" onClick={() => onDeleteLesson(l.id)}>
