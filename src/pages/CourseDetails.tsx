@@ -243,22 +243,6 @@ export default function CourseDetails() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="assessments">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Assessments</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="text-4xl mb-4">📝</div>
-                <h3 className="text-lg font-medium">No assessments configured</h3>
-                <p className="text-sm text-muted-foreground max-w-sm mt-1">
-                  Assessments for this course will appear here once configured.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="reports">
           <Card>
