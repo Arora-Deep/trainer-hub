@@ -157,7 +157,7 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
   const handleAddLesson = (chapterId: string) => {
     setActiveChapterId(chapterId);
     setEditingLesson(null);
-    setLessonForm({ title: "", type: "video", duration: "" });
+    setLessonForm({ title: "", type: "video", duration: "", source: "inline", refId: "" });
     setIsLessonDialogOpen(true);
   };
 
@@ -168,6 +168,8 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
       title: lesson.title,
       type: lesson.type,
       duration: lesson.duration,
+      source: lesson.source ?? "inline",
+      refId: lesson.refId ?? "",
     });
     setIsLessonDialogOpen(true);
   };
@@ -177,15 +179,28 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
       toast.error("Please enter a lesson title");
       return;
     }
-    
+    const isAssessment = isAssessmentLesson(lessonForm.type);
+    const useLibrary = isAssessment && lessonForm.source === "library";
+    if (useLibrary && !lessonForm.refId) {
+      toast.error("Pick an item from the library");
+      return;
+    }
+    const payload: Partial<Lesson> = {
+      title: lessonForm.title,
+      type: lessonForm.type,
+      duration: lessonForm.duration,
+      source: isAssessment ? lessonForm.source : undefined,
+      refId: useLibrary ? lessonForm.refId : undefined,
+    };
+
     if (editingLesson) {
-      updateLesson(courseId, editingLesson.chapterId, editingLesson.lesson.id, lessonForm);
+      updateLesson(courseId, editingLesson.chapterId, editingLesson.lesson.id, payload);
       toast.success("Lesson updated");
     } else if (activeChapterId) {
-      addLesson(courseId, activeChapterId, lessonForm);
+      addLesson(courseId, activeChapterId, payload as Omit<Lesson, "id">);
       toast.success("Lesson added");
     }
-    
+
     setIsLessonDialogOpen(false);
   };
 
