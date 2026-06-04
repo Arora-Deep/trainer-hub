@@ -19,7 +19,7 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import { useParams, Link, Navigate } from "react-router-dom";
-import { useCourseStore } from "@/stores/courseStore";
+import { useCourseStore, getCourseAssessments } from "@/stores/courseStore";
 import { CourseContentEditor } from "@/components/courses/CourseContentEditor";
 import { CourseAssessmentsTab } from "@/components/courses/CourseAssessmentsTab";
 
@@ -114,7 +114,7 @@ export default function CourseDetails() {
                 <ClipboardCheck className="h-5 w-5 text-warning" />
               </div>
               <div>
-                <p className="text-2xl font-semibold">{(course.assessments ?? []).length}</p>
+                <p className="text-2xl font-semibold">{getCourseAssessments(course).length}</p>
                 <p className="text-sm text-muted-foreground">Assessments</p>
               </div>
             </div>

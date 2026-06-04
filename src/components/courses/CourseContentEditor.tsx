@@ -45,7 +45,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useCourseStore, type Lesson, type Chapter, type LessonType } from "@/stores/courseStore";
+import { Badge } from "@/components/ui/badge";
+import { Library } from "lucide-react";
+import { useCourseStore, type Lesson, type Chapter, type LessonType, isAssessmentLesson } from "@/stores/courseStore";
+import { useQuizStore } from "@/stores/quizStore";
+import { useAssignmentStore } from "@/stores/assignmentStore";
+import { useExerciseStore } from "@/stores/exerciseStore";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -91,7 +96,20 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
     title: "",
     type: "video" as Lesson["type"],
     duration: "",
+    source: "inline" as "inline" | "library",
+    refId: "",
   });
+
+  const { quizzes } = useQuizStore();
+  const { assignments } = useAssignmentStore();
+  const { exercises } = useExerciseStore();
+
+  const libraryOptions = (() => {
+    if (lessonForm.type === "quiz") return quizzes.map((q) => ({ id: q.id, label: q.title }));
+    if (lessonForm.type === "assignment") return assignments.map((a) => ({ id: a.id, label: a.title }));
+    if (lessonForm.type === "code-exercise") return exercises.map((e) => ({ id: e.id, label: e.title }));
+    return [];
+  })();
 
   const toggleChapter = (chapterId: string) => {
     setExpandedChapters(prev => 
@@ -139,7 +157,7 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
   const handleAddLesson = (chapterId: string) => {
     setActiveChapterId(chapterId);
     setEditingLesson(null);
-    setLessonForm({ title: "", type: "video", duration: "" });
+    setLessonForm({ title: "", type: "video", duration: "", source: "inline", refId: "" });
     setIsLessonDialogOpen(true);
   };
 
@@ -150,6 +168,8 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
       title: lesson.title,
       type: lesson.type,
       duration: lesson.duration,
+      source: lesson.source ?? "inline",
+      refId: lesson.refId ?? "",
     });
     setIsLessonDialogOpen(true);
   };
@@ -159,15 +179,28 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
       toast.error("Please enter a lesson title");
       return;
     }
-    
+    const isAssessment = isAssessmentLesson(lessonForm.type);
+    const useLibrary = isAssessment && lessonForm.source === "library";
+    if (useLibrary && !lessonForm.refId) {
+      toast.error("Pick an item from the library");
+      return;
+    }
+    const payload: Partial<Lesson> = {
+      title: lessonForm.title,
+      type: lessonForm.type,
+      duration: lessonForm.duration,
+      source: isAssessment ? lessonForm.source : undefined,
+      refId: useLibrary ? lessonForm.refId : undefined,
+    };
+
     if (editingLesson) {
-      updateLesson(courseId, editingLesson.chapterId, editingLesson.lesson.id, lessonForm);
+      updateLesson(courseId, editingLesson.chapterId, editingLesson.lesson.id, payload);
       toast.success("Lesson updated");
     } else if (activeChapterId) {
-      addLesson(courseId, activeChapterId, lessonForm);
+      addLesson(courseId, activeChapterId, payload as Omit<Lesson, "id">);
       toast.success("Lesson added");
     }
-    
+
     setIsLessonDialogOpen(false);
   };
 
@@ -300,9 +333,16 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
                                   <Icon className="h-4 w-4 text-primary" />
                                 </div>
                                 <div>
-                                  <p className="font-medium text-sm">
-                                    {index + 1}.{lessonIndex + 1} {lesson.title}
-                                  </p>
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-medium text-sm">
+                                      {index + 1}.{lessonIndex + 1} {lesson.title}
+                                    </p>
+                                    {lesson.source === "library" && (
+                                      <Badge variant="outline" className="text-[10px] gap-1 py-0">
+                                        <Library className="h-2.5 w-2.5" /> Library
+                                      </Badge>
+                                    )}
+                                  </div>
                                   <p className="text-xs text-muted-foreground">
                                     {lessonTypeLabels[lesson.type]} • {lesson.duration}
                                   </p>
@@ -424,6 +464,52 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
                 />
               </div>
             </div>
+
+            {isAssessmentLesson(lessonForm.type) && (
+              <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+                <Label className="text-xs">Source</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["inline", "library"] as const).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setLessonForm((p) => ({ ...p, source: s, refId: "" }))}
+                      className={cn(
+                        "flex items-center gap-2 rounded-md border px-3 py-2 text-xs transition-all",
+                        lessonForm.source === s ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted/40"
+                      )}
+                    >
+                      {s === "library" ? <Library className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                      <span className="font-medium capitalize">{s === "inline" ? "Create new" : "Pick from library"}</span>
+                    </button>
+                  ))}
+                </div>
+                {lessonForm.source === "library" && (
+                  <div className="pt-1">
+                    <Select
+                      value={lessonForm.refId}
+                      onValueChange={(v) => {
+                        const opt = libraryOptions.find((o) => o.id === v);
+                        setLessonForm((p) => ({ ...p, refId: v, title: opt?.label ?? p.title }));
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={`Choose a ${lessonTypeLabels[lessonForm.type].toLowerCase()}…`} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {libraryOptions.length === 0 ? (
+                          <div className="px-3 py-2 text-xs text-muted-foreground">No items in library.</div>
+                        ) : (
+                          libraryOptions.map((o) => (
+                            <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsLessonDialogOpen(false)}>
