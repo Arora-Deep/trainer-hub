@@ -200,34 +200,8 @@ export default function CourseDetails() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="labs">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Attached Labs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Lab Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Duration</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {attachedLabs.map((lab) => (
-                    <TableRow key={lab.id}>
-                      <TableCell className="font-medium">{lab.name}</TableCell>
-                      <TableCell>
-                        <StatusBadge status="info" label={lab.type} />
-                      </TableCell>
-                      <TableCell>{lab.duration}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+        <TabsContent value="assessments">
+          <CourseAssessmentsTab course={course} />
         </TabsContent>
 
         <TabsContent value="batches">
