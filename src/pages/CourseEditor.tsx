@@ -18,8 +18,12 @@ import {
   FlaskConical, Save, Eye, Settings as SettingsIcon, Trash2, Code2, Flag, ShieldCheck,
   ClipboardCheck, Send, Sparkles,
 } from "lucide-react";
-import { useCourseStore, type LessonType, type LabMode, DEFAULT_COURSE_SETTINGS } from "@/stores/courseStore";
+import { useCourseStore, type LessonType, type LabMode, type Lesson, DEFAULT_COURSE_SETTINGS, isAssessmentLesson } from "@/stores/courseStore";
 import { useLabStore } from "@/stores/labStore";
+import { useQuizStore } from "@/stores/quizStore";
+import { useAssignmentStore } from "@/stores/assignmentStore";
+import { useExerciseStore } from "@/stores/exerciseStore";
+import { Library } from "lucide-react";
 import { toast } from "sonner";
 
 const lessonTypeMeta: Record<LessonType, { label: string; icon: any; hint: string }> = {
