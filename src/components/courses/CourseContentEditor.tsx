@@ -404,11 +404,13 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="video">Video</SelectItem>
-                    <SelectItem value="document">Document</SelectItem>
+                    <SelectItem value="reading">Reading</SelectItem>
                     <SelectItem value="quiz">Quiz</SelectItem>
                     <SelectItem value="assignment">Assignment</SelectItem>
-                  </SelectContent>
-                </Select>
+                    <SelectItem value="code-exercise">Code Exercise</SelectItem>
+                    <SelectItem value="lab">Lab</SelectItem>
+                    <SelectItem value="ctf-scenario">CTF Scenario</SelectItem>
+                    <SelectItem value="exam">Exam</SelectItem>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="duration">Duration</Label>
