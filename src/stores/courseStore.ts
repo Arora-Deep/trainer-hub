@@ -102,24 +102,6 @@ export interface CourseSettings {
   visibility: CourseVisibility;
 }
 
-export type AssessmentKind = 'quiz' | 'assignment' | 'exercise';
-
-export type AssessmentPlacement =
-  | { type: 'course-start' }
-  | { type: 'course-end' }
-  | { type: 'after-module'; chapterId: string }
-  | { type: 'after-lesson'; chapterId: string; lessonId: string };
-
-export interface CourseAssessment {
-  id: string;
-  kind: AssessmentKind;
-  refId: string; // id in quizStore/assignmentStore/exerciseStore
-  title: string; // snapshot for display
-  placement: AssessmentPlacement;
-  required: boolean; // gate progression
-  weight: number; // % toward course grade
-}
-
 export interface Course {
   id: string;
   name: string;
@@ -133,7 +115,6 @@ export interface Course {
   settings?: CourseSettings;
   owner?: { type: CourseOwnerType; id: string; name: string };
   moderation?: CourseModerationStatus;
-  assessments?: CourseAssessment[];
 }
 
 const defaultSettings: CourseSettings = {
