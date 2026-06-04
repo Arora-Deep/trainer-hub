@@ -464,6 +464,52 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
                 />
               </div>
             </div>
+
+            {isAssessmentLesson(lessonForm.type) && (
+              <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+                <Label className="text-xs">Source</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["inline", "library"] as const).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setLessonForm((p) => ({ ...p, source: s, refId: "" }))}
+                      className={cn(
+                        "flex items-center gap-2 rounded-md border px-3 py-2 text-xs transition-all",
+                        lessonForm.source === s ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted/40"
+                      )}
+                    >
+                      {s === "library" ? <Library className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                      <span className="font-medium capitalize">{s === "inline" ? "Create new" : "Pick from library"}</span>
+                    </button>
+                  ))}
+                </div>
+                {lessonForm.source === "library" && (
+                  <div className="pt-1">
+                    <Select
+                      value={lessonForm.refId}
+                      onValueChange={(v) => {
+                        const opt = libraryOptions.find((o) => o.id === v);
+                        setLessonForm((p) => ({ ...p, refId: v, title: opt?.label ?? p.title }));
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={`Choose a ${lessonTypeLabels[lessonForm.type].toLowerCase()}…`} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {libraryOptions.length === 0 ? (
+                          <div className="px-3 py-2 text-xs text-muted-foreground">No items in library.</div>
+                        ) : (
+                          libraryOptions.map((o) => (
+                            <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsLessonDialogOpen(false)}>
