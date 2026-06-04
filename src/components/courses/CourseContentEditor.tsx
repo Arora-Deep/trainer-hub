@@ -31,6 +31,10 @@ import {
   FileText,
   HelpCircle,
   ClipboardList,
+  Code2,
+  FlaskConical,
+  Flag,
+  GraduationCap,
   Pencil,
   Trash2,
   MoreHorizontal,
@@ -41,7 +45,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useCourseStore, type Lesson, type Chapter } from "@/stores/courseStore";
+import { useCourseStore, type Lesson, type Chapter, type LessonType } from "@/stores/courseStore";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -50,18 +54,26 @@ interface CourseContentEditorProps {
   chapters: Chapter[];
 }
 
-const lessonTypeIcons = {
+const lessonTypeIcons: Record<LessonType, typeof Video> = {
   video: Video,
-  document: FileText,
+  reading: FileText,
   quiz: HelpCircle,
   assignment: ClipboardList,
+  "code-exercise": Code2,
+  lab: FlaskConical,
+  "ctf-scenario": Flag,
+  exam: GraduationCap,
 };
 
-const lessonTypeLabels = {
+const lessonTypeLabels: Record<LessonType, string> = {
   video: "Video",
-  document: "Document",
+  reading: "Reading",
   quiz: "Quiz",
   assignment: "Assignment",
+  "code-exercise": "Code Exercise",
+  lab: "Lab",
+  "ctf-scenario": "CTF Scenario",
+  exam: "Exam",
 };
 
 export function CourseContentEditor({ courseId, chapters }: CourseContentEditorProps) {
