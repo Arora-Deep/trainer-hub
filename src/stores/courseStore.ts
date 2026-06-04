@@ -19,6 +19,8 @@ export interface LabAttachment {
   estimatedHours?: number; // for on-demand budgeting
 }
 
+export type LessonSource = 'inline' | 'library';
+
 export interface Lesson {
   id: string;
   title: string;
@@ -30,6 +32,44 @@ export interface Lesson {
   lab?: LabAttachment;
   language?: string; // for code-exercise (judge0)
   proctored?: boolean; // for exam
+  // Library link (assessment lesson types may reference quiz/assignment/exercise stores)
+  source?: LessonSource;
+  refId?: string;
+  // Grading metadata (only meaningful for assessment lesson types)
+  weight?: number; // % toward course final grade
+  required?: boolean; // gates progression
+}
+
+export const ASSESSMENT_LESSON_TYPES: LessonType[] = ['quiz', 'assignment', 'code-exercise', 'exam'];
+export const isAssessmentLesson = (t: LessonType) => ASSESSMENT_LESSON_TYPES.includes(t);
+
+export interface AssessmentEntry {
+  chapterId: string;
+  chapterTitle: string;
+  chapterIndex: number;
+  lessonIndex: number;
+  orderIndex: number; // overall order across course
+  lesson: Lesson;
+}
+
+export function getCourseAssessments(course: { chapters: Chapter[] }): AssessmentEntry[] {
+  const out: AssessmentEntry[] = [];
+  let order = 0;
+  course.chapters.forEach((ch, ci) => {
+    ch.lessons.forEach((l, li) => {
+      if (isAssessmentLesson(l.type)) {
+        out.push({
+          chapterId: ch.id,
+          chapterTitle: ch.title,
+          chapterIndex: ci,
+          lessonIndex: li,
+          orderIndex: order++,
+          lesson: l,
+        });
+      }
+    });
+  });
+  return out;
 }
 
 export interface Chapter {
