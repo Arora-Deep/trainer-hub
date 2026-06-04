@@ -296,33 +296,6 @@ export const useCourseStore = create<CourseStore>((set, get) => ({
       )
     }));
   },
-
-  addAssessment: (courseId, assessment) => {
-    const id = `as-${Date.now()}`;
-    set((state) => ({
-      courses: state.courses.map(c =>
-        c.id === courseId ? { ...c, assessments: [...(c.assessments ?? []), { ...assessment, id }] } : c
-      ),
-    }));
-  },
-
-  updateAssessment: (courseId, assessmentId, updates) => {
-    set((state) => ({
-      courses: state.courses.map(c =>
-        c.id === courseId
-          ? { ...c, assessments: (c.assessments ?? []).map(a => a.id === assessmentId ? { ...a, ...updates } : a) }
-          : c
-      ),
-    }));
-  },
-
-  deleteAssessment: (courseId, assessmentId) => {
-    set((state) => ({
-      courses: state.courses.map(c =>
-        c.id === courseId ? { ...c, assessments: (c.assessments ?? []).filter(a => a.id !== assessmentId) } : c
-      ),
-    }));
-  },
 }));
 
 export const DEFAULT_COURSE_SETTINGS = defaultSettings;
