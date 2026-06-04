@@ -111,11 +111,11 @@ export default function CourseDetails() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <div className="rounded-lg bg-warning/10 p-3">
-                <FlaskConical className="h-5 w-5 text-warning" />
+                <ClipboardCheck className="h-5 w-5 text-warning" />
               </div>
               <div>
-                <p className="text-2xl font-semibold">{attachedLabs.length}</p>
-                <p className="text-sm text-muted-foreground">Labs</p>
+                <p className="text-2xl font-semibold">{(course.assessments ?? []).length}</p>
+                <p className="text-sm text-muted-foreground">Assessments</p>
               </div>
             </div>
           </CardContent>
