@@ -411,6 +411,8 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
                     <SelectItem value="lab">Lab</SelectItem>
                     <SelectItem value="ctf-scenario">CTF Scenario</SelectItem>
                     <SelectItem value="exam">Exam</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="duration">Duration</Label>
