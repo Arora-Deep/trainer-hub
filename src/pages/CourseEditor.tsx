@@ -165,40 +165,118 @@ export default function CourseEditor() {
       </Tabs>
 
       {/* Add-lesson picker */}
-      <Sheet open={!!pickerOpen} onOpenChange={(o) => !o && setPickerOpen(null)}>
+      <Sheet open={!!pickerOpen} onOpenChange={(o) => { if (!o) { setPickerOpen(null); setPickerStage(null); } }}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>Add a lesson</SheetTitle>
-            <SheetDescription>Pick the block type to add to this module.</SheetDescription>
+            <SheetTitle>{pickerStage ? `Add ${lessonTypeMeta[pickerStage.type].label}` : "Add a lesson"}</SheetTitle>
+            <SheetDescription>
+              {pickerStage ? "Create new or pick an existing item from the library." : "Pick the block type to add to this module."}
+            </SheetDescription>
           </SheetHeader>
-          <div className="grid gap-2 mt-4">
-            {Object.entries(lessonTypeMeta).map(([type, meta]) => {
-              const Icon = meta.icon;
-              return (
-                <button
-                  key={type}
+
+          {!pickerStage && (
+            <div className="grid gap-2 mt-4">
+              {Object.entries(lessonTypeMeta).map(([type, meta]) => {
+                const Icon = meta.icon;
+                const lt = type as LessonType;
+                const handle = () => {
+                  if (!pickerOpen) return;
+                  if (isAssessmentLesson(lt)) {
+                    setPickerStage({ type: lt, source: "inline", refId: "" });
+                    return;
+                  }
+                  addLesson(course.id, pickerOpen.chapterId, {
+                    title: `New ${meta.label}`,
+                    type: lt,
+                    duration: lt === "video" ? "10 min" : lt === "lab" || lt === "ctf-scenario" ? "open" : "15 min",
+                  });
+                  setPickerOpen(null);
+                };
+                return (
+                  <button
+                    key={type}
+                    onClick={handle}
+                    className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-muted/40 transition-all text-left"
+                  >
+                    <div className="h-9 w-9 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{meta.label}</p>
+                      <p className="text-xs text-muted-foreground">{meta.hint}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {pickerStage && (
+            <div className="mt-4 space-y-4">
+              <div>
+                <Label className="text-xs">Source</Label>
+                <div className="grid grid-cols-2 gap-2 mt-1.5">
+                  {(["inline", "library"] as const).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setPickerStage({ ...pickerStage, source: s, refId: "" })}
+                      className={cn(
+                        "flex items-center gap-2 rounded-md border px-3 py-2 text-xs transition-all",
+                        pickerStage.source === s ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted/40"
+                      )}
+                    >
+                      {s === "library" ? <Library className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                      <span className="font-medium">{s === "inline" ? "Create new" : "Pick from library"}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {pickerStage.source === "library" && (
+                <div>
+                  <Label className="text-xs">Library item</Label>
+                  <Select value={pickerStage.refId} onValueChange={(v) => setPickerStage({ ...pickerStage, refId: v })}>
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder={`Choose a ${lessonTypeMeta[pickerStage.type].label.toLowerCase()}…`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {pickerLibOptions.length === 0 ? (
+                        <div className="px-3 py-2 text-xs text-muted-foreground">No items in library.</div>
+                      ) : (
+                        pickerLibOptions.map((o) => (
+                          <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <SheetFooter className="!justify-between pt-2">
+                <Button variant="outline" onClick={() => setPickerStage(null)}>Back</Button>
+                <Button
+                  disabled={pickerStage.source === "library" && !pickerStage.refId}
                   onClick={() => {
                     if (!pickerOpen) return;
-                    addLesson(course.id, pickerOpen.chapterId, {
-                      title: `New ${meta.label}`,
-                      type: type as LessonType,
-                      duration: type === "video" ? "10 min" : type === "lab" || type === "ctf-scenario" ? "open" : "15 min",
-                    });
+                    const meta = lessonTypeMeta[pickerStage.type];
+                    const opt = pickerLibOptions.find((o) => o.id === pickerStage.refId);
+                    const payload: Omit<Lesson, "id"> = {
+                      title: pickerStage.source === "library" ? (opt?.label ?? `New ${meta.label}`) : `New ${meta.label}`,
+                      type: pickerStage.type,
+                      duration: "15 min",
+                      source: pickerStage.source,
+                      refId: pickerStage.source === "library" ? pickerStage.refId : undefined,
+                    };
+                    addLesson(course.id, pickerOpen.chapterId, payload);
+                    setPickerStage(null);
                     setPickerOpen(null);
                   }}
-                  className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-muted/40 transition-all text-left"
                 >
-                  <div className="h-9 w-9 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{meta.label}</p>
-                    <p className="text-xs text-muted-foreground">{meta.hint}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+                  Add
+                </Button>
+              </SheetFooter>
+            </div>
+          )}
         </SheetContent>
       </Sheet>
 
