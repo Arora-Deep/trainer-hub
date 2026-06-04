@@ -147,9 +147,6 @@ interface CourseStore {
   addLesson: (courseId: string, chapterId: string, lesson: Omit<Lesson, 'id'>) => void;
   updateLesson: (courseId: string, chapterId: string, lessonId: string, updates: Partial<Lesson>) => void;
   deleteLesson: (courseId: string, chapterId: string, lessonId: string) => void;
-  addAssessment: (courseId: string, assessment: Omit<CourseAssessment, 'id'>) => void;
-  updateAssessment: (courseId: string, assessmentId: string, updates: Partial<CourseAssessment>) => void;
-  deleteAssessment: (courseId: string, assessmentId: string) => void;
 }
 
 const initialCourses: Course[] = [
