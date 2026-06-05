@@ -61,10 +61,10 @@ export default function ModifyBatch() {
   const [prepDays, setPrepDays] = useState(2);
   const [freeDays, setFreeDays] = useState(0);
 
-  // Mid-batch resize state — defaults to current VM spec where known
-  const currentCpu = batch?.vmConfig?.participantVMs?.[0]?.specs?.vcpus || 2;
-  const currentRam = batch?.vmConfig?.participantVMs?.[0]?.specs?.memory || 4;
-  const currentDisk = batch?.vmConfig?.participantVMs?.[0]?.specs?.storage || 50;
+  // Mid-batch resize state — defaults to a sensible starting spec
+  const currentCpu = 2;
+  const currentRam = 4;
+  const currentDisk = 50;
   const [newCpu, setNewCpu] = useState<number>(currentCpu);
   const [newRam, setNewRam] = useState<number>(currentRam);
   const [newDisk, setNewDisk] = useState<number>(currentDisk);
