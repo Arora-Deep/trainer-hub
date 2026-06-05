@@ -408,6 +408,43 @@ export default function ModifyBatch() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={resizeOpen} onOpenChange={setResizeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" /> Confirm resource resize
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2 text-sm">
+            <p className="text-muted-foreground">
+              You are about to resize every participant VM in <span className="font-medium text-foreground">{batch?.name}</span>.
+            </p>
+            <div className="rounded-lg border p-3 space-y-2 bg-muted/30">
+              <div className="flex justify-between text-xs"><span className="text-muted-foreground">vCPU</span><span className="font-mono">{currentCpu} → {newCpu}</span></div>
+              <div className="flex justify-between text-xs"><span className="text-muted-foreground">RAM</span><span className="font-mono">{currentRam} GB → {newRam} GB</span></div>
+              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Disk</span><span className="font-mono">{currentDisk} GB → {newDisk} GB</span></div>
+            </div>
+            <p className="text-[11px] text-amber-700 rounded-md bg-amber-500/10 border border-amber-500/30 p-2">
+              Each VM will reboot to apply the new spec. Schedule outside live training to avoid disruption.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResizeOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                toast({
+                  title: "Resize scheduled",
+                  description: `${batch?.vmConfig?.participantVMs.length ?? batch?.participants.length ?? 0} VMs will reboot to ${newCpu}c/${newRam}GB/${newDisk}GB.`,
+                });
+                setResizeOpen(false);
+              }}
+            >
+              Apply Resize
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
