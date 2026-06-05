@@ -1,7 +1,8 @@
 import { format, eachDayOfInterval } from "date-fns";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Clock, Copy } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Clock, Copy, Infinity as InfinityIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Select,
@@ -66,29 +67,53 @@ export function VMDaySchedule({ dateRange, dailySchedules, onChange }: VMDaySche
     onChange(newSchedules);
   };
 
+  const toggle24h = (date: Date) => {
+    const schedule = getScheduleForDate(date);
+    const is24 = schedule.startTime === "00:00" && schedule.endTime === "23:30";
+    const next = is24
+      ? { ...schedule, startTime: "09:00", endTime: "18:00" }
+      : { ...schedule, startTime: "00:00", endTime: "23:30" };
+    const dateStr = format(date, "yyyy-MM-dd");
+    onChange([...dailySchedules.filter(s => s.date !== dateStr), next]);
+  };
+
+  const apply24hAll = () => {
+    onChange(days.map(d => ({ date: format(d, "yyyy-MM-dd"), startTime: "00:00", endTime: "23:30" })));
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <Clock className="h-4 w-4 text-primary" />
-          Daily VM Availability
-        </CardTitle>
-        <CardDescription>Set the time window for each day when VMs are accessible</CardDescription>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" />
+              Daily VM Availability
+            </CardTitle>
+            <CardDescription>Set the time window for each day when VMs are accessible</CardDescription>
+          </div>
+          <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={apply24hAll}>
+            <InfinityIcon className="h-3 w-3" /> 24h all days
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
           {days.map((day, index) => {
             const schedule = getScheduleForDate(day);
             const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+            const is24h = schedule.startTime === "00:00" && schedule.endTime === "23:30";
 
             return (
               <div
                 key={format(day, "yyyy-MM-dd")}
                 className={cn(
                   "flex items-center gap-3 p-3 rounded-lg border transition-colors",
-                  isWeekend
-                    ? "bg-muted/50 border-border/30"
-                    : "bg-muted/10 border-border/50"
+                  is24h
+                    ? "bg-primary/5 border-primary/30"
+                    : isWeekend
+                      ? "bg-muted/50 border-border/30"
+                      : "bg-muted/10 border-border/50"
                 )}
               >
                 {/* Day label */}
@@ -128,6 +153,18 @@ export function VMDaySchedule({ dateRange, dailySchedules, onChange }: VMDaySche
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Apply to all button - only show on first day */}
+                <Button
+                  type="button"
+                  variant={is24h ? "default" : "outline"}
+                  size="sm"
+                  className="h-8 px-2 text-[10px] shrink-0 gap-1"
+                  onClick={() => toggle24h(day)}
+                  title="Toggle 24-hour availability"
+                >
+                  <InfinityIcon className="h-3 w-3" /> 24h
+                </Button>
 
                 {/* Apply to all button - only show on first day */}
                 {index === 0 && days.length > 1 && (

@@ -20,11 +20,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  Plus, 
-  Search, 
-  MoreHorizontal, 
-  HelpCircle, 
+import {
+  Plus,
+  Search,
+  MoreHorizontal,
+  HelpCircle,
   CheckCircle,
   Clock,
   FileQuestion,
@@ -32,8 +32,14 @@ import {
   Copy,
   Trash2,
   Eye,
-  BarChart3
+  BarChart3,
+  Upload,
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
 import { useQuizStore } from "@/stores/quizStore";
 
 const Quizzes = () => {
@@ -41,6 +47,8 @@ const Quizzes = () => {
   const { quizzes } = useQuizStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [importOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
 
   const filteredQuizzes = quizzes.filter((quiz) => {
     const matchesSearch = quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -70,10 +78,16 @@ const Quizzes = () => {
         title="Quizzes"
         description="Create and manage course quizzes and assessments"
         actions={
-          <Button onClick={() => navigate("/quizzes/create")} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Create Quiz
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
+              <Upload className="h-4 w-4" />
+              Import Quiz
+            </Button>
+            <Button onClick={() => navigate("/quizzes/create")} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Create Quiz
+            </Button>
+          </div>
         }
       />
 
@@ -145,7 +159,7 @@ const Quizzes = () => {
             </TableHeader>
             <TableBody>
               {filteredQuizzes.map((quiz) => (
-                <TableRow key={quiz.id} className="table-row-premium">
+                <TableRow key={quiz.id} className="table-row-premium cursor-pointer" onClick={() => navigate(`/quizzes/${quiz.id}`)}>
                   <TableCell className="font-medium">{quiz.title}</TableCell>
                   <TableCell className="text-muted-foreground">{quiz.course}</TableCell>
                   <TableCell>{quiz.questions.length}</TableCell>
@@ -166,7 +180,7 @@ const Quizzes = () => {
                       label={quiz.status}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -174,11 +188,11 @@ const Quizzes = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/quizzes/${quiz.id}`)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Preview Quiz
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/quizzes/${quiz.id}`)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit Questions
                         </DropdownMenuItem>
@@ -203,6 +217,39 @@ const Quizzes = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Quiz</DialogTitle>
+            <DialogDescription>
+              Upload a .json, .csv, or .xlsx file with questions, options and correct answers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label className="text-xs">Quiz File</Label>
+            <Input
+              type="file"
+              accept=".json,.csv,.xlsx,.qti"
+              onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Supports CloudAdda JSON, CSV templates, Excel and QTI 2.1 packages.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImportOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!importFile}
+              onClick={() => {
+                toast({ title: "Quiz imported", description: `${importFile?.name} queued — questions will appear shortly.` });
+                setImportFile(null);
+                setImportOpen(false);
+              }}
+            >Import</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

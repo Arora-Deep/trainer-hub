@@ -9,7 +9,16 @@ import { useCustomerStore } from "@/stores/customerStore";
 import { useBatchStore } from "@/stores/batchStore";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Monitor, Zap, Users, CheckCircle2 } from "lucide-react";
+import { Monitor, Zap, Users, CheckCircle2, Server } from "lucide-react";
+
+const NODE_OPTIONS = [
+  { value: "auto", label: "Auto-balance (recommended)" },
+  { value: "node-a-01", label: "node-a-01 · Mumbai · 38% load" },
+  { value: "node-a-02", label: "node-a-02 · Mumbai · 62% load" },
+  { value: "node-b-01", label: "node-b-01 · Bangalore · 24% load" },
+  { value: "node-b-02", label: "node-b-02 · Bangalore · 71% load" },
+  { value: "node-c-01", label: "node-c-01 · Singapore · 19% load" },
+];
 
 const statusConfig: Record<string, { dot: string; bg: string; text: string; label: string }> = {
   running: { dot: "bg-green-500", bg: "bg-green-500/10", text: "text-green-600", label: "Running" },
@@ -24,6 +33,7 @@ export default function AssignVM() {
   const [customerId, setCustomerId] = useState("");
   const [batchId, setBatchId] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [targetNode, setTargetNode] = useState("auto");
 
   const batch = batches.find((b) => b.id === batchId);
   const filteredBatches = useMemo(() => batches, [batches]);
@@ -40,10 +50,12 @@ export default function AssignVM() {
     setSelected(next);
   };
 
+  const nodeLabel = () => targetNode === "auto" ? "auto-balanced node" : targetNode;
+
   const handleAssign = (participantId: string, name: string) => {
     if (!batch) return;
     assignParticipantVM(batch.id, participantId);
-    toast({ title: "VM Assigned", description: `Provisioning a VM for ${name}...` });
+    toast({ title: "VM Assigned", description: `Provisioning a VM for ${name} on ${nodeLabel()}.` });
   };
 
   const handleAutoAssign = () => {
@@ -55,7 +67,7 @@ export default function AssignVM() {
         count++;
       }
     });
-    toast({ title: "Auto Assign", description: `Assigning VMs to ${count} unassigned participants.` });
+    toast({ title: "Auto Assign", description: `Assigning ${count} VMs to ${nodeLabel()}.` });
   };
 
   const handleBulkAssign = () => {
@@ -64,7 +76,7 @@ export default function AssignVM() {
       const p = participants.find((x) => x.id === id);
       if (p && !findVM(p.email)) assignParticipantVM(batch.id, id);
     });
-    toast({ title: "Bulk Assign", description: `Assigning ${selected.size} VMs.` });
+    toast({ title: "Bulk Assign", description: `Assigning ${selected.size} VMs to ${nodeLabel()}.` });
     setSelected(new Set());
   };
 
@@ -115,9 +127,22 @@ export default function AssignVM() {
       {batch && (
         <Card>
           <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <CardTitle className="text-sm">Participants</CardTitle>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Server className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Select value={targetNode} onValueChange={setTargetNode}>
+                    <SelectTrigger className="h-8 w-[240px] text-xs">
+                      <SelectValue placeholder="Target node" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {NODE_OPTIONS.map((n) => (
+                        <SelectItem key={n.value} value={n.value} className="text-xs">{n.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleAutoAssign} disabled={unassignedCount === 0}>
                   <Zap className="h-3 w-3" /> Auto Assign
                 </Button>
@@ -134,21 +159,26 @@ export default function AssignVM() {
                   <TableHead className="w-10"></TableHead>
                   <TableHead>Participant</TableHead>
                   <TableHead>Assigned VM</TableHead>
+                  <TableHead>Node</TableHead>
                   <TableHead>IP</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {participants.map((p) => {
+                {participants.map((p, idx) => {
                   const vm = findVM(p.email);
                   const status = vm ? vm.status : "not_assigned";
                   const sc = statusConfig[status] || statusConfig.not_assigned;
+                  const nodeForRow = vm
+                    ? (targetNode === "auto" ? `node-${["a", "b", "c"][idx % 3]}-0${(idx % 2) + 1}` : targetNode)
+                    : "—";
                   return (
                     <TableRow key={p.id}>
                       <TableCell><Checkbox checked={selected.has(p.id)} onCheckedChange={() => toggle(p.id)} disabled={!!vm} /></TableCell>
                       <TableCell className="text-sm font-medium">{p.name}<div className="text-xs text-muted-foreground">{p.email}</div></TableCell>
                       <TableCell className="text-sm font-mono">{vm?.vmName || "—"}</TableCell>
+                      <TableCell className="text-xs font-mono text-muted-foreground">{nodeForRow}</TableCell>
                       <TableCell className="text-sm font-mono text-muted-foreground">{vm?.ipAddress || "—"}</TableCell>
                       <TableCell>
                         <Badge variant="secondary" className={cn("text-xs gap-1.5", sc.bg, sc.text)}>

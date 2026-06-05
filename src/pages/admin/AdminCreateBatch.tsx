@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useBatchStore, type VMConfig, type VMTemplateConfig, type VMEntry } from "@/stores/batchStore";
 import { useLabStore } from "@/stores/labStore";
 import { useCustomerStore } from "@/stores/customerStore";
+import { useRoleStore, canViewPricing } from "@/stores/roleStore";
 import { VMDaySchedule, type DaySchedule } from "@/components/batches/VMDaySchedule";
 import { TemplatePickerDropdown } from "@/components/labs/TemplatePickerDropdown";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -26,6 +27,7 @@ import {
   Building2, FileText, Clock, Monitor, CheckCircle2,
   Users, Settings, Layers, Server, DollarSign, Shield, Eye, Sparkles,
   Send, HardDrive, Trash2, ArrowRight, ArrowLeft, Plus, X, Zap, Laptop,
+  Lock, Network,
 } from "lucide-react";
 
 const steps = [
@@ -93,6 +95,16 @@ export default function AdminCreateBatch() {
   const [vmRam, setVmRam] = useState(8);
   const [vmDisk, setVmDisk] = useState(50);
   const [skipApproval, setSkipApproval] = useState(true);
+
+  // Advanced VM options
+  const [enableVLAN, setEnableVLAN] = useState(false);
+  const [vlanId, setVlanId] = useState("100");
+  const [enableQemu, setEnableQemu] = useState(true);
+  const [enableNestedVirt, setEnableNestedVirt] = useState(false);
+
+  // RBAC: pricing visibility
+  const adminSubRole = useRoleStore((s) => s.adminSubRole);
+  const showPricing = canViewPricing(adminSubRole);
 
   // Step 5 approval
   const [cloudAddaApproval, setCloudAddaApproval] = useState<"pending" | "approved" | "rejected">("pending");
@@ -541,6 +553,48 @@ export default function AdminCreateBatch() {
                       }}>
                         <Plus className="mr-2 h-4 w-4" /> Add VM
                       </Button>
+
+                      {/* Advanced VM options — virtualization & networking */}
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <Network className="h-4 w-4 text-primary" /> Advanced VM Options
+                          </CardTitle>
+                          <CardDescription>Virtualization and networking toggles applied to every VM in this batch</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          <div className="flex items-center justify-between p-2.5 rounded-lg border">
+                            <div>
+                              <Label className="text-sm">Enable QEMU / KVM</Label>
+                              <p className="text-[11px] text-muted-foreground">Hardware-assisted virtualization</p>
+                            </div>
+                            <Switch checked={enableQemu} onCheckedChange={setEnableQemu} />
+                          </div>
+                          <div className="flex items-center justify-between p-2.5 rounded-lg border">
+                            <div>
+                              <Label className="text-sm">Nested Virtualization</Label>
+                              <p className="text-[11px] text-muted-foreground">Run VMs inside VMs (Docker, K8s labs)</p>
+                            </div>
+                            <Switch checked={enableNestedVirt} onCheckedChange={setEnableNestedVirt} />
+                          </div>
+                          <div className="flex items-center justify-between p-2.5 rounded-lg border">
+                            <div>
+                              <Label className="text-sm">Enable VLAN</Label>
+                              <p className="text-[11px] text-muted-foreground">Isolate batch traffic on a dedicated VLAN</p>
+                            </div>
+                            <Switch checked={enableVLAN} onCheckedChange={setEnableVLAN} />
+                          </div>
+                          {enableVLAN && (
+                            <div className="grid grid-cols-[1fr_auto] gap-3 items-end p-2.5 rounded-lg border bg-primary/5">
+                              <div className="space-y-1">
+                                <Label className="text-xs">VLAN ID</Label>
+                                <Input value={vlanId} onChange={(e) => setVlanId(e.target.value)} placeholder="e.g. 100" />
+                              </div>
+                              <Badge variant="secondary" className="text-[10px]">802.1Q</Badge>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
                     </>
                   )}
                 </div>
@@ -551,6 +605,16 @@ export default function AdminCreateBatch() {
                     <CardContent className="space-y-4">
                       {!enableVMs || addedVMs.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground"><Monitor className="h-12 w-12 mx-auto mb-3 opacity-30" /><p className="text-sm">Add VMs to see pricing</p></div>
+                      ) : !showPricing ? (
+                        <div className="text-center py-8 space-y-2">
+                          <div className="h-10 w-10 rounded-full bg-muted mx-auto flex items-center justify-center">
+                            <Lock className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <p className="text-sm font-medium">Pricing restricted</p>
+                          <p className="text-xs text-muted-foreground max-w-[220px] mx-auto">
+                            Visible to Super Admin and Finance roles only. Current role: <span className="capitalize">{adminSubRole.replace("_", " ")}</span>.
+                          </p>
+                        </div>
                       ) : (
                         <>
                           <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 grid grid-cols-3 gap-3 text-center">
@@ -599,21 +663,23 @@ export default function AdminCreateBatch() {
                     <Card>
                       <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-base flex items-center gap-2"><Monitor className="h-4 w-4 text-primary" /> VM Configuration</CardTitle>
-                        <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-                          <DialogTrigger asChild><Button variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" />Breakdown</Button></DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader><DialogTitle>Pricing Breakdown</DialogTitle><DialogDescription>Detailed cost</DialogDescription></DialogHeader>
-                            <div className="space-y-2 py-4 text-sm">
-                              <div className="flex justify-between"><span>VMs</span><span>{pricing.totalVMs}</span></div>
-                              <div className="flex justify-between"><span>Days</span><span>{pricing.days}</span></div>
-                              <div className="flex justify-between"><span>Compute</span><span>${pricing.compute.toFixed(0)}</span></div>
-                              <div className="flex justify-between"><span>Storage</span><span>${pricing.storage.toFixed(0)}</span></div>
-                              <div className="flex justify-between"><span>Network</span><span>${pricing.network.toFixed(0)}</span></div>
-                              <div className="flex justify-between"><span>Support</span><span>${pricing.support.toFixed(0)}</span></div>
-                              <div className="border-t pt-2 flex justify-between font-semibold"><span>Total</span><span className="text-primary">${pricing.total.toFixed(0)}</span></div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                        {showPricing && (
+                          <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+                            <DialogTrigger asChild><Button variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" />Breakdown</Button></DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader><DialogTitle>Pricing Breakdown</DialogTitle><DialogDescription>Detailed cost</DialogDescription></DialogHeader>
+                              <div className="space-y-2 py-4 text-sm">
+                                <div className="flex justify-between"><span>VMs</span><span>{pricing.totalVMs}</span></div>
+                                <div className="flex justify-between"><span>Days</span><span>{pricing.days}</span></div>
+                                <div className="flex justify-between"><span>Compute</span><span>${pricing.compute.toFixed(0)}</span></div>
+                                <div className="flex justify-between"><span>Storage</span><span>${pricing.storage.toFixed(0)}</span></div>
+                                <div className="flex justify-between"><span>Network</span><span>${pricing.network.toFixed(0)}</span></div>
+                                <div className="flex justify-between"><span>Support</span><span>${pricing.support.toFixed(0)}</span></div>
+                                <div className="border-t pt-2 flex justify-between font-semibold"><span>Total</span><span className="text-primary">${pricing.total.toFixed(0)}</span></div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        )}
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border">
@@ -621,7 +687,11 @@ export default function AdminCreateBatch() {
                             <p className="font-semibold">{vmType === "multi" ? `${addedVMs.length} VMs per participant` : "Single VM per participant"}</p>
                             <p className="text-sm text-muted-foreground">{pricing.totalVMs} total • {pricing.days} days</p>
                           </div>
-                          <span className="text-lg font-bold text-primary">${pricing.total.toFixed(0)}</span>
+                          {showPricing ? (
+                            <span className="text-lg font-bold text-primary">${pricing.total.toFixed(0)}</span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground inline-flex items-center gap-1"><Lock className="h-3 w-3" /> Restricted</span>
+                          )}
                         </div>
                       </CardContent>
                     </Card>

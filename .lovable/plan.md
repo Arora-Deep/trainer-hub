@@ -1,73 +1,37 @@
-## Refactor: assessments are lessons
+# Implementation Plan
 
-Single underlying data model = the existing chapter→lesson tree. Two views into it: **Content** (author & order) and **Assessments** (configure grading + view submissions). No more parallel placement system.
+Breaking the request into two portals. Each item is scoped to UI + store updates only (mock data, no backend).
 
-### 1. Data model cleanup (`courseStore.ts`)
+## Trainer Portal
 
-Remove:
-- `AssessmentPlacement` union
-- `CourseAssessment` interface
-- `assessments` array on `Course`
-- `addAssessment` / `updateAssessment` / `deleteAssessment` actions
+1. **Global VM controls in Live Training student view** (`src/pages/LiveTraining.tsx`)
+  - Add a toolbar above the participant list: "Start All", "Stop All", "Reclone All", "Restore All to Snapshot".
+  - Each action shows a confirm dialog. Reclone confirm includes a warning: *"Re-cloning repeatedly degrades host performance and resets all participant work. Use sparingly."*
+  - Toast alerts on completion ("Reclone queued for N VMs").
+  - Also add per-row actions menu with same options for single VM.
+2. **Quiz not opening** — investigate `src/pages/Quizzes.tsx` / quiz detail route. Likely a broken link/import. Fix the click handler / route.
+3. **Import buttons**
+  - Quizzes page: "Import Quiz" button → dialog accepting JSON/CSV (mock, just toast success and add a stub item).
+  - Assignments page: "Import Assignment" button (same pattern).
+  - Course content editor: "Import Content" button in `CourseContentEditor.tsx` (accepts a JSON outline, mock import).
+4. **24-hour option in VM availability times** — find the availability time picker (likely in batch create/settings VM schedule, `VMDaySchedule.tsx` or batch settings). Add a "24 hours (always on)" preset toggle alongside the time range inputs. do this for the admin and trianer vm. 
 
-Extend `Lesson`:
-```ts
-interface Lesson {
-  // …existing fields
-  refId?: string;        // points to quizStore/assignmentStore/exerciseStore item when library-linked
-  source?: 'inline' | 'library';
-  weight?: number;       // % toward course grade (assessment lessons only)
-  required?: boolean;    // gates progression (assessment lessons only)
-}
-```
+## Admin Portal
 
-Helper selector: `getCourseAssessments(courseId)` → flattens chapters and returns lessons where `type ∈ {quiz, assignment, code-exercise, exam}` in course order, each with `{chapterIndex, lessonIndex, chapterTitle}`.
+5. **Hide VM cost pricing from non-finance roles**
+  - In `AdminCreateBatch.tsx` (VM cost step) gate price columns behind a role check (`useRoleStore`/auth role). For now: hide if `role !== 'super_admin' && role !== 'finance'`. Show "—" with tooltip "Pricing restricted".
+6. **Modify batch — resize VM resources mid-batch** (`src/pages/admin/ModifyBatch.tsx`)
+  - Add a new section "Resize VM Resources" with current vs new CPU/RAM/Disk pickers and an "Apply to all participant VMs" action. Mock: update vmConfig, toast "Resize scheduled — VMs will reboot in maintenance window."
+7. **Node selection when assigning VMs** (`src/pages/admin/AssignVM.tsx`)
+  - Add a "Target Node" select (mock node list: node-a-01, node-a-02, node-b-01, "Auto-balance") shown above the assign actions. Also show node in the table column.
+8. **Enable VLAN toggle for batch** — in batch create wizard (network/advanced step), add a "Enable VLAN" switch sitting alongside existing Enable QEMU / nested virt toggles. Look in `AdminCreateBatch.tsx` or `CreateBatch.tsx`.
 
-### 2. Content editor — library picker
+## Out of Scope
 
-In `CourseEditor.tsx` add-lesson sheet and `CourseContentEditor.tsx` add-lesson dialog: when the picked type is `quiz`, `assignment`, or `code-exercise`, show a toggle:
+- Real backend wiring, real RBAC, persisted imports.
+- Drag-and-drop in imports; just file picker + toast.
 
-```
-( ) Create new    (•) Pick from library
-```
+## Files (anticipated)
 
-Library mode renders a `Select` of items from the matching store (`useQuizStore`, `useAssignmentStore`, `useExerciseStore`). On submit, the new lesson is created with `source: 'library'`, `refId`, and `title` snapshotted from the library item.
-
-Inline mode keeps current behavior (`source: 'inline'`).
-
-Visual: library-linked assessment lessons get a small "Library" chip in the tree so authors can see at a glance.
-
-### 3. Assessments tab — editable summary + submissions
-
-Replace the slot-based outline I built with a two-section tab:
-
-**Section A — Grading config (table)**
-Columns: Order · Title · Type · Located in (Module N › position) · Weight (%) · Required · Submissions count · Actions
-- Weight and Required edit inline (number input + switch). Writes back to the lesson on the chapter tree.
-- Title click → jumps to that lesson in the Content tab.
-- Footer shows `Σ weight = X%` with a warning chip if ≠ 100%.
-
-**Section B — Submissions**
-- Top selector: "All assessments" or pick a specific one.
-- Table of student submissions (mocked from existing stores): Student · Assessment · Submitted at · Score · Status (graded / pending / late).
-- Row click → opens a right-side drawer with submission detail (mock content for now).
-
-No "course-start / course-end / after-module" slots anywhere. Position = order in the content tree; trainers reorder by editing the tree.
-
-### 4. Files touched
-
-- `src/stores/courseStore.ts` — drop assessment array & actions, extend `Lesson`, add selector
-- `src/components/courses/CourseAssessmentsTab.tsx` — rewrite as table + submissions view
-- `src/components/courses/CourseContentEditor.tsx` — add library/inline toggle in lesson dialog, library chip in tree
-- `src/pages/CourseEditor.tsx` — same library/inline toggle in the add-lesson sheet, library chip in tree
-- `src/data/studentMockData.ts` — small mock submissions array for the new submissions section (or inline in tab)
-
-### 5. Migration
-
-Any existing `course.assessments` entries are dropped (they were just added this session, mock data only). No persistence to migrate.
-
-### Out of scope
-
-- Drag-and-drop reordering (current up/down + tree edit is enough; can add later)
-- Actual grading workflows / Judge0 wiring (still mocked)
-- Batch-level overrides of weight/required
+- Trainer: `LiveTraining.tsx`, `Quizzes.tsx` (+ quiz detail route check), `Assignments.tsx`, `CourseContentEditor.tsx`, `VMDaySchedule.tsx`/batch settings.
+- Admin: `AdminCreateBatch.tsx`, `ModifyBatch.tsx`, `AssignVM.tsx`, possibly `CreateBatch.tsx`.

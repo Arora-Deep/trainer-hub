@@ -19,6 +19,10 @@ import {
 } from "lucide-react";
 import { useBatchStore } from "@/stores/batchStore";
 import { useCourseStore } from "@/stores/courseStore";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -48,7 +52,7 @@ type StudentRow = {
 };
 
 export default function LiveTraining() {
-  const { batches, createSnapshot } = useBatchStore();
+  const { batches, createSnapshot, recloneAllVMs, resetAllVMs } = useBatchStore();
   const { courses } = useCourseStore();
 
   const liveBatches = batches.filter(b => b.status === "live" || b.status === "upcoming");
@@ -75,6 +79,7 @@ export default function LiveTraining() {
   const [mainTab, setMainTab] = useState<MainTab>("students");
   const [splitFullscreen, setSplitFullscreen] = useState(false);
   const [splitSide, setSplitSide] = useState<SplitSide>("students");
+  const [bulkAction, setBulkAction] = useState<null | "start" | "stop" | "reclone" | "restore">(null);
 
   const [messages, setMessages] = useState<{ id: string; from: string; text: string; t: string; kind: "msg" | "q" | "sys" }[]>([
     { id: "1", from: "Alice Johnson", text: "Can you re-explain VPC peering?", t: "2:34", kind: "q" },
@@ -160,6 +165,37 @@ export default function LiveTraining() {
       t: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }), kind: "msg",
     }]);
     setChatInput("");
+  };
+
+  const runBulkAction = () => {
+    if (!batch || !bulkAction) return;
+    const n = participantVMs.length || participants.length;
+    switch (bulkAction) {
+      case "start":
+        toast({ title: "Starting all VMs", description: `Boot signal sent to ${n} VMs.` });
+        break;
+      case "stop":
+        toast({ title: "Stopping all VMs", description: `Shutdown queued for ${n} VMs.` });
+        break;
+      case "reclone":
+        recloneAllVMs(batch.id);
+        toast({
+          title: "Re-cloning all VMs",
+          description: `${n} VMs queued. Repeated re-clones can slow the host.`,
+        });
+        break;
+      case "restore": {
+        const golden = batch.vmConfig?.goldenSnapshotId;
+        if (!golden) {
+          toast({ title: "No golden snapshot", description: "Set a golden snapshot before restoring." });
+        } else {
+          resetAllVMs(batch.id, golden);
+          toast({ title: "Restoring all VMs", description: `${n} VMs reverting to the golden snapshot.` });
+        }
+        break;
+      }
+    }
+    setBulkAction(null);
   };
 
   if (!batch) {
@@ -410,6 +446,7 @@ export default function LiveTraining() {
               onSelect={(id) => setSelectedStudentId(id)}
               onAssist={(s) => toast({ title: `Assisting ${s.name}` })}
               onRestart={(s) => toast({ title: `Restarting ${s.vmName}` })}
+              onBulk={(a) => setBulkAction(a)}
             />
           )}
           {mainTab === "trainer" && (
@@ -626,6 +663,48 @@ export default function LiveTraining() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk VM action confirmation */}
+      <AlertDialog open={!!bulkAction} onOpenChange={(open) => !open && setBulkAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              {bulkAction === "reclone" && <AlertCircle className="h-4 w-4 text-amber-500" />}
+              {bulkAction === "start" && "Start all participant VMs?"}
+              {bulkAction === "stop" && "Stop all participant VMs?"}
+              {bulkAction === "restore" && "Restore all VMs to snapshot?"}
+              {bulkAction === "reclone" && "Reclone all participant VMs?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                {bulkAction === "start" && <p>Boots every VM in {batch.name}. Cold starts may take 1-2 minutes.</p>}
+                {bulkAction === "stop" && <p>Gracefully shuts down every VM in {batch.name}. Unsaved work will be lost.</p>}
+                {bulkAction === "restore" && <p>Reverts every VM to the golden snapshot. Any work since the snapshot will be discarded.</p>}
+                {bulkAction === "reclone" && (
+                  <>
+                    <p>This re-clones every VM from scratch and discards all participant work.</p>
+                    <p className="rounded-md bg-amber-500/10 text-amber-700 border border-amber-500/30 px-3 py-2 text-xs">
+                      Warning: re-cloning repeatedly during a session puts heavy load on the host and can slow every VM in this batch. Use sparingly.
+                    </p>
+                  </>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={runBulkAction}
+              className={bulkAction === "reclone" || bulkAction === "stop" ? "bg-destructive hover:bg-destructive/90" : ""}
+            >
+              {bulkAction === "start" && "Start all"}
+              {bulkAction === "stop" && "Stop all"}
+              {bulkAction === "restore" && "Restore all"}
+              {bulkAction === "reclone" && "Reclone all"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -633,14 +712,15 @@ export default function LiveTraining() {
 /* ---------------- Main views ---------------- */
 
 function StudentsView({
-  filtered, grid, search, setSearch, onSelect, onAssist, onRestart,
+  filtered, grid, search, setSearch, onSelect, onAssist, onRestart, onBulk,
 }: {
   filtered: StudentRow[]; grid: StudentRow[]; search: string; setSearch: (v: string) => void;
   onSelect: (id: string) => void; onAssist: (s: StudentRow) => void; onRestart: (s: StudentRow) => void;
+  onBulk: (action: "start" | "stop" | "reclone" | "restore") => void;
 }) {
   return (
     <>
-      <div className="flex items-end justify-between mb-6">
+      <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
         <div>
           <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Classroom</p>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight">
@@ -655,6 +735,28 @@ function StudentsView({
             placeholder="Search students"
             className="h-9 w-[260px] pl-9"
           />
+        </div>
+      </div>
+
+      {/* Global VM controls */}
+      <div className="mb-4 flex items-center justify-between gap-3 flex-wrap rounded-xl border border-border bg-card px-4 py-2.5">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Monitor className="h-3.5 w-3.5" />
+          <span>Global VM controls — applies to all {grid.length} participant VMs</span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => onBulk("start")}>
+            <Play className="h-3.5 w-3.5" /> Start all
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => onBulk("stop")}>
+            <Square className="h-3.5 w-3.5" /> Stop all
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => onBulk("restore")}>
+            <RotateCcw className="h-3.5 w-3.5" /> Restore to snapshot
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs text-amber-600 border-amber-500/30 hover:bg-amber-500/10" onClick={() => onBulk("reclone")}>
+            <RefreshCw className="h-3.5 w-3.5" /> Reclone all
+          </Button>
         </div>
       </div>
 

@@ -20,11 +20,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  Plus, 
-  Search, 
-  MoreHorizontal, 
-  ClipboardList, 
+import {
+  Plus,
+  Search,
+  MoreHorizontal,
+  ClipboardList,
   CheckCircle,
   Clock,
   FileText,
@@ -33,8 +33,14 @@ import {
   Trash2,
   Eye,
   Download,
-  AlertCircle
+  AlertCircle,
+  Upload,
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
 import { useAssignmentStore } from "@/stores/assignmentStore";
 import { format } from "date-fns";
 
@@ -43,6 +49,8 @@ const Assignments = () => {
   const { assignments } = useAssignmentStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [importOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
 
   const filteredAssignments = assignments.filter((assignment) => {
     const matchesSearch = assignment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -82,10 +90,16 @@ const Assignments = () => {
         title="Assignments"
         description="Create and manage course assignments and track submissions"
         actions={
-          <Button onClick={() => navigate("/assignments/create")} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Create Assignment
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
+              <Upload className="h-4 w-4" />
+              Import Assignment
+            </Button>
+            <Button onClick={() => navigate("/assignments/create")} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Create Assignment
+            </Button>
+          </div>
         }
       />
 
@@ -231,6 +245,39 @@ const Assignments = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Assignment</DialogTitle>
+            <DialogDescription>
+              Upload a brief, rubric or sample submissions package.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label className="text-xs">Assignment File</Label>
+            <Input
+              type="file"
+              accept=".json,.csv,.xlsx,.zip,.pdf,.docx"
+              onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Supports JSON, CSV, Excel, ZIP packages, PDF or Word briefs.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImportOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!importFile}
+              onClick={() => {
+                toast({ title: "Assignment imported", description: `${importFile?.name} queued for processing.` });
+                setImportFile(null);
+                setImportOpen(false);
+              }}
+            >Import</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

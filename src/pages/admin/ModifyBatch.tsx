@@ -14,7 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   Save, CalendarDays, Pause, Play, CheckCircle2, Users, Monitor,
   AlertTriangle, RotateCcw, Camera, Star, Trash2, RefreshCw, ArrowLeft,
-  CalendarPlus, Clock,
+  CalendarPlus, Clock, Cpu, MemoryStick, HardDrive, Zap,
 } from "lucide-react";
 
 export default function ModifyBatch() {
@@ -60,6 +60,21 @@ export default function ModifyBatch() {
   const [prepOpen, setPrepOpen] = useState(false);
   const [prepDays, setPrepDays] = useState(2);
   const [freeDays, setFreeDays] = useState(0);
+
+  // Mid-batch resize state — defaults to a sensible starting spec
+  const currentCpu = 2;
+  const currentRam = 4;
+  const currentDisk = 50;
+  const [newCpu, setNewCpu] = useState<number>(currentCpu);
+  const [newRam, setNewRam] = useState<number>(currentRam);
+  const [newDisk, setNewDisk] = useState<number>(currentDisk);
+  const [resizeOpen, setResizeOpen] = useState(false);
+
+  useEffect(() => {
+    setNewCpu(currentCpu);
+    setNewRam(currentRam);
+    setNewDisk(currentDisk);
+  }, [selectedId, currentCpu, currentRam, currentDisk]);
 
   const snapshots = batch?.vmConfig?.snapshots || [];
   const goldenId = batch?.vmConfig?.goldenSnapshotId;
@@ -192,6 +207,78 @@ export default function ModifyBatch() {
                 </CardContent>
               </Card>
 
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-primary" /> Resize VM Resources
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Upgrade or downgrade compute, memory and disk for every participant VM mid-batch.
+                    Changes apply on next reboot.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs flex items-center gap-1.5"><Cpu className="h-3 w-3" /> vCPU</Label>
+                      <Select value={String(newCpu)} onValueChange={(v) => setNewCpu(parseInt(v))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {[2, 4, 6, 8, 12, 16, 24, 32].map((n) => (
+                            <SelectItem key={n} value={String(n)}>{n} cores</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-muted-foreground">Current: {currentCpu} cores</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs flex items-center gap-1.5"><MemoryStick className="h-3 w-3" /> RAM</Label>
+                      <Select value={String(newRam)} onValueChange={(v) => setNewRam(parseInt(v))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {[4, 8, 16, 24, 32, 48, 64, 96, 128].map((n) => (
+                            <SelectItem key={n} value={String(n)}>{n} GB</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-muted-foreground">Current: {currentRam} GB</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs flex items-center gap-1.5"><HardDrive className="h-3 w-3" /> Disk</Label>
+                      <Select value={String(newDisk)} onValueChange={(v) => setNewDisk(parseInt(v))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {[50, 100, 200, 400, 800, 1000, 2000].map((n) => (
+                            <SelectItem key={n} value={String(n)}>{n} GB</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-muted-foreground">Current: {currentDisk} GB</p>
+                    </div>
+                  </div>
+
+                  {(newCpu !== currentCpu || newRam !== currentRam || newDisk !== currentDisk) && (
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-700">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                      <span>
+                        Resizing {batch.vmConfig?.participantVMs.length ?? batch.participants.length} VMs from {currentCpu}c/{currentRam}GB/{currentDisk}GB to {newCpu}c/{newRam}GB/{newDisk}GB. VMs will reboot during the next maintenance window.
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={() => setResizeOpen(true)}
+                      disabled={newCpu === currentCpu && newRam === currentRam && newDisk === currentDisk}
+                      className="gap-2"
+                    >
+                      <Zap className="h-4 w-4" /> Apply Resize
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+
               {snapshots.length > 0 && (
                 <Card>
                   <CardHeader><CardTitle className="text-base flex items-center gap-2"><Camera className="h-4 w-4" /> Snapshots</CardTitle></CardHeader>
@@ -318,6 +405,43 @@ export default function ModifyBatch() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setPrepOpen(false)}>Cancel</Button>
             <Button onClick={() => { toast({ title: "Updated", description: `Prep: ${prepDays}d, Free: ${freeDays}d` }); setPrepOpen(false); }}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={resizeOpen} onOpenChange={setResizeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" /> Confirm resource resize
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2 text-sm">
+            <p className="text-muted-foreground">
+              You are about to resize every participant VM in <span className="font-medium text-foreground">{batch?.name}</span>.
+            </p>
+            <div className="rounded-lg border p-3 space-y-2 bg-muted/30">
+              <div className="flex justify-between text-xs"><span className="text-muted-foreground">vCPU</span><span className="font-mono">{currentCpu} → {newCpu}</span></div>
+              <div className="flex justify-between text-xs"><span className="text-muted-foreground">RAM</span><span className="font-mono">{currentRam} GB → {newRam} GB</span></div>
+              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Disk</span><span className="font-mono">{currentDisk} GB → {newDisk} GB</span></div>
+            </div>
+            <p className="text-[11px] text-amber-700 rounded-md bg-amber-500/10 border border-amber-500/30 p-2">
+              Each VM will reboot to apply the new spec. Schedule outside live training to avoid disruption.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResizeOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                toast({
+                  title: "Resize scheduled",
+                  description: `${batch?.vmConfig?.participantVMs.length ?? batch?.participants.length ?? 0} VMs will reboot to ${newCpu}c/${newRam}GB/${newDisk}GB.`,
+                });
+                setResizeOpen(false);
+              }}
+            >
+              Apply Resize
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
