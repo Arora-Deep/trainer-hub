@@ -159,7 +159,7 @@ const Quizzes = () => {
             </TableHeader>
             <TableBody>
               {filteredQuizzes.map((quiz) => (
-                <TableRow key={quiz.id} className="table-row-premium">
+                <TableRow key={quiz.id} className="table-row-premium cursor-pointer" onClick={() => navigate(`/quizzes/${quiz.id}`)}>
                   <TableCell className="font-medium">{quiz.title}</TableCell>
                   <TableCell className="text-muted-foreground">{quiz.course}</TableCell>
                   <TableCell>{quiz.questions.length}</TableCell>
