@@ -14,7 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   Save, CalendarDays, Pause, Play, CheckCircle2, Users, Monitor,
   AlertTriangle, RotateCcw, Camera, Star, Trash2, RefreshCw, ArrowLeft,
-  CalendarPlus, Clock,
+  CalendarPlus, Clock, Cpu, MemoryStick, HardDrive, Zap,
 } from "lucide-react";
 
 export default function ModifyBatch() {
