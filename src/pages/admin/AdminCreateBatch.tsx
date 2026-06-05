@@ -563,6 +563,16 @@ export default function AdminCreateBatch() {
                     <CardContent className="space-y-4">
                       {!enableVMs || addedVMs.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground"><Monitor className="h-12 w-12 mx-auto mb-3 opacity-30" /><p className="text-sm">Add VMs to see pricing</p></div>
+                      ) : !showPricing ? (
+                        <div className="text-center py-8 space-y-2">
+                          <div className="h-10 w-10 rounded-full bg-muted mx-auto flex items-center justify-center">
+                            <Lock className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <p className="text-sm font-medium">Pricing restricted</p>
+                          <p className="text-xs text-muted-foreground max-w-[220px] mx-auto">
+                            Visible to Super Admin and Finance roles only. Current role: <span className="capitalize">{adminSubRole.replace("_", " ")}</span>.
+                          </p>
+                        </div>
                       ) : (
                         <>
                           <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 grid grid-cols-3 gap-3 text-center">
