@@ -207,6 +207,78 @@ export default function ModifyBatch() {
                 </CardContent>
               </Card>
 
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-primary" /> Resize VM Resources
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Upgrade or downgrade compute, memory and disk for every participant VM mid-batch.
+                    Changes apply on next reboot.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs flex items-center gap-1.5"><Cpu className="h-3 w-3" /> vCPU</Label>
+                      <Select value={String(newCpu)} onValueChange={(v) => setNewCpu(parseInt(v))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {[2, 4, 6, 8, 12, 16, 24, 32].map((n) => (
+                            <SelectItem key={n} value={String(n)}>{n} cores</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-muted-foreground">Current: {currentCpu} cores</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs flex items-center gap-1.5"><MemoryStick className="h-3 w-3" /> RAM</Label>
+                      <Select value={String(newRam)} onValueChange={(v) => setNewRam(parseInt(v))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {[4, 8, 16, 24, 32, 48, 64, 96, 128].map((n) => (
+                            <SelectItem key={n} value={String(n)}>{n} GB</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-muted-foreground">Current: {currentRam} GB</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs flex items-center gap-1.5"><HardDrive className="h-3 w-3" /> Disk</Label>
+                      <Select value={String(newDisk)} onValueChange={(v) => setNewDisk(parseInt(v))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {[50, 100, 200, 400, 800, 1000, 2000].map((n) => (
+                            <SelectItem key={n} value={String(n)}>{n} GB</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-muted-foreground">Current: {currentDisk} GB</p>
+                    </div>
+                  </div>
+
+                  {(newCpu !== currentCpu || newRam !== currentRam || newDisk !== currentDisk) && (
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-700">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                      <span>
+                        Resizing {batch.vmConfig?.participantVMs.length ?? batch.participants.length} VMs from {currentCpu}c/{currentRam}GB/{currentDisk}GB to {newCpu}c/{newRam}GB/{newDisk}GB. VMs will reboot during the next maintenance window.
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={() => setResizeOpen(true)}
+                      disabled={newCpu === currentCpu && newRam === currentRam && newDisk === currentDisk}
+                      className="gap-2"
+                    >
+                      <Zap className="h-4 w-4" /> Apply Resize
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+
               {snapshots.length > 0 && (
                 <Card>
                   <CardHeader><CardTitle className="text-base flex items-center gap-2"><Camera className="h-4 w-4" /> Snapshots</CardTitle></CardHeader>
