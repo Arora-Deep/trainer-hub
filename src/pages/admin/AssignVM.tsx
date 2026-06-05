@@ -9,7 +9,16 @@ import { useCustomerStore } from "@/stores/customerStore";
 import { useBatchStore } from "@/stores/batchStore";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Monitor, Zap, Users, CheckCircle2 } from "lucide-react";
+import { Monitor, Zap, Users, CheckCircle2, Server } from "lucide-react";
+
+const NODE_OPTIONS = [
+  { value: "auto", label: "Auto-balance (recommended)" },
+  { value: "node-a-01", label: "node-a-01 · Mumbai · 38% load" },
+  { value: "node-a-02", label: "node-a-02 · Mumbai · 62% load" },
+  { value: "node-b-01", label: "node-b-01 · Bangalore · 24% load" },
+  { value: "node-b-02", label: "node-b-02 · Bangalore · 71% load" },
+  { value: "node-c-01", label: "node-c-01 · Singapore · 19% load" },
+];
 
 const statusConfig: Record<string, { dot: string; bg: string; text: string; label: string }> = {
   running: { dot: "bg-green-500", bg: "bg-green-500/10", text: "text-green-600", label: "Running" },
