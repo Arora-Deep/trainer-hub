@@ -155,6 +155,18 @@ export function VMDaySchedule({ dateRange, dailySchedules, onChange }: VMDaySche
                 </div>
 
                 {/* Apply to all button - only show on first day */}
+                <Button
+                  type="button"
+                  variant={is24h ? "default" : "outline"}
+                  size="sm"
+                  className="h-8 px-2 text-[10px] shrink-0 gap-1"
+                  onClick={() => toggle24h(day)}
+                  title="Toggle 24-hour availability"
+                >
+                  <InfinityIcon className="h-3 w-3" /> 24h
+                </Button>
+
+                {/* Apply to all button - only show on first day */}
                 {index === 0 && days.length > 1 && (
                   <Button
                     type="button"
