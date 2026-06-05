@@ -157,21 +157,26 @@ export default function AssignVM() {
                   <TableHead className="w-10"></TableHead>
                   <TableHead>Participant</TableHead>
                   <TableHead>Assigned VM</TableHead>
+                  <TableHead>Node</TableHead>
                   <TableHead>IP</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {participants.map((p) => {
+                {participants.map((p, idx) => {
                   const vm = findVM(p.email);
                   const status = vm ? vm.status : "not_assigned";
                   const sc = statusConfig[status] || statusConfig.not_assigned;
+                  const nodeForRow = vm
+                    ? (targetNode === "auto" ? `node-${["a", "b", "c"][idx % 3]}-0${(idx % 2) + 1}` : targetNode)
+                    : "—";
                   return (
                     <TableRow key={p.id}>
                       <TableCell><Checkbox checked={selected.has(p.id)} onCheckedChange={() => toggle(p.id)} disabled={!!vm} /></TableCell>
                       <TableCell className="text-sm font-medium">{p.name}<div className="text-xs text-muted-foreground">{p.email}</div></TableCell>
                       <TableCell className="text-sm font-mono">{vm?.vmName || "—"}</TableCell>
+                      <TableCell className="text-xs font-mono text-muted-foreground">{nodeForRow}</TableCell>
                       <TableCell className="text-sm font-mono text-muted-foreground">{vm?.ipAddress || "—"}</TableCell>
                       <TableCell>
                         <Badge variant="secondary" className={cn("text-xs gap-1.5", sc.bg, sc.text)}>
