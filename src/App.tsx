@@ -23,6 +23,7 @@ import Assignments from "./pages/Assignments";
 import CreateAssignment from "./pages/CreateAssignment";
 import Quizzes from "./pages/Quizzes";
 import CreateQuiz from "./pages/CreateQuiz";
+import QuizDetails from "./pages/QuizDetails";
 import Exercises from "./pages/Exercises";
 import ExerciseDetails from "./pages/ExerciseDetails";
 import CreateExercise from "./pages/CreateExercise";
