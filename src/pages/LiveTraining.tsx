@@ -19,6 +19,10 @@ import {
 } from "lucide-react";
 import { useBatchStore } from "@/stores/batchStore";
 import { useCourseStore } from "@/stores/courseStore";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
