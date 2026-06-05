@@ -90,10 +90,16 @@ const Assignments = () => {
         title="Assignments"
         description="Create and manage course assignments and track submissions"
         actions={
-          <Button onClick={() => navigate("/assignments/create")} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Create Assignment
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
+              <Upload className="h-4 w-4" />
+              Import Assignment
+            </Button>
+            <Button onClick={() => navigate("/assignments/create")} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Create Assignment
+            </Button>
+          </div>
         }
       />
 
