@@ -67,6 +67,20 @@ export function VMDaySchedule({ dateRange, dailySchedules, onChange }: VMDaySche
     onChange(newSchedules);
   };
 
+  const toggle24h = (date: Date) => {
+    const schedule = getScheduleForDate(date);
+    const is24 = schedule.startTime === "00:00" && schedule.endTime === "23:30";
+    const next = is24
+      ? { ...schedule, startTime: "09:00", endTime: "18:00" }
+      : { ...schedule, startTime: "00:00", endTime: "23:30" };
+    const dateStr = format(date, "yyyy-MM-dd");
+    onChange([...dailySchedules.filter(s => s.date !== dateStr), next]);
+  };
+
+  const apply24hAll = () => {
+    onChange(days.map(d => ({ date: format(d, "yyyy-MM-dd"), startTime: "00:00", endTime: "23:30" })));
+  };
+
   return (
     <Card>
       <CardHeader>
