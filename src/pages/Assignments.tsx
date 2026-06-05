@@ -245,6 +245,39 @@ const Assignments = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Assignment</DialogTitle>
+            <DialogDescription>
+              Upload a brief, rubric or sample submissions package.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label className="text-xs">Assignment File</Label>
+            <Input
+              type="file"
+              accept=".json,.csv,.xlsx,.zip,.pdf,.docx"
+              onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Supports JSON, CSV, Excel, ZIP packages, PDF or Word briefs.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImportOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!importFile}
+              onClick={() => {
+                toast({ title: "Assignment imported", description: `${importFile?.name} queued for processing.` });
+                setImportFile(null);
+                setImportOpen(false);
+              }}
+            >Import</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
