@@ -645,7 +645,11 @@ export default function AdminCreateBatch() {
                             <p className="font-semibold">{vmType === "multi" ? `${addedVMs.length} VMs per participant` : "Single VM per participant"}</p>
                             <p className="text-sm text-muted-foreground">{pricing.totalVMs} total • {pricing.days} days</p>
                           </div>
-                          <span className="text-lg font-bold text-primary">${pricing.total.toFixed(0)}</span>
+                          {showPricing ? (
+                            <span className="text-lg font-bold text-primary">${pricing.total.toFixed(0)}</span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground inline-flex items-center gap-1"><Lock className="h-3 w-3" /> Restricted</span>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
