@@ -38,6 +38,7 @@ import {
   Pencil,
   Trash2,
   MoreHorizontal,
+  Upload,
 } from "lucide-react";
 import {
   DropdownMenu,
