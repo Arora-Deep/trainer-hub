@@ -96,6 +96,16 @@ export default function AdminCreateBatch() {
   const [vmDisk, setVmDisk] = useState(50);
   const [skipApproval, setSkipApproval] = useState(true);
 
+  // Advanced VM options
+  const [enableVLAN, setEnableVLAN] = useState(false);
+  const [vlanId, setVlanId] = useState("100");
+  const [enableQemu, setEnableQemu] = useState(true);
+  const [enableNestedVirt, setEnableNestedVirt] = useState(false);
+
+  // RBAC: pricing visibility
+  const adminSubRole = useRoleStore((s) => s.adminSubRole);
+  const showPricing = canViewPricing(adminSubRole);
+
   // Step 5 approval
   const [cloudAddaApproval, setCloudAddaApproval] = useState<"pending" | "approved" | "rejected">("pending");
   const [companyAdminApproval, setCompanyAdminApproval] = useState<"pending" | "approved" | "rejected">("pending");
