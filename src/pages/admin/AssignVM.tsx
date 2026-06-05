@@ -125,9 +125,22 @@ export default function AssignVM() {
       {batch && (
         <Card>
           <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <CardTitle className="text-sm">Participants</CardTitle>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Server className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Select value={targetNode} onValueChange={setTargetNode}>
+                    <SelectTrigger className="h-8 w-[240px] text-xs">
+                      <SelectValue placeholder="Target node" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {NODE_OPTIONS.map((n) => (
+                        <SelectItem key={n.value} value={n.value} className="text-xs">{n.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleAutoAssign} disabled={unassignedCount === 0}>
                   <Zap className="h-3 w-3" /> Auto Assign
                 </Button>
