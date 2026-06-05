@@ -446,6 +446,7 @@ export default function LiveTraining() {
               onSelect={(id) => setSelectedStudentId(id)}
               onAssist={(s) => toast({ title: `Assisting ${s.name}` })}
               onRestart={(s) => toast({ title: `Restarting ${s.vmName}` })}
+              onBulk={(a) => setBulkAction(a)}
             />
           )}
           {mainTab === "trainer" && (
