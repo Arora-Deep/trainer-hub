@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useBatchStore, type VMConfig, type VMTemplateConfig, type VMEntry } from "@/stores/batchStore";
 import { useLabStore } from "@/stores/labStore";
 import { useCustomerStore } from "@/stores/customerStore";
+import { useRoleStore, canViewPricing } from "@/stores/roleStore";
 import { VMDaySchedule, type DaySchedule } from "@/components/batches/VMDaySchedule";
 import { TemplatePickerDropdown } from "@/components/labs/TemplatePickerDropdown";
 import { StatusBadge } from "@/components/ui/StatusBadge";
