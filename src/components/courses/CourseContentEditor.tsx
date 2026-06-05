@@ -91,6 +91,8 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
   const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
   const [editingLesson, setEditingLesson] = useState<{ chapterId: string; lesson: Lesson } | null>(null);
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
   
   const [chapterTitle, setChapterTitle] = useState("");
   const [lessonForm, setLessonForm] = useState({
