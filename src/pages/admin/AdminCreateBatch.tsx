@@ -621,21 +621,23 @@ export default function AdminCreateBatch() {
                     <Card>
                       <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-base flex items-center gap-2"><Monitor className="h-4 w-4 text-primary" /> VM Configuration</CardTitle>
-                        <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-                          <DialogTrigger asChild><Button variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" />Breakdown</Button></DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader><DialogTitle>Pricing Breakdown</DialogTitle><DialogDescription>Detailed cost</DialogDescription></DialogHeader>
-                            <div className="space-y-2 py-4 text-sm">
-                              <div className="flex justify-between"><span>VMs</span><span>{pricing.totalVMs}</span></div>
-                              <div className="flex justify-between"><span>Days</span><span>{pricing.days}</span></div>
-                              <div className="flex justify-between"><span>Compute</span><span>${pricing.compute.toFixed(0)}</span></div>
-                              <div className="flex justify-between"><span>Storage</span><span>${pricing.storage.toFixed(0)}</span></div>
-                              <div className="flex justify-between"><span>Network</span><span>${pricing.network.toFixed(0)}</span></div>
-                              <div className="flex justify-between"><span>Support</span><span>${pricing.support.toFixed(0)}</span></div>
-                              <div className="border-t pt-2 flex justify-between font-semibold"><span>Total</span><span className="text-primary">${pricing.total.toFixed(0)}</span></div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                        {showPricing && (
+                          <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+                            <DialogTrigger asChild><Button variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" />Breakdown</Button></DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader><DialogTitle>Pricing Breakdown</DialogTitle><DialogDescription>Detailed cost</DialogDescription></DialogHeader>
+                              <div className="space-y-2 py-4 text-sm">
+                                <div className="flex justify-between"><span>VMs</span><span>{pricing.totalVMs}</span></div>
+                                <div className="flex justify-between"><span>Days</span><span>{pricing.days}</span></div>
+                                <div className="flex justify-between"><span>Compute</span><span>${pricing.compute.toFixed(0)}</span></div>
+                                <div className="flex justify-between"><span>Storage</span><span>${pricing.storage.toFixed(0)}</span></div>
+                                <div className="flex justify-between"><span>Network</span><span>${pricing.network.toFixed(0)}</span></div>
+                                <div className="flex justify-between"><span>Support</span><span>${pricing.support.toFixed(0)}</span></div>
+                                <div className="border-t pt-2 flex justify-between font-semibold"><span>Total</span><span className="text-primary">${pricing.total.toFixed(0)}</span></div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        )}
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border">
