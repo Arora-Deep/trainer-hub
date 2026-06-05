@@ -52,7 +52,7 @@ type StudentRow = {
 };
 
 export default function LiveTraining() {
-  const { batches, createSnapshot } = useBatchStore();
+  const { batches, createSnapshot, recloneAllVMs, resetAllVMs } = useBatchStore();
   const { courses } = useCourseStore();
 
   const liveBatches = batches.filter(b => b.status === "live" || b.status === "upcoming");
