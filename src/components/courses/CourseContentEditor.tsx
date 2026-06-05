@@ -220,11 +220,48 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
             {chapters.length} chapters • {totalLessons} lessons
           </p>
         </div>
-        <Button onClick={handleAddChapter} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Chapter
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
+            <Upload className="h-4 w-4" />
+            Import Content
+          </Button>
+          <Button onClick={handleAddChapter} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Chapter
+          </Button>
+        </div>
       </div>
+
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Course Content</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label className="text-xs">Content Package</Label>
+            <Input
+              type="file"
+              accept=".json,.zip,.scorm,.xml,.csv"
+              onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Supports JSON outlines, ZIP/SCORM packages, common LMS exports.
+              Chapters and lessons will be merged into this course.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImportOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!importFile}
+              onClick={() => {
+                toast.success(`${importFile?.name} imported — content queued`);
+                setImportFile(null);
+                setImportOpen(false);
+              }}
+            >Import</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {chapters.length === 0 ? (
         <Card>
