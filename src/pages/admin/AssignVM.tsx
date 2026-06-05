@@ -33,6 +33,7 @@ export default function AssignVM() {
   const [customerId, setCustomerId] = useState("");
   const [batchId, setBatchId] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [targetNode, setTargetNode] = useState("auto");
 
   const batch = batches.find((b) => b.id === batchId);
   const filteredBatches = useMemo(() => batches, [batches]);
