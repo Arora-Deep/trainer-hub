@@ -84,11 +84,18 @@ export function VMDaySchedule({ dateRange, dailySchedules, onChange }: VMDaySche
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <Clock className="h-4 w-4 text-primary" />
-          Daily VM Availability
-        </CardTitle>
-        <CardDescription>Set the time window for each day when VMs are accessible</CardDescription>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" />
+              Daily VM Availability
+            </CardTitle>
+            <CardDescription>Set the time window for each day when VMs are accessible</CardDescription>
+          </div>
+          <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={apply24hAll}>
+            <InfinityIcon className="h-3 w-3" /> 24h all days
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
