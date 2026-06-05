@@ -79,6 +79,7 @@ export default function LiveTraining() {
   const [mainTab, setMainTab] = useState<MainTab>("students");
   const [splitFullscreen, setSplitFullscreen] = useState(false);
   const [splitSide, setSplitSide] = useState<SplitSide>("students");
+  const [bulkAction, setBulkAction] = useState<null | "start" | "stop" | "reclone" | "restore">(null);
 
   const [messages, setMessages] = useState<{ id: string; from: string; text: string; t: string; kind: "msg" | "q" | "sys" }[]>([
     { id: "1", from: "Alice Johnson", text: "Can you re-explain VPC peering?", t: "2:34", kind: "q" },
