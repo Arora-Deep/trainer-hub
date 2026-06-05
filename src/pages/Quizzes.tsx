@@ -180,7 +180,7 @@ const Quizzes = () => {
                       label={quiz.status}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -188,11 +188,11 @@ const Quizzes = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/quizzes/${quiz.id}`)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Preview Quiz
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/quizzes/${quiz.id}`)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit Questions
                         </DropdownMenuItem>
