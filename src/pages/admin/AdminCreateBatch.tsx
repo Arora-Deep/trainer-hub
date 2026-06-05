@@ -553,6 +553,48 @@ export default function AdminCreateBatch() {
                       }}>
                         <Plus className="mr-2 h-4 w-4" /> Add VM
                       </Button>
+
+                      {/* Advanced VM options — virtualization & networking */}
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <Network className="h-4 w-4 text-primary" /> Advanced VM Options
+                          </CardTitle>
+                          <CardDescription>Virtualization and networking toggles applied to every VM in this batch</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          <div className="flex items-center justify-between p-2.5 rounded-lg border">
+                            <div>
+                              <Label className="text-sm">Enable QEMU / KVM</Label>
+                              <p className="text-[11px] text-muted-foreground">Hardware-assisted virtualization</p>
+                            </div>
+                            <Switch checked={enableQemu} onCheckedChange={setEnableQemu} />
+                          </div>
+                          <div className="flex items-center justify-between p-2.5 rounded-lg border">
+                            <div>
+                              <Label className="text-sm">Nested Virtualization</Label>
+                              <p className="text-[11px] text-muted-foreground">Run VMs inside VMs (Docker, K8s labs)</p>
+                            </div>
+                            <Switch checked={enableNestedVirt} onCheckedChange={setEnableNestedVirt} />
+                          </div>
+                          <div className="flex items-center justify-between p-2.5 rounded-lg border">
+                            <div>
+                              <Label className="text-sm">Enable VLAN</Label>
+                              <p className="text-[11px] text-muted-foreground">Isolate batch traffic on a dedicated VLAN</p>
+                            </div>
+                            <Switch checked={enableVLAN} onCheckedChange={setEnableVLAN} />
+                          </div>
+                          {enableVLAN && (
+                            <div className="grid grid-cols-[1fr_auto] gap-3 items-end p-2.5 rounded-lg border bg-primary/5">
+                              <div className="space-y-1">
+                                <Label className="text-xs">VLAN ID</Label>
+                                <Input value={vlanId} onChange={(e) => setVlanId(e.target.value)} placeholder="e.g. 100" />
+                              </div>
+                              <Badge variant="secondary" className="text-[10px]">802.1Q</Badge>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
                     </>
                   )}
                 </div>
