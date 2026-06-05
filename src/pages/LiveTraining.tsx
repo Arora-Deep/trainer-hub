@@ -167,6 +167,37 @@ export default function LiveTraining() {
     setChatInput("");
   };
 
+  const runBulkAction = () => {
+    if (!batch || !bulkAction) return;
+    const n = participantVMs.length || participants.length;
+    switch (bulkAction) {
+      case "start":
+        toast({ title: "Starting all VMs", description: `Boot signal sent to ${n} VMs.` });
+        break;
+      case "stop":
+        toast({ title: "Stopping all VMs", description: `Shutdown queued for ${n} VMs.` });
+        break;
+      case "reclone":
+        recloneAllVMs(batch.id);
+        toast({
+          title: "Re-cloning all VMs",
+          description: `${n} VMs queued. Repeated re-clones can slow the host.`,
+        });
+        break;
+      case "restore": {
+        const golden = batch.vmConfig?.goldenSnapshotId;
+        if (!golden) {
+          toast({ title: "No golden snapshot", description: "Set a golden snapshot before restoring." });
+        } else {
+          resetAllVMs(batch.id, golden);
+          toast({ title: "Restoring all VMs", description: `${n} VMs reverting to the golden snapshot.` });
+        }
+        break;
+      }
+    }
+    setBulkAction(null);
+  };
+
   if (!batch) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
