@@ -663,6 +663,48 @@ export default function LiveTraining() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk VM action confirmation */}
+      <AlertDialog open={!!bulkAction} onOpenChange={(open) => !open && setBulkAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              {bulkAction === "reclone" && <AlertCircle className="h-4 w-4 text-amber-500" />}
+              {bulkAction === "start" && "Start all participant VMs?"}
+              {bulkAction === "stop" && "Stop all participant VMs?"}
+              {bulkAction === "restore" && "Restore all VMs to snapshot?"}
+              {bulkAction === "reclone" && "Reclone all participant VMs?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                {bulkAction === "start" && <p>Boots every VM in {batch.name}. Cold starts may take 1-2 minutes.</p>}
+                {bulkAction === "stop" && <p>Gracefully shuts down every VM in {batch.name}. Unsaved work will be lost.</p>}
+                {bulkAction === "restore" && <p>Reverts every VM to the golden snapshot. Any work since the snapshot will be discarded.</p>}
+                {bulkAction === "reclone" && (
+                  <>
+                    <p>This re-clones every VM from scratch and discards all participant work.</p>
+                    <p className="rounded-md bg-amber-500/10 text-amber-700 border border-amber-500/30 px-3 py-2 text-xs">
+                      Warning: re-cloning repeatedly during a session puts heavy load on the host and can slow every VM in this batch. Use sparingly.
+                    </p>
+                  </>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={runBulkAction}
+              className={bulkAction === "reclone" || bulkAction === "stop" ? "bg-destructive hover:bg-destructive/90" : ""}
+            >
+              {bulkAction === "start" && "Start all"}
+              {bulkAction === "stop" && "Stop all"}
+              {bulkAction === "restore" && "Restore all"}
+              {bulkAction === "reclone" && "Reclone all"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
