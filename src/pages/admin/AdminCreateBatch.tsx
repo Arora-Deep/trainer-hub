@@ -27,6 +27,7 @@ import {
   Building2, FileText, Clock, Monitor, CheckCircle2,
   Users, Settings, Layers, Server, DollarSign, Shield, Eye, Sparkles,
   Send, HardDrive, Trash2, ArrowRight, ArrowLeft, Plus, X, Zap, Laptop,
+  Lock, Network,
 } from "lucide-react";
 
 const steps = [
