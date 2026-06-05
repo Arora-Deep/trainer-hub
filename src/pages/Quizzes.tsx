@@ -20,11 +20,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  Plus, 
-  Search, 
-  MoreHorizontal, 
-  HelpCircle, 
+import {
+  Plus,
+  Search,
+  MoreHorizontal,
+  HelpCircle,
   CheckCircle,
   Clock,
   FileQuestion,
@@ -32,8 +32,14 @@ import {
   Copy,
   Trash2,
   Eye,
-  BarChart3
+  BarChart3,
+  Upload,
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
 import { useQuizStore } from "@/stores/quizStore";
 
 const Quizzes = () => {
@@ -41,6 +47,8 @@ const Quizzes = () => {
   const { quizzes } = useQuizStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [importOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
 
   const filteredQuizzes = quizzes.filter((quiz) => {
     const matchesSearch = quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
