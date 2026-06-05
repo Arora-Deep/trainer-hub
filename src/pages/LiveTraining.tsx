@@ -670,14 +670,15 @@ export default function LiveTraining() {
 /* ---------------- Main views ---------------- */
 
 function StudentsView({
-  filtered, grid, search, setSearch, onSelect, onAssist, onRestart,
+  filtered, grid, search, setSearch, onSelect, onAssist, onRestart, onBulk,
 }: {
   filtered: StudentRow[]; grid: StudentRow[]; search: string; setSearch: (v: string) => void;
   onSelect: (id: string) => void; onAssist: (s: StudentRow) => void; onRestart: (s: StudentRow) => void;
+  onBulk: (action: "start" | "stop" | "reclone" | "restore") => void;
 }) {
   return (
     <>
-      <div className="flex items-end justify-between mb-6">
+      <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
         <div>
           <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Classroom</p>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight">
@@ -692,6 +693,28 @@ function StudentsView({
             placeholder="Search students"
             className="h-9 w-[260px] pl-9"
           />
+        </div>
+      </div>
+
+      {/* Global VM controls */}
+      <div className="mb-4 flex items-center justify-between gap-3 flex-wrap rounded-xl border border-border bg-card px-4 py-2.5">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Monitor className="h-3.5 w-3.5" />
+          <span>Global VM controls — applies to all {grid.length} participant VMs</span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => onBulk("start")}>
+            <Play className="h-3.5 w-3.5" /> Start all
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => onBulk("stop")}>
+            <Square className="h-3.5 w-3.5" /> Stop all
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => onBulk("restore")}>
+            <RotateCcw className="h-3.5 w-3.5" /> Restore to snapshot
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs text-amber-600 border-amber-500/30 hover:bg-amber-500/10" onClick={() => onBulk("reclone")}>
+            <RefreshCw className="h-3.5 w-3.5" /> Reclone all
+          </Button>
         </div>
       </div>
 
