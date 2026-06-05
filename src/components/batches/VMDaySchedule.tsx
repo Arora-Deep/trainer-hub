@@ -1,7 +1,8 @@
 import { format, eachDayOfInterval } from "date-fns";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Clock, Copy } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Clock, Copy, Infinity as InfinityIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Select,
