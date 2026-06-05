@@ -50,10 +50,12 @@ export default function AssignVM() {
     setSelected(next);
   };
 
+  const nodeLabel = () => targetNode === "auto" ? "auto-balanced node" : targetNode;
+
   const handleAssign = (participantId: string, name: string) => {
     if (!batch) return;
     assignParticipantVM(batch.id, participantId);
-    toast({ title: "VM Assigned", description: `Provisioning a VM for ${name}...` });
+    toast({ title: "VM Assigned", description: `Provisioning a VM for ${name} on ${nodeLabel()}.` });
   };
 
   const handleAutoAssign = () => {
@@ -65,7 +67,7 @@ export default function AssignVM() {
         count++;
       }
     });
-    toast({ title: "Auto Assign", description: `Assigning VMs to ${count} unassigned participants.` });
+    toast({ title: "Auto Assign", description: `Assigning ${count} VMs to ${nodeLabel()}.` });
   };
 
   const handleBulkAssign = () => {
@@ -74,7 +76,7 @@ export default function AssignVM() {
       const p = participants.find((x) => x.id === id);
       if (p && !findVM(p.email)) assignParticipantVM(batch.id, id);
     });
-    toast({ title: "Bulk Assign", description: `Assigning ${selected.size} VMs.` });
+    toast({ title: "Bulk Assign", description: `Assigning ${selected.size} VMs to ${nodeLabel()}.` });
     setSelected(new Set());
   };
 
