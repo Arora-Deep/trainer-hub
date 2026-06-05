@@ -78,10 +78,16 @@ const Quizzes = () => {
         title="Quizzes"
         description="Create and manage course quizzes and assessments"
         actions={
-          <Button onClick={() => navigate("/quizzes/create")} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Create Quiz
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
+              <Upload className="h-4 w-4" />
+              Import Quiz
+            </Button>
+            <Button onClick={() => navigate("/quizzes/create")} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Create Quiz
+            </Button>
+          </div>
         }
       />
 
