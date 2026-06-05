@@ -217,6 +217,39 @@ const Quizzes = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Quiz</DialogTitle>
+            <DialogDescription>
+              Upload a .json, .csv, or .xlsx file with questions, options and correct answers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label className="text-xs">Quiz File</Label>
+            <Input
+              type="file"
+              accept=".json,.csv,.xlsx,.qti"
+              onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Supports CloudAdda JSON, CSV templates, Excel and QTI 2.1 packages.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImportOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!importFile}
+              onClick={() => {
+                toast({ title: "Quiz imported", description: `${importFile?.name} queued — questions will appear shortly.` });
+                setImportFile(null);
+                setImportOpen(false);
+              }}
+            >Import</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
