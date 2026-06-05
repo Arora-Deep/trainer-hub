@@ -102,15 +102,18 @@ export function VMDaySchedule({ dateRange, dailySchedules, onChange }: VMDaySche
           {days.map((day, index) => {
             const schedule = getScheduleForDate(day);
             const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+            const is24h = schedule.startTime === "00:00" && schedule.endTime === "23:30";
 
             return (
               <div
                 key={format(day, "yyyy-MM-dd")}
                 className={cn(
                   "flex items-center gap-3 p-3 rounded-lg border transition-colors",
-                  isWeekend
-                    ? "bg-muted/50 border-border/30"
-                    : "bg-muted/10 border-border/50"
+                  is24h
+                    ? "bg-primary/5 border-primary/30"
+                    : isWeekend
+                      ? "bg-muted/50 border-border/30"
+                      : "bg-muted/10 border-border/50"
                 )}
               >
                 {/* Day label */}
