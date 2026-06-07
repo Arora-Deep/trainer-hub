@@ -7,16 +7,41 @@ export type LessonType =
   | 'assignment'
   | 'code-exercise'
   | 'lab'
+  | 'lab-instruction'
+  | 'live-session'
   | 'ctf-scenario'
-  | 'exam';
+  | 'exam'
+  | 'mock-exam'
+  | 'survey';
 
 export type LabMode = 'on-demand' | 'persistent';
+
+export type LabAllocationType =
+  | 'persistent'      // dedicated for full course duration
+  | 'module-unlock'   // unlocks after prerequisite lesson/module
+  | 'time-limited'    // launch -> countdown
+  | 'hour-pool';      // student spends from a pool
+
+export interface LabAllocation {
+  type: LabAllocationType;
+  hours?: number;                    // persistent fixed total / hour-pool total
+  expiry?: string;                   // ISO date for persistent fixed-expiry
+  untilCourseEnd?: boolean;
+  unlockAfter?: {
+    kind: 'lesson' | 'module' | 'quiz' | 'assignment';
+    refId: string;
+    refLabel?: string;
+  };
+  sessionDurationHrs?: number;       // time-limited per launch
+  onExpire?: 'suspend' | 'delete' | 'lock';
+}
 
 export interface LabAttachment {
   templateId: string;
   templateName: string;
   mode: LabMode;
-  estimatedHours?: number; // for on-demand budgeting
+  estimatedHours?: number;
+  allocation?: LabAllocation;
 }
 
 export type LessonSource = 'inline' | 'library';
@@ -26,6 +51,35 @@ export interface LessonAttachment {
   size?: number;
   url?: string;
   kind?: string;
+}
+
+export interface LabInstructionTask {
+  id: string;
+  title: string;
+  detail?: string;
+}
+
+export interface LabInstructionResource {
+  label: string;
+  url?: string;
+  kind?: 'link' | 'doc' | 'download' | 'reference';
+}
+
+export interface LabInstructionContent {
+  objective?: string;
+  prerequisites?: string[];
+  tasks?: LabInstructionTask[];
+  expectedOutcome?: string;
+  resources?: LabInstructionResource[];
+  launchLessonId?: string;
+}
+
+export interface LiveSessionContent {
+  date?: string;
+  time?: string;
+  durationMin?: number;
+  meetingUrl?: string;
+  agenda?: string;
 }
 
 export interface Lesson {
@@ -46,6 +100,10 @@ export interface Lesson {
   // Lab
   lab?: LabAttachment;
   successCriteria?: string;
+  // Lab instructions
+  labInstructions?: LabInstructionContent;
+  // Live session
+  liveSession?: LiveSessionContent;
   // Code exercise
   language?: string;
   starterCode?: string;
