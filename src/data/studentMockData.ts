@@ -262,6 +262,14 @@ export const studentCourses: StudentCourse[] = [
     batch: "Python Self-Paced", batchId: "7", prerequisites: [],
     nextLessonId: "l-4-5",
     totalAccessHours: 120, usedAccessHours: 38,
+    persistentLab: {
+      labId: "lab-4",
+      templateName: "Python DS Sandbox",
+      totalHours: 20,
+      usedHours: 6.5,
+      ip: "10.0.3.21",
+      status: "running",
+    },
     studyData: [
       { day: "Mon", hours: 1 }, { day: "Tue", hours: 1.5 }, { day: "Wed", hours: 0.5 },
       { day: "Thu", hours: 1 }, { day: "Fri", hours: 0.5 }, { day: "Sat", hours: 1 }, { day: "Sun", hours: 1.2 },
