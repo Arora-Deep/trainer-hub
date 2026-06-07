@@ -474,3 +474,168 @@ function AttachmentsBlock({
     </div>
   );
 }
+
+function LabAllocationEditor({ value, onChange }: { value?: LabAllocation; onChange: (v: LabAllocation) => void }) {
+  const alloc: LabAllocation = value ?? { type: "persistent", untilCourseEnd: true };
+  const set = <K extends keyof LabAllocation>(k: K, v: LabAllocation[K]) => onChange({ ...alloc, [k]: v });
+  return (
+    <div className="rounded-md border bg-background/60 p-3 space-y-3">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs font-semibold">Allocation rule</Label>
+        <Select value={alloc.type} onValueChange={(v: LabAllocationType) => onChange({ type: v, ...(v === "persistent" ? { untilCourseEnd: true } : {}) })}>
+          <SelectTrigger className="h-8 w-[200px] text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="persistent">Persistent — full course</SelectItem>
+            <SelectItem value="module-unlock">Unlock after module</SelectItem>
+            <SelectItem value="time-limited">Time-limited per launch</SelectItem>
+            <SelectItem value="hour-pool">Hour pool</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {alloc.type === "persistent" && (
+        <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-1">
+            <Label className="text-[11px]">Until course ends</Label>
+            <Switch checked={!!alloc.untilCourseEnd} onCheckedChange={(v) => set("untilCourseEnd", v)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[11px]">Total hours</Label>
+            <Input type="number" value={alloc.hours ?? ""} onChange={(e) => set("hours", Number(e.target.value))} disabled={!!alloc.untilCourseEnd} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[11px]">Fixed expiry</Label>
+            <Input type="date" value={alloc.expiry?.slice(0,10) ?? ""} onChange={(e) => set("expiry", e.target.value)} disabled={!!alloc.untilCourseEnd} />
+          </div>
+        </div>
+      )}
+
+      {alloc.type === "module-unlock" && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-[11px]">Unlock after</Label>
+            <Select
+              value={alloc.unlockAfter?.kind ?? "lesson"}
+              onValueChange={(v: any) => set("unlockAfter", { kind: v, refId: alloc.unlockAfter?.refId ?? "", refLabel: alloc.unlockAfter?.refLabel })}
+            >
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="lesson">Lesson</SelectItem>
+                <SelectItem value="module">Module</SelectItem>
+                <SelectItem value="quiz">Quiz</SelectItem>
+                <SelectItem value="assignment">Assignment</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[11px]">Reference name</Label>
+            <Input value={alloc.unlockAfter?.refLabel ?? ""} onChange={(e) => set("unlockAfter", { kind: alloc.unlockAfter?.kind ?? "lesson", refId: alloc.unlockAfter?.refId ?? e.target.value, refLabel: e.target.value })} placeholder="e.g., Module 2 quiz" />
+          </div>
+        </div>
+      )}
+
+      {alloc.type === "time-limited" && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-[11px]">Session length (hrs)</Label>
+            <Select value={String(alloc.sessionDurationHrs ?? 2)} onValueChange={(v) => set("sessionDurationHrs", Number(v))}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[1,2,4,8].map((h) => <SelectItem key={h} value={String(h)}>{h}h</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[11px]">On expiry</Label>
+            <Select value={alloc.onExpire ?? "suspend"} onValueChange={(v: any) => set("onExpire", v)}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="suspend">Suspend VM</SelectItem>
+                <SelectItem value="delete">Delete VM</SelectItem>
+                <SelectItem value="lock">Lock access</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
+      {alloc.type === "hour-pool" && (
+        <div className="space-y-1">
+          <Label className="text-[11px]">Pool size (hours)</Label>
+          <Input type="number" value={alloc.hours ?? 20} onChange={(e) => set("hours", Number(e.target.value))} />
+          <p className="text-[10px] text-muted-foreground">Students spend from this pool whenever they launch the lab.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LabInstructionEditor({ value, onChange }: { value: NonNullable<Lesson["labInstructions"]>; onChange: (v: NonNullable<Lesson["labInstructions"]>) => void }) {
+  const v = value;
+  const set = <K extends keyof typeof v>(k: K, val: any) => onChange({ ...v, [k]: val });
+  const tasks: LabInstructionTask[] = v.tasks ?? [];
+  const resources: LabInstructionResource[] = v.resources ?? [];
+  const prereqs: string[] = v.prerequisites ?? [];
+
+  const updateTask = (i: number, patch: Partial<LabInstructionTask>) =>
+    set("tasks", tasks.map((t, idx) => (idx === i ? { ...t, ...patch } : t)));
+  const addTask = () => set("tasks", [...tasks, { id: `t-${Date.now()}`, title: "" }]);
+  const removeTask = (i: number) => set("tasks", tasks.filter((_, idx) => idx !== i));
+
+  const updateRes = (i: number, patch: Partial<LabInstructionResource>) =>
+    set("resources", resources.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  const addRes = () => set("resources", [...resources, { label: "", url: "", kind: "link" }]);
+  const removeRes = (i: number) => set("resources", resources.filter((_, idx) => idx !== i));
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1.5">
+        <Label className="text-xs">Objective</Label>
+        <Textarea rows={2} value={v.objective ?? ""} onChange={(e) => set("objective", e.target.value)} placeholder="What will the student learn or accomplish?" />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Prerequisites</Label>
+        <Textarea rows={2} value={prereqs.join("\n")} onChange={(e) => set("prerequisites", e.target.value.split("\n").filter(Boolean))} placeholder="One per line — e.g., Completed Module 1" />
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Tasks</Label>
+          <Button type="button" size="sm" variant="outline" onClick={addTask} className="h-7 text-xs gap-1"><Plus className="h-3 w-3" /> Add task</Button>
+        </div>
+        {tasks.length === 0 && <p className="text-[11px] text-muted-foreground">No tasks yet. Add step-by-step instructions.</p>}
+        {tasks.map((t, i) => (
+          <div key={t.id} className="rounded-md border bg-card p-2 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono text-muted-foreground w-5">{i + 1}.</span>
+              <Input className="h-8 text-xs" value={t.title} onChange={(e) => updateTask(i, { title: e.target.value })} placeholder="Task title" />
+              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeTask(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
+            </div>
+            <Textarea rows={2} className="text-xs" value={t.detail ?? ""} onChange={(e) => updateTask(i, { detail: e.target.value })} placeholder="Optional detail / commands / expected output…" />
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Expected outcome</Label>
+        <Textarea rows={2} value={v.expectedOutcome ?? ""} onChange={(e) => set("expectedOutcome", e.target.value)} placeholder="What does success look like?" />
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Helpful resources</Label>
+          <Button type="button" size="sm" variant="outline" onClick={addRes} className="h-7 text-xs gap-1"><Plus className="h-3 w-3" /> Add link</Button>
+        </div>
+        {resources.map((r, i) => (
+          <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2">
+            <Input className="h-8 text-xs" value={r.label} onChange={(e) => updateRes(i, { label: e.target.value })} placeholder="Label" />
+            <Input className="h-8 text-xs" value={r.url ?? ""} onChange={(e) => updateRes(i, { url: e.target.value })} placeholder="https://…" />
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeRes(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
