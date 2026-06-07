@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import {
   ArrowLeft, ArrowRight, Check, ChevronLeft, CheckCircle, Lock, Video, FileText,
   FlaskConical, Award, BookOpen, Play, Download, MessageSquare, Code2, Flag, ShieldCheck,
-  Calendar, Timer, Sparkles,
+  Calendar, Timer, Sparkles, ListChecks, Radio, Maximize2, ExternalLink,
 } from "lucide-react";
 import { getStudentCourse } from "@/data/studentMockData";
 import { useEnrollmentStore } from "@/stores/enrollmentStore";
@@ -22,22 +22,30 @@ const icons: Record<string, any> = {
   video: Video,
   reading: FileText,
   lab: FlaskConical,
+  "lab-instruction": ListChecks,
+  "live-session": Radio,
   quiz: Award,
   assignment: FileText,
   "code-exercise": Code2,
   "ctf-scenario": Flag,
   exam: ShieldCheck,
+  "mock-exam": ShieldCheck,
+  survey: MessageSquare,
 };
 
 const blockLabel: Record<string, string> = {
   video: "Video",
   reading: "Reading",
   lab: "Lab",
+  "lab-instruction": "Lab Instructions",
+  "live-session": "Live Session",
   quiz: "Quiz",
   assignment: "Assignment",
   "code-exercise": "Code exercise",
   "ctf-scenario": "CTF scenario",
   exam: "Exam",
+  "mock-exam": "Mock Exam",
+  survey: "Survey",
 };
 
 export default function CoursePlayer() {
