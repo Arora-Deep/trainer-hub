@@ -322,6 +322,13 @@ export const studentCourses: StudentCourse[] = [
     deliveryMode: "self-paced", rating: 4.5, studyTime: "0h", lastAccessed: "—",
     batch: "Linux Self-Paced", batchId: "8", prerequisites: [],
     totalAccessHours: 80, usedAccessHours: 0,
+    persistentLab: {
+      labId: "lab-5",
+      templateName: "Linux Hardening Sandbox",
+      totalHours: 20,
+      usedHours: 0,
+      status: "stopped",
+    },
     studyData: [],
     chapters: [
       {
