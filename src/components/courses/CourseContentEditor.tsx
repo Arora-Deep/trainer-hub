@@ -3,13 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -39,6 +32,8 @@ import {
   Trash2,
   MoreHorizontal,
   Upload,
+  Eye,
+  Library,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -47,11 +42,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Library } from "lucide-react";
-import { useCourseStore, type Lesson, type Chapter, type LessonType, isAssessmentLesson } from "@/stores/courseStore";
-import { useQuizStore } from "@/stores/quizStore";
-import { useAssignmentStore } from "@/stores/assignmentStore";
-import { useExerciseStore } from "@/stores/exerciseStore";
+import { useCourseStore, type Lesson, type Chapter, type LessonType } from "@/stores/courseStore";
+import { LessonEditorSheet } from "./LessonEditorSheet";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -84,132 +77,58 @@ const lessonTypeLabels: Record<LessonType, string> = {
 
 export function CourseContentEditor({ courseId, chapters }: CourseContentEditorProps) {
   const { addChapter, updateChapter, deleteChapter, addLesson, updateLesson, deleteLesson } = useCourseStore();
-  
+  const navigate = useNavigate();
+
   const [expandedChapters, setExpandedChapters] = useState<string[]>(chapters.map(c => c.id));
   const [isChapterDialogOpen, setIsChapterDialogOpen] = useState(false);
-  const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
   const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
+  const [chapterTitle, setChapterTitle] = useState("");
+
+  const [lessonSheetOpen, setLessonSheetOpen] = useState(false);
   const [editingLesson, setEditingLesson] = useState<{ chapterId: string; lesson: Lesson } | null>(null);
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
+
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
-  
-  const [chapterTitle, setChapterTitle] = useState("");
-  const [lessonForm, setLessonForm] = useState({
-    title: "",
-    type: "video" as Lesson["type"],
-    duration: "",
-    source: "inline" as "inline" | "library",
-    refId: "",
-  });
 
-  const { quizzes } = useQuizStore();
-  const { assignments } = useAssignmentStore();
-  const { exercises } = useExerciseStore();
+  const toggleChapter = (chapterId: string) =>
+    setExpandedChapters((prev) => (prev.includes(chapterId) ? prev.filter((id) => id !== chapterId) : [...prev, chapterId]));
 
-  const libraryOptions = (() => {
-    if (lessonForm.type === "quiz") return quizzes.map((q) => ({ id: q.id, label: q.title }));
-    if (lessonForm.type === "assignment") return assignments.map((a) => ({ id: a.id, label: a.title }));
-    if (lessonForm.type === "code-exercise") return exercises.map((e) => ({ id: e.id, label: e.title }));
-    return [];
-  })();
-
-  const toggleChapter = (chapterId: string) => {
-    setExpandedChapters(prev => 
-      prev.includes(chapterId) 
-        ? prev.filter(id => id !== chapterId)
-        : [...prev, chapterId]
-    );
-  };
-
-  const handleAddChapter = () => {
-    setEditingChapter(null);
-    setChapterTitle("");
-    setIsChapterDialogOpen(true);
-  };
-
-  const handleEditChapter = (chapter: Chapter) => {
-    setEditingChapter(chapter);
-    setChapterTitle(chapter.title);
-    setIsChapterDialogOpen(true);
-  };
-
+  const handleAddChapter = () => { setEditingChapter(null); setChapterTitle(""); setIsChapterDialogOpen(true); };
+  const handleEditChapter = (chapter: Chapter) => { setEditingChapter(chapter); setChapterTitle(chapter.title); setIsChapterDialogOpen(true); };
   const handleSaveChapter = () => {
-    if (!chapterTitle.trim()) {
-      toast.error("Please enter a chapter title");
-      return;
-    }
-    
-    if (editingChapter) {
-      updateChapter(courseId, editingChapter.id, chapterTitle);
-      toast.success("Chapter updated");
-    } else {
-      addChapter(courseId, chapterTitle);
-      toast.success("Chapter added");
-    }
-    
-    setIsChapterDialogOpen(false);
-    setChapterTitle("");
+    if (!chapterTitle.trim()) { toast.error("Please enter a chapter title"); return; }
+    if (editingChapter) { updateChapter(courseId, editingChapter.id, chapterTitle); toast.success("Chapter updated"); }
+    else { addChapter(courseId, chapterTitle); toast.success("Chapter added"); }
+    setIsChapterDialogOpen(false); setChapterTitle("");
   };
-
-  const handleDeleteChapter = (chapterId: string) => {
-    deleteChapter(courseId, chapterId);
-    toast.success("Chapter deleted");
-  };
+  const handleDeleteChapter = (chapterId: string) => { deleteChapter(courseId, chapterId); toast.success("Chapter deleted"); };
 
   const handleAddLesson = (chapterId: string) => {
     setActiveChapterId(chapterId);
     setEditingLesson(null);
-    setLessonForm({ title: "", type: "video", duration: "", source: "inline", refId: "" });
-    setIsLessonDialogOpen(true);
+    setLessonSheetOpen(true);
   };
 
   const handleEditLesson = (chapterId: string, lesson: Lesson) => {
     setActiveChapterId(chapterId);
     setEditingLesson({ chapterId, lesson });
-    setLessonForm({
-      title: lesson.title,
-      type: lesson.type,
-      duration: lesson.duration,
-      source: lesson.source ?? "inline",
-      refId: lesson.refId ?? "",
-    });
-    setIsLessonDialogOpen(true);
+    setLessonSheetOpen(true);
   };
 
-  const handleSaveLesson = () => {
-    if (!lessonForm.title.trim()) {
-      toast.error("Please enter a lesson title");
-      return;
-    }
-    const isAssessment = isAssessmentLesson(lessonForm.type);
-    const useLibrary = isAssessment && lessonForm.source === "library";
-    if (useLibrary && !lessonForm.refId) {
-      toast.error("Pick an item from the library");
-      return;
-    }
-    const payload: Partial<Lesson> = {
-      title: lessonForm.title,
-      type: lessonForm.type,
-      duration: lessonForm.duration,
-      source: isAssessment ? lessonForm.source : undefined,
-      refId: useLibrary ? lessonForm.refId : undefined,
-    };
-
+  const handleSaveLesson = (data: Omit<Lesson, "id"> & { id?: string }) => {
     if (editingLesson) {
-      updateLesson(courseId, editingLesson.chapterId, editingLesson.lesson.id, payload);
+      updateLesson(courseId, editingLesson.chapterId, editingLesson.lesson.id, data);
       toast.success("Lesson updated");
     } else if (activeChapterId) {
+      const { id: _ignored, ...payload } = data;
       addLesson(courseId, activeChapterId, payload as Omit<Lesson, "id">);
       toast.success("Lesson added");
     }
-
-    setIsLessonDialogOpen(false);
   };
 
   const handleDeleteLesson = (chapterId: string, lessonId: string) => {
-    deleteLesson(courseId, chapterId, lessonId);
-    toast.success("Lesson deleted");
+    deleteLesson(courseId, chapterId, lessonId); toast.success("Lesson deleted");
   };
 
   const totalLessons = chapters.reduce((acc, ch) => acc + ch.lessons.length, 0);
@@ -236,31 +155,17 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
 
       <Dialog open={importOpen} onOpenChange={setImportOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Import Course Content</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Import Course Content</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
             <Label className="text-xs">Content Package</Label>
-            <Input
-              type="file"
-              accept=".json,.zip,.scorm,.xml,.csv"
-              onChange={(e) => setImportFile(e.target.files?.[0] || null)}
-            />
+            <Input type="file" accept=".json,.zip,.scorm,.xml,.csv" onChange={(e) => setImportFile(e.target.files?.[0] || null)} />
             <p className="text-[11px] text-muted-foreground">
-              Supports JSON outlines, ZIP/SCORM packages, common LMS exports.
-              Chapters and lessons will be merged into this course.
+              Supports JSON outlines, ZIP/SCORM packages, common LMS exports. Chapters and lessons will be merged into this course.
             </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setImportOpen(false)}>Cancel</Button>
-            <Button
-              disabled={!importFile}
-              onClick={() => {
-                toast.success(`${importFile?.name} imported — content queued`);
-                setImportFile(null);
-                setImportOpen(false);
-              }}
-            >Import</Button>
+            <Button disabled={!importFile} onClick={() => { toast.success(`${importFile?.name} imported — content queued`); setImportFile(null); setImportOpen(false); }}>Import</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -268,73 +173,39 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
       {chapters.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="rounded-full bg-primary/10 p-4 mb-4">
-              <FileText className="h-8 w-8 text-primary" />
-            </div>
+            <div className="rounded-full bg-primary/10 p-4 mb-4"><FileText className="h-8 w-8 text-primary" /></div>
             <h3 className="text-lg font-medium mb-2">No content yet</h3>
-            <p className="text-sm text-muted-foreground max-w-sm mb-4">
-              Start building your course by adding chapters and lessons.
-            </p>
-            <Button onClick={handleAddChapter} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Your First Chapter
-            </Button>
+            <p className="text-sm text-muted-foreground max-w-sm mb-4">Start building your course by adding chapters and lessons.</p>
+            <Button onClick={handleAddChapter} className="gap-2"><Plus className="h-4 w-4" />Add Your First Chapter</Button>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
           {chapters.map((chapter, index) => (
             <Card key={chapter.id} className="overflow-hidden">
-              <Collapsible
-                open={expandedChapters.includes(chapter.id)}
-                onOpenChange={() => toggleChapter(chapter.id)}
-              >
+              <Collapsible open={expandedChapters.includes(chapter.id)} onOpenChange={() => toggleChapter(chapter.id)}>
                 <CollapsibleTrigger asChild>
                   <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors py-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <GripVertical className="h-4 w-4 text-muted-foreground" />
-                        {expandedChapters.includes(chapter.id) ? (
-                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                        )}
+                        {expandedChapters.includes(chapter.id) ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
                         <div>
-                          <CardTitle className="text-base">
-                            Chapter {index + 1}: {chapter.title}
-                          </CardTitle>
-                          <p className="text-sm text-muted-foreground mt-0.5">
-                            {chapter.lessons.length} lessons
-                          </p>
+                          <CardTitle className="text-base">Chapter {index + 1}: {chapter.title}</CardTitle>
+                          <p className="text-sm text-muted-foreground mt-0.5">{chapter.lessons.length} lessons</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleAddLesson(chapter.id)}
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Add Lesson
+                        <Button variant="ghost" size="sm" onClick={() => handleAddLesson(chapter.id)}>
+                          <Plus className="h-4 w-4 mr-1" />Add Lesson
                         </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEditChapter(chapter)}>
-                              <Pencil className="h-4 w-4 mr-2" />
-                              Edit Chapter
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteChapter(chapter.id)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete Chapter
-                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditChapter(chapter)}><Pencil className="h-4 w-4 mr-2" />Edit Chapter</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeleteChapter(chapter.id)} className="text-destructive"><Trash2 className="h-4 w-4 mr-2" />Delete Chapter</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -346,14 +217,7 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
                     {chapter.lessons.length === 0 ? (
                       <div className="text-center py-6 text-muted-foreground border-2 border-dashed rounded-lg">
                         <p className="text-sm">No lessons in this chapter yet</p>
-                        <Button
-                          variant="link"
-                          size="sm"
-                          onClick={() => handleAddLesson(chapter.id)}
-                          className="mt-1"
-                        >
-                          Add a lesson
-                        </Button>
+                        <Button variant="link" size="sm" onClick={() => handleAddLesson(chapter.id)} className="mt-1">Add a lesson</Button>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -362,47 +226,31 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
                           return (
                             <div
                               key={lesson.id}
-                              className={cn(
-                                "flex items-center justify-between p-3 rounded-lg border",
-                                "hover:bg-muted/50 transition-colors group"
-                              )}
+                              className={cn("flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group cursor-pointer")}
+                              onClick={() => navigate(`/courses/${courseId}/lessons/${lesson.id}`)}
                             >
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
                                 <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <div className="rounded-lg bg-primary/10 p-2">
-                                  <Icon className="h-4 w-4 text-primary" />
-                                </div>
-                                <div>
+                                <div className="rounded-lg bg-primary/10 p-2"><Icon className="h-4 w-4 text-primary" /></div>
+                                <div className="min-w-0">
                                   <div className="flex items-center gap-2">
-                                    <p className="font-medium text-sm">
-                                      {index + 1}.{lessonIndex + 1} {lesson.title}
-                                    </p>
+                                    <p className="font-medium text-sm truncate">{index + 1}.{lessonIndex + 1} {lesson.title}</p>
                                     {lesson.source === "library" && (
-                                      <Badge variant="outline" className="text-[10px] gap-1 py-0">
-                                        <Library className="h-2.5 w-2.5" /> Library
-                                      </Badge>
+                                      <Badge variant="outline" className="text-[10px] gap-1 py-0"><Library className="h-2.5 w-2.5" />Library</Badge>
                                     )}
+                                    {lesson.required && <Badge variant="outline" className="text-[10px] py-0">Required</Badge>}
                                   </div>
-                                  <p className="text-xs text-muted-foreground">
-                                    {lessonTypeLabels[lesson.type]} • {lesson.duration}
-                                  </p>
+                                  <p className="text-xs text-muted-foreground">{lessonTypeLabels[lesson.type]} • {lesson.duration || "—"}</p>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => handleEditLesson(chapter.id, lesson)}
-                                >
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/courses/${courseId}/lessons/${lesson.id}`)}>
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditLesson(chapter.id, lesson)}>
                                   <Pencil className="h-4 w-4" />
                                 </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-destructive hover:text-destructive"
-                                  onClick={() => handleDeleteLesson(chapter.id, lesson.id)}
-                                >
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteLesson(chapter.id, lesson.id)}>
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
@@ -422,145 +270,27 @@ export function CourseContentEditor({ courseId, chapters }: CourseContentEditorP
       {/* Chapter Dialog */}
       <Dialog open={isChapterDialogOpen} onOpenChange={setIsChapterDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {editingChapter ? "Edit Chapter" : "Add New Chapter"}
-            </DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>{editingChapter ? "Edit Chapter" : "Add New Chapter"}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="chapterTitle">Chapter Title</Label>
-              <Input
-                id="chapterTitle"
-                placeholder="e.g., Introduction to Cloud Computing"
-                value={chapterTitle}
-                onChange={(e) => setChapterTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSaveChapter();
-                }}
-              />
+              <Input id="chapterTitle" placeholder="e.g., Introduction to Cloud Computing" value={chapterTitle} onChange={(e) => setChapterTitle(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleSaveChapter(); }} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsChapterDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveChapter}>
-              {editingChapter ? "Save Changes" : "Add Chapter"}
-            </Button>
+            <Button variant="outline" onClick={() => setIsChapterDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveChapter}>{editingChapter ? "Save Changes" : "Add Chapter"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Lesson Dialog */}
-      <Dialog open={isLessonDialogOpen} onOpenChange={setIsLessonDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {editingLesson ? "Edit Lesson" : "Add New Lesson"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="lessonTitle">Lesson Title</Label>
-              <Input
-                id="lessonTitle"
-                placeholder="e.g., What is AWS?"
-                value={lessonForm.title}
-                onChange={(e) => setLessonForm(prev => ({ ...prev, title: e.target.value }))}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Lesson Type</Label>
-                <Select
-                  value={lessonForm.type}
-                  onValueChange={(value: Lesson["type"]) => 
-                    setLessonForm(prev => ({ ...prev, type: value }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="video">Video</SelectItem>
-                    <SelectItem value="reading">Reading</SelectItem>
-                    <SelectItem value="quiz">Quiz</SelectItem>
-                    <SelectItem value="assignment">Assignment</SelectItem>
-                    <SelectItem value="code-exercise">Code Exercise</SelectItem>
-                    <SelectItem value="lab">Lab</SelectItem>
-                    <SelectItem value="ctf-scenario">CTF Scenario</SelectItem>
-                    <SelectItem value="exam">Exam</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="duration">Duration</Label>
-                <Input
-                  id="duration"
-                  placeholder="e.g., 15 min"
-                  value={lessonForm.duration}
-                  onChange={(e) => setLessonForm(prev => ({ ...prev, duration: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            {isAssessmentLesson(lessonForm.type) && (
-              <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
-                <Label className="text-xs">Source</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {(["inline", "library"] as const).map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setLessonForm((p) => ({ ...p, source: s, refId: "" }))}
-                      className={cn(
-                        "flex items-center gap-2 rounded-md border px-3 py-2 text-xs transition-all",
-                        lessonForm.source === s ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted/40"
-                      )}
-                    >
-                      {s === "library" ? <Library className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                      <span className="font-medium capitalize">{s === "inline" ? "Create new" : "Pick from library"}</span>
-                    </button>
-                  ))}
-                </div>
-                {lessonForm.source === "library" && (
-                  <div className="pt-1">
-                    <Select
-                      value={lessonForm.refId}
-                      onValueChange={(v) => {
-                        const opt = libraryOptions.find((o) => o.id === v);
-                        setLessonForm((p) => ({ ...p, refId: v, title: opt?.label ?? p.title }));
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={`Choose a ${lessonTypeLabels[lessonForm.type].toLowerCase()}…`} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {libraryOptions.length === 0 ? (
-                          <div className="px-3 py-2 text-xs text-muted-foreground">No items in library.</div>
-                        ) : (
-                          libraryOptions.map((o) => (
-                            <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsLessonDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveLesson}>
-              {editingLesson ? "Save Changes" : "Add Lesson"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Lesson editor sheet */}
+      <LessonEditorSheet
+        open={lessonSheetOpen}
+        onOpenChange={setLessonSheetOpen}
+        initial={editingLesson?.lesson ?? null}
+        onSave={handleSaveLesson}
+      />
     </div>
   );
 }
