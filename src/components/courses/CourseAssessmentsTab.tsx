@@ -31,11 +31,15 @@ const typeMeta: Record<LessonType, { label: string; icon: any; color: string } |
   video: undefined,
   reading: undefined,
   lab: undefined,
+  "lab-instruction": undefined,
+  "live-session": undefined,
   "ctf-scenario": undefined,
+  survey: undefined,
   quiz: { label: "Quiz", icon: HelpCircle, color: "text-info" },
   assignment: { label: "Assignment", icon: ClipboardList, color: "text-warning" },
   "code-exercise": { label: "Code Exercise", icon: Code2, color: "text-primary" },
   exam: { label: "Exam", icon: GraduationCap, color: "text-destructive" },
+  "mock-exam": { label: "Mock Exam", icon: GraduationCap, color: "text-destructive" },
 };
 
 // Mock submissions — would come from a real submissions store
