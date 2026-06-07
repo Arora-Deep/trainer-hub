@@ -92,6 +92,7 @@ import StudentLabDetail from "./pages/student/LabDetail";
 import StudentCourses from "./pages/student/Courses";
 import StudentCourseDetail from "./pages/student/CourseDetail";
 import CoursePlayer from "./pages/student/CoursePlayer";
+import LabWorkspace from "./pages/student/LabWorkspace";
 import CourseResources from "./pages/student/CourseResources";
 import CourseDiscussion from "./pages/student/CourseDiscussion";
 import StudentAssessments from "./pages/student/Assessments";
