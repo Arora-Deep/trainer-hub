@@ -33,8 +33,12 @@ const lessonTypeMeta: Record<LessonType, { label: string; icon: any; hint: strin
   assignment: { label: "Assignment", icon: ClipboardCheck, hint: "File submission" },
   "code-exercise": { label: "Code Exercise", icon: Code2, hint: "Inline editor with auto-grading (Judge0)" },
   lab: { label: "Lab", icon: FlaskConical, hint: "Attached VM blueprint" },
+  "lab-instruction": { label: "Lab Instructions", icon: ClipboardCheck, hint: "Structured tasks shown inside a lab" },
+  "live-session": { label: "Live Session", icon: PlayCircle, hint: "Scheduled instructor-led session" },
   "ctf-scenario": { label: "CTF Scenario", icon: Flag, hint: "Capture-the-flag with flag submission" },
   exam: { label: "Exam", icon: ShieldCheck, hint: "Timed / proctored — gates certification" },
+  "mock-exam": { label: "Mock Exam", icon: ShieldCheck, hint: "Practice run, ungraded" },
+  survey: { label: "Survey", icon: HelpCircle, hint: "Collect learner feedback" },
 };
 
 export default function CourseEditor() {
