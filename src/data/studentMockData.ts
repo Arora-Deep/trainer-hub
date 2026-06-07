@@ -58,6 +58,15 @@ export interface StudentChapter {
   lessons: StudentLesson[];
 }
 
+export interface StudentCoursePersistentLab {
+  labId: string;
+  templateName: string;
+  totalHours: number;
+  usedHours: number;
+  ip?: string;
+  status?: "running" | "stopped";
+}
+
 export interface StudentCourse {
   id: string;
   name: string;
@@ -83,6 +92,7 @@ export interface StudentCourse {
   // self-paced
   totalAccessHours?: number;
   usedAccessHours?: number;
+  persistentLab?: StudentCoursePersistentLab;
   // live
   nextLiveSession?: { title: string; date: string; time: string };
   studyData: { day: string; hours: number }[];
