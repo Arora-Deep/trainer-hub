@@ -58,6 +58,15 @@ export interface StudentChapter {
   lessons: StudentLesson[];
 }
 
+export interface StudentCoursePersistentLab {
+  labId: string;
+  templateName: string;
+  totalHours: number;
+  usedHours: number;
+  ip?: string;
+  status?: "running" | "stopped";
+}
+
 export interface StudentCourse {
   id: string;
   name: string;
@@ -83,6 +92,7 @@ export interface StudentCourse {
   // self-paced
   totalAccessHours?: number;
   usedAccessHours?: number;
+  persistentLab?: StudentCoursePersistentLab;
   // live
   nextLiveSession?: { title: string; date: string; time: string };
   studyData: { day: string; hours: number }[];
@@ -252,6 +262,14 @@ export const studentCourses: StudentCourse[] = [
     batch: "Python Self-Paced", batchId: "7", prerequisites: [],
     nextLessonId: "l-4-5",
     totalAccessHours: 120, usedAccessHours: 38,
+    persistentLab: {
+      labId: "lab-4",
+      templateName: "Python DS Sandbox",
+      totalHours: 20,
+      usedHours: 6.5,
+      ip: "10.0.3.21",
+      status: "running",
+    },
     studyData: [
       { day: "Mon", hours: 1 }, { day: "Tue", hours: 1.5 }, { day: "Wed", hours: 0.5 },
       { day: "Thu", hours: 1 }, { day: "Fri", hours: 0.5 }, { day: "Sat", hours: 1 }, { day: "Sun", hours: 1.2 },
@@ -304,6 +322,13 @@ export const studentCourses: StudentCourse[] = [
     deliveryMode: "self-paced", rating: 4.5, studyTime: "0h", lastAccessed: "—",
     batch: "Linux Self-Paced", batchId: "8", prerequisites: [],
     totalAccessHours: 80, usedAccessHours: 0,
+    persistentLab: {
+      labId: "lab-5",
+      templateName: "Linux Hardening Sandbox",
+      totalHours: 20,
+      usedHours: 0,
+      status: "stopped",
+    },
     studyData: [],
     chapters: [
       {
@@ -397,6 +422,8 @@ export interface StudentLab {
   batch: string;
   batchId: string;
   deliveryMode: DeliveryMode;
+  accessKind?: "course-persistent" | "lesson-time-limited";
+  courseId?: string;
   sshPort: number;
   username: string;
   password: string;
@@ -411,7 +438,9 @@ export const studentLabs: StudentLab[] = [
   {
     id: "lab-1", name: "AWS VPC Lab", template: "AWS Cloud Practitioner", os: "linux", status: "running",
     timeRemaining: "1h 45m", ip: "10.0.1.42", cpu: 45, ram: 62, storage: 30, uptime: "2h 15m",
-    batch: "AWS Batch 12", batchId: "1", deliveryMode: "live", sshPort: 22, username: "student",
+    batch: "AWS Batch 12", batchId: "1", deliveryMode: "live",
+    accessKind: "lesson-time-limited", courseId: "1",
+    sshPort: 22, username: "student",
     password: "Aws@2026!", lastCommands: ["$ aws ec2 describe-vpcs", "$ aws ec2 create-subnet --vpc-id vpc-0a1b", "$ aws ec2 describe-route-tables"],
     snapshots: [{ id: "s1", name: "Fresh start", createdAt: "Mar 1", size: "4.2 GB" }, { id: "s2", name: "Post Subnet", createdAt: "Mar 3", size: "5.1 GB" }],
   },
@@ -430,18 +459,22 @@ export const studentLabs: StudentLab[] = [
   },
   {
     id: "lab-4", name: "Python DS Sandbox", template: "Python for Data Science", os: "linux", status: "running",
-    timeRemaining: "On-demand", ip: "10.0.3.21", cpu: 30, ram: 45, storage: 25, uptime: "45m",
-    batch: "Python Self-Paced", batchId: "7", deliveryMode: "self-paced", sshPort: 22, username: "student",
+    timeRemaining: "Always-on · 13.5h left", ip: "10.0.3.21", cpu: 30, ram: 45, storage: 25, uptime: "45m",
+    batch: "Python Self-Paced", batchId: "7", deliveryMode: "self-paced",
+    accessKind: "course-persistent", courseId: "4",
+    sshPort: 22, username: "student",
     password: "Py@datasci1", lastCommands: ["$ jupyter lab --port 8888", "$ pip install pandas seaborn"],
-    totalAccessHours: 120, usedAccessHours: 38,
+    totalAccessHours: 20, usedAccessHours: 6.5,
     snapshots: [{ id: "s1", name: "Conda ready", createdAt: "Feb 20", size: "3.4 GB" }],
   },
   {
     id: "lab-5", name: "Linux Hardening Lab", template: "Linux Server Hardening", os: "linux", status: "stopped",
-    timeRemaining: "On-demand", ip: "-", cpu: 0, ram: 0, storage: 18, uptime: "-",
-    batch: "Linux Self-Paced", batchId: "8", deliveryMode: "self-paced", sshPort: 22, username: "root",
+    timeRemaining: "Always-on · 20h left", ip: "-", cpu: 0, ram: 0, storage: 18, uptime: "-",
+    batch: "Linux Self-Paced", batchId: "8", deliveryMode: "self-paced",
+    accessKind: "course-persistent", courseId: "5",
+    sshPort: 22, username: "root",
     password: "Lnx@hard3n", lastCommands: [],
-    totalAccessHours: 80, usedAccessHours: 0,
+    totalAccessHours: 20, usedAccessHours: 0,
     snapshots: [],
   },
   {

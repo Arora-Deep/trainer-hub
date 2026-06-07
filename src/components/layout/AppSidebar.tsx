@@ -147,7 +147,7 @@ const studentNav: NavConfig = {
     { label: "Main", icon: Home, items: [
       { title: "My Dashboard", icon: Home, path: "/student/dashboard" },
       { title: "Learning Centre", icon: Video, path: "/student/live-class" },
-      { title: "My Labs", icon: Monitor, path: "/student/labs" },
+      { title: "Active Labs", icon: Monitor, path: "/student/labs" },
       { title: "My Courses", icon: BookOpen, path: "/student/courses" },
       { title: "Schedule", icon: Calendar, path: "/student/schedule" },
       { title: "Assessments", icon: FileText, path: "/student/assessments" },

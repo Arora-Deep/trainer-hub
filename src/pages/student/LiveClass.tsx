@@ -23,6 +23,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { studentCourses, type StudentCourse, type StudentLesson } from "@/data/studentMockData";
+import SelfPacedLearningCentre from "@/pages/student/SelfPacedLearningCentre";
 
 /* ── Data ── */
 const lessonIcons: Record<StudentLesson["type"], typeof Video> = {
@@ -359,34 +360,46 @@ export default function StudentLiveClass() {
     return <div className="text-sm text-muted-foreground">No courses assigned yet.</div>;
   }
 
+  const courseSwitcher = studentCourses.length > 0 && (
+    <div className="flex flex-wrap items-center gap-3 pb-1">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">Choose training</span>
+      <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
+        <SelectTrigger className="h-10 w-full max-w-md min-w-[280px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {studentCourses.map((course) => (
+            <SelectItem key={course.id} value={course.id}>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{course.name}</span>
+                <span className="text-[10px] text-muted-foreground capitalize">· {course.deliveryMode}</span>
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {isSelfPaced && (
+        <Badge className="bg-amber-500/10 text-amber-600 text-[10px] gap-1">
+          <Sparkles className="h-3 w-3" /> Self-paced course
+        </Badge>
+      )}
+    </div>
+  );
+
+  // Self-paced courses get a dedicated LMS-style learning centre.
+  if (isSelfPaced) {
+    return (
+      <div className="space-y-4">
+        {courseSwitcher}
+        <SelfPacedLearningCentre course={selectedCourse} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      {/* Course Switcher */}
-      {studentCourses.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3 pb-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">Choose training</span>
-          <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
-            <SelectTrigger className="h-10 w-full max-w-md min-w-[280px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {studentCourses.map((course) => (
-                <SelectItem key={course.id} value={course.id}>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{course.name}</span>
-                    <span className="text-[10px] text-muted-foreground capitalize">· {course.deliveryMode}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {isSelfPaced && (
-            <Badge className="bg-amber-500/10 text-amber-600 text-[10px] gap-1">
-              <Sparkles className="h-3 w-3" /> Self-paced course
-            </Badge>
-          )}
-        </div>
-      )}
+      {courseSwitcher}
+
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
