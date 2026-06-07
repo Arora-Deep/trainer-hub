@@ -422,6 +422,8 @@ export interface StudentLab {
   batch: string;
   batchId: string;
   deliveryMode: DeliveryMode;
+  accessKind?: "course-persistent" | "lesson-time-limited";
+  courseId?: string;
   sshPort: number;
   username: string;
   password: string;
@@ -436,7 +438,9 @@ export const studentLabs: StudentLab[] = [
   {
     id: "lab-1", name: "AWS VPC Lab", template: "AWS Cloud Practitioner", os: "linux", status: "running",
     timeRemaining: "1h 45m", ip: "10.0.1.42", cpu: 45, ram: 62, storage: 30, uptime: "2h 15m",
-    batch: "AWS Batch 12", batchId: "1", deliveryMode: "live", sshPort: 22, username: "student",
+    batch: "AWS Batch 12", batchId: "1", deliveryMode: "live",
+    accessKind: "lesson-time-limited", courseId: "1",
+    sshPort: 22, username: "student",
     password: "Aws@2026!", lastCommands: ["$ aws ec2 describe-vpcs", "$ aws ec2 create-subnet --vpc-id vpc-0a1b", "$ aws ec2 describe-route-tables"],
     snapshots: [{ id: "s1", name: "Fresh start", createdAt: "Mar 1", size: "4.2 GB" }, { id: "s2", name: "Post Subnet", createdAt: "Mar 3", size: "5.1 GB" }],
   },
