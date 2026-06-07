@@ -60,8 +60,12 @@ const lessonTypeIcons: Record<LessonType, typeof Video> = {
   assignment: ClipboardList,
   "code-exercise": Code2,
   lab: FlaskConical,
+  "lab-instruction": ClipboardList,
+  "live-session": Video,
   "ctf-scenario": Flag,
   exam: GraduationCap,
+  "mock-exam": GraduationCap,
+  survey: HelpCircle,
 };
 
 const lessonTypeLabels: Record<LessonType, string> = {
@@ -71,8 +75,12 @@ const lessonTypeLabels: Record<LessonType, string> = {
   assignment: "Assignment",
   "code-exercise": "Code Exercise",
   lab: "Lab",
+  "lab-instruction": "Lab Instructions",
+  "live-session": "Live Session",
   "ctf-scenario": "CTF Scenario",
   exam: "Exam",
+  "mock-exam": "Mock Exam",
+  survey: "Survey",
 };
 
 export function CourseContentEditor({ courseId, chapters }: CourseContentEditorProps) {
