@@ -92,6 +92,7 @@ import StudentLabDetail from "./pages/student/LabDetail";
 import StudentCourses from "./pages/student/Courses";
 import StudentCourseDetail from "./pages/student/CourseDetail";
 import CoursePlayer from "./pages/student/CoursePlayer";
+import LabWorkspace from "./pages/student/LabWorkspace";
 import CourseResources from "./pages/student/CourseResources";
 import CourseDiscussion from "./pages/student/CourseDiscussion";
 import StudentAssessments from "./pages/student/Assessments";
@@ -214,6 +215,7 @@ const App = () => (
             <Route path="/student/courses" element={<StudentCourses />} />
             <Route path="/student/courses/:id" element={<StudentCourseDetail />} />
             <Route path="/student/courses/:id/learn/:lessonId" element={<CoursePlayer />} />
+            <Route path="/student/courses/:id/labs/:lessonId/workspace" element={<LabWorkspace />} />
             <Route path="/student/courses/:id/resources" element={<CourseResources />} />
             <Route path="/student/courses/:id/discussion" element={<CourseDiscussion />} />
             <Route path="/student/assessments" element={<StudentAssessments />} />

@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Video, FileText, HelpCircle, ClipboardList, Code2, FlaskConical, Flag, GraduationCap,
-  Upload, Link2, Library, Plus, X, FileUp, Trash2,
+  Upload, Link2, Library, Plus, X, FileUp, Trash2, Radio, ListChecks, MessageSquareQuote,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TemplatePickerDropdown } from "@/components/labs/TemplatePickerDropdown";
@@ -19,7 +19,7 @@ import { useLabStore } from "@/stores/labStore";
 import { useQuizStore } from "@/stores/quizStore";
 import { useAssignmentStore } from "@/stores/assignmentStore";
 import { useExerciseStore } from "@/stores/exerciseStore";
-import { isAssessmentLesson, type Lesson, type LessonType, type LessonAttachment } from "@/stores/courseStore";
+import { isAssessmentLesson, type Lesson, type LessonType, type LessonAttachment, type LabInstructionTask, type LabInstructionResource, type LabAllocation, type LabAllocationType } from "@/stores/courseStore";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -29,9 +29,13 @@ const typeMeta: Record<LessonType, { label: string; icon: any; hint: string }> =
   quiz: { label: "Quiz", icon: HelpCircle, hint: "Create a quiz inline or pull one from your library." },
   assignment: { label: "Assignment", icon: ClipboardList, hint: "Add a graded assignment with submission rules." },
   "code-exercise": { label: "Code Exercise", icon: Code2, hint: "Define a coding challenge with starter code and tests." },
-  lab: { label: "Lab", icon: FlaskConical, hint: "Attach a lab template — on-demand or persistent." },
+  lab: { label: "Lab", icon: FlaskConical, hint: "Attach a lab template with an allocation rule." },
+  "lab-instruction": { label: "Lab Instructions", icon: ListChecks, hint: "Structured step-by-step instructions students follow inside a lab." },
+  "live-session": { label: "Live Session", icon: Radio, hint: "Schedule a live instructor-led session." },
   "ctf-scenario": { label: "CTF Scenario", icon: Flag, hint: "Capture-the-flag style scenario on a lab box." },
   exam: { label: "Exam", icon: GraduationCap, hint: "Final graded assessment, optionally proctored." },
+  "mock-exam": { label: "Mock Exam", icon: GraduationCap, hint: "Practice exam — same shape as the real one, but ungraded." },
+  survey: { label: "Survey", icon: MessageSquareQuote, hint: "Collect feedback from learners." },
 };
 
 interface Props {
@@ -221,7 +225,7 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
                   selectedId={form.lab?.templateId}
                   onSelect={(t) => setForm((p) => ({
                     ...p,
-                    lab: { templateId: t.id, templateName: t.name, mode: p.lab?.mode ?? "on-demand", estimatedHours: p.lab?.estimatedHours ?? 1 },
+                    lab: { templateId: t.id, templateName: t.name, mode: p.lab?.mode ?? "on-demand", estimatedHours: p.lab?.estimatedHours ?? 1, allocation: p.lab?.allocation },
                   }))}
                 />
                 <div className="grid grid-cols-2 gap-3">
@@ -243,10 +247,60 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
                     <Input type="number" min={0} value={form.lab?.estimatedHours ?? 1} onChange={(e) => setForm((p) => ({ ...p, lab: { ...(p.lab ?? { templateId: "", templateName: "", mode: "on-demand" }), estimatedHours: Number(e.target.value) } as any }))} />
                   </div>
                 </div>
+
+                {/* Allocation rules */}
+                <LabAllocationEditor
+                  value={form.lab?.allocation}
+                  onChange={(alloc) => setForm((p) => ({ ...p, lab: { ...(p.lab ?? { templateId: "", templateName: "", mode: "on-demand" }), allocation: alloc } as any }))}
+                />
+
                 <div className="space-y-1.5">
                   <Label className="text-xs">Success criteria</Label>
                   <Textarea rows={3} value={form.successCriteria ?? ""} onChange={(e) => setField("successCriteria", e.target.value)} placeholder="What does the learner need to achieve in this lab?" />
                 </div>
+              </div>
+            )}
+
+            {form.type === "lab-instruction" && (
+              <LabInstructionEditor
+                value={form.labInstructions ?? {}}
+                onChange={(v) => setField("labInstructions", v)}
+              />
+            )}
+
+            {form.type === "live-session" && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Date</Label>
+                    <Input type="date" value={form.liveSession?.date ?? ""} onChange={(e) => setField("liveSession", { ...(form.liveSession ?? {}), date: e.target.value })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Time</Label>
+                    <Input type="time" value={form.liveSession?.time ?? ""} onChange={(e) => setField("liveSession", { ...(form.liveSession ?? {}), time: e.target.value })} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Duration (min)</Label>
+                    <Input type="number" value={form.liveSession?.durationMin ?? ""} onChange={(e) => setField("liveSession", { ...(form.liveSession ?? {}), durationMin: Number(e.target.value) })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Meeting URL</Label>
+                    <Input value={form.liveSession?.meetingUrl ?? ""} onChange={(e) => setField("liveSession", { ...(form.liveSession ?? {}), meetingUrl: e.target.value })} placeholder="https://meet.…" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Agenda</Label>
+                  <Textarea rows={3} value={form.liveSession?.agenda ?? ""} onChange={(e) => setField("liveSession", { ...(form.liveSession ?? {}), agenda: e.target.value })} />
+                </div>
+              </div>
+            )}
+
+            {form.type === "survey" && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">Survey description</Label>
+                <Textarea rows={4} value={form.body ?? ""} onChange={(e) => setField("body", e.target.value)} placeholder="What feedback are you collecting?" />
               </div>
             )}
 
@@ -420,3 +474,168 @@ function AttachmentsBlock({
     </div>
   );
 }
+
+function LabAllocationEditor({ value, onChange }: { value?: LabAllocation; onChange: (v: LabAllocation) => void }) {
+  const alloc: LabAllocation = value ?? { type: "persistent", untilCourseEnd: true };
+  const set = <K extends keyof LabAllocation>(k: K, v: LabAllocation[K]) => onChange({ ...alloc, [k]: v });
+  return (
+    <div className="rounded-md border bg-background/60 p-3 space-y-3">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs font-semibold">Allocation rule</Label>
+        <Select value={alloc.type} onValueChange={(v: LabAllocationType) => onChange({ type: v, ...(v === "persistent" ? { untilCourseEnd: true } : {}) })}>
+          <SelectTrigger className="h-8 w-[200px] text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="persistent">Persistent — full course</SelectItem>
+            <SelectItem value="module-unlock">Unlock after module</SelectItem>
+            <SelectItem value="time-limited">Time-limited per launch</SelectItem>
+            <SelectItem value="hour-pool">Hour pool</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {alloc.type === "persistent" && (
+        <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-1">
+            <Label className="text-[11px]">Until course ends</Label>
+            <Switch checked={!!alloc.untilCourseEnd} onCheckedChange={(v) => set("untilCourseEnd", v)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[11px]">Total hours</Label>
+            <Input type="number" value={alloc.hours ?? ""} onChange={(e) => set("hours", Number(e.target.value))} disabled={!!alloc.untilCourseEnd} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[11px]">Fixed expiry</Label>
+            <Input type="date" value={alloc.expiry?.slice(0,10) ?? ""} onChange={(e) => set("expiry", e.target.value)} disabled={!!alloc.untilCourseEnd} />
+          </div>
+        </div>
+      )}
+
+      {alloc.type === "module-unlock" && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-[11px]">Unlock after</Label>
+            <Select
+              value={alloc.unlockAfter?.kind ?? "lesson"}
+              onValueChange={(v: any) => set("unlockAfter", { kind: v, refId: alloc.unlockAfter?.refId ?? "", refLabel: alloc.unlockAfter?.refLabel })}
+            >
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="lesson">Lesson</SelectItem>
+                <SelectItem value="module">Module</SelectItem>
+                <SelectItem value="quiz">Quiz</SelectItem>
+                <SelectItem value="assignment">Assignment</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[11px]">Reference name</Label>
+            <Input value={alloc.unlockAfter?.refLabel ?? ""} onChange={(e) => set("unlockAfter", { kind: alloc.unlockAfter?.kind ?? "lesson", refId: alloc.unlockAfter?.refId ?? e.target.value, refLabel: e.target.value })} placeholder="e.g., Module 2 quiz" />
+          </div>
+        </div>
+      )}
+
+      {alloc.type === "time-limited" && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-[11px]">Session length (hrs)</Label>
+            <Select value={String(alloc.sessionDurationHrs ?? 2)} onValueChange={(v) => set("sessionDurationHrs", Number(v))}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[1,2,4,8].map((h) => <SelectItem key={h} value={String(h)}>{h}h</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[11px]">On expiry</Label>
+            <Select value={alloc.onExpire ?? "suspend"} onValueChange={(v: any) => set("onExpire", v)}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="suspend">Suspend VM</SelectItem>
+                <SelectItem value="delete">Delete VM</SelectItem>
+                <SelectItem value="lock">Lock access</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
+      {alloc.type === "hour-pool" && (
+        <div className="space-y-1">
+          <Label className="text-[11px]">Pool size (hours)</Label>
+          <Input type="number" value={alloc.hours ?? 20} onChange={(e) => set("hours", Number(e.target.value))} />
+          <p className="text-[10px] text-muted-foreground">Students spend from this pool whenever they launch the lab.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LabInstructionEditor({ value, onChange }: { value: NonNullable<Lesson["labInstructions"]>; onChange: (v: NonNullable<Lesson["labInstructions"]>) => void }) {
+  const v = value;
+  const set = <K extends keyof typeof v>(k: K, val: any) => onChange({ ...v, [k]: val });
+  const tasks: LabInstructionTask[] = v.tasks ?? [];
+  const resources: LabInstructionResource[] = v.resources ?? [];
+  const prereqs: string[] = v.prerequisites ?? [];
+
+  const updateTask = (i: number, patch: Partial<LabInstructionTask>) =>
+    set("tasks", tasks.map((t, idx) => (idx === i ? { ...t, ...patch } : t)));
+  const addTask = () => set("tasks", [...tasks, { id: `t-${Date.now()}`, title: "" }]);
+  const removeTask = (i: number) => set("tasks", tasks.filter((_, idx) => idx !== i));
+
+  const updateRes = (i: number, patch: Partial<LabInstructionResource>) =>
+    set("resources", resources.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  const addRes = () => set("resources", [...resources, { label: "", url: "", kind: "link" }]);
+  const removeRes = (i: number) => set("resources", resources.filter((_, idx) => idx !== i));
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1.5">
+        <Label className="text-xs">Objective</Label>
+        <Textarea rows={2} value={v.objective ?? ""} onChange={(e) => set("objective", e.target.value)} placeholder="What will the student learn or accomplish?" />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Prerequisites</Label>
+        <Textarea rows={2} value={prereqs.join("\n")} onChange={(e) => set("prerequisites", e.target.value.split("\n").filter(Boolean))} placeholder="One per line — e.g., Completed Module 1" />
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Tasks</Label>
+          <Button type="button" size="sm" variant="outline" onClick={addTask} className="h-7 text-xs gap-1"><Plus className="h-3 w-3" /> Add task</Button>
+        </div>
+        {tasks.length === 0 && <p className="text-[11px] text-muted-foreground">No tasks yet. Add step-by-step instructions.</p>}
+        {tasks.map((t, i) => (
+          <div key={t.id} className="rounded-md border bg-card p-2 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono text-muted-foreground w-5">{i + 1}.</span>
+              <Input className="h-8 text-xs" value={t.title} onChange={(e) => updateTask(i, { title: e.target.value })} placeholder="Task title" />
+              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeTask(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
+            </div>
+            <Textarea rows={2} className="text-xs" value={t.detail ?? ""} onChange={(e) => updateTask(i, { detail: e.target.value })} placeholder="Optional detail / commands / expected output…" />
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Expected outcome</Label>
+        <Textarea rows={2} value={v.expectedOutcome ?? ""} onChange={(e) => set("expectedOutcome", e.target.value)} placeholder="What does success look like?" />
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Helpful resources</Label>
+          <Button type="button" size="sm" variant="outline" onClick={addRes} className="h-7 text-xs gap-1"><Plus className="h-3 w-3" /> Add link</Button>
+        </div>
+        {resources.map((r, i) => (
+          <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2">
+            <Input className="h-8 text-xs" value={r.label} onChange={(e) => updateRes(i, { label: e.target.value })} placeholder="Label" />
+            <Input className="h-8 text-xs" value={r.url ?? ""} onChange={(e) => updateRes(i, { url: e.target.value })} placeholder="https://…" />
+            <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeRes(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+

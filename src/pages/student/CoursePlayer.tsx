@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import {
   ArrowLeft, ArrowRight, Check, ChevronLeft, CheckCircle, Lock, Video, FileText,
   FlaskConical, Award, BookOpen, Play, Download, MessageSquare, Code2, Flag, ShieldCheck,
-  Calendar, Timer, Sparkles,
+  Calendar, Timer, Sparkles, ListChecks, Radio, Maximize2, ExternalLink,
 } from "lucide-react";
 import { getStudentCourse } from "@/data/studentMockData";
 import { useEnrollmentStore } from "@/stores/enrollmentStore";
@@ -22,22 +22,30 @@ const icons: Record<string, any> = {
   video: Video,
   reading: FileText,
   lab: FlaskConical,
+  "lab-instruction": ListChecks,
+  "live-session": Radio,
   quiz: Award,
   assignment: FileText,
   "code-exercise": Code2,
   "ctf-scenario": Flag,
   exam: ShieldCheck,
+  "mock-exam": ShieldCheck,
+  survey: MessageSquare,
 };
 
 const blockLabel: Record<string, string> = {
   video: "Video",
   reading: "Reading",
   lab: "Lab",
+  "lab-instruction": "Lab Instructions",
+  "live-session": "Live Session",
   quiz: "Quiz",
   assignment: "Assignment",
   "code-exercise": "Code exercise",
   "ctf-scenario": "CTF scenario",
   exam: "Exam",
+  "mock-exam": "Mock Exam",
+  survey: "Survey",
 };
 
 export default function CoursePlayer() {
@@ -198,6 +206,19 @@ export default function CoursePlayer() {
             )}
             {(lesson.type === "lab" || lesson.type === "ctf-scenario") && (
               <div className="p-5 space-y-4">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="text-xs text-muted-foreground">
+                    {lesson.labAllocation?.type === "time-limited" && <>Time-limited · {lesson.labAllocation.sessionDurationHrs ?? 2}h per launch</>}
+                    {lesson.labAllocation?.type === "hour-pool" && <>Hour pool · {lesson.labAllocation.hours ?? 0}h available</>}
+                    {lesson.labAllocation?.type === "persistent" && <>Persistent · available for course duration</>}
+                    {lesson.labAllocation?.type === "module-unlock" && <>Unlocks after: {lesson.labAllocation.unlockAfterLabel ?? "prerequisite"}</>}
+                  </div>
+                  <Button asChild size="sm" className="gap-1.5">
+                    <Link to={`/student/courses/${c.id}/labs/${lesson.id}/workspace`}>
+                      <Maximize2 className="h-3.5 w-3.5" /> Open Lab Workspace
+                    </Link>
+                  </Button>
+                </div>
                 {lesson.labMode === "persistent" ? (
                   <PersistentLabPanel templateName={lesson.labTemplate ?? "Course VM"} validUntil={validUntil} />
                 ) : (
@@ -217,6 +238,75 @@ export default function CoursePlayer() {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+            {lesson.type === "lab-instruction" && (
+              <div className="p-5 space-y-4">
+                {lesson.labInstruction?.objective && (
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Objective</p>
+                    <p className="text-sm">{lesson.labInstruction.objective}</p>
+                  </div>
+                )}
+                {lesson.labInstruction?.prerequisites && lesson.labInstruction.prerequisites.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Prerequisites</p>
+                    <ul className="text-sm list-disc pl-5 text-muted-foreground space-y-0.5">
+                      {lesson.labInstruction.prerequisites.map((p, i) => <li key={i}>{p}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {lesson.labInstruction?.tasks && lesson.labInstruction.tasks.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Tasks</p>
+                    <ol className="space-y-2 text-sm">
+                      {lesson.labInstruction.tasks.map((t, i) => (
+                        <li key={t.id} className="flex gap-2">
+                          <span className="font-mono text-xs text-muted-foreground w-5">{i + 1}.</span>
+                          <div>
+                            <p className="font-medium">{t.title}</p>
+                            {t.detail && <p className="text-xs text-muted-foreground mt-0.5 whitespace-pre-wrap">{t.detail}</p>}
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+                {lesson.labInstruction?.expectedOutcome && (
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Expected outcome</p>
+                    <p className="text-sm">{lesson.labInstruction.expectedOutcome}</p>
+                  </div>
+                )}
+                {lesson.labInstruction?.resources && lesson.labInstruction.resources.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Resources</p>
+                    <div className="space-y-1">
+                      {lesson.labInstruction.resources.map((r, i) => (
+                        <a key={i} href={r.url ?? "#"} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-sm text-primary hover:underline">
+                          <ExternalLink className="h-3 w-3" /> {r.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="pt-2 border-t">
+                  <Button asChild className="gap-1.5">
+                    <Link to={`/student/courses/${c.id}/labs/${lesson.id}/workspace`}>
+                      <Play className="h-4 w-4" /> Launch Lab
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            )}
+            {lesson.type === "live-session" && (
+              <div className="p-8 text-center space-y-3">
+                <Radio className="h-10 w-10 mx-auto text-destructive" />
+                <div>
+                  <p className="text-sm font-medium">{lesson.title}</p>
+                  <p className="text-xs text-muted-foreground">Live instructor-led session · {lesson.duration}</p>
+                </div>
+                <Button asChild className="gap-1.5"><Link to="/student/live-class"><Play className="h-4 w-4" /> Join live class</Link></Button>
               </div>
             )}
             {lesson.type === "exam" && (

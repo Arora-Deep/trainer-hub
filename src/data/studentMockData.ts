@@ -6,11 +6,33 @@ export type StudentLessonType =
   | "video"
   | "reading"
   | "lab"
+  | "lab-instruction"
+  | "live-session"
   | "quiz"
   | "assignment"
   | "code-exercise"
   | "ctf-scenario"
-  | "exam";
+  | "exam"
+  | "mock-exam"
+  | "survey";
+
+export type LabAllocationType = "persistent" | "module-unlock" | "time-limited" | "hour-pool";
+
+export interface StudentLabAllocation {
+  type: LabAllocationType;
+  hours?: number;
+  sessionDurationHrs?: number;
+  untilCourseEnd?: boolean;
+  unlockAfterLabel?: string;
+}
+
+export interface StudentLabInstruction {
+  objective?: string;
+  prerequisites?: string[];
+  tasks?: { id: string; title: string; detail?: string }[];
+  expectedOutcome?: string;
+  resources?: { label: string; url?: string }[];
+}
 
 export interface StudentLesson {
   id: string;
@@ -23,6 +45,8 @@ export interface StudentLesson {
   body?: string;
   labMode?: "on-demand" | "persistent";
   labTemplate?: string;
+  labAllocation?: StudentLabAllocation;
+  labInstruction?: StudentLabInstruction;
   estimatedHours?: number;
   language?: string;
   proctored?: boolean;
@@ -112,7 +136,30 @@ export const studentCourses: StudentCourse[] = [
         lessons: [
           { id: "l-1-8", title: "Networking Basics", type: "reading", duration: "30m", completed: true, locked: false },
           { id: "l-1-9", title: "VPC Deep Dive", type: "video", duration: "1h 30m", completed: false, locked: false },
-          { id: "l-1-10", title: "VPC Lab", type: "lab", duration: "1h 30m", completed: false, locked: false },
+          {
+            id: "l-1-9b", title: "Lab Instructions: Build a VPC", type: "lab-instruction", duration: "10m",
+            completed: false, locked: false,
+            labInstruction: {
+              objective: "Provision a VPC with public + private subnets and verify connectivity end-to-end.",
+              prerequisites: ["Completed 'VPC Deep Dive' video", "Lab VM is running"],
+              tasks: [
+                { id: "t1", title: "Create a VPC with CIDR 10.0.0.0/16" },
+                { id: "t2", title: "Create one public and one private subnet" },
+                { id: "t3", title: "Attach an Internet Gateway and configure route tables" },
+                { id: "t4", title: "Launch a test EC2 in each subnet and verify reachability" },
+              ],
+              expectedOutcome: "You can SSH into the public EC2 and ping the private EC2 from within it.",
+              resources: [
+                { label: "AWS VPC official docs", url: "https://docs.aws.amazon.com/vpc/" },
+                { label: "VPC cheat sheet (PDF)", url: "#" },
+              ],
+            },
+          },
+          {
+            id: "l-1-10", title: "VPC Lab", type: "lab", duration: "1h 30m", completed: false, locked: false,
+            labTemplate: "AWS Networking Sandbox", labMode: "on-demand", estimatedHours: 2,
+            labAllocation: { type: "time-limited", sessionDurationHrs: 2 },
+          },
           { id: "l-1-11", title: "Route 53 & CDN", type: "video", duration: "1h", completed: false, locked: true },
           { id: "l-1-12", title: "Final Assessment", type: "quiz", duration: "45m", completed: false, locked: true },
         ],
