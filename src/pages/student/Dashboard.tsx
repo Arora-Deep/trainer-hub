@@ -1,222 +1,271 @@
-import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  Play, Clock, BookOpen, FileText, Github, Video, ChevronRight, Download,
-  Route, ArrowRight, Swords, BadgeCheck, Flame, FlaskConical,
+  Play, BookOpen, Radio, FlaskConical, Timer, Trophy, ChevronRight,
+  CheckCircle, Clock, ArrowRight, Sparkles, FileText, Award,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { HeroDashboard } from "@/components/gamification/HeroDashboard";
-import { useGamificationStore, pathProgress, challengeProgress, skillColor } from "@/stores/gamificationStore";
-
-const sessions = [
-  { day: "Tomorrow", time: "7:00 PM", title: "Kubernetes Networking Deep Dive", trainer: "Sarah Johnson", type: "Live Class" },
-  { day: "Thu, Nov 14", time: "6:30 PM", title: "CI/CD with GitHub Actions", trainer: "Marcus Lee", type: "Workshop" },
-  { day: "Sat, Nov 16", time: "11:00 AM", title: "Weekly Doubt Clearance", trainer: "Sarah Johnson", type: "Q&A" },
-];
-
-const resources = [
-  { name: "Kubernetes Networking Slides", type: "PDF", icon: FileText },
-  { name: "Lab Guide · Week 7", type: "Guide", icon: BookOpen },
-  { name: "aws-devops-bootcamp", type: "GitHub", icon: Github },
-  { name: "Session Recording · Nov 10", type: "Video", icon: Video },
-];
+import { studentCourses, studentLabs } from "@/data/studentMockData";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function StudentDashboard() {
-  const navigate = useNavigate();
-  const [, setNow] = useState(new Date());
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 60000);
-    return () => clearInterval(t);
-  }, []);
+  const nav = useNavigate();
 
-  const { profile, learningPaths, challenges, getBatchLeaderboard } = useGamificationStore();
-  const activePaths = learningPaths.filter((p) => {
-    const pp = pathProgress(p);
-    return pp.pct > 0 && pp.pct < 100;
-  }).slice(0, 3);
-  const activeChallenges = challenges.filter((c) => c.status === "in_progress" || c.status === "available").slice(0, 3);
-  const batchLb = getBatchLeaderboard(profile.batchId);
-  const me = batchLb.find((e) => e.you);
+  const inProgress = studentCourses.filter((c) => c.status === "in_progress");
+  const continueCourse = inProgress[0];
+  const continuePct = continueCourse ? Math.round((continueCourse.completed / continueCourse.modules) * 100) : 0;
+
+  const upcomingSessions = studentCourses
+    .filter((c) => c.deliveryMode !== "self-paced" && c.nextLiveSession)
+    .map((c) => ({ course: c, session: c.nextLiveSession! }))
+    .slice(0, 3);
+
+  const activeLabs = studentLabs.filter((l) => l.status === "running" || l.status === "stopped").slice(0, 4);
+
+  const hourPoolCourses = studentCourses.filter((c) => c.totalAccessHours && c.totalAccessHours > 0);
+
+  const recentActivity = [
+    { icon: CheckCircle, color: "text-success", text: "Completed 'S3 Quiz' in AWS Cloud Practitioner", time: "2h ago" },
+    { icon: FlaskConical, color: "text-warning", text: "Launched 'AWS VPC Lab'", time: "3h ago" },
+    { icon: FileText, color: "text-primary", text: "Submitted assignment 'Cleaning Real Data'", time: "Yesterday" },
+    { icon: Award, color: "text-amber-600", text: "Earned 'Docker Essentials' certificate", time: "2d ago" },
+  ];
 
   return (
     <div className="space-y-6">
-      <HeroDashboard />
+      <PageHeader
+        title="Welcome back, Sarah"
+        description="Here's what to focus on today."
+      />
 
-      {/* Quick stat strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <QuickCard
-          label="Batch rank"
-          value={me ? `#${me.rank}` : "—"}
-          sub={`of ${batchLb.length} in your batch`}
-          icon={BadgeCheck}
-          onClick={() => navigate("/student/leaderboard")}
-        />
-        <QuickCard
-          label="Active paths"
-          value={activePaths.length}
-          sub="learning journeys"
-          icon={Route}
-          onClick={() => navigate("/student/paths")}
-        />
-        <QuickCard
-          label="Open challenges"
-          value={activeChallenges.length}
-          sub="scenarios to clear"
-          icon={Swords}
-          onClick={() => navigate("/student/challenges")}
-        />
-        <QuickCard
-          label="Labs shipped"
-          value={useGamificationStore.getState().completedLabs.length}
-          sub="hands-on work"
-          icon={FlaskConical}
-          onClick={() => navigate("/student/labs")}
-        />
-      </div>
-
-      {/* Active learning paths */}
-      <Section title="Continue your paths" subtitle="Pick up where you left off" actionLabel="All paths" onAction={() => navigate("/student/paths")}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {activePaths.map((p) => {
-            const pp = pathProgress(p);
-            const accent = skillColor[p.key];
-            return (
-              <Card key={p.slug} className="overflow-hidden cursor-pointer group" onClick={() => navigate(`/student/paths/${p.slug}`)}>
-                <div className="h-1.5" style={{ background: accent }} />
-                <CardContent className="p-5 space-y-3">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Learning path</p>
-                    <h3 className="text-sm font-semibold mt-0.5">{p.name}</h3>
-                  </div>
-                  <Progress value={pp.pct} className="h-1.5" />
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span>{pp.done} / {pp.total} modules</span>
-                    <span className="font-semibold text-primary inline-flex items-center gap-1 group-hover:gap-1.5 transition-all">
-                      Continue <ArrowRight className="h-3 w-3" />
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </Section>
-
-      {/* Active challenges */}
-      <Section title="Live challenges" subtitle="Real scenarios. Real proof." actionLabel="All challenges" onAction={() => navigate("/student/challenges")}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {activeChallenges.map((c) => {
-            const cp = challengeProgress(c);
-            return (
-              <Card key={c.id} className="cursor-pointer" onClick={() => navigate("/student/challenges")}>
-                <CardContent className="p-5 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{c.difficulty}</p>
-                      <h3 className="text-sm font-semibold leading-snug mt-0.5">{c.title}</h3>
-                    </div>
-                    <Swords className="h-4 w-4 text-primary shrink-0" />
-                  </div>
-                  {c.steps && (
-                    <div>
-                      <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
-                        <span>{cp.done}/{cp.total} steps</span>
-                        <span className="tabular-nums">{cp.pct}%</span>
-                      </div>
-                      <Progress value={cp.pct} className="h-1" />
-                    </div>
-                  )}
-                  {c.reward && <p className="text-[11px] text-muted-foreground">Reward · {c.reward}</p>}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </Section>
-
-      {/* Upcoming + resources */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-5">
-        <Section title="Upcoming sessions" subtitle="Live with your trainer">
-          <Card>
+      {/* Continue learning */}
+      {continueCourse && (
+        <section className="space-y-2">
+          <SectionHeader title="Continue learning" actionLabel="All courses" onAction={() => nav("/student/courses")} />
+          <Card className="overflow-hidden">
             <CardContent className="p-0">
-              {sessions.map((s, i) => (
-                <div key={s.title} className={`p-4 hover:bg-foreground/5 transition-colors ${i !== sessions.length - 1 ? "border-b border-foreground/10" : ""}`}>
-                  <div className="flex items-start gap-3">
-                    <div className="flex flex-col items-center min-w-[60px]">
-                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.day.split(",")[0]}</span>
-                      <span className="text-sm font-semibold mt-0.5">{s.time}</span>
+              <div className="grid md:grid-cols-[1fr_auto] gap-0">
+                <div className="p-5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-[10px]">{continueCourse.category}</Badge>
+                    <DeliveryBadge mode={continueCourse.deliveryMode} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold">{continueCourse.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">{continueCourse.description}</p>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[11px] mb-1">
+                      <span className="text-muted-foreground">{continueCourse.completed}/{continueCourse.modules} modules</span>
+                      <span className="font-medium">{continuePct}%</span>
+                    </div>
+                    <Progress value={continuePct} className="h-1.5" />
+                  </div>
+                </div>
+                <div className="border-t md:border-t-0 md:border-l p-5 flex flex-col justify-center gap-2 bg-muted/20 md:min-w-[240px]">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Next lesson</p>
+                  <p className="text-sm font-medium">VPC Deep Dive</p>
+                  <Button asChild size="sm" className="gap-1.5 mt-1">
+                    <Link to={continueCourse.nextLessonId ? `/student/courses/${continueCourse.id}/learn/${continueCourse.nextLessonId}` : `/student/courses/${continueCourse.id}`}>
+                      <Play className="h-3.5 w-3.5" /> Resume
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+      <div className="grid lg:grid-cols-[1.2fr_1fr] gap-6">
+        {/* Active labs */}
+        <section className="space-y-2">
+          <SectionHeader title="Active labs" actionLabel="All labs" onAction={() => nav("/student/labs")} />
+          {activeLabs.length === 0 ? (
+            <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No active labs.</CardContent></Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {activeLabs.map((l) => (
+                <Card key={l.id} className="hover:border-primary/40 transition-colors">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-semibold truncate">{l.name}</h4>
+                        <p className="text-[11px] text-muted-foreground truncate">{l.template}</p>
+                      </div>
+                      <Badge className={
+                        l.status === "running" ? "bg-success/10 text-success border-0 text-[10px]" :
+                        "bg-muted text-muted-foreground border-0 text-[10px]"
+                      }>● {l.status}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                      <span className="flex items-center gap-1"><Timer className="h-3 w-3" /> {l.timeRemaining}</span>
+                      <span>{l.ip}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button asChild size="sm" variant="outline" className="flex-1 h-8 text-xs">
+                        <Link to={`/student/labs/${l.id}`}>Open</Link>
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 text-xs">Snapshot</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Upcoming live sessions */}
+        <section className="space-y-2">
+          <SectionHeader title="Upcoming live sessions" actionLabel="Schedule" onAction={() => nav("/student/schedule")} />
+          {upcomingSessions.length === 0 ? (
+            <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No live sessions scheduled.</CardContent></Card>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                {upcomingSessions.map((u, i) => (
+                  <div key={i} className={`p-4 flex items-start gap-3 ${i !== upcomingSessions.length - 1 ? "border-b" : ""}`}>
+                    <div className="h-9 w-9 rounded-md bg-destructive/10 flex items-center justify-center shrink-0">
+                      <Radio className="h-4 w-4 text-destructive" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium">{s.title}</h4>
-                      <p className="text-xs text-muted-foreground mt-0.5">{s.trainer} · {s.type}</p>
+                      <p className="text-sm font-medium truncate">{u.session.title}</p>
+                      <p className="text-[11px] text-muted-foreground">{u.course.name}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                        <Clock className="h-3 w-3" /> {u.session.date} · {u.session.time}
+                      </p>
                     </div>
-                    {i === 0 && (
-                      <Button size="sm" onClick={() => navigate("/student/live-class")} className="gap-1.5">
-                        <Play className="h-3.5 w-3.5" /> Join
-                      </Button>
-                    )}
+                    <Button size="sm" className="gap-1 h-8" onClick={() => nav("/student/live-class")}>
+                      <Play className="h-3.5 w-3.5" /> Join
+                    </Button>
                   </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </section>
+      </div>
+
+      {/* Lab hours remaining + course progress */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <section className="space-y-2">
+          <SectionHeader title="Lab hours remaining" />
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              {hourPoolCourses.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No metered courses.</p>
+              ) : hourPoolCourses.map((c) => {
+                const remain = (c.totalAccessHours ?? 0) - (c.usedAccessHours ?? 0);
+                const pct = ((c.usedAccessHours ?? 0) / (c.totalAccessHours ?? 1)) * 100;
+                return (
+                  <div key={c.id} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium truncate">{c.name}</span>
+                      <span className="text-muted-foreground tabular-nums">{remain}h / {c.totalAccessHours}h</span>
+                    </div>
+                    <Progress value={pct} className="h-1.5" />
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="space-y-2">
+          <SectionHeader title="Course progress" />
+          <Card>
+            <CardContent className="p-0">
+              {inProgress.map((c, i) => {
+                const pct = Math.round((c.completed / c.modules) * 100);
+                return (
+                  <Link key={c.id} to={`/student/courses/${c.id}`} className={`flex items-center gap-3 p-3 hover:bg-muted/40 transition-colors ${i !== inProgress.length - 1 ? "border-b" : ""}`}>
+                    <BookOpen className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{c.name}</p>
+                      <Progress value={pct} className="h-1 mt-1" />
+                    </div>
+                    <span className="text-xs tabular-nums text-muted-foreground">{pct}%</span>
+                  </Link>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+
+      {/* Recent activity + Achievements */}
+      <div className="grid lg:grid-cols-[1.4fr_1fr] gap-6">
+        <section className="space-y-2">
+          <SectionHeader title="Recent activity" />
+          <Card>
+            <CardContent className="p-0">
+              {recentActivity.map((a, i) => (
+                <div key={i} className={`flex items-start gap-3 p-3 ${i !== recentActivity.length - 1 ? "border-b" : ""}`}>
+                  <a.icon className={`h-4 w-4 ${a.color} shrink-0 mt-0.5`} />
+                  <p className="text-sm flex-1">{a.text}</p>
+                  <span className="text-[11px] text-muted-foreground shrink-0">{a.time}</span>
                 </div>
               ))}
             </CardContent>
           </Card>
-        </Section>
+        </section>
 
-        <Section title="Quick resources" subtitle="Everything for this week">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {resources.map((r) => (
-              <Card key={r.name} className="cursor-pointer">
-                <CardContent className="flex items-center gap-3 p-4">
-                  <div className="h-9 w-9 rounded-xl bg-foreground/5 flex items-center justify-center">
-                    <r.icon className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{r.name}</p>
-                    <p className="text-xs text-muted-foreground">{r.type}</p>
-                  </div>
-                  <Download className="h-4 w-4 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </Section>
+        <section className="space-y-2">
+          <SectionHeader title="Achievements" actionLabel="View all" onAction={() => nav("/student/certificates")} />
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                  <Trophy className="h-5 w-5 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold">3 certificates earned</p>
+                  <p className="text-xs text-muted-foreground">Latest: Docker Essentials</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="grid grid-cols-3 gap-2 pt-2 border-t">
+                <Stat label="Streak" value="7d" icon={Sparkles} />
+                <Stat label="Labs done" value="14" icon={FlaskConical} />
+                <Stat label="Hours" value="68" icon={Clock} />
+              </div>
+            </CardContent>
+          </Card>
+        </section>
       </div>
     </div>
   );
 }
 
-function QuickCard({ label, value, sub, icon: Icon, onClick }: { label: string; value: string | number; sub: string; icon: typeof Route; onClick?: () => void }) {
+function SectionHeader({ title, actionLabel, onAction }: { title: string; actionLabel?: string; onAction?: () => void }) {
   return (
-    <Card className="cursor-pointer" onClick={onClick}>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-        </div>
-        <p className="text-2xl font-bold tabular-nums mt-1">{value}</p>
-        <p className="text-[11px] text-muted-foreground">{sub}</p>
-      </CardContent>
-    </Card>
+    <div className="flex items-end justify-between">
+      <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
+      {actionLabel && onAction && (
+        <button onClick={onAction} className="text-xs font-medium text-primary inline-flex items-center gap-1 hover:gap-1.5 transition-all">
+          {actionLabel} <ArrowRight className="h-3 w-3" />
+        </button>
+      )}
+    </div>
   );
 }
 
-function Section({ title, subtitle, actionLabel, onAction, children }: { title: string; subtitle?: string; actionLabel?: string; onAction?: () => void; children: React.ReactNode }) {
+function DeliveryBadge({ mode }: { mode: "live" | "self-paced" | "hybrid" }) {
+  if (mode === "live") return <Badge className="bg-destructive/10 text-destructive border-0 text-[10px]"><Radio className="h-2.5 w-2.5 mr-0.5" />VILT</Badge>;
+  if (mode === "self-paced") return <Badge className="bg-amber-500/10 text-amber-600 border-0 text-[10px]"><Sparkles className="h-2.5 w-2.5 mr-0.5" />Self-paced</Badge>;
+  return <Badge className="bg-violet-500/10 text-violet-600 border-0 text-[10px]">Hybrid</Badge>;
+}
+
+function Stat({ label, value, icon: Icon }: { label: string; value: string; icon: any }) {
   return (
-    <section className="space-y-3">
-      <div className="flex items-end justify-between">
-        <div>
-          <h2 className="text-base font-semibold tracking-tight">{title}</h2>
-          {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
-        </div>
-        {actionLabel && onAction && (
-          <button onClick={onAction} className="text-xs font-semibold inline-flex items-center gap-1 hover:gap-1.5 transition-all text-primary">
-            {actionLabel} <ChevronRight className="h-3 w-3" />
-          </button>
-        )}
+    <div className="text-center">
+      <div className="flex items-center justify-center gap-1">
+        <Icon className="h-3 w-3 text-muted-foreground" />
+        <span className="text-sm font-bold tabular-nums">{value}</span>
       </div>
-      {children}
-    </section>
+      <p className="text-[10px] text-muted-foreground">{label}</p>
+    </div>
   );
 }
