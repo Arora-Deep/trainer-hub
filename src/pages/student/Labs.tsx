@@ -110,7 +110,11 @@ export default function StudentLabs() {
             <TabsTrigger value="completed" className="text-xs">Completed</TabsTrigger>
           </TabsList>
         </Tabs>
+        <Button variant={showAll ? "default" : "outline"} size="sm" onClick={() => setShowAll((v) => !v)} className="ml-auto text-xs">
+          {showAll ? "Active only" : "Show all labs"}
+        </Button>
       </div>
+
 
       <div className="grid gap-4 md:grid-cols-2">
         {filtered.map((lab) => {
