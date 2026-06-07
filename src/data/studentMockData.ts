@@ -6,11 +6,33 @@ export type StudentLessonType =
   | "video"
   | "reading"
   | "lab"
+  | "lab-instruction"
+  | "live-session"
   | "quiz"
   | "assignment"
   | "code-exercise"
   | "ctf-scenario"
-  | "exam";
+  | "exam"
+  | "mock-exam"
+  | "survey";
+
+export type LabAllocationType = "persistent" | "module-unlock" | "time-limited" | "hour-pool";
+
+export interface StudentLabAllocation {
+  type: LabAllocationType;
+  hours?: number;
+  sessionDurationHrs?: number;
+  untilCourseEnd?: boolean;
+  unlockAfterLabel?: string;
+}
+
+export interface StudentLabInstruction {
+  objective?: string;
+  prerequisites?: string[];
+  tasks?: { id: string; title: string; detail?: string }[];
+  expectedOutcome?: string;
+  resources?: { label: string; url?: string }[];
+}
 
 export interface StudentLesson {
   id: string;
@@ -23,6 +45,8 @@ export interface StudentLesson {
   body?: string;
   labMode?: "on-demand" | "persistent";
   labTemplate?: string;
+  labAllocation?: StudentLabAllocation;
+  labInstruction?: StudentLabInstruction;
   estimatedHours?: number;
   language?: string;
   proctored?: boolean;
