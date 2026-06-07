@@ -135,12 +135,17 @@ export default function StudentLabs() {
                       </div>
                     </Link>
                     <div className="flex items-center gap-2">
-                      {isSelfPaced && <Badge className="text-[10px] bg-amber-500/10 text-amber-600 border-0">Self-paced</Badge>}
+                      {lab.accessKind === "course-persistent" ? (
+                        <Badge className="text-[10px] bg-emerald-500/10 text-emerald-600 border-0">Always available</Badge>
+                      ) : (
+                        <Badge className="text-[10px] bg-amber-500/10 text-amber-600 border-0">Lesson lab</Badge>
+                      )}
                       <Badge variant="secondary" className={`text-xs capitalize ${statusColors[lab.status]}`}>
                         {lab.status === "running" && "● "}{lab.status}
                       </Badge>
                     </div>
                   </div>
+
 
                   {lab.status === "running" && (
                     <>
