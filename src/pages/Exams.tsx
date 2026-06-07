@@ -42,10 +42,10 @@ export default function Exams() {
       />
 
       <div className="grid gap-4 md:grid-cols-4">
-        <StatCard label="Total Exams" value={mockExams.length} icon={GraduationCap} />
-        <StatCard label="Published" value={published} icon={CheckCircle} />
-        <StatCard label="Attempts" value={totalAttempts} icon={Timer} />
-        <StatCard label="Avg Score" value={`${avg}%`} icon={Clock} />
+        <StatCard title="Total Exams" value={mockExams.length} icon={GraduationCap} />
+        <StatCard title="Published" value={published} icon={CheckCircle} />
+        <StatCard title="Attempts" value={totalAttempts} icon={Timer} />
+        <StatCard title="Avg Score" value={`${avg}%`} icon={Clock} />
       </div>
 
       <Card>
