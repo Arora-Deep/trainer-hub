@@ -21,24 +21,47 @@ export interface LabAttachment {
 
 export type LessonSource = 'inline' | 'library';
 
+export interface LessonAttachment {
+  name: string;
+  size?: number;
+  url?: string;
+  kind?: string;
+}
+
 export interface Lesson {
   id: string;
   title: string;
   type: LessonType;
   duration: string;
-  // Optional content fields
+  // Common
+  summary?: string;
+  instructions?: string;
+  // Video / reading
   body?: string;
   videoUrl?: string;
+  videoFileName?: string;
+  transcript?: string;
+  attachments?: LessonAttachment[];
+  allowDownload?: boolean;
+  // Lab
   lab?: LabAttachment;
-  language?: string; // for code-exercise (judge0)
-  proctored?: boolean; // for exam
-  // Library link (assessment lesson types may reference quiz/assignment/exercise stores)
+  successCriteria?: string;
+  // Code exercise
+  language?: string;
+  starterCode?: string;
+  // Exam / assessment
+  proctored?: boolean;
+  passingScore?: number;
+  attempts?: number;
+  timeLimit?: number; // minutes
+  // Library link
   source?: LessonSource;
   refId?: string;
-  // Grading metadata (only meaningful for assessment lesson types)
-  weight?: number; // % toward course final grade
-  required?: boolean; // gates progression
+  // Grading
+  weight?: number;
+  required?: boolean;
 }
+
 
 export const ASSESSMENT_LESSON_TYPES: LessonType[] = ['quiz', 'assignment', 'code-exercise', 'exam'];
 export const isAssessmentLesson = (t: LessonType) => ASSESSMENT_LESSON_TYPES.includes(t);
