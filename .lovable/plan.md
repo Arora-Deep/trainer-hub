@@ -1,100 +1,88 @@
-# Student Portal Restructure – Self-Paced & VILT
+## Goal
 
-Reshapes the student experience around three delivery modes (Self-Paced, VILT, Hybrid) with first-class lab allocation rules, a new Lab Instructions content type, and a proper Lab Workspace. Trainer/admin tooling gets the minimum knobs to drive these student views.
+Make `/student/live-class` (the "Learning Centre") behave differently depending on the selected course's delivery mode, and tighten the Labs page so it only shows VMs a student can currently access.
 
 ---
 
-## 1. Data model changes
+## 1. Learning Centre — VILT courses (no change)
 
-**`courseStore.ts`**
-- Extend `Course` with `deliveryMode: 'self_paced' | 'vilt' | 'hybrid'` (already exists on student mock — promote to authoring side).
-- Extend `Lesson` type union with `'lab_instruction'` and `'live_session'`, `'survey'`, `'mock_exam'`.
-- Add `LabInstruction` shape on `Lesson`: `objective`, `prerequisites[]`, `tasks[] { title, detail }`, `expectedOutcome`, `resources[] { label, url, kind }`.
-- Extend `LabAttachment` with `allocation`:
-  ```
-  { type: 'persistent' | 'module_unlock' | 'time_limited' | 'hour_pool',
-    hours?, expiry?, untilCourseEnd?, unlockAfter?: { kind: 'lesson'|'module'|'quiz'|'assignment', refId },
-    sessionDurationHrs?, onExpire?: 'suspend'|'delete'|'lock',
-    poolHours? }
-  ```
-- New `studentLabStore.ts` (lightweight): tracks per-student active labs — `id, courseId, lessonId, name, status, hoursRemaining, expiresAt, lastAccessed, snapshotId`.
+When the selected course is `deliveryMode: "live"` or `"hybrid"`, render today's existing live-class layout exactly as it is (instructor video / chat / synced lab console / participants / view modes).
 
-**`studentMockData.ts`**
-- Add 1 self-paced course, 1 VILT course, 1 hybrid course with full module/lesson/lab-instruction examples and varied lab allocation types.
-- Add active labs list, lab-hour pools, upcoming sessions tied to VILT courses.
+The current "Self-paced" branches and amber notices in `LiveClass.tsx` are pulled out — the live UI no longer pretends to also serve self-paced.
 
-## 2. Trainer-side authoring (minimal)
+## 2. Learning Centre — Self-Paced courses (new view)
 
-**`LessonEditorSheet.tsx`** — add new type options:
-- `lab_instruction` → form with Objective / Prerequisites / Tasks (repeatable) / Expected Outcome / Resources (repeatable).
-- `live_session` → date, time, duration, meeting link, agenda.
-- `mock_exam`, `survey` → reuse existing inline-vs-library pattern.
-- When type = `lab`, add **Allocation** section with the 4 types and conditional fields.
+When the selected course is `deliveryMode: "self-paced"`, render a new layout inside the same page that feels like the existing `CoursePlayer` (the "My Courses → course" experience), not like a live class.
 
-**`CreateCourse.tsx` / `CourseDetails.tsx`** — add Delivery Mode selector (Self-Paced / VILT / Hybrid).
+Structure:
 
-## 3. Student dashboard redesign (`src/pages/student/Dashboard.tsx`)
+```
+┌────────────────────────────────────────────────────────────────┐
+│ Course switcher · course title · self-paced badge · hours left │
+├──────────────┬────────────────────────────────┬────────────────┤
+│              │                                │                │
+│  Curriculum  │   Current lesson content       │  Course Lab    │
+│  (chapters,  │   (video / reading / quiz /    │  (only if      │
+│   lessons,   │    assignment / code / lab /   │   course has   │
+│   locked,    │    lab-instruction / exam /    │   a persistent │
+│   completed) │    live-session)               │   course VM)   │
+│              │   Prev / Mark complete / Next  │                │
+└──────────────┴────────────────────────────────┴────────────────┘
+```
 
-Replace existing layout with sections in this order:
-1. **Hero strip** – name, streak, today's focus CTA ("Continue X" or "Join live in 12m").
-2. **Continue learning** – top in-progress course card with progress %, next lesson, resume button.
-3. **Upcoming live sessions** – only renders if student has VILT/hybrid enrollments; shows join button when within ±15m.
-4. **Active labs** – cards with name, status chip, hours remaining bar, expiry, quick actions (Resume / Snapshot / Stop).
-5. **Lab hours remaining** – per-course meter for hour-pool allocations.
-6. **Course progress** – compact list of enrolled courses with % bars.
-7. **Recent activity** – feed (lesson done, lab launched, assignment submitted).
-8. **Achievements** – existing certificates/skill chips, slimmed.
+Lab handling — two modes:
 
-Keep gamification but as a secondary band, not the hero.
+- **Course-wide persistent VM with hour pool** (e.g. 20h, accessible anytime): the right rail shows a "Course Lab" panel with VM status, hours-remaining meter, launch console button, and VM actions (Start / Stop / Restart / Snapshot / Reset / Open fullscreen). Available from every lesson, not gated by lesson type.
+- **Time-limited between-lesson lab** (current behaviour): when the current lesson itself is a `lab` / `lab-instruction`, the centre pane keeps today's inline `OnDemandLabPanel` / `LabWorkspace` launch flow. The right rail hides when no course-wide VM exists.
 
-## 4. Course detail adapts to delivery mode (`src/pages/student/CourseDetail.tsx`)
+### View toggle when student opens the VM
 
-- Header badge already shows mode — expand summary card per mode:
-  - **Self-Paced**: progress, est. time remaining, lab hours remaining, "Next lesson" CTA.
-  - **VILT**: next live session card prominent, attendance %, "Join session" CTA, schedule list.
-  - **Hybrid**: both, with self-paced modules and a live schedule tab.
-- Module list renders new lesson types with proper icons; show lock state with reason ("Unlocks after Module 2 quiz").
+On a self-paced course with a persistent VM, the top of the page exposes a small segmented control:
 
-## 5. New Lab Workspace page
+- **Lessons + Lab** (split, default) — curriculum / lesson / VM side-by-side as above.
+- **Lab only** — center pane is replaced by a full-width VM console; curriculum collapses to a slim rail; right controls remain.
 
-New route `/student/courses/:courseId/labs/:lessonId/workspace` → `src/pages/student/LabWorkspace.tsx`.
+(Existing "Content View / Lab View / Notes" tabs are removed in self-paced mode — replaced by these two states.)
 
-Layout (3-pane, resizable via existing `resizable` primitives):
-- **Left (320px)**: Lab Instructions — Objective, Tasks checklist (local check state), Expected Outcome, Resources list.
-- **Center (flex)**: VM console placeholder (existing console mock), top bar with VM name + status + timer (for time-limited).
-- **Right (260px)**: Controls — Start/Stop/Restart/Pause, Snapshot/Restore, Fullscreen, Remaining time, Expiry info.
+## 3. Active Labs page (rename + scope change)
 
-Reuse `OnDemandLabPanel`/`PersistentLabPanel` patterns; new wrapper page.
+- Sidebar item "My Labs" → **"Active Labs"** (`/student/labs` route unchanged).
+- The page only lists labs the student can currently use:
+  - Course-wide persistent VMs (self-paced courses with hour pools).
+  - Currently-running time-limited lesson labs.
+- Stopped lesson labs without an active session and completed/failed labs are hidden by default (still reachable via a "Show all" toggle for transparency).
+- Card copy clarifies access type: "Always available · 20h pool" vs "Lesson lab · 1h 30m left this session".
 
-## 6. Lesson viewer extensions (`src/pages/student/CoursePlayer.tsx` and/or `LessonView.tsx`)
+## 4. Data tweaks (`src/data/studentMockData.ts`)
 
-- `lab_instruction` lesson → render the structured instruction layout inline with "Launch lab" CTA that opens the Lab Workspace.
-- `live_session` lesson → session card with join button + status.
-- `lab` lesson → opens Lab Workspace directly.
-- Lock evaluation uses `allocation.unlockAfter` and student progress.
+Add to `StudentCourse` for self-paced courses:
 
-## 7. VILT live session page (`src/pages/student/LiveClass.tsx`)
+```ts
+persistentLab?: {
+  labId: string;          // links to studentLabs
+  templateName: string;
+  totalHours: number;     // e.g. 20
+  usedHours: number;
+};
+```
 
-Restructure into 4 zones:
-- Main: instructor video/screen-share placeholder + chat.
-- Right top: **My Training Lab** mini-console with quick controls.
-- Right bottom: **Session Resources** (downloads/slides).
-- Bottom strip: announcements, attendance status chip, session timer.
+Populate it on the Python (id 4) and Linux Hardening (id 5) self-paced courses. The hybrid GenAI course (id 6) gets one too.
 
-## 8. Routing (`src/App.tsx`)
+Existing `studentLabs` entries gain an `accessKind: "course-persistent" | "lesson-time-limited"` so the Active Labs page can filter cleanly.
 
-Add:
-- `/student/courses/:courseId/labs/:lessonId/workspace` → `LabWorkspace`
-- Ensure existing `/student/courses/:id/learn/:lessonId` handles new lesson types.
+## 5. Files touched
 
-## 9. Out of scope
+**Edit**
+- `src/data/studentMockData.ts` — add `persistentLab` on courses, `accessKind` on labs.
+- `src/components/layout/AppSidebar.tsx` — rename "My Labs" → "Active Labs".
+- `src/pages/student/LiveClass.tsx` — branch on delivery mode; mount new self-paced view, keep VILT as-is.
+- `src/pages/student/Labs.tsx` — filter to active-only by default, add "Show all" toggle, update copy and hero title.
 
-- Real WebRTC / video infra (mocked).
-- Real VM orchestration (mocked statuses).
-- Admin batch wizard changes beyond delivery mode (already covered earlier; will reuse).
-- Backend persistence — all client state via Zustand mocks.
+**New**
+- `src/pages/student/SelfPacedLearningCentre.tsx` — the curriculum + lesson + course-lab layout, with Split / Lab-only toggle. Reuses `CoursePlayer`'s block renderers and `LabWorkspace`'s console mock.
 
-## Files touched
+## 6. Out of scope
 
-**New:** `src/pages/student/LabWorkspace.tsx`, `src/stores/studentLabStore.ts`
-**Edit:** `src/stores/courseStore.ts`, `src/data/studentMockData.ts`, `src/components/courses/LessonEditorSheet.tsx`, `src/pages/CreateCourse.tsx`, `src/pages/student/Dashboard.tsx`, `src/pages/student/CourseDetail.tsx`, `src/pages/student/CoursePlayer.tsx`, `src/pages/student/LiveClass.tsx`, `src/App.tsx`
+- Real VM orchestration / real video — all mock.
+- Trainer authoring side for `persistentLab` (already covered by lab allocation editor).
+- `/student/courses/:id/learn/:lessonId` (My Courses → CoursePlayer) keeps its current behaviour; no duplication.
