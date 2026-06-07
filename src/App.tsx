@@ -36,6 +36,8 @@ import Settings from "./pages/Settings";
 import LiveTraining from "./pages/LiveTraining";
 import RequestLab from "./pages/RequestLab";
 import LessonView from "./pages/LessonView";
+import Exams from "./pages/Exams";
+import InsightQuestions from "./pages/InsightQuestions";
 
 import NotFound from "./pages/NotFound";
 
