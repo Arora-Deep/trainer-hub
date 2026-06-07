@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Video, FileText, HelpCircle, ClipboardList, Code2, FlaskConical, Flag, GraduationCap,
-  Upload, Link2, Library, Plus, X, FileUp, Trash2,
+  Upload, Link2, Library, Plus, X, FileUp, Trash2, Radio, ListChecks, MessageSquareQuote,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TemplatePickerDropdown } from "@/components/labs/TemplatePickerDropdown";
@@ -19,7 +19,7 @@ import { useLabStore } from "@/stores/labStore";
 import { useQuizStore } from "@/stores/quizStore";
 import { useAssignmentStore } from "@/stores/assignmentStore";
 import { useExerciseStore } from "@/stores/exerciseStore";
-import { isAssessmentLesson, type Lesson, type LessonType, type LessonAttachment } from "@/stores/courseStore";
+import { isAssessmentLesson, type Lesson, type LessonType, type LessonAttachment, type LabInstructionTask, type LabInstructionResource, type LabAllocation, type LabAllocationType } from "@/stores/courseStore";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -29,9 +29,13 @@ const typeMeta: Record<LessonType, { label: string; icon: any; hint: string }> =
   quiz: { label: "Quiz", icon: HelpCircle, hint: "Create a quiz inline or pull one from your library." },
   assignment: { label: "Assignment", icon: ClipboardList, hint: "Add a graded assignment with submission rules." },
   "code-exercise": { label: "Code Exercise", icon: Code2, hint: "Define a coding challenge with starter code and tests." },
-  lab: { label: "Lab", icon: FlaskConical, hint: "Attach a lab template — on-demand or persistent." },
+  lab: { label: "Lab", icon: FlaskConical, hint: "Attach a lab template with an allocation rule." },
+  "lab-instruction": { label: "Lab Instructions", icon: ListChecks, hint: "Structured step-by-step instructions students follow inside a lab." },
+  "live-session": { label: "Live Session", icon: Radio, hint: "Schedule a live instructor-led session." },
   "ctf-scenario": { label: "CTF Scenario", icon: Flag, hint: "Capture-the-flag style scenario on a lab box." },
   exam: { label: "Exam", icon: GraduationCap, hint: "Final graded assessment, optionally proctored." },
+  "mock-exam": { label: "Mock Exam", icon: GraduationCap, hint: "Practice exam — same shape as the real one, but ungraded." },
+  survey: { label: "Survey", icon: MessageSquareQuote, hint: "Collect feedback from learners." },
 };
 
 interface Props {
