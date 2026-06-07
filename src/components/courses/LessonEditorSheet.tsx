@@ -225,7 +225,7 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
                   selectedId={form.lab?.templateId}
                   onSelect={(t) => setForm((p) => ({
                     ...p,
-                    lab: { templateId: t.id, templateName: t.name, mode: p.lab?.mode ?? "on-demand", estimatedHours: p.lab?.estimatedHours ?? 1 },
+                    lab: { templateId: t.id, templateName: t.name, mode: p.lab?.mode ?? "on-demand", estimatedHours: p.lab?.estimatedHours ?? 1, allocation: p.lab?.allocation },
                   }))}
                 />
                 <div className="grid grid-cols-2 gap-3">
@@ -247,10 +247,60 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
                     <Input type="number" min={0} value={form.lab?.estimatedHours ?? 1} onChange={(e) => setForm((p) => ({ ...p, lab: { ...(p.lab ?? { templateId: "", templateName: "", mode: "on-demand" }), estimatedHours: Number(e.target.value) } as any }))} />
                   </div>
                 </div>
+
+                {/* Allocation rules */}
+                <LabAllocationEditor
+                  value={form.lab?.allocation}
+                  onChange={(alloc) => setForm((p) => ({ ...p, lab: { ...(p.lab ?? { templateId: "", templateName: "", mode: "on-demand" }), allocation: alloc } as any }))}
+                />
+
                 <div className="space-y-1.5">
                   <Label className="text-xs">Success criteria</Label>
                   <Textarea rows={3} value={form.successCriteria ?? ""} onChange={(e) => setField("successCriteria", e.target.value)} placeholder="What does the learner need to achieve in this lab?" />
                 </div>
+              </div>
+            )}
+
+            {form.type === "lab-instruction" && (
+              <LabInstructionEditor
+                value={form.labInstructions ?? {}}
+                onChange={(v) => setField("labInstructions", v)}
+              />
+            )}
+
+            {form.type === "live-session" && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Date</Label>
+                    <Input type="date" value={form.liveSession?.date ?? ""} onChange={(e) => setField("liveSession", { ...(form.liveSession ?? {}), date: e.target.value })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Time</Label>
+                    <Input type="time" value={form.liveSession?.time ?? ""} onChange={(e) => setField("liveSession", { ...(form.liveSession ?? {}), time: e.target.value })} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Duration (min)</Label>
+                    <Input type="number" value={form.liveSession?.durationMin ?? ""} onChange={(e) => setField("liveSession", { ...(form.liveSession ?? {}), durationMin: Number(e.target.value) })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Meeting URL</Label>
+                    <Input value={form.liveSession?.meetingUrl ?? ""} onChange={(e) => setField("liveSession", { ...(form.liveSession ?? {}), meetingUrl: e.target.value })} placeholder="https://meet.…" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Agenda</Label>
+                  <Textarea rows={3} value={form.liveSession?.agenda ?? ""} onChange={(e) => setField("liveSession", { ...(form.liveSession ?? {}), agenda: e.target.value })} />
+                </div>
+              </div>
+            )}
+
+            {form.type === "survey" && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">Survey description</Label>
+                <Textarea rows={4} value={form.body ?? ""} onChange={(e) => setField("body", e.target.value)} placeholder="What feedback are you collecting?" />
               </div>
             )}
 
