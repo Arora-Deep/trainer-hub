@@ -33,22 +33,29 @@ export default function StudentLabs() {
   const [mode, setMode] = useState<string>("all");
   const [tab, setTab] = useState("all");
   const [copied, setCopied] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   const batches = useMemo(() => Array.from(new Set(studentLabs.map((l) => l.batch))), []);
+
+  // An "active" lab is a course-persistent VM (always available) or a currently-running lesson lab.
+  const isActive = (l: typeof studentLabs[number]) =>
+    l.accessKind === "course-persistent" || l.status === "running";
 
   const filtered = useMemo(
     () =>
       studentLabs.filter((l) => {
+        if (!showAll && !isActive(l)) return false;
         if (tab !== "all" && l.status !== tab) return false;
         if (batch !== "all" && l.batch !== batch) return false;
         if (mode !== "all" && l.deliveryMode !== mode) return false;
         if (search && !l.name.toLowerCase().includes(search.toLowerCase())) return false;
         return true;
       }),
-    [tab, batch, mode, search]
+    [tab, batch, mode, search, showAll]
   );
 
   const running = studentLabs.filter((l) => l.status === "running").length;
+  const persistent = studentLabs.filter((l) => l.accessKind === "course-persistent").length;
 
   const copy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -61,16 +68,17 @@ export default function StudentLabs() {
     <div className="space-y-6">
       <StudentPageHero
         variant="cyan"
-        eyebrow="Mission Control"
+        eyebrow="Active Labs"
         icon={FlaskConical}
-        title={<>Spin up. Break things. <span className="text-white/95">Earn XP.</span></>}
-        description="Hands-on environments across your enrolled batches — every minute in a live lab counts."
+        title={<>Your live VMs. <span className="text-white/95">Right now.</span></>}
+        description="Only the labs you can use right now — always-on course VMs and active lesson sessions."
         stats={[
           { icon: Activity, label: "Running", value: running },
-          { icon: Monitor, label: "Total", value: studentLabs.length },
-          { icon: Timer, label: "Completed", value: studentLabs.filter((l) => l.status === "completed").length },
+          { icon: Monitor, label: "Always-on", value: persistent },
+          { icon: Timer, label: "Total active", value: studentLabs.filter(isActive).length },
         ]}
       />
+
 
 
       <div className="flex flex-wrap items-center gap-3">
