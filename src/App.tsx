@@ -36,6 +36,8 @@ import Settings from "./pages/Settings";
 import LiveTraining from "./pages/LiveTraining";
 import RequestLab from "./pages/RequestLab";
 import LessonView from "./pages/LessonView";
+import Exams from "./pages/Exams";
+import InsightQuestions from "./pages/InsightQuestions";
 
 import NotFound from "./pages/NotFound";
 
@@ -148,6 +150,8 @@ const App = () => (
             <Route path="/exercises" element={<Exercises />} />
             <Route path="/exercises/create" element={<CreateExercise />} />
             <Route path="/exercises/:id" element={<ExerciseDetails />} />
+            <Route path="/exams" element={<Exams />} />
+            <Route path="/insight-questions" element={<InsightQuestions />} />
             <Route path="/certifications" element={<Certifications />} />
             <Route path="/certifications/create" element={<CreateCertification />} />
             <Route path="/certifications/:id" element={<CertificationDetails />} />
