@@ -80,7 +80,7 @@ export default function Exams() {
                   <TableCell className="text-sm">{e.avgScore > 0 ? `${e.avgScore}%` : "—"}</TableCell>
                   <TableCell className="text-sm">{e.proctored ? "Yes" : "No"}</TableCell>
                   <TableCell>
-                    <StatusBadge status={e.status === "published" ? "success" : "neutral"} />
+                    <StatusBadge status={e.status === "published" ? "success" : "neutral"} label={e.status} />
                   </TableCell>
                 </TableRow>
               ))}
