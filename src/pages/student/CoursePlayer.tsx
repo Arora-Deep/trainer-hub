@@ -426,19 +426,7 @@ export default function CoursePlayer() {
               </div>
             )}
             {lesson.type === "exam" && (
-              <div className="p-8 text-center space-y-3">
-                <ShieldCheck className="h-10 w-10 mx-auto text-primary" />
-                <div>
-                  <p className="text-sm font-medium">{lesson.title}</p>
-                  <p className="text-xs text-muted-foreground">Timed exam · {lesson.duration}{lesson.proctored ? " · Proctored" : ""}</p>
-                </div>
-                {lesson.proctored && (
-                  <Badge variant="outline" className="text-[10px]">Camera + lockdown browser required</Badge>
-                )}
-                <div className="pt-2">
-                  <Button asChild className="gap-1.5"><Link to="/student/assessments"><Play className="h-4 w-4" /> Begin exam</Link></Button>
-                </div>
-              </div>
+              <InlineExam lesson={lesson} />
             )}
           </CardContent>
         </Card>
