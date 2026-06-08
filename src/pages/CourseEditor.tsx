@@ -548,7 +548,7 @@ function CourseSettingsForm({ settings, onChange }: any) {
               <SelectContent>
                 <SelectItem value="private">Private — assigned batches only</SelectItem>
                 <SelectItem value="customer">Customer — anyone in my organization</SelectItem>
-                <SelectItem value="marketplace">Marketplace — public (requires CloudAdda approval)</SelectItem>
+                <SelectItem value="marketplace">Marketplace — public (requires Platform approval)</SelectItem>
               </SelectContent>
             </Select>
           </Field>

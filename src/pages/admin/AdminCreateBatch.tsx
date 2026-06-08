@@ -107,7 +107,7 @@ export default function AdminCreateBatch() {
   const showPricing = canViewPricing(adminSubRole);
 
   // Step 5 approval
-  const [cloudAddaApproval, setCloudAddaApproval] = useState<"pending" | "approved" | "rejected">("pending");
+  const [cloudAddaApproval, setPlatformApproval] = useState<"pending" | "approved" | "rejected">("pending");
   const [companyAdminApproval, setCompanyAdminApproval] = useState<"pending" | "approved" | "rejected">("pending");
   const [approvalRequested, setApprovalRequested] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -145,7 +145,7 @@ export default function AdminCreateBatch() {
   const handleRequestApproval = () => {
     setApprovalRequested(true);
     toast({ title: "Approval Requested" });
-    setTimeout(() => { setCloudAddaApproval("approved"); toast({ title: "CloudAdda Approved" }); }, 1500);
+    setTimeout(() => { setPlatformApproval("approved"); toast({ title: "Platform Approved" }); }, 1500);
     setTimeout(() => { setCompanyAdminApproval("approved"); toast({ title: "Company Admin Approved" }); }, 3000);
   };
 
@@ -703,7 +703,7 @@ export default function AdminCreateBatch() {
                     <Card>
                       <CardHeader><CardTitle className="text-base flex items-center gap-2"><Shield className="h-4 w-4 text-primary" /> Approval</CardTitle></CardHeader>
                       <CardContent className="space-y-3">
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border"><span className="text-sm">CloudAdda</span>{getApprovalStatusBadge(cloudAddaApproval)}</div>
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border"><span className="text-sm">Platform</span>{getApprovalStatusBadge(cloudAddaApproval)}</div>
                         <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border"><span className="text-sm">Company Admin</span>{getApprovalStatusBadge(companyAdminApproval)}</div>
                         {!approvalRequested && (
                           <Button type="button" className="w-full" onClick={handleRequestApproval}><Send className="mr-2 h-4 w-4" /> Request Approval</Button>

@@ -152,7 +152,7 @@ export default function AdminInvoices() {
                   {[
                     ["Series", "INV-2026-"],
                     ["PO Number", `PO-${selected.id.slice(-4)}`],
-                    ["Cost Center", "Main - CloudAdda"],
+                    ["Cost Center", "Main - Platform"],
                     ["Project", selected.tenant],
                     ["Tax Template", "Output GST 18%"],
                     ["Payment Terms", "Net 30"],
@@ -210,7 +210,7 @@ export default function AdminInvoices() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5"><Label className="text-xs">Customer</Label><Input placeholder="DevOps Academy" /></div>
             <div className="space-y-1.5"><Label className="text-xs">PO Number</Label><Input placeholder="PO-2026-0123" /></div>
-            <div className="space-y-1.5"><Label className="text-xs">Cost Center</Label><Input defaultValue="Main - CloudAdda" /></div>
+            <div className="space-y-1.5"><Label className="text-xs">Cost Center</Label><Input defaultValue="Main - Platform" /></div>
             <div className="space-y-1.5"><Label className="text-xs">Project</Label><Input placeholder="Project link" /></div>
             <div className="space-y-1.5"><Label className="text-xs">Tax Template</Label><Select defaultValue="gst18"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="gst18">Output GST 18%</SelectItem><SelectItem value="gst5">Output GST 5%</SelectItem><SelectItem value="export">Export (Zero rated)</SelectItem></SelectContent></Select></div>
             <div className="space-y-1.5"><Label className="text-xs">Payment Terms</Label><Select defaultValue="net30"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="net15">Net 15</SelectItem><SelectItem value="net30">Net 30</SelectItem><SelectItem value="net45">Net 45</SelectItem></SelectContent></Select></div>

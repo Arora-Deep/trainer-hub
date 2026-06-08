@@ -48,7 +48,7 @@ export default function PortfolioPublic() {
       <header className="border-b">
         <div className="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between">
           <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold">
-            <Briefcase className="h-4 w-4 text-primary" /> CloudAdda Portfolio
+            <Briefcase className="h-4 w-4 text-primary" /> Platform Portfolio
           </Link>
           <span className="text-[11px] text-muted-foreground">@{portfolio.handle}</span>
         </div>
@@ -142,7 +142,7 @@ export default function PortfolioPublic() {
         )}
 
         <footer className="pt-8 pb-12 text-center text-[11px] text-muted-foreground">
-          Powered by <Link to="/" className="text-primary hover:underline">CloudAdda</Link>
+          Powered by <Link to="/" className="text-primary hover:underline">Platform</Link>
         </footer>
       </main>
     </div>
