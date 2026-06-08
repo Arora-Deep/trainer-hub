@@ -26,9 +26,9 @@ export default function StudentCourses() {
   const [tab, setTab] = useState("all");
   const [mode, setMode] = useState("all");
 
-  const defaultActive = studentCourses.find((c) => c.status === "in_progress")?.id || studentCourses[0]?.id || "";
-  const [activeId, setActiveId] = useState(defaultActive);
-  const active = studentCourses.find((c) => c.id === activeId) || studentCourses[0];
+  const [activeId, setActiveId] = useState<string>(
+    studentCourses.find((c) => c.status === "in_progress")?.id || studentCourses[0]?.id || ""
+  );
 
   const filtered = useMemo(
     () =>
@@ -40,9 +40,6 @@ export default function StudentCourses() {
       }),
     [search, tab, mode]
   );
-
-  const activePct = active ? Math.round((active.completed / active.modules) * 100) : 0;
-  const activeNext = active?.nextLessonId || active?.chapters[0]?.lessons[0]?.id;
 
   return (
     <div className="space-y-6">
