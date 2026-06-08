@@ -30,7 +30,7 @@ interface ParticipantsTabProps {
   batch: Batch;
 }
 
-type SortField = "name" | "quizScore" | "attendance" | "lastActive";
+type SortField = "name" | "attendance" | "lastActive";
 
 export function ParticipantsTab({ batch }: ParticipantsTabProps) {
   const { addParticipant, removeParticipant, updateParticipant, importParticipantsCSV } = useBatchStore();
