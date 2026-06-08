@@ -280,8 +280,86 @@ const initialCourses: Course[] = [
     ]},
   ]},
   // DEMO courses
-  { id: "10", name: "Java Fundamentals", deliveryType: "instructor-led", category: "Programming", description: "VILT Java fundamentals bootcamp with daily live classes and dedicated lab VMs.", batches: 1, lastUpdated: "May 20, 2026", status: "active", settings: { ...defaultSettings, deliveryType: 'instructor-led' }, owner: { type: 'trainer', id: 't-3', name: 'Rahul Verma' }, moderation: 'approved', chapters: [] },
-  { id: "11", name: "Python Fundamentals", deliveryType: "self-paced", category: "Programming", description: "Self-paced Python fundamentals with persistent learner labs cloned from a trainer golden template.", batches: 1, lastUpdated: "Apr 25, 2026", status: "active", settings: { ...defaultSettings, deliveryType: 'self-paced', labPolicy: 'unlimited-during-validity', visibility: 'customer' }, owner: { type: 'trainer', id: 't-4', name: 'Neha Kapoor' }, moderation: 'approved', chapters: [] },
+  { id: "10", name: "Java Fundamentals", deliveryType: "instructor-led", category: "Programming", description: "VILT Java fundamentals bootcamp with daily live classes and dedicated lab VMs.", batches: 1, lastUpdated: "May 20, 2026", status: "active", settings: { ...defaultSettings, deliveryType: 'instructor-led' }, owner: { type: 'trainer', id: 't-3', name: 'Rahul Verma' }, moderation: 'approved', chapters: [
+    { id: "ch-java-1", title: "Getting Started with Java", lessons: [
+      { id: "l-java-1", title: "Welcome & Course Roadmap", type: "video", duration: "10 min", summary: "Trainer kicks off the cohort and walks through the 6-week schedule." },
+      { id: "l-java-2", title: "Reading: The Java Platform (JVM, JRE, JDK)", type: "reading", duration: "15 min", body: "Java is a class-based, object-oriented language compiled to bytecode and executed on the Java Virtual Machine (JVM). This reading covers the JDK toolchain (javac, java, jshell), how the JVM loads classes, JIT compilation, and why 'write once, run anywhere' still matters in 2026." },
+      { id: "l-java-3", title: "Live Session: JDK 21 setup walkthrough", type: "live-session", duration: "45 min", liveSession: { date: "Jun 09, 2026", time: "10:00 AM IST", durationMin: 45, agenda: "Install JDK 21, verify with java -version, run first HelloWorld." } },
+      { id: "l-java-4", title: "Lab: Hello Java on your VM", type: "lab", duration: "30 min", lab: { templateId: 'tpl-java', templateName: 'Java Dev VM (JDK 21)', mode: 'persistent' } },
+      { id: "l-java-5", title: "Quiz: Java Platform Basics", type: "quiz", duration: "10 min", passingScore: 70, attempts: 2 },
+    ]},
+    { id: "ch-java-2", title: "Syntax, Variables & Control Flow", lessons: [
+      { id: "l-java-6", title: "Video: Primitive types & operators", type: "video", duration: "22 min" },
+      { id: "l-java-7", title: "Reading: Control flow cheatsheet", type: "reading", duration: "12 min", body: "if/else, switch expressions (Java 14+), for, while, do-while, enhanced-for, labelled break — with idiomatic examples." },
+      { id: "l-java-8", title: "Exercise: FizzBuzz in Java", type: "code-exercise", duration: "20 min", language: "java", starterCode: "public class FizzBuzz {\n  public static void main(String[] args) {\n    // TODO\n  }\n}" },
+      { id: "l-java-9", title: "Insight Question: Why is String immutable?", type: "survey", duration: "5 min" },
+    ]},
+    { id: "ch-java-3", title: "Object-Oriented Programming", lessons: [
+      { id: "l-java-10", title: "Video: Classes, objects & constructors", type: "video", duration: "28 min" },
+      { id: "l-java-11", title: "Video: Inheritance & polymorphism", type: "video", duration: "25 min" },
+      { id: "l-java-12", title: "Reading: SOLID principles in Java", type: "reading", duration: "18 min", body: "Single responsibility, open/closed, Liskov, interface segregation, dependency inversion — with Java snippets for each." },
+      { id: "l-java-13", title: "Quiz: OOP Concepts", type: "quiz", duration: "15 min", passingScore: 70, attempts: 2 },
+      { id: "l-java-14", title: "Game-Based Learning: Refactor the Zoo", type: "game-based-learning", duration: "25 min", summary: "Earn points by refactoring a tangled Animal hierarchy into clean polymorphic code." },
+    ]},
+    { id: "ch-java-4", title: "Collections & Generics", lessons: [
+      { id: "l-java-15", title: "Video: List, Set, Map deep-dive", type: "video", duration: "30 min" },
+      { id: "l-java-16", title: "Reading: Generics & type erasure", type: "reading", duration: "14 min", body: "How the compiler enforces generic types, bounded wildcards (? extends T / ? super T), and common pitfalls with raw types." },
+      { id: "l-java-17", title: "Exercise: Word Frequency Counter", type: "code-exercise", duration: "30 min", language: "java" },
+      { id: "l-java-18", title: "Assignment: Library Management System", type: "assignment", duration: "2 days", instructions: "Build a console app using HashMap and ArrayList to manage books, members and loans. Submit as a zipped Maven project." },
+    ]},
+    { id: "ch-java-5", title: "Exceptions, Files & Streams", lessons: [
+      { id: "l-java-19", title: "Video: try/catch/finally & custom exceptions", type: "video", duration: "20 min" },
+      { id: "l-java-20", title: "Reading: java.nio.file & try-with-resources", type: "reading", duration: "12 min", body: "Reading and writing files safely with the modern NIO.2 API, auto-closing resources, and idiomatic error handling." },
+      { id: "l-java-21", title: "Lab: Build a CSV log parser", type: "lab", duration: "60 min", lab: { templateId: 'tpl-java', templateName: 'Java Dev VM (JDK 21)', mode: 'persistent' } },
+      { id: "l-java-22", title: "Quiz: Exceptions & I/O", type: "quiz", duration: "10 min", passingScore: 70 },
+    ]},
+    { id: "ch-java-6", title: "Capstone & Final Assessment", lessons: [
+      { id: "l-java-23", title: "Live Session: Capstone briefing", type: "live-session", duration: "30 min", liveSession: { date: "Jun 30, 2026", time: "10:00 AM IST", durationMin: 30, agenda: "Walkthrough of the capstone scoring rubric and Q&A." } },
+      { id: "l-java-24", title: "Assignment: Capstone — Bank Account Simulator", type: "assignment", duration: "5 days", instructions: "Design a multi-account banking domain with transactions, transfers and an audit log. Use OOP, collections and exception handling." },
+      { id: "l-java-25", title: "Game-Based Learning: Bug Bash Arena", type: "game-based-learning", duration: "30 min", summary: "Timed challenge — fix as many seeded bugs as you can in a Java codebase." },
+      { id: "l-java-26", title: "Final Exam (Proctored)", type: "exam", duration: "60 min", proctored: true, passingScore: 70, attempts: 1, timeLimit: 60 },
+      { id: "l-java-27", title: "Insight Question: What will you build next?", type: "survey", duration: "3 min" },
+    ]},
+  ] },
+  { id: "11", name: "Python Fundamentals", deliveryType: "self-paced", category: "Programming", description: "Self-paced Python fundamentals with persistent learner labs cloned from a trainer golden template.", batches: 1, lastUpdated: "Apr 25, 2026", status: "active", settings: { ...defaultSettings, deliveryType: 'self-paced', labPolicy: 'unlimited-during-validity', visibility: 'customer' }, owner: { type: 'trainer', id: 't-4', name: 'Neha Kapoor' }, moderation: 'approved', chapters: [
+    { id: "ch-pyf-1", title: "Welcome to Python", lessons: [
+      { id: "l-pyf-1", title: "Intro video: Why Python in 2026?", type: "video", duration: "8 min" },
+      { id: "l-pyf-2", title: "Reading: Setting up your learner VM", type: "reading", duration: "10 min", body: "Your personal Python VM has been cloned from the trainer's golden snapshot. It includes Python 3.12, pip, venv, VS Code Server and pre-installed packages (numpy, pandas, requests). Launch it from the lab panel and you're ready to code." },
+      { id: "l-pyf-3", title: "Lab: Your persistent Python VM", type: "lab", duration: "open", lab: { templateId: 'tpl-py', templateName: 'Python Learner VM', mode: 'persistent' } },
+      { id: "l-pyf-4", title: "Insight Question: What do you want to build?", type: "survey", duration: "3 min" },
+    ]},
+    { id: "ch-pyf-2", title: "Syntax, Variables & Types", lessons: [
+      { id: "l-pyf-5", title: "Video: Variables, numbers & strings", type: "video", duration: "18 min" },
+      { id: "l-pyf-6", title: "Reading: Truthiness & Pythonic style", type: "reading", duration: "12 min", body: "PEP 8 essentials, truthy/falsy values, f-strings, comprehensions, and idiomatic patterns that separate beginners from intermediate Pythonistas." },
+      { id: "l-pyf-7", title: "Exercise: Temperature converter", type: "code-exercise", duration: "15 min", language: "python", starterCode: "def c_to_f(c):\n    # TODO\n    pass\n" },
+      { id: "l-pyf-8", title: "Quiz: Python Basics", type: "quiz", duration: "10 min", passingScore: 70, attempts: 3 },
+    ]},
+    { id: "ch-pyf-3", title: "Control Flow & Functions", lessons: [
+      { id: "l-pyf-9", title: "Video: if / for / while", type: "video", duration: "20 min" },
+      { id: "l-pyf-10", title: "Video: Functions, *args, **kwargs", type: "video", duration: "22 min" },
+      { id: "l-pyf-11", title: "Exercise: FizzBuzz", type: "code-exercise", duration: "15 min", language: "python" },
+      { id: "l-pyf-12", title: "Exercise: Prime number checker", type: "code-exercise", duration: "20 min", language: "python" },
+      { id: "l-pyf-13", title: "Game-Based Learning: Loop Labyrinth", type: "game-based-learning", duration: "25 min", summary: "Navigate a maze by writing the correct loop & conditional for each room." },
+    ]},
+    { id: "ch-pyf-4", title: "Data Structures", lessons: [
+      { id: "l-pyf-14", title: "Video: Lists, tuples, sets, dicts", type: "video", duration: "26 min" },
+      { id: "l-pyf-15", title: "Reading: Choosing the right structure", type: "reading", duration: "14 min", body: "Big-O cheat sheet for list vs set vs dict operations, when to use a tuple vs a namedtuple vs a dataclass." },
+      { id: "l-pyf-16", title: "Assignment: Contact Book CLI", type: "assignment", duration: "Any time", instructions: "Build a CLI that stores contacts in a JSON file with add/search/delete commands. Submit your script and a screen recording." },
+      { id: "l-pyf-17", title: "Quiz: Data Structures", type: "quiz", duration: "10 min", passingScore: 70 },
+    ]},
+    { id: "ch-pyf-5", title: "Files, Modules & Packages", lessons: [
+      { id: "l-pyf-18", title: "Video: Reading & writing files", type: "video", duration: "18 min" },
+      { id: "l-pyf-19", title: "Reading: Virtual envs & pip", type: "reading", duration: "12 min", body: "Why every project needs its own venv, how requirements.txt works, and a tour of the modern alternative (uv) — already installed on your lab VM." },
+      { id: "l-pyf-20", title: "Lab: Build a CSV analyzer", type: "lab", duration: "60 min", lab: { templateId: 'tpl-py', templateName: 'Python Learner VM', mode: 'persistent' } },
+      { id: "l-pyf-21", title: "Exercise: Word counter from file", type: "code-exercise", duration: "25 min", language: "python" },
+    ]},
+    { id: "ch-pyf-6", title: "Capstone", lessons: [
+      { id: "l-pyf-22", title: "Reading: Capstone brief", type: "reading", duration: "10 min", body: "Build a weather dashboard that pulls data from a public API, caches it locally and renders a daily summary. Stretch goal: schedule it with cron on your VM." },
+      { id: "l-pyf-23", title: "Assignment: Weather Dashboard", type: "assignment", duration: "Any time", instructions: "Submit the project zip and a short Loom walkthrough." },
+      { id: "l-pyf-24", title: "Game-Based Learning: Debug Dungeon", type: "game-based-learning", duration: "30 min", summary: "Solve increasingly tricky Python bugs to escape the dungeon." },
+      { id: "l-pyf-25", title: "Final Quiz: Python Fundamentals", type: "quiz", duration: "20 min", passingScore: 70, attempts: 2 },
+    ]},
+  ] },
 ];
 
 export const useCourseStore = create<CourseStore>((set, get) => ({
