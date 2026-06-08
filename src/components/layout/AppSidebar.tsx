@@ -130,7 +130,7 @@ const trainerNav: NavConfig = {
     ]},
     { label: "More", icon: Award, items: [
       { title: "Certifications", icon: Award, path: "/certifications" },
-      { title: "Engagement", icon: Zap, path: "/engagement" },
+      
       { title: "Request Lab / Quote", icon: MessageSquarePlus, path: "/request-lab" },
     ]},
   ],
