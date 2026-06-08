@@ -899,3 +899,62 @@ export default function StudentLiveClass() {
     </div>
   );
 }
+
+/* ===== Materials Panel (student view) ===== */
+const materialTypeMeta: Record<Material["type"], { label: string; cls: string; icon: any }> = {
+  video: { label: "Video", cls: "text-rose-600 bg-rose-50", icon: Video },
+  document: { label: "Document", cls: "text-blue-600 bg-blue-50", icon: FileText },
+  link: { label: "Link", cls: "text-violet-600 bg-violet-50", icon: Link2 },
+  slide: { label: "Slides", cls: "text-amber-600 bg-amber-50", icon: FileText },
+  image: { label: "Image", cls: "text-emerald-600 bg-emerald-50", icon: ImageIcon },
+  other: { label: "File", cls: "text-slate-600 bg-slate-100", icon: FileText },
+};
+
+function MaterialsPanel() {
+  const batches = useBatchStore((s) => s.batches);
+  const items = batches.flatMap((b) => (b.materials ?? []).map((m) => ({ ...m, batchName: b.name, batchId: b.id })));
+  const [q, setQ] = useState("");
+  const filtered = items.filter((m) => m.name.toLowerCase().includes(q.toLowerCase()));
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-primary" />
+          <span className="text-sm font-semibold">Materials shared by your trainer</span>
+          <Badge variant="outline" className="text-[10px]">{filtered.length}</Badge>
+        </div>
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…" className="h-8 w-56" />
+      </div>
+      <div className="p-4">
+        {filtered.length === 0 ? (
+          <div className="text-center py-12 text-sm text-muted-foreground">
+            No materials shared yet. Your trainer can upload videos, slides, documents, or links from the batch page.
+          </div>
+        ) : (
+          <div className="grid gap-2 md:grid-cols-2">
+            {filtered.map((m) => {
+              const meta = materialTypeMeta[m.type];
+              const Icon = meta.icon;
+              return (
+                <a key={m.id} href={m.url} target="_blank" rel="noreferrer" className="flex items-start gap-3 rounded-lg border bg-card px-3 py-2.5 hover:bg-muted/40 transition">
+                  <div className={`h-9 w-9 rounded-md flex items-center justify-center shrink-0 ${meta.cls}`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-medium truncate">{m.name}</p>
+                      <Badge variant="outline" className="text-[10px] uppercase">{meta.label}</Badge>
+                    </div>
+                    {m.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{m.description}</p>}
+                    <p className="text-[10px] text-muted-foreground mt-1">{m.batchName} · {m.uploadedAt}</p>
+                  </div>
+                  {m.type === "link" ? <ExternalLink className="h-3.5 w-3.5 text-muted-foreground mt-1" /> : <Download className="h-3.5 w-3.5 text-muted-foreground mt-1" />}
+                </a>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
