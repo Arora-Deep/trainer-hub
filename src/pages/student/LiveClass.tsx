@@ -41,6 +41,7 @@ const lessonIcons: Record<StudentLesson["type"], typeof Video> = {
   "mock-exam": HelpCircle,
   survey: HelpCircle,
   "game-based-learning": HelpCircle,
+  reasoning: Sparkles,
 };
 
 const getCurrentLesson = (course: StudentCourse) => {
