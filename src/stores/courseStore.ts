@@ -332,7 +332,7 @@ const initialCourses: Course[] = [
       { id: "l-pyf-1", title: "Intro video: Why Python in 2026?", type: "video", duration: "8 min" },
       { id: "l-pyf-2", title: "Reading: Setting up your learner VM", type: "reading", duration: "10 min", body: "Your personal Python VM has been cloned from the trainer's golden snapshot. It includes Python 3.12, pip, venv, VS Code Server and pre-installed packages (numpy, pandas, requests). Launch it from the lab panel and you're ready to code." },
       { id: "l-pyf-3", title: "Lab: Your persistent Python VM", type: "lab", duration: "open", lab: { templateId: 'tpl-py', templateName: 'Python Learner VM', mode: 'persistent' } },
-      { id: "l-pyf-4", title: "Insight Question: What do you want to build?", type: "survey", duration: "3 min" },
+      { id: "l-pyf-4", title: "AI Reasoning: What do you want to build?", type: "reasoning", duration: "5 min", reasoningType: "scenario-response", reasoningPrompt: "Pick one project you'd like to build in Python and outline the modules / libraries you'd reach for." },
     ]},
     { id: "ch-pyf-2", title: "Syntax, Variables & Types", lessons: [
       { id: "l-pyf-5", title: "Video: Variables, numbers & strings", type: "video", duration: "18 min" },
