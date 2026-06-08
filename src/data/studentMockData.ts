@@ -476,6 +476,9 @@ export const studentCourses: StudentCourse[] = [
           },
           { id: "l-10-15", title: "Assignment: Build a Library Management System", type: "assignment", duration: "3h", completed: false, locked: false,
             body: "Design a small library system with Book, Member and Loan classes. Submit GitHub repo + screen recording." },
+        ],
+      },
+      {
         id: "ch-10-4", title: "Collections & Generics",
         lessons: [
           { id: "l-10-16", title: "List, Set, Map — when to use what", type: "video", duration: "50m", completed: false, locked: false },
