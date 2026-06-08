@@ -92,6 +92,7 @@ export default function BatchDetails() {
   const [selectedVMIds, setSelectedVMIds] = useState<string[]>([]);
   const [consoleSheetVM, setConsoleSheetVM] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [openAssessment, setOpenAssessment] = useState<Lesson | null>(null);
 
   if (!batch) {
     return (
