@@ -459,17 +459,51 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className={cn("font-semibold text-sm tabular-nums", getScoreColor(participant.quizScore))}>
-                          {participant.quizScore !== null ? `${participant.quizScore}%` : "—"}
-                        </span>
-                        {participant.quizScore !== null && participant.quizScore >= 90 && (
-                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-success/10 text-success border-0">Top</Badge>
-                        )}
-                        {participant.quizScore !== null && participant.quizScore < 50 && (
-                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-destructive/10 text-destructive border-0">At Risk</Badge>
-                        )}
-                      </div>
+                      {(() => {
+                        const creds = getCredentials(participant);
+                        const revealed = revealedIds.has(participant.id);
+                        return (
+                          <div className="space-y-1 min-w-[220px]">
+                            <div className="flex items-center gap-1.5">
+                              <code className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-muted text-foreground truncate max-w-[150px]" title={creds.username}>
+                                {creds.username}
+                              </code>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5 text-muted-foreground hover:text-foreground"
+                                onClick={() => copyToClipboard(creds.username, "Username")}
+                                title="Copy username"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <code className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-muted text-foreground tabular-nums">
+                                {revealed ? creds.password : "••••••••"}
+                              </code>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5 text-muted-foreground hover:text-foreground"
+                                onClick={() => toggleReveal(participant.id)}
+                                title={revealed ? "Hide password" : "Show password"}
+                              >
+                                {revealed ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5 text-muted-foreground hover:text-foreground"
+                                onClick={() => copyToClipboard(creds.password, "Password")}
+                                title="Copy password"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       <span className="text-sm">{participant.currentModule}</span>
