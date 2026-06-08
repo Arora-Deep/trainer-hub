@@ -186,6 +186,8 @@ interface BatchStore {
   assignLab: (batchId: string, lab: Omit<AssignedLab, "id" | "completions">) => void;
   removeLab: (batchId: string, labAssignmentId: string) => void;
   addAnnouncement: (batchId: string, announcement: Omit<Announcement, "id" | "date">) => void;
+  addMaterial: (batchId: string, material: Omit<Material, "id" | "uploadedAt">) => void;
+  removeMaterial: (batchId: string, materialId: string) => void;
   setCourse: (batchId: string, courseId: string, courseName: string) => void;
   setVMConfig: (batchId: string, vmConfig: VMConfig) => void;
   provisionTrainerVM: (batchId: string) => void;
