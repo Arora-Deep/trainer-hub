@@ -13,7 +13,8 @@ export type LessonType =
   | 'exam'
   | 'mock-exam'
   | 'survey'
-  | 'game-based-learning';
+  | 'game-based-learning'
+  | 'reasoning';
 
 export type LabMode = 'on-demand' | 'persistent';
 
