@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import {
   ArrowLeft, ArrowRight, Check, ChevronLeft, CheckCircle, Lock, Video, FileText,
   FlaskConical, Award, BookOpen, Play, Download, MessageSquare, Code2, Flag, ShieldCheck,
-  Calendar, Timer, Sparkles, ListChecks, Radio, Maximize2, ExternalLink,
+  Calendar, Timer, Sparkles, ListChecks, Radio, Maximize2, ExternalLink, Brain, TrendingUp, TrendingDown, AlertCircle, MapPin, Target, Loader2,
 } from "lucide-react";
 import { getStudentCourse, type StudentLesson } from "@/data/studentMockData";
 import { useEnrollmentStore } from "@/stores/enrollmentStore";
