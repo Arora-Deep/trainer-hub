@@ -16,7 +16,9 @@ import {
   FileText, Link2, Download, Sparkles, ChevronLeft, ChevronRight, Play,
   CheckCircle2, Circle, Mic, Video, ScreenShare, Square, RefreshCw,
   BarChart3, TrendingUp, Clock, Activity, Maximize2, LayoutPanelLeft, Minimize2,
+  Zap, HelpCircle, Brain, Gamepad2,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useBatchStore } from "@/stores/batchStore";
 import { useCourseStore } from "@/stores/courseStore";
 import {
@@ -259,6 +261,47 @@ export default function LiveTraining() {
             <Pill icon={<Users className="h-3 w-3" />} label="Online" value={`${onlineCount}/${grid.length}`} />
             <Pill icon={<Hand className="h-3 w-3" />} label="Raised" value={handsRaised} accent={handsRaised > 0 ? "amber" : undefined} />
             <Pill icon={<AlertCircle className="h-3 w-3" />} label="Issues" value={issues} accent={issues > 0 ? "rose" : undefined} />
+            <div className="w-px h-5 bg-border mx-1" />
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/15 transition-colors">
+                  <Zap className="h-3.5 w-3.5" /> Push Assessment
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-64 p-1">
+                <p className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Push to {participants.length} students</p>
+                <button
+                  onClick={() => toast({ title: "Quiz pushed", description: `Quiz sent to ${participants.length} students.` })}
+                  className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-xs hover:bg-muted text-left"
+                >
+                  <HelpCircle className="h-3.5 w-3.5 text-info" />
+                  <div>
+                    <div className="font-medium">Quiz</div>
+                    <div className="text-[10px] text-muted-foreground">Multiple-choice knowledge check</div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => toast({ title: "Insight question pushed", description: "Students will respond in their own words. AI scores 0–10." })}
+                  className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-xs hover:bg-muted text-left"
+                >
+                  <Brain className="h-3.5 w-3.5 text-primary" />
+                  <div>
+                    <div className="font-medium">Insight Question</div>
+                    <div className="text-[10px] text-muted-foreground">Open-ended, AI-scored reasoning</div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => toast({ title: "Game session launched", description: `Game lobby opened for ${participants.length} students.` })}
+                  className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-xs hover:bg-muted text-left"
+                >
+                  <Gamepad2 className="h-3.5 w-3.5 text-warning" />
+                  <div>
+                    <div className="font-medium">Game-based Learning</div>
+                    <div className="text-[10px] text-muted-foreground">Gamified live session with leaderboard</div>
+                  </div>
+                </button>
+              </PopoverContent>
+            </Popover>
             <div className="w-px h-5 bg-border mx-1" />
             <Tooltip>
               <TooltipTrigger asChild>
