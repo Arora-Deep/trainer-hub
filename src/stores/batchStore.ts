@@ -126,6 +126,18 @@ export interface LessonVMAccess {
   unlockOn: "lesson-start" | "lesson-complete" | "previous-complete";
 }
 
+export type MaterialType = "video" | "document" | "link" | "slide" | "image" | "other";
+export interface Material {
+  id: string;
+  name: string;
+  type: MaterialType;
+  url: string;
+  description?: string;
+  size?: string;
+  uploadedBy?: string;
+  uploadedAt: string;
+}
+
 export interface Batch {
   id: string;
   name: string;
@@ -149,6 +161,7 @@ export interface Batch {
   participants: Participant[];
   assignedLabs: AssignedLab[];
   announcements: Announcement[];
+  materials?: Material[];
   vmConfig?: VMConfig;
   labConfigs: VMConfig[];
   // Self-paced support (optional, additive)
