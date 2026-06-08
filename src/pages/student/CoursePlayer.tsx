@@ -142,6 +142,268 @@ function InlineExam({ lesson }: { lesson: StudentLesson }) {
   return <InlineQuiz lesson={lesson} />;
 }
 
+/* ── Inline AI Reasoning Evaluation ── */
+type ReasoningDims = {
+  conceptAccuracy: number;
+  reasoningQuality: number;
+  alternativeAnalysis: number;
+  technicalDepth: number;
+  clarity: number;
+};
+type ReasoningResult = {
+  scores: ReasoningDims;
+  finalScore: number;
+  strengths: string[];
+  weaknesses: string[];
+  missingConcepts: string[];
+  suggestedTopics: string[];
+};
+
+function evaluateReasoning(answer: string, rubric: string[]): ReasoningResult {
+  const text = answer.toLowerCase();
+  const words = text.split(/\s+/).filter(Boolean);
+  const len = words.length;
+
+  // Concept accuracy: how many rubric items the student touched
+  const hit = rubric.map((r) => {
+    const tokens = r.toLowerCase().split(/[\s/(),]+/).filter((t) => t.length > 3);
+    const matched = tokens.filter((t) => text.includes(t)).length;
+    return { rubric: r, ratio: tokens.length ? matched / tokens.length : 0 };
+  });
+  const conceptCoverage = hit.reduce((s, h) => s + h.ratio, 0) / Math.max(rubric.length, 1);
+  const conceptAccuracy = Math.min(10, Math.round((conceptCoverage * 9 + (len > 25 ? 1 : 0)) * 10) / 10);
+
+  // Reasoning quality: causal/justification words
+  const causal = ["because", "since", "due to", "as a result", "therefore", "so that", "in order", "this means", "which means", "reason"];
+  const causalHits = causal.filter((w) => text.includes(w)).length;
+  const reasoningQuality = Math.min(10, Math.round((Math.min(causalHits, 4) * 2 + (len > 40 ? 2 : len > 20 ? 1 : 0)) * 10) / 10);
+
+  // Alternative analysis: comparative words
+  const compare = [" vs ", "instead", "rather", "compared", "while ", "whereas", "alternative", "trade-off", "tradeoff", "however", "on the other hand", "better than", "worse than"];
+  const compareHits = compare.filter((w) => text.includes(w)).length;
+  const alternativeAnalysis = Math.min(10, Math.round((Math.min(compareHits, 4) * 2.2 + (len > 50 ? 1 : 0)) * 10) / 10);
+
+  // Technical depth: long answers + technical jargon density (any rubric-token longer than 5 chars)
+  const techTokens = rubric.flatMap((r) => r.toLowerCase().split(/[\s/(),]+/)).filter((t) => t.length > 5);
+  const techHits = new Set(techTokens.filter((t) => text.includes(t))).size;
+  const technicalDepth = Math.min(10, Math.round((techHits * 1.6 + Math.min(len / 25, 4)) * 10) / 10);
+
+  // Clarity: punctuation + sentence structure + length sweet spot
+  const sentences = answer.split(/[.!?]+/).filter((s) => s.trim().length > 0).length;
+  const avgSentLen = sentences ? len / sentences : len;
+  let clarity = 5;
+  if (len >= 25) clarity += 2;
+  if (len >= 60) clarity += 1;
+  if (avgSentLen >= 6 && avgSentLen <= 25) clarity += 2;
+  if (sentences >= 2) clarity += 1;
+  clarity = Math.min(10, clarity);
+
+  const scores: ReasoningDims = { conceptAccuracy, reasoningQuality, alternativeAnalysis, technicalDepth, clarity };
+  const finalScore = Math.round(((conceptAccuracy + reasoningQuality + alternativeAnalysis + technicalDepth + clarity) / 5) * 10) / 10;
+
+  const covered = hit.filter((h) => h.ratio >= 0.5).map((h) => h.rubric);
+  const missing = hit.filter((h) => h.ratio < 0.3).map((h) => h.rubric);
+
+  const strengths: string[] = [];
+  if (conceptAccuracy >= 7) strengths.push("Good grasp of the core concept");
+  if (reasoningQuality >= 7) strengths.push("Explains the 'why' clearly with causal language");
+  if (alternativeAnalysis >= 7) strengths.push("Compares alternatives explicitly");
+  if (technicalDepth >= 7) strengths.push("Uses precise technical vocabulary");
+  if (clarity >= 8) strengths.push("Well-structured, coherent answer");
+  if (covered.length) strengths.push(`Covered: ${covered.slice(0, 2).join(", ")}`);
+  if (!strengths.length) strengths.push("Attempted the question — keep building on this");
+
+  const weaknesses: string[] = [];
+  if (len < 20) weaknesses.push("Answer is too short — expand your reasoning");
+  if (reasoningQuality < 5) weaknesses.push("Missing the 'why' — justify your choice with reasoning");
+  if (alternativeAnalysis < 5) weaknesses.push("Did not compare the alternative option");
+  if (technicalDepth < 5) weaknesses.push("Explanation stays at a surface level — add technical depth");
+  if (clarity < 6) weaknesses.push("Structure could be clearer — try shorter, focused sentences");
+  if (!weaknesses.length) weaknesses.push("Minor polish only — strong attempt");
+
+  const suggested: string[] = [];
+  if (alternativeAnalysis < 7) suggested.push("Comparative analysis & trade-off framing");
+  if (reasoningQuality < 7) suggested.push("Cause-and-effect explanation patterns");
+  if (technicalDepth < 7) suggested.push("Deeper dive into the underlying mechanism");
+  if (!suggested.length) suggested.push("Advanced edge cases for this topic");
+
+  return {
+    scores,
+    finalScore,
+    strengths,
+    weaknesses,
+    missingConcepts: missing.length ? missing : [],
+    suggestedTopics: suggested,
+  };
+}
+
+const dimColor = (v: number) => (v >= 8 ? "text-success" : v >= 6 ? "text-warning" : "text-destructive");
+
+function DimBar({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={cn("font-semibold tabular-nums", dimColor(value))}>{value.toFixed(1)}/10</span>
+      </div>
+      <Progress value={value * 10} className="h-1.5" />
+    </div>
+  );
+}
+
+const TYPE_LABEL: Record<string, string> = {
+  "explain-choice": "Explain Your Choice",
+  "compare-options": "Compare Options",
+  "improve-solution": "Improve This Solution",
+  "root-cause": "Root Cause Analysis",
+  "scenario-response": "Scenario Response",
+};
+
+function InlineReasoning({ lesson }: { lesson: StudentLesson }) {
+  const [answer, setAnswer] = useState("");
+  const [evaluating, setEvaluating] = useState(false);
+  const [result, setResult] = useState<ReasoningResult | null>(null);
+  const [showModel, setShowModel] = useState(false);
+
+  const rubric = lesson.reasoningRubric ?? [];
+
+  const onSubmit = () => {
+    if (answer.trim().split(/\s+/).length < 5) {
+      toast.error("Write at least a couple of sentences before submitting.");
+      return;
+    }
+    setEvaluating(true);
+    setTimeout(() => {
+      setResult(evaluateReasoning(answer, rubric));
+      setEvaluating(false);
+    }, 1400);
+  };
+
+  const reset = () => { setResult(null); setAnswer(""); setShowModel(false); };
+
+  return (
+    <div className="p-6 space-y-5">
+      <div className="flex items-center gap-2 flex-wrap">
+        <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-transparent gap-1">
+          <Brain className="h-3 w-3" /> AI Reasoning Evaluation
+        </Badge>
+        {lesson.reasoningType && (
+          <Badge variant="outline" className="text-[10px]">{TYPE_LABEL[lesson.reasoningType]}</Badge>
+        )}
+        <span className="text-xs text-muted-foreground">Scored across 5 dimensions · {lesson.duration}</span>
+      </div>
+
+      <div className="p-4 rounded-lg border border-border bg-muted/30">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Question</p>
+        <p className="text-sm leading-relaxed">{lesson.reasoningPrompt}</p>
+      </div>
+
+      {!result && (
+        <div className="space-y-3">
+          <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Your answer</Label>
+          <Textarea
+            rows={7}
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            placeholder="Explain your reasoning in your own words. Compare alternatives where relevant, and justify *why*…"
+            disabled={evaluating}
+            className="text-sm"
+          />
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] text-muted-foreground">{answer.trim().split(/\s+/).filter(Boolean).length} words</span>
+            <Button size="sm" onClick={onSubmit} disabled={evaluating || !answer.trim()} className="gap-1.5">
+              {evaluating ? <><Loader2 className="h-4 w-4 animate-spin" /> AI evaluating…</> : <><Sparkles className="h-4 w-4" /> Evaluate with AI</>}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {result && (
+        <div className="space-y-5">
+          {/* Final score */}
+          <Card className="border-primary/30">
+            <CardContent className="pt-5 text-center">
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Final reasoning score</p>
+              <p className={cn("text-4xl font-bold mt-1", dimColor(result.finalScore))}>
+                {result.finalScore.toFixed(1)}<span className="text-lg text-muted-foreground">/10</span>
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Dimension scores */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Dimension scores</p>
+            <div className="space-y-3">
+              <DimBar label="Concept Accuracy" value={result.scores.conceptAccuracy} />
+              <DimBar label="Reasoning Quality" value={result.scores.reasoningQuality} />
+              <DimBar label="Alternative Analysis" value={result.scores.alternativeAnalysis} />
+              <DimBar label="Technical Depth" value={result.scores.technicalDepth} />
+              <DimBar label="Clarity" value={result.scores.clarity} />
+            </div>
+          </div>
+
+          {/* Feedback grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="p-3 rounded-lg border border-success/30 bg-success/5">
+              <p className="text-xs font-semibold text-success flex items-center gap-1.5 mb-2"><TrendingUp className="h-3.5 w-3.5" /> Strengths</p>
+              <ul className="text-xs space-y-1 list-disc list-inside text-foreground/80">
+                {result.strengths.map((s, i) => <li key={i}>{s}</li>)}
+              </ul>
+            </div>
+            <div className="p-3 rounded-lg border border-warning/30 bg-warning/5">
+              <p className="text-xs font-semibold text-warning flex items-center gap-1.5 mb-2"><TrendingDown className="h-3.5 w-3.5" /> What could be better</p>
+              <ul className="text-xs space-y-1 list-disc list-inside text-foreground/80">
+                {result.weaknesses.map((s, i) => <li key={i}>{s}</li>)}
+              </ul>
+            </div>
+            {result.missingConcepts.length > 0 && (
+              <div className="p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+                <p className="text-xs font-semibold text-destructive flex items-center gap-1.5 mb-2"><AlertCircle className="h-3.5 w-3.5" /> Missing concepts</p>
+                <ul className="text-xs space-y-1 list-disc list-inside text-foreground/80">
+                  {result.missingConcepts.map((s, i) => <li key={i}>{s}</li>)}
+                </ul>
+              </div>
+            )}
+            <div className="p-3 rounded-lg border border-primary/30 bg-primary/5">
+              <p className="text-xs font-semibold text-primary flex items-center gap-1.5 mb-2"><MapPin className="h-3.5 w-3.5" /> Suggested learning areas</p>
+              <ul className="text-xs space-y-1 list-disc list-inside text-foreground/80">
+                {result.suggestedTopics.map((s, i) => <li key={i}>{s}</li>)}
+              </ul>
+            </div>
+          </div>
+
+          {/* Your answer + model */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Your answer</p>
+            <p className="text-sm leading-relaxed p-3 rounded-lg bg-muted/40 border border-border whitespace-pre-wrap">{answer}</p>
+          </div>
+
+          {lesson.reasoningModelAnswer && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                  <Target className="h-3.5 w-3.5" /> Model answer
+                </p>
+                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowModel((v) => !v)}>
+                  {showModel ? "Hide" : "Reveal"}
+                </Button>
+              </div>
+              {showModel && (
+                <p className="text-sm leading-relaxed p-3 rounded-lg bg-primary/5 border border-primary/20">{lesson.reasoningModelAnswer}</p>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={reset}>Try again</Button>
+            <Button size="sm" onClick={() => toast.success("Reasoning lesson complete")}>Save & continue</Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const icons: Record<string, any> = {
   video: Video,
   reading: FileText,
