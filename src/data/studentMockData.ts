@@ -586,6 +586,12 @@ export const studentCourses: StudentCourse[] = [
         lessons: [
           { id: "l-11-9", title: "if / elif / else, loops", type: "video", duration: "35m", completed: false, locked: false },
           { id: "l-11-10", title: "Functions, args, *args, **kwargs", type: "video", duration: "40m", completed: false, locked: false },
+          { id: "l-11-10b", title: "AI Reasoning: List comprehension vs for loop", type: "reasoning", duration: "8m", completed: false, locked: false,
+            reasoningType: "compare-options",
+            reasoningPrompt: "You need to build a new list of squared values from an existing list of 10,000 numbers. Would you use a list comprehension or a traditional for loop with `.append()`? Compare the two approaches on readability, performance and when each is the better choice.",
+            reasoningModelAnswer: "A list comprehension is preferred here — it is more readable for a single-expression transformation, runs faster in CPython because the loop happens in C (no repeated `.append()` attribute lookups), and signals intent (build a new list). A for-loop is better when the body has side effects, multiple statements, or needs early termination — comprehensions optimize for expression, not control flow.",
+            reasoningRubric: ["readability / intent", "performance (C-level loop, fewer attribute lookups)", "when for loop is better (side effects, complex body)", "memory (generator vs list)", "pythonic idiom"],
+          },
           { id: "l-11-11", title: "Reading: Pythonic style (PEP 8 essentials)", type: "reading", duration: "15m", completed: false, locked: false,
             body: "Idiomatic Python: list comprehensions, truthiness, EAFP vs LBYL, naming conventions and the Zen of Python." },
           { id: "l-11-12", title: "Game: Python Pop Quiz Show", type: "game-based-learning", duration: "20m", completed: false, locked: false,
