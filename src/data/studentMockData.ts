@@ -14,7 +14,8 @@ export type StudentLessonType =
   | "ctf-scenario"
   | "exam"
   | "mock-exam"
-  | "survey";
+  | "survey"
+  | "game-based-learning";
 
 export type LabAllocationType = "persistent" | "module-unlock" | "time-limited" | "hour-pool";
 

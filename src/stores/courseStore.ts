@@ -12,7 +12,8 @@ export type LessonType =
   | 'ctf-scenario'
   | 'exam'
   | 'mock-exam'
-  | 'survey';
+  | 'survey'
+  | 'game-based-learning';
 
 export type LabMode = 'on-demand' | 'persistent';
 
@@ -121,7 +122,7 @@ export interface Lesson {
 }
 
 
-export const ASSESSMENT_LESSON_TYPES: LessonType[] = ['quiz', 'assignment', 'code-exercise', 'exam'];
+export const ASSESSMENT_LESSON_TYPES: LessonType[] = ['quiz', 'assignment', 'code-exercise', 'exam', 'game-based-learning'];
 export const isAssessmentLesson = (t: LessonType) => ASSESSMENT_LESSON_TYPES.includes(t);
 
 export interface AssessmentEntry {
