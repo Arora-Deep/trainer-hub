@@ -587,6 +587,11 @@ const initialBatches: Batch[] = [
     announcements: [
       { id: "ann-py-1", title: "Weekly office hours — Saturdays 5 PM", content: "Drop in for async questions and capstone reviews.", date: "May 1, 2026" },
     ],
+    materials: [
+      { id: "mat-py-1", name: "Python Crash Course — Intro Video", type: "video", url: "https://www.youtube.com/watch?v=rfscVS0vtbw", description: "Full intro to Python covering syntax, data types, control flow and functions.", uploadedBy: "Neha Kapoor", uploadedAt: "May 2, 2026", size: "1h 12m" },
+      { id: "mat-py-2", name: "Python Fundamentals — Notes (TXT)", type: "document", url: "data:text/plain;charset=utf-8,PYTHON%20FUNDAMENTALS%20NOTES%0A%0A1.%20Data%20Types%3A%20int%2C%20float%2C%20str%2C%20bool%2C%20list%2C%20tuple%2C%20dict%2C%20set%0A2.%20Control%20Flow%3A%20if%2Felif%2Felse%2C%20for%2C%20while%2C%20break%2Fcontinue%0A3.%20Functions%3A%20def%2C%20*args%2C%20**kwargs%2C%20lambda%0A4.%20Comprehensions%3A%20%5Bx*2%20for%20x%20in%20range(10)%20if%20x%252%3D%3D0%5D%0A5.%20Modules%3A%20import%20os%2C%20from%20math%20import%20sqrt%0A6.%20File%20I%2FO%3A%20with%20open('f.txt')%20as%20f%3A%20...%0A7.%20Exceptions%3A%20try%2Fexcept%2Ffinally%0A", description: "Concise written notes for the entire course.", uploadedBy: "Neha Kapoor", uploadedAt: "May 1, 2026", size: "10 KB" },
+      { id: "mat-py-3", name: "Hangman Game — Reference", type: "link", url: "https://hangman-timespro.lovable.app", description: "Game-based learning module link for revision.", uploadedBy: "Neha Kapoor", uploadedAt: "May 3, 2026" },
+    ],
     labConfigs: [],
     deliveryMode: "self-paced",
     accessModel: "full-course",
