@@ -12,6 +12,10 @@ const icons: Record<string, any> = { pdf: FileText, slides: Presentation, zip: F
 export default function CourseResources() {
   const { id = "" } = useParams();
   const c = getStudentCourse(id);
+  const batches = useBatchStore((s) => s.batches);
+  const trainerMaterials = batches
+    .filter((b) => !c || b.courseId === c.id)
+    .flatMap((b) => (b.materials ?? []).map((m) => ({ ...m, batchName: b.name })));
   if (!c) return <Card><CardContent className="py-12 text-center">Course not found.</CardContent></Card>;
 
   return (
