@@ -279,7 +279,7 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <CardTitle className="text-base">Participants</CardTitle>
-            <CardDescription>Manage enrolled participants — monitor quiz scores, attendance, and VM access</CardDescription>
+            <CardDescription>Manage enrolled participants — share login credentials, attendance, and VM access</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="hidden sm:flex" onClick={() => csvInputRef.current?.click()}>
