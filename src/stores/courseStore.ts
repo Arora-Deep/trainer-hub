@@ -120,6 +120,11 @@ export interface Lesson {
   // Grading
   weight?: number;
   required?: boolean;
+  // AI Reasoning
+  reasoningPrompt?: string;
+  reasoningModelAnswer?: string;
+  reasoningRubric?: string;
+  reasoningType?: 'explain-choice' | 'compare-options' | 'improve-solution' | 'root-cause' | 'scenario-response';
 }
 
 
