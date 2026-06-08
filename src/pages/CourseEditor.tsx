@@ -23,7 +23,7 @@ import { useLabStore } from "@/stores/labStore";
 import { useQuizStore } from "@/stores/quizStore";
 import { useAssignmentStore } from "@/stores/assignmentStore";
 import { useExerciseStore } from "@/stores/exerciseStore";
-import { Library } from "lucide-react";
+import { Library, Brain } from "lucide-react";
 import { toast } from "sonner";
 
 const lessonTypeMeta: Record<LessonType, { label: string; icon: any; hint: string }> = {
