@@ -468,11 +468,14 @@ export const studentCourses: StudentCourse[] = [
             body: "A practical walkthrough of Single Responsibility, Open/Closed, Liskov, Interface Segregation and Dependency Inversion — using a banking domain example." },
           { id: "l-10-14", title: "Game: OOP Concept Quest", type: "game-based-learning", duration: "30m", completed: false, locked: false,
             body: "A scenario-based escape room where you debug a misbehaving zoo simulation by applying the right OOP concept at each room." },
+          { id: "l-10-14b", title: "AI Reasoning: Why is String immutable in Java?", type: "reasoning", duration: "10m", completed: false, locked: false,
+            reasoningType: "root-cause",
+            reasoningPrompt: "Explain why the String class is immutable in Java. What problems would arise if String were mutable, and how does immutability help with security, the String pool and multithreading?",
+            reasoningModelAnswer: "Strings are immutable so they can be safely shared via the String pool (deduplication), so security-sensitive values (class names, file paths, DB URLs) cannot be changed after a security check (TOCTOU), so they are inherently thread-safe (no synchronization needed), and so their hashCode can be cached — making them excellent keys in HashMap. If String were mutable, pool sharing would corrupt unrelated references and any 'check then use' security pattern would break.",
+            reasoningRubric: ["string pool / interning", "security / class loading", "thread safety", "cached hashcode / HashMap keys", "trade-off vs StringBuilder"],
+          },
           { id: "l-10-15", title: "Assignment: Build a Library Management System", type: "assignment", duration: "3h", completed: false, locked: false,
             body: "Design a small library system with Book, Member and Loan classes. Submit GitHub repo + screen recording." },
-        ],
-      },
-      {
         id: "ch-10-4", title: "Collections & Generics",
         lessons: [
           { id: "l-10-16", title: "List, Set, Map — when to use what", type: "video", duration: "50m", completed: false, locked: false },
