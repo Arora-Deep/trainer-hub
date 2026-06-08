@@ -45,6 +45,7 @@ export interface StudentLesson {
   locked: boolean;
   videoUrl?: string;
   body?: string;
+  bodyHtml?: string;
   labMode?: "on-demand" | "persistent";
   labTemplate?: string;
   labAllocation?: StudentLabAllocation;
