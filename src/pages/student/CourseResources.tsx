@@ -44,8 +44,38 @@ export default function CourseResources() {
             </Card>
           );
         })}
-        {c.resources.length === 0 && <Card className="md:col-span-2"><CardContent className="py-12 text-center text-sm text-muted-foreground">No resources yet.</CardContent></Card>}
+        {c.resources.length === 0 && trainerMaterials.length === 0 && <Card className="md:col-span-2"><CardContent className="py-12 text-center text-sm text-muted-foreground">No resources yet.</CardContent></Card>}
       </div>
+
+      {trainerMaterials.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold">Material shared by your trainer</h2>
+            <Badge variant="outline" className="text-[10px]">{trainerMaterials.length}</Badge>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {trainerMaterials.map((m) => {
+              const Icon = icons[m.type] || FileText;
+              const isLink = m.type === "link";
+              return (
+                <Card key={m.id}>
+                  <CardContent className="py-4 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center"><Icon className="h-5 w-5 text-primary" /></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{m.name}</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-2"><Badge variant="outline" className="text-[10px] uppercase">{m.type}</Badge>{m.batchName}</p>
+                      {m.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{m.description}</p>}
+                    </div>
+                    <Button size="sm" variant="outline" className="gap-1.5" asChild>
+                      <a href={m.url} target="_blank" rel="noreferrer">{isLink ? <ExternalLink className="h-3.5 w-3.5" /> : <Download className="h-3.5 w-3.5" />} {isLink ? "Open" : "Download"}</a>
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
