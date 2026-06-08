@@ -35,6 +35,7 @@ const typeMeta: Record<LessonType, { label: string; icon: any; color: string } |
   "live-session": undefined,
   "ctf-scenario": undefined,
   survey: undefined,
+  reasoning: undefined,
   "game-based-learning": { label: "Game-based", icon: HelpCircle, color: "text-primary" },
   quiz: { label: "Quiz", icon: HelpCircle, color: "text-info" },
   assignment: { label: "Assignment", icon: ClipboardList, color: "text-warning" },

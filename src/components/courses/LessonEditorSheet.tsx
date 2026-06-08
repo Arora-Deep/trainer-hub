@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Video, FileText, HelpCircle, ClipboardList, Code2, FlaskConical, Flag, GraduationCap,
-  Upload, Link2, Library, Plus, X, FileUp, Trash2, Radio, ListChecks, MessageSquareQuote, Gamepad2,
+  Upload, Link2, Library, Plus, X, FileUp, Trash2, Radio, ListChecks, MessageSquareQuote, Gamepad2, Brain,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TemplatePickerDropdown } from "@/components/labs/TemplatePickerDropdown";
@@ -37,7 +37,11 @@ const typeMeta: Record<LessonType, { label: string; icon: any; hint: string }> =
   "mock-exam": { label: "Mock Exam", icon: GraduationCap, hint: "Practice exam — same shape as the real one, but ungraded." },
   survey: { label: "Survey", icon: MessageSquareQuote, hint: "Collect feedback from learners." },
   "game-based-learning": { label: "Game-based Learning", icon: Gamepad2, hint: "Gamified, interactive challenge — leaderboard, points and rounds." },
+  reasoning: { label: "AI Reasoning", icon: Brain, hint: "Open-ended question scored by AI on concept accuracy, reasoning quality, depth and clarity." },
 };
+
+// Lesson types hidden from the type picker (kept in the union for back-compat with legacy content).
+const HIDDEN_TYPES = new Set<LessonType>(["live-session", "survey"]);
 
 interface Props {
   open: boolean;
@@ -125,7 +129,7 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
             <Select value={form.type} onValueChange={(v: LessonType) => setForm((p) => ({ ...p, type: v, source: isAssessmentLesson(v) ? (p.source ?? "inline") : undefined }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {(Object.keys(typeMeta) as LessonType[]).map((t) => {
+                {(Object.keys(typeMeta) as LessonType[]).filter((t) => !HIDDEN_TYPES.has(t) || t === form.type).map((t) => {
                   const I = typeMeta[t].icon;
                   return (
                     <SelectItem key={t} value={t}>
@@ -302,6 +306,37 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
               <div className="space-y-1.5">
                 <Label className="text-xs">Survey description</Label>
                 <Textarea rows={4} value={form.body ?? ""} onChange={(e) => setField("body", e.target.value)} placeholder="What feedback are you collecting?" />
+              </div>
+            )}
+
+            {form.type === "reasoning" && (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Reasoning type</Label>
+                  <Select value={form.reasoningType ?? "explain-choice"} onValueChange={(v) => setField("reasoningType", v as any)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="explain-choice">Explain a choice</SelectItem>
+                      <SelectItem value="compare-options">Compare options</SelectItem>
+                      <SelectItem value="improve-solution">Improve a solution</SelectItem>
+                      <SelectItem value="root-cause">Root cause analysis</SelectItem>
+                      <SelectItem value="scenario-response">Scenario response</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Question / prompt</Label>
+                  <Textarea rows={3} value={form.reasoningPrompt ?? ""} onChange={(e) => setField("reasoningPrompt", e.target.value)} placeholder="Ask a question that requires reasoning, not recall…" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Model answer (used by AI as the reference)</Label>
+                  <Textarea rows={4} value={form.reasoningModelAnswer ?? ""} onChange={(e) => setField("reasoningModelAnswer", e.target.value)} placeholder="A strong, complete answer the AI will compare student responses against." />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Evaluation rubric (one concept per line)</Label>
+                  <Textarea rows={4} value={form.reasoningRubric ?? ""} onChange={(e) => setField("reasoningRubric", e.target.value)} placeholder={"e.g.\nunknown iteration count\nsentinel / exit condition\ncompare for vs while\ninfinite loop risk"} />
+                  <p className="text-[11px] text-muted-foreground">Each line is a key concept the AI looks for. Students are scored on Concept Accuracy, Reasoning Quality, Alternative Analysis, Technical Depth, and Clarity (0–10 each).</p>
+                </div>
               </div>
             )}
 

@@ -23,7 +23,7 @@ import { useLabStore } from "@/stores/labStore";
 import { useQuizStore } from "@/stores/quizStore";
 import { useAssignmentStore } from "@/stores/assignmentStore";
 import { useExerciseStore } from "@/stores/exerciseStore";
-import { Library } from "lucide-react";
+import { Library, Brain } from "lucide-react";
 import { toast } from "sonner";
 
 const lessonTypeMeta: Record<LessonType, { label: string; icon: any; hint: string }> = {
@@ -40,6 +40,7 @@ const lessonTypeMeta: Record<LessonType, { label: string; icon: any; hint: strin
   "mock-exam": { label: "Mock Exam", icon: ShieldCheck, hint: "Practice run, ungraded" },
   survey: { label: "Survey", icon: HelpCircle, hint: "Collect learner feedback" },
   "game-based-learning": { label: "Game-based Learning", icon: Flag, hint: "Gamified challenge — points, rounds, leaderboard" },
+  reasoning: { label: "AI Reasoning", icon: Brain, hint: "Open-ended question scored by AI on accuracy, reasoning, depth and clarity" },
 };
 
 export default function CourseEditor() {
@@ -181,7 +182,7 @@ export default function CourseEditor() {
 
           {!pickerStage && (
             <div className="grid gap-2 mt-4">
-              {Object.entries(lessonTypeMeta).map(([type, meta]) => {
+              {Object.entries(lessonTypeMeta).filter(([t]) => t !== "live-session" && t !== "survey").map(([type, meta]) => {
                 const Icon = meta.icon;
                 const lt = type as LessonType;
                 const handle = () => {

@@ -45,6 +45,7 @@ export interface StudentLesson {
   locked: boolean;
   videoUrl?: string;
   body?: string;
+  bodyHtml?: string;
   labMode?: "on-demand" | "persistent";
   labTemplate?: string;
   labAllocation?: StudentLabAllocation;
@@ -439,10 +440,49 @@ export const studentCourses: StudentCourse[] = [
         id: "ch-10-1", title: "Getting Started",
         lessons: [
           { id: "l-10-1", title: "Welcome & course roadmap", type: "video", duration: "12m", completed: true, locked: false,
+            videoUrl: "https://www.youtube.com/embed/eIrMbAQSU34",
             body: "An overview of what you will learn over the next 4 weeks — from your first 'Hello World' to building a JDBC-backed CLI app." },
           { id: "l-10-2", title: "Reading: Why Java still matters in 2026", type: "reading", duration: "15m", completed: true, locked: false,
-            body: "Java remains the backbone of enterprise systems — banks, telecoms, Android, Big Data (Kafka, Spark, Hadoop) all run on the JVM. This chapter walks through where Java fits today, its ecosystem, and why JVM languages still dominate large-scale production." },
-          { id: "l-10-3", title: "Installing JDK 21 & IntelliJ IDEA", type: "video", duration: "20m", completed: true, locked: false },
+            bodyHtml: `
+              <h1>Why Java still matters in 2026</h1>
+              <p class="lead">Java turned 30 this year. Despite the rise of Go, Rust, Kotlin and TypeScript, the JVM ecosystem still powers a staggering share of the world's critical infrastructure — and shows no signs of slowing down.</p>
+
+              <h2>1. Where you'll find Java today</h2>
+              <ul>
+                <li><strong>Banking & FinTech</strong> — almost every major bank (JPMorgan, Goldman Sachs, HDFC, ICICI) runs core systems on the JVM. Low-latency trading platforms are written in Java because of predictable GC and JIT performance.</li>
+                <li><strong>Big Data</strong> — Apache Kafka, Spark, Hadoop, Cassandra, Elasticsearch, Flink — all JVM-based.</li>
+                <li><strong>Android</strong> — even with Kotlin's rise, the Android runtime, SDK and 80% of production apps still ship Java bytecode.</li>
+                <li><strong>Enterprise SaaS</strong> — Atlassian (Jira, Confluence), Salesforce backends, Netflix middleware, LinkedIn's Kafka pipelines.</li>
+              </ul>
+
+              <h2>2. What "write once, run anywhere" really means</h2>
+              <p>Your <code>.java</code> source is compiled by <code>javac</code> into platform-neutral <strong>bytecode</strong> (<code>.class</code> files). The Java Virtual Machine (JVM) on Linux, macOS, Windows, ARM servers or even a Raspberry Pi interprets that bytecode and JIT-compiles hot paths into native machine code at runtime.</p>
+              <blockquote>The JVM is one of the most sophisticated runtime systems ever built — adaptive optimisation, escape analysis, biased locking, tiered compilation, and a pluggable garbage collector.</blockquote>
+
+              <h2>3. Modern Java is not your uncle's Java</h2>
+              <p>If you last saw Java 8, you're in for a treat. Java 21 (the current LTS) gives you:</p>
+              <ul>
+                <li><code>var</code> for local type inference</li>
+                <li><strong>Records</strong> — one-line immutable data classes</li>
+                <li><strong>Pattern matching</strong> in <code>switch</code> and <code>instanceof</code></li>
+                <li><strong>Sealed classes</strong> for exhaustive hierarchies</li>
+                <li><strong>Virtual threads (Project Loom)</strong> — millions of cheap threads, no reactor framework required</li>
+                <li><strong>Text blocks</strong> for multi-line strings</li>
+              </ul>
+
+              <h2>4. Why this matters for your career</h2>
+              <p>Job postings for "Java backend engineer" still outnumber Go and Rust combined in India, the US and Europe. Average compensation for a Java engineer with 3+ years is 30–40% higher than the median backend role because the systems are mission-critical and the ecosystem is deep.</p>
+              <p>By the end of this course you will be able to read, debug and contribute to a real enterprise codebase — not just toy programs.</p>
+
+              <h2>What to do next</h2>
+              <ol>
+                <li>Watch the next lesson and install JDK 21 + IntelliJ IDEA.</li>
+                <li>Launch your dedicated <em>Java Dev Sandbox</em> VM and run your first program.</li>
+                <li>Take the chapter quiz to lock in the basics.</li>
+              </ol>
+            ` },
+          { id: "l-10-3", title: "Installing JDK 21 & IntelliJ IDEA", type: "video", duration: "20m", completed: true, locked: false,
+            videoUrl: "https://www.youtube.com/embed/dRMvujm3a88" },
           { id: "l-10-4", title: "Lab: Your first Java program", type: "lab", duration: "45m", completed: false, locked: false,
             labTemplate: "Java Dev Sandbox (JDK 21 + Maven)", labMode: "on-demand", estimatedHours: 1,
             labAllocation: { type: "time-limited", sessionDurationHrs: 2 } },
@@ -452,10 +492,50 @@ export const studentCourses: StudentCourse[] = [
       {
         id: "ch-10-2", title: "Syntax, Variables & Control Flow",
         lessons: [
-          { id: "l-10-6", title: "Primitive types, operators, casting", type: "video", duration: "35m", completed: false, locked: false },
-          { id: "l-10-7", title: "Live class: Control flow deep-dive", type: "live-session", duration: "1h 30m", completed: false, locked: false },
-          { id: "l-10-8", title: "Insight: Where do you struggle most?", type: "survey", duration: "5m", completed: false, locked: false,
-            body: "Trainer-pushed insight question to gauge cohort confidence before moving to OOP." },
+          { id: "l-10-6", title: "Primitive types, operators, casting", type: "video", duration: "35m", completed: false, locked: false,
+            videoUrl: "https://www.youtube.com/embed/eIrMbAQSU34" },
+          { id: "l-10-6b", title: "Reading: Variables, types and the stack vs heap", type: "reading", duration: "18m", completed: false, locked: false,
+            bodyHtml: `
+              <h1>Variables, types and where they live</h1>
+              <p class="lead">Every Java program is a dance between two regions of memory: the <strong>stack</strong> (fast, per-thread, holds primitives and references) and the <strong>heap</strong> (slower, garbage-collected, holds every object you ever <code>new</code>).</p>
+
+              <h2>Primitive types — the 8 originals</h2>
+              <table>
+                <thead><tr><th>Type</th><th>Size</th><th>Range</th><th>Default</th></tr></thead>
+                <tbody>
+                  <tr><td><code>byte</code></td><td>8-bit</td><td>-128…127</td><td>0</td></tr>
+                  <tr><td><code>short</code></td><td>16-bit</td><td>±32k</td><td>0</td></tr>
+                  <tr><td><code>int</code></td><td>32-bit</td><td>±2.1B</td><td>0</td></tr>
+                  <tr><td><code>long</code></td><td>64-bit</td><td>±9.2 quintillion</td><td>0L</td></tr>
+                  <tr><td><code>float</code></td><td>32-bit IEEE-754</td><td>~7 digits</td><td>0.0f</td></tr>
+                  <tr><td><code>double</code></td><td>64-bit IEEE-754</td><td>~15 digits</td><td>0.0d</td></tr>
+                  <tr><td><code>char</code></td><td>16-bit Unicode</td><td>U+0000…U+FFFF</td><td>'\\u0000'</td></tr>
+                  <tr><td><code>boolean</code></td><td>JVM-defined</td><td>true / false</td><td>false</td></tr>
+                </tbody>
+              </table>
+
+              <h2>References vs values</h2>
+              <pre><code>int x = 42;            // value lives on the stack
+String name = "Alex";  // reference on stack, String object on heap
+int[] data = {1,2,3};  // reference on stack, array on heap</code></pre>
+              <p>This distinction explains every "but I changed it inside the method!" bug you'll ever write. Primitives pass by value; object references pass by value <em>of the reference</em> — so you can mutate the object, but reassigning the parameter doesn't change the caller's reference.</p>
+
+              <h2>Casting — widening vs narrowing</h2>
+              <p>Widening (e.g. <code>int → long</code>) is implicit. Narrowing (<code>double → int</code>) requires an explicit cast and may lose data:</p>
+              <pre><code>double pi = 3.14159;
+int truncated = (int) pi;   // 3 — fractional part discarded</code></pre>
+
+              <h2>Why <code>BigDecimal</code> exists</h2>
+              <blockquote>Never use <code>double</code> for money. Floating-point can't represent 0.1 exactly — <code>0.1 + 0.2</code> in Java prints <code>0.30000000000000004</code>. Use <code>java.math.BigDecimal</code>.</blockquote>
+
+              <h2>Control flow in modern Java</h2>
+              <p>Java 14+ introduced <strong>switch expressions</strong> — they return a value and have no fall-through:</p>
+              <pre><code>String day = switch (dayOfWeek) {
+    case MON, TUE, WED, THU, FRI -> "Weekday";
+    case SAT, SUN -> "Weekend";
+};</code></pre>
+              <p>This eliminates an entire class of bugs caused by forgotten <code>break</code> statements in classic switch.</p>
+            ` },
           { id: "l-10-9", title: "Code exercise: FizzBuzz", type: "code-exercise", duration: "30m", completed: false, locked: false, language: "java",
             codeProblem: "Write a program that reads an integer N from stdin and prints numbers from 1 to N, one per line, with these rules:\n• If the number is divisible by 3, print 'Fizz' instead.\n• If divisible by 5, print 'Buzz' instead.\n• If divisible by both 3 and 5, print 'FizzBuzz'.",
             codeConstraints: "1 <= N <= 100",
@@ -480,10 +560,45 @@ export const studentCourses: StudentCourse[] = [
       {
         id: "ch-10-3", title: "Object-Oriented Programming",
         lessons: [
-          { id: "l-10-11", title: "Classes, objects, constructors", type: "video", duration: "40m", completed: false, locked: false },
-          { id: "l-10-12", title: "Inheritance & polymorphism", type: "video", duration: "45m", completed: false, locked: false },
+          { id: "l-10-11", title: "Classes, objects, constructors", type: "video", duration: "40m", completed: false, locked: false,
+            videoUrl: "https://www.youtube.com/embed/pTB0EiLXUC8" },
+          { id: "l-10-12", title: "Inheritance & polymorphism", type: "video", duration: "45m", completed: false, locked: false,
+            videoUrl: "https://www.youtube.com/embed/jzeoNkU45IM" },
           { id: "l-10-13", title: "Reading: SOLID principles in plain English", type: "reading", duration: "20m", completed: false, locked: false,
-            body: "A practical walkthrough of Single Responsibility, Open/Closed, Liskov, Interface Segregation and Dependency Inversion — using a banking domain example." },
+            bodyHtml: `
+              <h1>SOLID principles in plain English</h1>
+              <p class="lead">Five design principles, coined by Robert C. Martin, that separate a codebase you enjoy working in from one you dread on Monday mornings. We'll walk through each one with a banking domain example.</p>
+
+              <h2>S — Single Responsibility Principle</h2>
+              <p>A class should have one, and only one, reason to change. The classic violation: a <code>Customer</code> class that loads itself from the database, validates fields, sends welcome emails and renders a PDF receipt.</p>
+              <pre><code>// ❌ Bad — four reasons to change
+class Customer {
+  void saveToDb() { ... }
+  void validate() { ... }
+  void sendWelcomeEmail() { ... }
+  void printReceipt() { ... }
+}
+
+// ✅ Good — split responsibilities
+class Customer { /* data only */ }
+class CustomerRepository { void save(Customer c) { ... } }
+class CustomerValidator { void validate(Customer c) { ... } }
+class EmailService { void sendWelcome(Customer c) { ... } }</code></pre>
+
+              <h2>O — Open/Closed</h2>
+              <p>Software entities should be <strong>open for extension, closed for modification</strong>. Adding a new account type (Savings, Current, FixedDeposit) shouldn't require editing a giant <code>switch</code> — it should mean adding a new subclass.</p>
+
+              <h2>L — Liskov Substitution</h2>
+              <p>If <code>S</code> is a subtype of <code>T</code>, you can substitute <code>S</code> for <code>T</code> without breaking the program. The infamous "Square extends Rectangle" trap is the textbook violation: setting width on a Square changes height, breaking every caller that assumed independent dimensions.</p>
+
+              <h2>I — Interface Segregation</h2>
+              <p>Clients shouldn't be forced to depend on methods they don't use. A 40-method <code>BankingService</code> interface should be split into <code>AccountService</code>, <code>TransferService</code>, <code>StatementService</code> — so a reporting module isn't dragged into transaction logic.</p>
+
+              <h2>D — Dependency Inversion</h2>
+              <p>Depend on <strong>abstractions</strong>, not concretions. Your <code>TransferService</code> should accept an <code>AccountRepository</code> interface, not <code>PostgresAccountRepository</code> directly. This is what makes unit testing (with mocks) possible and what lets you swap Postgres for DynamoDB without rewriting business logic.</p>
+
+              <blockquote>If your IDE shows red squiggles every time a requirement changes, you probably broke at least three of these. Re-read this lesson.</blockquote>
+            ` },
           { id: "l-10-14", title: "Game: OOP Concept Quest", type: "game-based-learning", duration: "30m", completed: false, locked: false,
             body: "A scenario-based escape room where you debug a misbehaving zoo simulation by applying the right OOP concept at each room." },
           { id: "l-10-14b", title: "AI Reasoning: Why is String immutable in Java?", type: "reasoning", duration: "10m", completed: false, locked: false,
@@ -499,8 +614,44 @@ export const studentCourses: StudentCourse[] = [
       {
         id: "ch-10-4", title: "Collections & Generics",
         lessons: [
-          { id: "l-10-16", title: "List, Set, Map — when to use what", type: "video", duration: "50m", completed: false, locked: false },
-          { id: "l-10-17", title: "Generics & wildcards", type: "video", duration: "35m", completed: false, locked: false },
+          { id: "l-10-16", title: "List, Set, Map — when to use what", type: "video", duration: "50m", completed: false, locked: false,
+            videoUrl: "https://www.youtube.com/embed/viTHc_4XfCA" },
+          { id: "l-10-16b", title: "Reading: Choosing the right collection", type: "reading", duration: "16m", completed: false, locked: false,
+            bodyHtml: `
+              <h1>Choosing the right collection</h1>
+              <p class="lead">Java's <code>java.util</code> package has over 20 collection classes. 90% of the time you only need four — and picking the wrong one is the difference between an O(1) lookup and an accidental O(n²) loop that takes down production.</p>
+
+              <h2>The decision tree</h2>
+              <ul>
+                <li><strong>Need order? Allow duplicates?</strong> → <code>ArrayList</code> (random access, fast iteration) or <code>LinkedList</code> (fast insert/remove at ends).</li>
+                <li><strong>No duplicates, no order matters?</strong> → <code>HashSet</code> — O(1) contains / add / remove.</li>
+                <li><strong>No duplicates, insertion order matters?</strong> → <code>LinkedHashSet</code>.</li>
+                <li><strong>No duplicates, sorted?</strong> → <code>TreeSet</code> (O(log n), red-black tree).</li>
+                <li><strong>Key → value lookup?</strong> → <code>HashMap</code>. With insertion order: <code>LinkedHashMap</code>. Sorted: <code>TreeMap</code>.</li>
+              </ul>
+
+              <h2>The hidden cost of ArrayList.contains()</h2>
+              <pre><code>List&lt;String&gt; ids = new ArrayList&lt;&gt;();   // O(n) contains
+for (String id : incoming) {
+    if (!ids.contains(id)) ids.add(id);    // O(n²) overall 🔥
+}
+
+// ✅ Use a Set
+Set&lt;String&gt; ids = new HashSet&lt;&gt;();     // O(1) contains
+for (String id : incoming) ids.add(id);    // O(n) overall</code></pre>
+
+              <h2>Generics — why they exist</h2>
+              <p>Before Java 5, every collection held raw <code>Object</code> — you cast on every read and prayed at runtime. Generics let the compiler prove type safety at compile time:</p>
+              <pre><code>List&lt;Customer&gt; customers = repo.findAll();
+for (Customer c : customers) {   // no cast — Customer is guaranteed
+    System.out.println(c.email());
+}</code></pre>
+
+              <h2>Bounded wildcards — PECS</h2>
+              <p><strong>P</strong>roducer <strong>E</strong>xtends, <strong>C</strong>onsumer <strong>S</strong>uper. If a method <em>reads</em> from a collection, use <code>? extends T</code>. If it <em>writes</em>, use <code>? super T</code>. This unlocks polymorphism without sacrificing type safety.</p>
+            ` },
+          { id: "l-10-17", title: "Generics & wildcards", type: "video", duration: "35m", completed: false, locked: false,
+            videoUrl: "https://www.youtube.com/embed/K1iu1kXkVoA" },
           { id: "l-10-18", title: "Lab: Refactor with collections", type: "lab", duration: "1h 30m", completed: false, locked: false,
             labTemplate: "Java Dev Sandbox (JDK 21 + Maven)", labMode: "on-demand", estimatedHours: 2,
             labAllocation: { type: "time-limited", sessionDurationHrs: 2 } },
@@ -510,9 +661,46 @@ export const studentCourses: StudentCourse[] = [
       {
         id: "ch-10-5", title: "Exceptions, IO & Multithreading",
         lessons: [
-          { id: "l-10-20", title: "Checked vs unchecked exceptions", type: "video", duration: "30m", completed: false, locked: false },
-          { id: "l-10-21", title: "File IO with java.nio", type: "video", duration: "40m", completed: false, locked: false },
-          { id: "l-10-22", title: "Multithreading & ExecutorService", type: "video", duration: "1h", completed: false, locked: false },
+          { id: "l-10-20", title: "Checked vs unchecked exceptions", type: "video", duration: "30m", completed: false, locked: false,
+            videoUrl: "https://www.youtube.com/embed/1XAfapkBQjk" },
+          { id: "l-10-20b", title: "Reading: Exception handling done right", type: "reading", duration: "14m", completed: false, locked: false,
+            bodyHtml: `
+              <h1>Exception handling done right</h1>
+              <p class="lead">Exceptions exist to <em>separate the normal happy path from the recovery path</em>. They are not a flow-control mechanism, not a "return two values" trick, and definitely not something to swallow silently with an empty catch block.</p>
+
+              <h2>Checked vs unchecked — the two-minute version</h2>
+              <ul>
+                <li><strong>Checked</strong> (<code>extends Exception</code>) — the compiler forces you to declare or handle it. Use for <em>recoverable</em> failures the caller is expected to deal with: <code>IOException</code>, <code>SQLException</code>.</li>
+                <li><strong>Unchecked</strong> (<code>extends RuntimeException</code>) — programmer errors and unrecoverable failures: <code>NullPointerException</code>, <code>IllegalArgumentException</code>, <code>IllegalStateException</code>.</li>
+              </ul>
+
+              <h2>The cardinal sins</h2>
+              <pre><code>// ❌ The "shut up compiler" pattern
+try { riskyOp(); } catch (Exception e) { /* nothing */ }
+
+// ❌ Catch and rethrow with no context
+try { riskyOp(); } catch (IOException e) { throw new RuntimeException(e); }
+
+// ✅ Catch what you can handle, wrap with context
+try {
+    config = loadConfig(path);
+} catch (IOException e) {
+    throw new ConfigLoadException("Failed loading config from " + path, e);
+}</code></pre>
+
+              <h2>try-with-resources</h2>
+              <p>Since Java 7, any class implementing <code>AutoCloseable</code> can go in the try header — and the JVM guarantees <code>close()</code> is called, even if your code throws.</p>
+              <pre><code>try (BufferedReader r = Files.newBufferedReader(path)) {
+    return r.readLine();
+}  // r.close() called automatically</code></pre>
+
+              <h2>The rule of thumb</h2>
+              <blockquote><strong>Throw early, catch late.</strong> Validate inputs at the boundary and fail fast. Catch only at the layer where you can do something meaningful — log, retry, or translate to a user-facing error.</blockquote>
+            ` },
+          { id: "l-10-21", title: "File IO with java.nio", type: "video", duration: "40m", completed: false, locked: false,
+            videoUrl: "https://www.youtube.com/embed/yH3SuD8M6Ow" },
+          { id: "l-10-22", title: "Multithreading & ExecutorService", type: "video", duration: "1h", completed: false, locked: false,
+            videoUrl: "https://www.youtube.com/embed/4aYvLz4E1Ts" },
           { id: "l-10-23", title: "Game: Concurrency Café", type: "game-based-learning", duration: "25m", completed: false, locked: false,
             body: "Run a virtual café — assign threads to baristas without deadlocking the espresso machine." },
           { id: "l-10-24", title: "Lab: Concurrent file processor", type: "lab", duration: "2h", completed: false, locked: false,
@@ -523,7 +711,48 @@ export const studentCourses: StudentCourse[] = [
       {
         id: "ch-10-6", title: "JDBC & Capstone",
         lessons: [
-          { id: "l-10-25", title: "JDBC basics & PreparedStatement", type: "video", duration: "45m", completed: false, locked: false },
+          { id: "l-10-25", title: "JDBC basics & PreparedStatement", type: "video", duration: "45m", completed: false, locked: false,
+            videoUrl: "https://www.youtube.com/embed/QwbZmpQgPB8" },
+          { id: "l-10-25b", title: "Reading: JDBC, connection pools & SQL injection", type: "reading", duration: "16m", completed: false, locked: false,
+            bodyHtml: `
+              <h1>JDBC, connection pools & SQL injection</h1>
+              <p class="lead">JDBC is Java's lowest-level database API. Modern frameworks (Hibernate, Spring Data, jOOQ) sit on top of it — and they all delegate to JDBC under the hood. Understanding it is non-negotiable.</p>
+
+              <h2>The four objects you need to know</h2>
+              <ol>
+                <li><code>DataSource</code> — the pool-aware factory. You never call <code>DriverManager.getConnection()</code> in production.</li>
+                <li><code>Connection</code> — a session with the database. <strong>Always</strong> close it (or use try-with-resources) — connection leaks kill apps.</li>
+                <li><code>PreparedStatement</code> — a precompiled, parameter-safe SQL statement. Never use <code>Statement</code> with concatenated user input.</li>
+                <li><code>ResultSet</code> — a forward-only cursor over rows. Also <code>AutoCloseable</code>.</li>
+              </ol>
+
+              <h2>The SQL injection that ended careers</h2>
+              <pre><code>// ❌ NEVER do this — direct concatenation
+String sql = "SELECT * FROM users WHERE email = '" + email + "'";
+stmt.executeQuery(sql);
+// If email = "x' OR '1'='1" → returns every row. Or worse, drops the table.
+
+// ✅ PreparedStatement — driver escapes for you
+PreparedStatement ps = conn.prepareStatement(
+    "SELECT * FROM users WHERE email = ?");
+ps.setString(1, email);
+ResultSet rs = ps.executeQuery();</code></pre>
+
+              <h2>Why connection pools matter</h2>
+              <p>Opening a TCP connection + TLS handshake + authentication to Postgres takes 30-100ms. If every HTTP request opens a new connection, your p99 latency is dead before your code runs. <strong>HikariCP</strong> is the de-facto standard in 2026 — pre-warmed connections, ~10µs to acquire.</p>
+
+              <h2>Transactions</h2>
+              <pre><code>conn.setAutoCommit(false);
+try {
+    debit(fromAccount, amount);
+    credit(toAccount, amount);
+    conn.commit();
+} catch (SQLException e) {
+    conn.rollback();
+    throw e;
+}</code></pre>
+              <p>This 6-line pattern is the foundation of every banking system on earth.</p>
+            ` },
           { id: "l-10-26", title: "Capstone: CLI Expense Tracker", type: "assignment", duration: "6h", completed: false, locked: false,
             body: "Build a CLI expense tracker backed by PostgreSQL using JDBC. Submission: GitHub repo + 5-min demo video." },
           { id: "l-10-27", title: "Final exam (proctored)", type: "exam", duration: "1h 30m", completed: false, locked: false, proctored: true },
@@ -606,8 +835,6 @@ export const studentCourses: StudentCourse[] = [
               { id: "t3", input: "(hidden)", expectedOutput: "(hidden)", hidden: true, weight: 40 },
             ],
           },
-          { id: "l-11-8", title: "Insight: What confuses you most?", type: "survey", duration: "3m", completed: false, locked: false,
-            body: "Async insight question — your mentor reviews responses weekly." },
         ],
       },
       {

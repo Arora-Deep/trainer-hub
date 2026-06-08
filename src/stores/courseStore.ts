@@ -13,7 +13,8 @@ export type LessonType =
   | 'exam'
   | 'mock-exam'
   | 'survey'
-  | 'game-based-learning';
+  | 'game-based-learning'
+  | 'reasoning';
 
 export type LabMode = 'on-demand' | 'persistent';
 
@@ -119,6 +120,11 @@ export interface Lesson {
   // Grading
   weight?: number;
   required?: boolean;
+  // AI Reasoning
+  reasoningPrompt?: string;
+  reasoningModelAnswer?: string;
+  reasoningRubric?: string;
+  reasoningType?: 'explain-choice' | 'compare-options' | 'improve-solution' | 'root-cause' | 'scenario-response';
 }
 
 
@@ -284,7 +290,7 @@ const initialCourses: Course[] = [
     { id: "ch-java-1", title: "Getting Started with Java", lessons: [
       { id: "l-java-1", title: "Welcome & Course Roadmap", type: "video", duration: "10 min", summary: "Trainer kicks off the cohort and walks through the 6-week schedule." },
       { id: "l-java-2", title: "Reading: The Java Platform (JVM, JRE, JDK)", type: "reading", duration: "15 min", body: "Java is a class-based, object-oriented language compiled to bytecode and executed on the Java Virtual Machine (JVM). This reading covers the JDK toolchain (javac, java, jshell), how the JVM loads classes, JIT compilation, and why 'write once, run anywhere' still matters in 2026." },
-      { id: "l-java-3", title: "Live Session: JDK 21 setup walkthrough", type: "live-session", duration: "45 min", liveSession: { date: "Jun 09, 2026", time: "10:00 AM IST", durationMin: 45, agenda: "Install JDK 21, verify with java -version, run first HelloWorld." } },
+      { id: "l-java-3", title: "Video: JDK 21 setup walkthrough", type: "video", duration: "45 min", videoUrl: "https://www.youtube.com/embed/dRMvujm3a88" },
       { id: "l-java-4", title: "Lab: Hello Java on your VM", type: "lab", duration: "30 min", lab: { templateId: 'tpl-java', templateName: 'Java Dev VM (JDK 21)', mode: 'persistent' } },
       { id: "l-java-5", title: "Quiz: Java Platform Basics", type: "quiz", duration: "10 min", passingScore: 70, attempts: 2 },
     ]},
@@ -292,7 +298,7 @@ const initialCourses: Course[] = [
       { id: "l-java-6", title: "Video: Primitive types & operators", type: "video", duration: "22 min" },
       { id: "l-java-7", title: "Reading: Control flow cheatsheet", type: "reading", duration: "12 min", body: "if/else, switch expressions (Java 14+), for, while, do-while, enhanced-for, labelled break — with idiomatic examples." },
       { id: "l-java-8", title: "Exercise: FizzBuzz in Java", type: "code-exercise", duration: "20 min", language: "java", starterCode: "public class FizzBuzz {\n  public static void main(String[] args) {\n    // TODO\n  }\n}" },
-      { id: "l-java-9", title: "Insight Question: Why is String immutable?", type: "survey", duration: "5 min" },
+      { id: "l-java-9", title: "AI Reasoning: Why is String immutable?", type: "reasoning", duration: "10 min", reasoningType: "root-cause", reasoningPrompt: "Explain why the String class is immutable in Java and how that helps with security, the String pool and multithreading.", reasoningRubric: "string pool / interning\nsecurity / TOCTOU\nthread safety\ncached hashcode / HashMap keys" },
     ]},
     { id: "ch-java-3", title: "Object-Oriented Programming", lessons: [
       { id: "l-java-10", title: "Video: Classes, objects & constructors", type: "video", duration: "28 min" },
@@ -314,11 +320,11 @@ const initialCourses: Course[] = [
       { id: "l-java-22", title: "Quiz: Exceptions & I/O", type: "quiz", duration: "10 min", passingScore: 70 },
     ]},
     { id: "ch-java-6", title: "Capstone & Final Assessment", lessons: [
-      { id: "l-java-23", title: "Live Session: Capstone briefing", type: "live-session", duration: "30 min", liveSession: { date: "Jun 30, 2026", time: "10:00 AM IST", durationMin: 30, agenda: "Walkthrough of the capstone scoring rubric and Q&A." } },
+      { id: "l-java-23", title: "Video: Capstone briefing", type: "video", duration: "30 min" },
       { id: "l-java-24", title: "Assignment: Capstone — Bank Account Simulator", type: "assignment", duration: "5 days", instructions: "Design a multi-account banking domain with transactions, transfers and an audit log. Use OOP, collections and exception handling." },
       { id: "l-java-25", title: "Game-Based Learning: Bug Bash Arena", type: "game-based-learning", duration: "30 min", summary: "Timed challenge — fix as many seeded bugs as you can in a Java codebase." },
       { id: "l-java-26", title: "Final Exam (Proctored)", type: "exam", duration: "60 min", proctored: true, passingScore: 70, attempts: 1, timeLimit: 60 },
-      { id: "l-java-27", title: "Insight Question: What will you build next?", type: "survey", duration: "3 min" },
+      { id: "l-java-27", title: "AI Reasoning: What will you build next?", type: "reasoning", duration: "5 min", reasoningType: "scenario-response", reasoningPrompt: "Describe a small Java project you'd build next week and the concepts from this course you'd use." },
     ]},
   ] },
   { id: "11", name: "Python Fundamentals", deliveryType: "self-paced", category: "Programming", description: "Self-paced Python fundamentals with persistent learner labs cloned from a trainer golden template.", batches: 1, lastUpdated: "Apr 25, 2026", status: "active", settings: { ...defaultSettings, deliveryType: 'self-paced', labPolicy: 'unlimited-during-validity', visibility: 'customer' }, owner: { type: 'trainer', id: 't-4', name: 'Neha Kapoor' }, moderation: 'approved', chapters: [
@@ -326,7 +332,7 @@ const initialCourses: Course[] = [
       { id: "l-pyf-1", title: "Intro video: Why Python in 2026?", type: "video", duration: "8 min" },
       { id: "l-pyf-2", title: "Reading: Setting up your learner VM", type: "reading", duration: "10 min", body: "Your personal Python VM has been cloned from the trainer's golden snapshot. It includes Python 3.12, pip, venv, VS Code Server and pre-installed packages (numpy, pandas, requests). Launch it from the lab panel and you're ready to code." },
       { id: "l-pyf-3", title: "Lab: Your persistent Python VM", type: "lab", duration: "open", lab: { templateId: 'tpl-py', templateName: 'Python Learner VM', mode: 'persistent' } },
-      { id: "l-pyf-4", title: "Insight Question: What do you want to build?", type: "survey", duration: "3 min" },
+      { id: "l-pyf-4", title: "AI Reasoning: What do you want to build?", type: "reasoning", duration: "5 min", reasoningType: "scenario-response", reasoningPrompt: "Pick one project you'd like to build in Python and outline the modules / libraries you'd reach for." },
     ]},
     { id: "ch-pyf-2", title: "Syntax, Variables & Types", lessons: [
       { id: "l-pyf-5", title: "Video: Variables, numbers & strings", type: "video", duration: "18 min" },
