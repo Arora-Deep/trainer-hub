@@ -83,7 +83,7 @@ export default function CreateLab() {
   
   // Approval State
   const [approvalRequested, setApprovalRequested] = useState(false);
-  const [cloudAddaApproval, setPlatformApproval] = useState<"pending" | "approved" | "rejected">("pending");
+  const [platformApproval, setPlatformApproval] = useState<"pending" | "approved" | "rejected">("pending");
   const [companyAdminApproval, setCompanyAdminApproval] = useState<"pending" | "approved" | "rejected">("pending");
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -134,7 +134,7 @@ export default function CreateLab() {
   };
 
   const isFormValid = labName && dateRange.from && dateRange.to && vmTemplates.every(t => t.templateId && t.instanceName);
-  const isApproved = cloudAddaApproval === "approved" && companyAdminApproval === "approved";
+  const isApproved = platformApproval === "approved" && companyAdminApproval === "approved";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -798,7 +798,7 @@ export default function CreateLab() {
                       <Cloud className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm font-medium">Platform</span>
                     </div>
-                    {getApprovalStatusBadge(cloudAddaApproval)}
+                    {getApprovalStatusBadge(platformApproval)}
                   </div>
                   
                   <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">

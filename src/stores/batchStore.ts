@@ -85,7 +85,7 @@ export interface VMConfig {
     total: number;
   };
   approval: {
-    cloudAdda: "pending" | "approved" | "rejected";
+    platform: "pending" | "approved" | "rejected";
     companyAdmin: "pending" | "approved" | "rejected";
     requested: boolean;
   };
@@ -286,7 +286,7 @@ const initialBatches: Batch[] = [
       ],
       cloneStatus: "cloned",
       pricing: { compute: 3125, storage: 312.5, network: 125, support: 60, total: 3622.5 },
-      approval: { cloudAdda: "approved", companyAdmin: "approved", requested: true },
+      approval: { platform: "approved", companyAdmin: "approved", requested: true },
       createdAt: "Jan 10, 2024",
     },
     labConfigs: [],
@@ -560,7 +560,7 @@ const initialBatches: Batch[] = [
       ],
       cloneStatus: "cloned",
       pricing: { compute: 4200, storage: 420, network: 160, support: 80, total: 4860 },
-      approval: { cloudAdda: "approved", companyAdmin: "approved", requested: true },
+      approval: { platform: "approved", companyAdmin: "approved", requested: true },
       createdAt: "May 28, 2026",
     },
   },
