@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import {
   Users, UserPlus, MoreHorizontal, ExternalLink, Monitor, CalendarCheck,
-  BookOpen, GraduationCap, Search, Download, Upload, Mail, ArrowUpDown, Pencil, Check, X,
+  BookOpen, KeyRound, Search, Download, Upload, Mail, ArrowUpDown, Pencil, Check, X, Copy, Eye, EyeOff,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { Batch } from "@/stores/batchStore";
@@ -30,7 +30,7 @@ interface ParticipantsTabProps {
   batch: Batch;
 }
 
-type SortField = "name" | "quizScore" | "attendance" | "lastActive";
+type SortField = "name" | "attendance" | "lastActive";
 
 export function ParticipantsTab({ batch }: ParticipantsTabProps) {
   const { addParticipant, removeParticipant, updateParticipant, importParticipantsCSV } = useBatchStore();
@@ -44,7 +44,35 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
   const csvInputRef = useRef<HTMLInputElement>(null);
+
+  // Deterministic credential generator (mock — would come from backend in prod)
+  const getCredentials = (participant: { id: string; email: string; name: string }) => {
+    const username = participant.email.split("@")[0].toLowerCase().replace(/[^a-z0-9._-]/g, "");
+    // Stable pseudo-random password from id
+    const seed = participant.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    const syllables = ["Tr", "Cl", "Pk", "Mx", "Vn", "Br", "Sk", "Lt", "Qz", "Hp"];
+    const vowels = ["a", "i", "o", "u", "e"];
+    const s1 = syllables[seed % syllables.length];
+    const v1 = vowels[(seed >> 2) % vowels.length];
+    const s2 = syllables[(seed >> 3) % syllables.length].toLowerCase();
+    const num = 100 + (seed % 900);
+    return { username, password: `${s1}${v1}${s2}@${num}` };
+  };
+
+  const toggleReveal = (id: string) => {
+    setRevealedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied", description: `${label} copied to clipboard` });
+  };
 
   const handleAddParticipant = () => {
     if (!newParticipantName.trim() || !newParticipantEmail.trim()) {
@@ -128,7 +156,6 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
       const dir = sortDir === "asc" ? 1 : -1;
       switch (sortField) {
         case "name": return a.name.localeCompare(b.name) * dir;
-        case "quizScore": return ((a.quizScore ?? -1) - (b.quizScore ?? -1)) * dir;
         case "attendance": {
           const aRate = a.attendance.total > 0 ? a.attendance.present / a.attendance.total : 0;
           const bRate = b.attendance.total > 0 ? b.attendance.present / b.attendance.total : 0;
@@ -212,7 +239,7 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
               ? { label: "Enrolled (Floating)", value: `${batch.enrolledCount ?? batch.participants.length}`, icon: Users }
               : { label: "Total Participants", value: `${batch.participants.length}/${batch.seatCount}`, icon: Users },
             { label: "VMs Running", value: vmCounts.running, icon: Monitor },
-            { label: "Avg Quiz Score", value: avgScore !== null ? `${avgScore}%` : "—", icon: GraduationCap },
+            { label: "Credentials Issued", value: batch.participants.length, icon: KeyRound },
             { label: "Avg Attendance", value: avgAttendance !== null ? `${avgAttendance}%` : "—", icon: CalendarCheck },
           ].map((stat, i) => (
             <motion.div
@@ -252,7 +279,7 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <CardTitle className="text-base">Participants</CardTitle>
-            <CardDescription>Manage enrolled participants — monitor quiz scores, attendance, and VM access</CardDescription>
+            <CardDescription>Manage enrolled participants — share login credentials, attendance, and VM access</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="hidden sm:flex" onClick={() => csvInputRef.current?.click()}>
@@ -344,10 +371,10 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
                     <SortableHeader field="name">Participant</SortableHeader>
                   </TableHead>
                   <TableHead className="font-medium">
-                    <SortableHeader field="quizScore">
-                      <GraduationCap className="h-3.5 w-3.5" />
-                      Quiz Score
-                    </SortableHeader>
+                    <div className="flex items-center gap-1.5">
+                      <KeyRound className="h-3.5 w-3.5" />
+                      Login Credentials
+                    </div>
                   </TableHead>
                   <TableHead className="font-medium">
                     <div className="flex items-center gap-1.5">
@@ -432,17 +459,51 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className={cn("font-semibold text-sm tabular-nums", getScoreColor(participant.quizScore))}>
-                          {participant.quizScore !== null ? `${participant.quizScore}%` : "—"}
-                        </span>
-                        {participant.quizScore !== null && participant.quizScore >= 90 && (
-                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-success/10 text-success border-0">Top</Badge>
-                        )}
-                        {participant.quizScore !== null && participant.quizScore < 50 && (
-                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-destructive/10 text-destructive border-0">At Risk</Badge>
-                        )}
-                      </div>
+                      {(() => {
+                        const creds = getCredentials(participant);
+                        const revealed = revealedIds.has(participant.id);
+                        return (
+                          <div className="space-y-1 min-w-[220px]">
+                            <div className="flex items-center gap-1.5">
+                              <code className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-muted text-foreground truncate max-w-[150px]" title={creds.username}>
+                                {creds.username}
+                              </code>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5 text-muted-foreground hover:text-foreground"
+                                onClick={() => copyToClipboard(creds.username, "Username")}
+                                title="Copy username"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <code className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-muted text-foreground tabular-nums">
+                                {revealed ? creds.password : "••••••••"}
+                              </code>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5 text-muted-foreground hover:text-foreground"
+                                onClick={() => toggleReveal(participant.id)}
+                                title={revealed ? "Hide password" : "Show password"}
+                              >
+                                {revealed ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5 text-muted-foreground hover:text-foreground"
+                                onClick={() => copyToClipboard(creds.password, "Password")}
+                                title="Copy password"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       <span className="text-sm">{participant.currentModule}</span>
