@@ -17,7 +17,7 @@ const typeIcons: Record<LessonType, any> = {
   video: Video, reading: FileText, quiz: HelpCircle, assignment: ClipboardList,
   "code-exercise": Code2, lab: FlaskConical, "lab-instruction": ClipboardList,
   "live-session": Video, "ctf-scenario": Flag, exam: GraduationCap,
-  "mock-exam": GraduationCap, survey: HelpCircle,
+  "mock-exam": GraduationCap, survey: HelpCircle, "game-based-learning": HelpCircle,
 };
 
 export default function LessonView() {

@@ -39,6 +39,7 @@ const lessonTypeMeta: Record<LessonType, { label: string; icon: any; hint: strin
   exam: { label: "Exam", icon: ShieldCheck, hint: "Timed / proctored — gates certification" },
   "mock-exam": { label: "Mock Exam", icon: ShieldCheck, hint: "Practice run, ungraded" },
   survey: { label: "Survey", icon: HelpCircle, hint: "Collect learner feedback" },
+  "game-based-learning": { label: "Game-based Learning", icon: Flag, hint: "Gamified challenge — points, rounds, leaderboard" },
 };
 
 export default function CourseEditor() {
