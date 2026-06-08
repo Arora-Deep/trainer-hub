@@ -103,7 +103,7 @@ const statusIndicators: Record<string, { color: string; label: string }> = {
   away: { color: "bg-muted-foreground/40", label: "Away" },
 };
 
-type ViewMode = "default" | "content" | "lab" | "notes";
+type ViewMode = "default" | "content" | "lab" | "notes" | "materials";
 type SideRail = "materials" | "chat" | "students" | null;
 
 const sessionMaterials = [
