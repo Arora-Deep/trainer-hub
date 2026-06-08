@@ -119,7 +119,6 @@ const trainerNav: NavConfig = {
       { title: "Batches", icon: Users, path: "/batches" },
       { title: "Lab Templates", icon: FlaskConical, path: "/labs" },
       { title: "Courses", icon: BookOpen, path: "/courses" },
-      { title: "Programs", icon: Layers, path: "/programs" },
     ]},
     { label: "Assessments", icon: ClipboardCheck, items: [
       { title: "Assignments", icon: ClipboardList, path: "/assignments" },
