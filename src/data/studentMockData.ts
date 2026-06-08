@@ -15,7 +15,8 @@ export type StudentLessonType =
   | "exam"
   | "mock-exam"
   | "survey"
-  | "game-based-learning";
+  | "game-based-learning"
+  | "reasoning";
 
 export type LabAllocationType = "persistent" | "module-unlock" | "time-limited" | "hour-pool";
 
@@ -51,6 +52,10 @@ export interface StudentLesson {
   estimatedHours?: number;
   language?: string;
   proctored?: boolean;
+  reasoningPrompt?: string;
+  reasoningModelAnswer?: string;
+  reasoningRubric?: string[];
+  reasoningType?: "explain-choice" | "compare-options" | "improve-solution" | "root-cause" | "scenario-response";
 }
 
 export interface StudentChapter {
@@ -445,6 +450,12 @@ export const studentCourses: StudentCourse[] = [
           { id: "l-10-8", title: "Insight: Where do you struggle most?", type: "survey", duration: "5m", completed: false, locked: false,
             body: "Trainer-pushed insight question to gauge cohort confidence before moving to OOP." },
           { id: "l-10-9", title: "Lab: FizzBuzz & loops practice", type: "code-exercise", duration: "30m", completed: false, locked: false, language: "java" },
+          { id: "l-10-9b", title: "AI Reasoning: for loop vs while loop", type: "reasoning", duration: "8m", completed: false, locked: false,
+            reasoningType: "explain-choice",
+            reasoningPrompt: "You need to process records until a user enters EXIT. Would you use a for loop or a while loop? Explain your reasoning.",
+            reasoningModelAnswer: "A while loop is preferred because the number of iterations is not known in advance — execution continues until a sentinel value (EXIT) is encountered. A for loop fits known/iterable ranges. Mention readability, exit-condition placement, and the risk of an infinite loop if the sentinel check is wrong.",
+            reasoningRubric: ["unknown iteration count", "sentinel / exit condition", "compare for vs while", "infinite loop risk", "maintainability"],
+          },
           { id: "l-10-10", title: "Quiz: Control flow", type: "quiz", duration: "15m", completed: false, locked: false },
         ],
       },
@@ -457,6 +468,12 @@ export const studentCourses: StudentCourse[] = [
             body: "A practical walkthrough of Single Responsibility, Open/Closed, Liskov, Interface Segregation and Dependency Inversion — using a banking domain example." },
           { id: "l-10-14", title: "Game: OOP Concept Quest", type: "game-based-learning", duration: "30m", completed: false, locked: false,
             body: "A scenario-based escape room where you debug a misbehaving zoo simulation by applying the right OOP concept at each room." },
+          { id: "l-10-14b", title: "AI Reasoning: Why is String immutable in Java?", type: "reasoning", duration: "10m", completed: false, locked: false,
+            reasoningType: "root-cause",
+            reasoningPrompt: "Explain why the String class is immutable in Java. What problems would arise if String were mutable, and how does immutability help with security, the String pool and multithreading?",
+            reasoningModelAnswer: "Strings are immutable so they can be safely shared via the String pool (deduplication), so security-sensitive values (class names, file paths, DB URLs) cannot be changed after a security check (TOCTOU), so they are inherently thread-safe (no synchronization needed), and so their hashCode can be cached — making them excellent keys in HashMap. If String were mutable, pool sharing would corrupt unrelated references and any 'check then use' security pattern would break.",
+            reasoningRubric: ["string pool / interning", "security / class loading", "thread safety", "cached hashcode / HashMap keys", "trade-off vs StringBuilder"],
+          },
           { id: "l-10-15", title: "Assignment: Build a Library Management System", type: "assignment", duration: "3h", completed: false, locked: false,
             body: "Design a small library system with Book, Member and Loan classes. Submit GitHub repo + screen recording." },
         ],
@@ -569,6 +586,12 @@ export const studentCourses: StudentCourse[] = [
         lessons: [
           { id: "l-11-9", title: "if / elif / else, loops", type: "video", duration: "35m", completed: false, locked: false },
           { id: "l-11-10", title: "Functions, args, *args, **kwargs", type: "video", duration: "40m", completed: false, locked: false },
+          { id: "l-11-10b", title: "AI Reasoning: List comprehension vs for loop", type: "reasoning", duration: "8m", completed: false, locked: false,
+            reasoningType: "compare-options",
+            reasoningPrompt: "You need to build a new list of squared values from an existing list of 10,000 numbers. Would you use a list comprehension or a traditional for loop with `.append()`? Compare the two approaches on readability, performance and when each is the better choice.",
+            reasoningModelAnswer: "A list comprehension is preferred here — it is more readable for a single-expression transformation, runs faster in CPython because the loop happens in C (no repeated `.append()` attribute lookups), and signals intent (build a new list). A for-loop is better when the body has side effects, multiple statements, or needs early termination — comprehensions optimize for expression, not control flow.",
+            reasoningRubric: ["readability / intent", "performance (C-level loop, fewer attribute lookups)", "when for loop is better (side effects, complex body)", "memory (generator vs list)", "pythonic idiom"],
+          },
           { id: "l-11-11", title: "Reading: Pythonic style (PEP 8 essentials)", type: "reading", duration: "15m", completed: false, locked: false,
             body: "Idiomatic Python: list comprehensions, truthiness, EAFP vs LBYL, naming conventions and the Zen of Python." },
           { id: "l-11-12", title: "Game: Python Pop Quiz Show", type: "game-based-learning", duration: "20m", completed: false, locked: false,
@@ -591,6 +614,12 @@ export const studentCourses: StudentCourse[] = [
         lessons: [
           { id: "l-11-18", title: "Reading & writing files", type: "video", duration: "30m", completed: false, locked: false },
           { id: "l-11-19", title: "try / except / finally", type: "video", duration: "25m", completed: false, locked: false },
+          { id: "l-11-19b", title: "AI Reasoning: try/except vs if-check (EAFP vs LBYL)", type: "reasoning", duration: "10m", completed: false, locked: false,
+            reasoningType: "compare-options",
+            reasoningPrompt: "In Python, would you use a try/except block to handle a missing dictionary key, or check with `if key in dict` first? Compare the two — when is each appropriate? (EAFP vs LBYL)",
+            reasoningModelAnswer: "Python idiom favours EAFP — 'easier to ask forgiveness than permission' — so a try/except KeyError is generally cleaner and faster on the happy path because exceptions are cheap when not raised, and there is no race condition between the check and the access. LBYL (if key in dict) is preferable when the missing case is the common path (exceptions are expensive then), when the check has no race risk, or for readability when multiple conditions are pre-validated together. Bonus: `.get()` is the Pythonic middle ground for a single key.",
+            reasoningRubric: ["EAFP vs LBYL terminology", "performance on happy path", "race conditions / TOCTOU", "readability", "dict.get() alternative"],
+          },
           { id: "l-11-20", title: "Working with modules & venv", type: "video", duration: "30m", completed: false, locked: false },
           { id: "l-11-21", title: "Game: Debug Detective", type: "game-based-learning", duration: "30m", completed: false, locked: false,
             body: "5 broken Python programs — find the bug, choose the fix, climb the leaderboard." },
