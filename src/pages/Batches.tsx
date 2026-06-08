@@ -354,7 +354,7 @@ export default function Batches() {
                     <CardContent className="p-5">
                       {/* Header */}
                       <div className="flex items-start justify-between mb-5 gap-3">
-                        <div className="flex items-start gap-3 min-w-0">
+                        <div className="flex items-start gap-3 min-w-0 flex-1">
                           <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
                             <GraduationCap className="h-5 w-5 text-primary" />
                           </div>
