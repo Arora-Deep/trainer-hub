@@ -1169,8 +1169,8 @@ export const studentAssessments: StudentAssessment[] = [
   },
   {
     id: "a-13", title: "Python Basics Quiz", type: "Quiz", course: "Python Fundamentals", courseId: "11",
-    batch: "Python Fundamentals — Self-Paced", dueDate: "Any time", score: null, maxScore: 100, status: "pending",
-    timeLimitMin: 20, attempts: 0, maxAttempts: 3, deliveryMode: "self-paced",
+    batch: "Python Fundamentals — Cohort 7", dueDate: "Fri, Jun 12", score: null, maxScore: 100, status: "pending",
+    timeLimitMin: 20, attempts: 0, maxAttempts: 3, deliveryMode: "live",
     instructions: "Self-paced quiz on Python syntax and data types. Retake up to 3 times.",
     syllabus: ["Variables", "Strings", "Lists & dicts", "Truthiness"],
     questions: [
@@ -1183,8 +1183,8 @@ export const studentAssessments: StudentAssessment[] = [
   },
   {
     id: "a-14", title: "BankAccount OOP Exercise", type: "Exercise", course: "Python Fundamentals", courseId: "11",
-    batch: "Python Fundamentals — Self-Paced", dueDate: "Any time", score: null, maxScore: 40, status: "not_started",
-    timeLimitMin: 60, attempts: 0, maxAttempts: 5, deliveryMode: "self-paced",
+    batch: "Python Fundamentals — Cohort 7", dueDate: "Mon, Jun 22", score: null, maxScore: 40, status: "not_started",
+    timeLimitMin: 60, attempts: 0, maxAttempts: 5, deliveryMode: "live",
     instructions: "Implement a `BankAccount` class with deposit, withdraw, transfer and history methods. Tests are pre-loaded.",
     syllabus: ["Classes", "Methods", "Exceptions"], questions: [],
     starterCode: "class BankAccount:\n    def __init__(self, owner, balance=0):\n        # TODO\n        pass\n",
@@ -1192,8 +1192,8 @@ export const studentAssessments: StudentAssessment[] = [
   },
   {
     id: "a-15", title: "Expense Tracker Capstone", type: "Assignment", course: "Python Fundamentals", courseId: "11",
-    batch: "Python Fundamentals — Self-Paced", dueDate: "Any time", score: null, maxScore: 100, status: "not_started",
-    timeLimitMin: 240, attempts: 0, maxAttempts: 1, deliveryMode: "self-paced",
+    batch: "Python Fundamentals — Cohort 7", dueDate: "Sun, Jun 28", score: null, maxScore: 100, status: "not_started",
+    timeLimitMin: 240, attempts: 0, maxAttempts: 1, deliveryMode: "live",
     instructions: "Build a CLI expense tracker backed by JSON. Submit a single .zip with code + README.",
     syllabus: ["File IO", "JSON", "CLI args", "Classes"],
     questions: [], submission: { type: "file", placeholder: "Upload .zip" },
