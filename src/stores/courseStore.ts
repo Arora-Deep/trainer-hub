@@ -320,7 +320,7 @@ const initialCourses: Course[] = [
       { id: "l-java-22", title: "Quiz: Exceptions & I/O", type: "quiz", duration: "10 min", passingScore: 70 },
     ]},
     { id: "ch-java-6", title: "Capstone & Final Assessment", lessons: [
-      { id: "l-java-23", title: "Live Session: Capstone briefing", type: "live-session", duration: "30 min", liveSession: { date: "Jun 30, 2026", time: "10:00 AM IST", durationMin: 30, agenda: "Walkthrough of the capstone scoring rubric and Q&A." } },
+      { id: "l-java-23", title: "Video: Capstone briefing", type: "video", duration: "30 min" },
       { id: "l-java-24", title: "Assignment: Capstone — Bank Account Simulator", type: "assignment", duration: "5 days", instructions: "Design a multi-account banking domain with transactions, transfers and an audit log. Use OOP, collections and exception handling." },
       { id: "l-java-25", title: "Game-Based Learning: Bug Bash Arena", type: "game-based-learning", duration: "30 min", summary: "Timed challenge — fix as many seeded bugs as you can in a Java codebase." },
       { id: "l-java-26", title: "Final Exam (Proctored)", type: "exam", duration: "60 min", proctored: true, passingScore: 70, attempts: 1, timeLimit: 60 },
