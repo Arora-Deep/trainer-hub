@@ -44,7 +44,35 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
   const csvInputRef = useRef<HTMLInputElement>(null);
+
+  // Deterministic credential generator (mock — would come from backend in prod)
+  const getCredentials = (participant: { id: string; email: string; name: string }) => {
+    const username = participant.email.split("@")[0].toLowerCase().replace(/[^a-z0-9._-]/g, "");
+    // Stable pseudo-random password from id
+    const seed = participant.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    const syllables = ["Tr", "Cl", "Pk", "Mx", "Vn", "Br", "Sk", "Lt", "Qz", "Hp"];
+    const vowels = ["a", "i", "o", "u", "e"];
+    const s1 = syllables[seed % syllables.length];
+    const v1 = vowels[(seed >> 2) % vowels.length];
+    const s2 = syllables[(seed >> 3) % syllables.length].toLowerCase();
+    const num = 100 + (seed % 900);
+    return { username, password: `${s1}${v1}${s2}@${num}` };
+  };
+
+  const toggleReveal = (id: string) => {
+    setRevealedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied", description: `${label} copied to clipboard` });
+  };
 
   const handleAddParticipant = () => {
     if (!newParticipantName.trim() || !newParticipantEmail.trim()) {
