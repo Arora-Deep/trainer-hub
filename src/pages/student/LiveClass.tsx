@@ -346,6 +346,10 @@ export default function StudentLiveClass() {
   // Notes view state
   const [notesRailCollapsed, setNotesRailCollapsed] = useState(false);
   const [notesValue, setNotesValue] = useState("");
+  const [pushedAssessment, setPushedAssessment] = useState<{ kind: "quiz" | "insight question" | "game session"; title: string } | null>({
+    kind: "quiz",
+    title: "VPC Basics — 5 questions · 4 min",
+  });
 
   const sendReaction = (emoji: string) => {
     const id = reactionId.current++;
@@ -487,6 +491,33 @@ export default function StudentLiveClass() {
           This session is being recorded. Recording will be available within 24 hours.
         </div>
       )}
+
+      {/* Trainer-pushed Assessment Banner (VILT only) */}
+      {!isSelfPaced && pushedAssessment && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary/10 border border-primary/30"
+        >
+          <div className="h-9 w-9 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+            <Sparkles className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold">Instructor pushed a {pushedAssessment.kind}</span>
+              <Badge className="bg-primary/15 text-primary text-[10px]">Live</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground truncate">{pushedAssessment.title}</p>
+          </div>
+          <Button size="sm" className="gap-1.5" onClick={() => toast.success(`Starting ${pushedAssessment.kind}…`)}>
+            <Play className="h-3.5 w-3.5" /> Start now
+          </Button>
+          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setPushedAssessment(null)}>
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </motion.div>
+      )}
+
 
       {/* Participants Panel */}
       <AnimatePresence>
