@@ -182,7 +182,7 @@ export default function CourseEditor() {
 
           {!pickerStage && (
             <div className="grid gap-2 mt-4">
-              {Object.entries(lessonTypeMeta).map(([type, meta]) => {
+              {Object.entries(lessonTypeMeta).filter(([t]) => t !== "live-session" && t !== "survey").map(([type, meta]) => {
                 const Icon = meta.icon;
                 const lt = type as LessonType;
                 const handle = () => {
