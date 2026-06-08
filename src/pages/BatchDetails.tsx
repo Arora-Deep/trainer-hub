@@ -45,6 +45,7 @@ import { cn } from "@/lib/utils";
 import { ParticipantsTab } from "@/components/batches/ParticipantsTab";
 import { BatchSettingsTab } from "@/components/batches/BatchSettingsTab";
 import { MaterialsTab } from "@/components/batches/MaterialsTab";
+import { BatchReportsTab } from "@/components/batches/BatchReportsTab";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
@@ -1296,21 +1297,7 @@ export default function BatchDetails() {
 
         {/* Reports Tab */}
         <TabsContent value="reports">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Reports & Analytics</CardTitle>
-              <CardDescription>Detailed insights into batch performance</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
-                  <BarChart3 className="h-8 w-8 text-muted-foreground/50" />
-                </div>
-                <h3 className="text-lg font-semibold">Reports Coming Soon</h3>
-                <p className="text-sm text-muted-foreground max-w-sm mt-1.5">Detailed analytics and reports will be available here.</p>
-              </div>
-            </CardContent>
-          </Card>
+          <BatchReportsTab batch={batch} />
         </TabsContent>
 
         {/* Settings Tab */}

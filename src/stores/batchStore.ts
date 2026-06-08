@@ -516,6 +516,11 @@ const initialBatches: Batch[] = [
       { id: "ann-jv-1", title: "OOP live class moved to 11 AM", content: "Today's OOP live session shifts to 11:00 AM IST.", date: "Jun 8, 2026" },
       { id: "ann-jv-2", title: "Library System assignment released", content: "Due Sunday — submit GitHub link + 3-min demo.", date: "Jun 6, 2026" },
     ],
+    materials: [
+      { id: "mat-jv-1", name: "Java OOP — Walkthrough Video", type: "video", url: "https://www.youtube.com/watch?v=grEKMHGYyns", description: "Recorded walkthrough of inheritance, polymorphism and encapsulation with live coding.", uploadedBy: "Rahul Verma", uploadedAt: "Jun 5, 2026", size: "48 min" },
+      { id: "mat-jv-2", name: "Java Fundamentals — Cheat Sheet", type: "document", url: "data:text/plain;charset=utf-8,JAVA%20FUNDAMENTALS%20CHEAT%20SHEET%0A%0A1.%20Primitive%20Types%3A%20byte%2C%20short%2C%20int%2C%20long%2C%20float%2C%20double%2C%20char%2C%20boolean%0A2.%20Control%20Flow%3A%20if%2Felse%2C%20switch%2C%20for%2C%20while%2C%20do-while%0A3.%20OOP%20Pillars%3A%20Encapsulation%2C%20Inheritance%2C%20Polymorphism%2C%20Abstraction%0A4.%20Collections%3A%20List%2C%20Set%2C%20Map%20(ArrayList%2C%20HashSet%2C%20HashMap)%0A5.%20Exception%20Handling%3A%20try%2Fcatch%2Ffinally%2C%20throws%0A6.%20Streams%3A%20list.stream().filter(...).map(...).collect(...)%0A", description: "Quick-reference text document covering syntax, OOP, collections and streams.", uploadedBy: "Rahul Verma", uploadedAt: "Jun 4, 2026", size: "12 KB" },
+      { id: "mat-jv-3", name: "Library Management — Starter Project (Link)", type: "link", url: "https://github.com/cloudadda/java-library-starter", description: "GitHub starter repo for the OOP capstone assignment.", uploadedBy: "Rahul Verma", uploadedAt: "Jun 6, 2026" },
+    ],
     labConfigs: [],
     vmConfig: {
       id: "vm-10",
@@ -581,6 +586,11 @@ const initialBatches: Batch[] = [
     ],
     announcements: [
       { id: "ann-py-1", title: "Weekly office hours — Saturdays 5 PM", content: "Drop in for async questions and capstone reviews.", date: "May 1, 2026" },
+    ],
+    materials: [
+      { id: "mat-py-1", name: "Python Crash Course — Intro Video", type: "video", url: "https://www.youtube.com/watch?v=rfscVS0vtbw", description: "Full intro to Python covering syntax, data types, control flow and functions.", uploadedBy: "Neha Kapoor", uploadedAt: "May 2, 2026", size: "1h 12m" },
+      { id: "mat-py-2", name: "Python Fundamentals — Notes (TXT)", type: "document", url: "data:text/plain;charset=utf-8,PYTHON%20FUNDAMENTALS%20NOTES%0A%0A1.%20Data%20Types%3A%20int%2C%20float%2C%20str%2C%20bool%2C%20list%2C%20tuple%2C%20dict%2C%20set%0A2.%20Control%20Flow%3A%20if%2Felif%2Felse%2C%20for%2C%20while%2C%20break%2Fcontinue%0A3.%20Functions%3A%20def%2C%20*args%2C%20**kwargs%2C%20lambda%0A4.%20Comprehensions%3A%20%5Bx*2%20for%20x%20in%20range(10)%20if%20x%252%3D%3D0%5D%0A5.%20Modules%3A%20import%20os%2C%20from%20math%20import%20sqrt%0A6.%20File%20I%2FO%3A%20with%20open('f.txt')%20as%20f%3A%20...%0A7.%20Exceptions%3A%20try%2Fexcept%2Ffinally%0A", description: "Concise written notes for the entire course.", uploadedBy: "Neha Kapoor", uploadedAt: "May 1, 2026", size: "10 KB" },
+      { id: "mat-py-3", name: "Hangman Game — Reference", type: "link", url: "https://hangman-timespro.lovable.app", description: "Game-based learning module link for revision.", uploadedBy: "Neha Kapoor", uploadedAt: "May 3, 2026" },
     ],
     labConfigs: [],
     deliveryMode: "self-paced",
