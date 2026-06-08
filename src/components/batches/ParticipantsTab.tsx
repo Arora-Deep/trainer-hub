@@ -128,7 +128,6 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
       const dir = sortDir === "asc" ? 1 : -1;
       switch (sortField) {
         case "name": return a.name.localeCompare(b.name) * dir;
-        case "quizScore": return ((a.quizScore ?? -1) - (b.quizScore ?? -1)) * dir;
         case "attendance": {
           const aRate = a.attendance.total > 0 ? a.attendance.present / a.attendance.total : 0;
           const bRate = b.attendance.total > 0 ? b.attendance.present / b.attendance.total : 0;
