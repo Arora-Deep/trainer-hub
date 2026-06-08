@@ -18,6 +18,7 @@ import { getStudentCourse, type StudentLesson } from "@/data/studentMockData";
 import { useEnrollmentStore } from "@/stores/enrollmentStore";
 import { OnDemandLabPanel } from "@/components/learning/OnDemandLabPanel";
 import { PersistentLabPanel } from "@/components/learning/PersistentLabPanel";
+import { GameLessonPanel } from "@/components/learning/GameLessonPanel";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
