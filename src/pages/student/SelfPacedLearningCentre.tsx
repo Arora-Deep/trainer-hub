@@ -4,15 +4,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import {
   CheckCircle, Lock, Video, FileText, FlaskConical, Award, BookOpen, Play,
   ListChecks, Radio, ShieldCheck, Code2, Flag, MessageSquare, ArrowRight, ArrowLeft,
-  Monitor, Cpu, MemoryStick, Wifi, Timer, Power, RotateCw, Save, Maximize2,
-  Columns2, Square, ExternalLink, Sparkles,
+  Monitor, Wifi, Timer, RotateCw, Save, Maximize2, Square, ExternalLink, Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -32,8 +32,6 @@ const blockLabel: Record<string, string> = {
   "mock-exam": "Mock exam", survey: "Survey",
 };
 
-type ViewMode = "split" | "lab-only";
-
 export default function SelfPacedLearningCentre({ course }: { course: StudentCourse }) {
   const flat = useMemo(
     () => course.chapters.flatMap((ch) => ch.lessons.map((l) => ({ ...l, chapterTitle: ch.title }))),
@@ -48,9 +46,7 @@ export default function SelfPacedLearningCentre({ course }: { course: StudentCou
 
   const persistentLab = course.persistentLab;
   const hasPersistent = !!persistentLab;
-  const [view, setView] = useState<ViewMode>("split");
 
-  // local progress
   const [completedSet, setCompletedSet] = useState<Set<string>>(
     () => new Set(flat.filter((l) => l.completed).map((l) => l.id))
   );
@@ -81,138 +77,110 @@ export default function SelfPacedLearningCentre({ course }: { course: StudentCou
             {course.batch} · {flat.length} lessons · Mentor {course.instructor.replace(/^Mentor:\s*/i, "")}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {hasPersistent && (
-            <Tabs value={view} onValueChange={(v) => setView(v as ViewMode)}>
-              <TabsList className="h-8">
-                <TabsTrigger value="split" className="text-xs gap-1.5"><Columns2 className="h-3.5 w-3.5" /> Lessons + Lab</TabsTrigger>
-                <TabsTrigger value="lab-only" className="text-xs gap-1.5"><Monitor className="h-3.5 w-3.5" /> Lab only</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          )}
-          {course.totalAccessHours && (
-            <Badge variant="outline" className="text-[11px] gap-1">
-              <Timer className="h-3 w-3" /> {Math.max(0, course.totalAccessHours - (course.usedAccessHours ?? 0))}h validity
-            </Badge>
-          )}
-        </div>
+        {course.totalAccessHours && (
+          <Badge variant="outline" className="text-[11px] gap-1">
+            <Timer className="h-3 w-3" /> {Math.max(0, course.totalAccessHours - (course.usedAccessHours ?? 0))}h validity
+          </Badge>
+        )}
       </div>
 
-      {/* Layout */}
-      <div className={cn(
-        "grid gap-4",
-        view === "lab-only" && hasPersistent
-          ? "lg:grid-cols-[200px_1fr]"
-          : hasPersistent
-          ? "lg:grid-cols-[260px_1fr_320px]"
-          : "lg:grid-cols-[260px_1fr]"
-      )}>
-        {/* Curriculum rail */}
-        <Card className="overflow-hidden flex flex-col h-[calc(100vh-13rem)]">
-          <div className="p-3 border-b">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Progress</span>
-              <span className="font-medium">{completedSet.size}/{flat.length}</span>
-            </div>
-            <Progress value={pct} className="h-1 mt-1" />
-          </div>
-          <ScrollArea className="flex-1">
-            <div className="p-2 space-y-3">
-              {course.chapters.map((ch, ci) => (
-                <div key={ch.id}>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground px-2 mb-1">
-                    Ch {ci + 1} · {ch.title}
-                  </p>
-                  {ch.lessons.map((l) => {
-                    const I = icons[l.type] || BookOpen;
-                    const active = l.id === currentId;
-                    const done = completedSet.has(l.id);
-                    return (
-                      <button
-                        key={l.id}
-                        disabled={l.locked}
-                        onClick={() => !l.locked && setCurrentId(l.id)}
-                        className={cn(
-                          "w-full text-left flex items-center gap-2 px-2 py-1.5 rounded text-xs transition-colors",
-                          active ? "bg-primary/10 text-primary font-medium" :
-                          l.locked ? "opacity-50 cursor-not-allowed" : "hover:bg-muted"
-                        )}
-                      >
-                        {done ? <CheckCircle className="h-3.5 w-3.5 text-success shrink-0" /> :
-                         l.locked ? <Lock className="h-3.5 w-3.5 text-muted-foreground shrink-0" /> :
-                         <I className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
-                        {view !== "lab-only" && (
-                          <>
-                            <span className="flex-1 truncate">{l.title}</span>
-                            <span className="text-[10px] text-muted-foreground">{l.duration}</span>
-                          </>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </Card>
-
-        {/* Center: lesson or full VM */}
-        {view === "lab-only" && hasPersistent ? (
-          <CoursePersistentConsole lab={persistentLab!} fullscreen />
-        ) : (
-          <div className="space-y-3 min-w-0">
-            {/* Lesson header */}
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="h-8 w-8 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                  {(() => { const I = icons[lesson.type] || BookOpen; return <I className="h-4 w-4" />; })()}
-                </div>
-                <div className="min-w-0">
-                  <h2 className="text-base font-semibold truncate">{lesson.title}</h2>
-                  <p className="text-[11px] text-muted-foreground">{blockLabel[lesson.type]} · {lesson.duration}</p>
-                </div>
+      {/* Layout: left rail (lab + curriculum) + center lesson */}
+      <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
+        {/* Left rail */}
+        <div className="flex flex-col gap-3 h-[calc(100vh-13rem)]">
+          {hasPersistent && (
+            <PersistentLabRail lab={persistentLab!} />
+          )}
+          <Card className="overflow-hidden flex flex-col flex-1 min-h-0">
+            <div className="p-3 border-b">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Course Content</span>
+                <span className="font-medium">{completedSet.size}/{flat.length}</span>
               </div>
-              {completedSet.has(lesson.id) && (
-                <Badge variant="outline" className="text-success border-success/30 bg-success/5 text-[10px]">
-                  <CheckCircle className="h-3 w-3 mr-1" /> Completed
-                </Badge>
-              )}
+              <Progress value={pct} className="h-1 mt-1" />
             </div>
+            <ScrollArea className="flex-1">
+              <div className="p-2 space-y-3">
+                {course.chapters.map((ch, ci) => (
+                  <div key={ch.id}>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground px-2 mb-1">
+                      Ch {ci + 1} · {ch.title}
+                    </p>
+                    {ch.lessons.map((l) => {
+                      const I = icons[l.type] || BookOpen;
+                      const active = l.id === currentId;
+                      const done = completedSet.has(l.id);
+                      return (
+                        <button
+                          key={l.id}
+                          disabled={l.locked}
+                          onClick={() => !l.locked && setCurrentId(l.id)}
+                          className={cn(
+                            "w-full text-left flex items-center gap-2 px-2 py-1.5 rounded text-xs transition-colors",
+                            active ? "bg-primary/10 text-primary font-medium" :
+                            l.locked ? "opacity-50 cursor-not-allowed" : "hover:bg-muted"
+                          )}
+                        >
+                          {done ? <CheckCircle className="h-3.5 w-3.5 text-success shrink-0" /> :
+                           l.locked ? <Lock className="h-3.5 w-3.5 text-muted-foreground shrink-0" /> :
+                           <I className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+                          <span className="flex-1 truncate">{l.title}</span>
+                          <span className="text-[10px] text-muted-foreground">{l.duration}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </Card>
+        </div>
 
-            {/* Block renderer */}
-            <Card>
-              <CardContent className="p-0">
-                <LessonBlock lesson={lesson} courseId={course.id} />
-              </CardContent>
-            </Card>
+        {/* Center: lesson */}
+        <div className="space-y-3 min-w-0">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="h-8 w-8 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                {(() => { const I = icons[lesson.type] || BookOpen; return <I className="h-4 w-4" />; })()}
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-base font-semibold truncate">{lesson.title}</h2>
+                <p className="text-[11px] text-muted-foreground">{blockLabel[lesson.type]} · {lesson.duration}</p>
+              </div>
+            </div>
+            {completedSet.has(lesson.id) && (
+              <Badge variant="outline" className="text-success border-success/30 bg-success/5 text-[10px]">
+                <CheckCircle className="h-3 w-3 mr-1" /> Completed
+              </Badge>
+            )}
+          </div>
 
-            {/* Footer nav */}
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <Button variant="outline" size="sm" disabled={!prev} onClick={() => prev && setCurrentId(prev.id)} className="gap-1.5">
-                <ArrowLeft className="h-3.5 w-3.5" /> Previous
+          <Card>
+            <CardContent className="p-0">
+              <LessonBlock lesson={lesson} courseId={course.id} />
+            </CardContent>
+          </Card>
+
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <Button variant="outline" size="sm" disabled={!prev} onClick={() => prev && setCurrentId(prev.id)} className="gap-1.5">
+              <ArrowLeft className="h-3.5 w-3.5" /> Previous
+            </Button>
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={markComplete} className="gap-1.5">
+                <CheckCircle className="h-3.5 w-3.5" /> Mark complete
               </Button>
-              <div className="flex items-center gap-2">
-                <Button size="sm" onClick={markComplete} className="gap-1.5">
-                  <CheckCircle className="h-3.5 w-3.5" /> Mark complete
-                </Button>
-                <Button variant="outline" size="sm" disabled={!next} onClick={() => next && setCurrentId(next.id)} className="gap-1.5">
-                  Next <ArrowRight className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" disabled={!next} onClick={() => next && setCurrentId(next.id)} className="gap-1.5">
+                Next <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
             </div>
           </div>
-        )}
-
-        {/* Right rail: persistent course lab */}
-        {hasPersistent && view === "split" && (
-          <CoursePersistentConsole lab={persistentLab!} />
-        )}
+        </div>
       </div>
     </div>
   );
 }
 
-/* ── Lesson block renderer (subset of CoursePlayer) ── */
+/* ── Lesson block renderer (subset of CoursePlayer + inline assessments) ── */
 function LessonBlock({ lesson, courseId }: { lesson: StudentLesson; courseId: string }) {
   const [code, setCode] = useState("# Write your solution here\n");
   const [flag, setFlag] = useState("");
@@ -235,22 +203,13 @@ function LessonBlock({ lesson, courseId }: { lesson: StudentLesson; courseId: st
     );
   }
   if (lesson.type === "quiz" || lesson.type === "mock-exam") {
-    return (
-      <div className="p-8 text-center">
-        <Award className="h-10 w-10 mx-auto text-primary mb-3" />
-        <p className="text-sm text-muted-foreground mb-4">Knowledge check · {lesson.duration}</p>
-        <Button asChild className="gap-1.5"><Link to="/student/assessments"><Play className="h-4 w-4" /> Start quiz</Link></Button>
-      </div>
-    );
+    return <InlineQuiz lesson={lesson} />;
   }
   if (lesson.type === "assignment") {
-    return (
-      <div className="p-8 text-center">
-        <FileText className="h-10 w-10 mx-auto text-primary mb-3" />
-        <p className="text-sm text-muted-foreground mb-4">Assignment · upload your submission</p>
-        <Input type="file" className="max-w-sm mx-auto" />
-      </div>
-    );
+    return <InlineAssignment lesson={lesson} />;
+  }
+  if (lesson.type === "exam") {
+    return <InlineExam lesson={lesson} />;
   }
   if (lesson.type === "code-exercise") {
     return (
@@ -336,15 +295,6 @@ function LessonBlock({ lesson, courseId }: { lesson: StudentLesson; courseId: st
       </div>
     );
   }
-  if (lesson.type === "exam") {
-    return (
-      <div className="p-8 text-center space-y-3">
-        <ShieldCheck className="h-10 w-10 mx-auto text-primary" />
-        <p className="text-sm font-medium">{lesson.title}</p>
-        <Button asChild className="gap-1.5"><Link to="/student/assessments"><Play className="h-4 w-4" /> Begin exam</Link></Button>
-      </div>
-    );
-  }
   return <div className="p-8 text-sm text-muted-foreground text-center">Content type: {lesson.type}</div>;
 }
 
@@ -357,13 +307,139 @@ function Field({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-/* ── Course-wide persistent VM panel ── */
-function CoursePersistentConsole({
+/* ── Inline assessments (no routing to /student/assessments) ── */
+function InlineQuiz({ lesson }: { lesson: StudentLesson }) {
+  const questions = useMemo(
+    () => [
+      { q: "Which service stores objects in AWS?", opts: ["EC2", "S3", "VPC", "IAM"], a: 1 },
+      { q: "What does CIDR stand for?", opts: ["Classless Inter-Domain Routing", "Cloud Internal Data Route", "Common IP Distribution Range", "Centralized IP Domain Resolution"], a: 0 },
+      { q: "Default VPC subnet is in how many AZs?", opts: ["1", "2", "All AZs in region", "3"], a: 2 },
+    ],
+    []
+  );
+  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [submitted, setSubmitted] = useState(false);
+  const score = submitted ? questions.reduce((s, q, i) => s + (answers[i] === q.a ? 1 : 0), 0) : 0;
+
+  if (submitted) {
+    return (
+      <div className="p-6 space-y-4">
+        <div className="text-center">
+          <Award className="h-10 w-10 mx-auto text-primary mb-2" />
+          <p className="text-lg font-semibold">{score} / {questions.length} correct</p>
+          <p className="text-xs text-muted-foreground">{score === questions.length ? "Perfect!" : "Review and try again."}</p>
+        </div>
+        <div className="space-y-3">
+          {questions.map((q, i) => (
+            <div key={i} className="text-sm">
+              <p className="font-medium mb-1">{i + 1}. {q.q}</p>
+              <p className={cn("text-xs", answers[i] === q.a ? "text-success" : "text-destructive")}>
+                Your answer: {q.opts[answers[i] ?? -1] ?? "—"} {answers[i] !== q.a && <span className="text-muted-foreground">· Correct: {q.opts[q.a]}</span>}
+              </p>
+            </div>
+          ))}
+        </div>
+        <Button variant="outline" size="sm" onClick={() => { setSubmitted(false); setAnswers({}); }}>Retake</Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-5">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Award className="h-4 w-4 text-primary" /> {questions.length} questions · {lesson.duration}
+      </div>
+      {questions.map((q, i) => (
+        <div key={i} className="space-y-2">
+          <p className="text-sm font-medium">{i + 1}. {q.q}</p>
+          <RadioGroup value={answers[i]?.toString() ?? ""} onValueChange={(v) => setAnswers((a) => ({ ...a, [i]: Number(v) }))}>
+            {q.opts.map((opt, oi) => (
+              <div key={oi} className="flex items-center gap-2">
+                <RadioGroupItem value={oi.toString()} id={`q${i}-${oi}`} />
+                <Label htmlFor={`q${i}-${oi}`} className="text-sm font-normal cursor-pointer">{opt}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+      ))}
+      <div className="flex justify-end">
+        <Button
+          size="sm"
+          disabled={Object.keys(answers).length < questions.length}
+          onClick={() => { setSubmitted(true); toast.success("Quiz submitted"); }}
+        >
+          Submit quiz
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function InlineAssignment({ lesson }: { lesson: StudentLesson }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [notes, setNotes] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  if (submitted) {
+    return (
+      <div className="p-8 text-center space-y-2">
+        <CheckCircle className="h-10 w-10 mx-auto text-success" />
+        <p className="text-sm font-medium">Assignment submitted</p>
+        <p className="text-xs text-muted-foreground">{file?.name ?? "submission.zip"} · awaiting review</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-4">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Brief</p>
+        <p className="text-sm text-muted-foreground">{lesson.body ?? "Complete the assignment described in your course materials and upload your submission."}</p>
+      </div>
+      <div className="space-y-2">
+        <Label className="text-xs">Upload your file</Label>
+        <Input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-xs">Notes for reviewer (optional)</Label>
+        <Textarea rows={4} placeholder="Anything the reviewer should know..." value={notes} onChange={(e) => setNotes(e.target.value)} />
+      </div>
+      <div className="flex justify-end">
+        <Button size="sm" disabled={!file} onClick={() => { setSubmitted(true); toast.success("Assignment submitted"); }}>
+          Submit assignment
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function InlineExam({ lesson }: { lesson: StudentLesson }) {
+  const [started, setStarted] = useState(false);
+  if (!started) {
+    return (
+      <div className="p-8 text-center space-y-3">
+        <ShieldCheck className="h-10 w-10 mx-auto text-primary" />
+        <div>
+          <p className="text-sm font-medium">{lesson.title}</p>
+          <p className="text-xs text-muted-foreground">Timed exam · {lesson.duration}{lesson.proctored ? " · Proctored" : ""}</p>
+        </div>
+        {lesson.proctored && <Badge variant="outline" className="text-[10px]">Camera + lockdown browser required</Badge>}
+        <div className="pt-2">
+          <Button size="sm" onClick={() => setStarted(true)} className="gap-1.5">
+            <Play className="h-4 w-4" /> Begin exam
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  return <InlineQuiz lesson={lesson} />;
+}
+
+/* ── Persistent VM rail (top-left, like VILT lab console) ── */
+function PersistentLabRail({
   lab,
-  fullscreen = false,
 }: {
   lab: { labId: string; templateName: string; totalHours: number; usedHours: number; ip?: string; status?: "running" | "stopped" };
-  fullscreen?: boolean;
 }) {
   const [status, setStatus] = useState<"running" | "stopped" | "booting">(lab.status ?? "stopped");
   const [used, setUsed] = useState(lab.usedHours);
@@ -380,85 +456,68 @@ function CoursePersistentConsole({
   const stop = () => { setStatus("stopped"); toast.message("VM stopped"); };
 
   return (
-    <Card className={cn("overflow-hidden flex flex-col", fullscreen ? "h-[calc(100vh-13rem)]" : "h-[calc(100vh-13rem)]")}>
-      <div className="flex items-center justify-between border-b px-3 py-2 shrink-0">
-        <div className="flex items-center gap-2">
-          <Monitor className="h-4 w-4 text-success" />
-          <span className="text-sm font-semibold">Course Lab</span>
-          <Badge className={cn(
-            "text-[10px] border-0",
-            status === "running" ? "bg-success/10 text-success" :
-            status === "booting" ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"
-          )}>
-            ● {status === "booting" ? "Booting" : status === "running" ? "Running" : "Stopped"}
-          </Badge>
+    <Card className="overflow-hidden shrink-0">
+      <div className="flex items-center justify-between border-b px-3 py-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <Monitor className="h-4 w-4 text-success shrink-0" />
+          <span className="text-xs font-semibold truncate">Course Lab</span>
         </div>
-        <Badge variant="outline" className="text-[10px] gap-1 font-mono">
-          <Timer className="h-3 w-3" /> {remaining.toFixed(1)}h / {lab.totalHours}h
+        <Badge className={cn(
+          "text-[10px] border-0 shrink-0",
+          status === "running" ? "bg-success/10 text-success" :
+          status === "booting" ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"
+        )}>
+          ● {status === "booting" ? "Booting" : status === "running" ? "Running" : "Stopped"}
         </Badge>
       </div>
 
-      {/* Hours meter */}
-      <div className="px-3 py-2 border-b bg-muted/30">
-        <div className="flex items-center justify-between text-[11px] mb-1">
-          <span className="text-muted-foreground">Lab hours used</span>
-          <span className="font-medium">{used.toFixed(1)}h</span>
-        </div>
-        <Progress value={pct} className="h-1.5" />
-      </div>
-
-      {/* Console */}
-      <div className={cn("bg-foreground/95 text-background p-3 font-mono text-xs flex-1", !fullscreen && "min-h-[260px]")}>
+      {/* Mini console preview */}
+      <div className="bg-foreground/95 text-background p-2.5 font-mono text-[10px] h-[120px] overflow-hidden">
         {status === "booting" ? (
           <div className="flex items-center justify-center h-full text-background/60">
-            <span className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin mr-2" />
-            Booting your VM…
+            <span className="h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin mr-2" />
+            Booting…
           </div>
         ) : status === "running" ? (
-          <div className="space-y-1">
-            <div className="text-success">student@{lab.templateName.toLowerCase().replace(/\s+/g, "-")}:~$ uname -a</div>
-            <div className="text-background/70">Linux course-vm 5.15 #1 SMP x86_64 GNU/Linux</div>
-            <div className="text-success">student@course-vm:~$ jupyter lab --port 8888</div>
-            <div className="text-background/70">[I] Jupyter Server at http://{lab.ip ?? "10.0.0.10"}:8888</div>
-            <div className="text-success">student@course-vm:~$ <span className="animate-pulse">▍</span></div>
+          <div className="space-y-0.5">
+            <div className="text-success">student@vm:~$ uname -a</div>
+            <div className="text-background/70 truncate">Linux 5.15 x86_64</div>
+            <div className="text-success">student@vm:~$ <span className="animate-pulse">▍</span></div>
           </div>
         ) : (
           <div className="flex items-center justify-center h-full text-background/50 text-center">
-            VM is stopped.<br/>Start it to begin working.
+            VM is stopped
           </div>
         )}
       </div>
 
-      {/* Stats */}
-      {status === "running" && (
-        <div className="flex items-center gap-3 px-3 py-1.5 border-t text-[11px] text-muted-foreground bg-muted/20">
-          <span className="flex items-center gap-1"><Cpu className="h-3 w-3" /> 28%</span>
-          <span className="flex items-center gap-1"><MemoryStick className="h-3 w-3" /> 42%</span>
-          <span className="flex items-center gap-1"><Wifi className="h-3 w-3 text-success" /> {lab.ip ?? "10.0.0.10"}</span>
+      {/* Hours meter */}
+      <div className="px-3 py-2 border-t bg-muted/20">
+        <div className="flex items-center justify-between text-[10px] mb-1">
+          <span className="text-muted-foreground flex items-center gap-1"><Timer className="h-2.5 w-2.5" /> Lab hours</span>
+          <span className="font-medium">{remaining.toFixed(1)}h / {lab.totalHours}h</span>
         </div>
-      )}
+        <Progress value={pct} className="h-1" />
+        {status === "running" && lab.ip && (
+          <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1"><Wifi className="h-2.5 w-2.5 text-success" /> {lab.ip}</p>
+        )}
+      </div>
 
       {/* Actions */}
-      <div className="border-t p-2 grid grid-cols-3 gap-1.5 shrink-0">
+      <div className="border-t p-2 grid grid-cols-2 gap-1.5">
         {status === "running" ? (
-          <Button variant="outline" size="sm" onClick={stop} className="gap-1 text-[11px]"><Square className="h-3 w-3" /> Stop</Button>
+          <Button variant="outline" size="sm" onClick={stop} className="h-7 gap-1 text-[10px]"><Square className="h-3 w-3" /> Stop</Button>
         ) : (
-          <Button size="sm" onClick={start} className="gap-1 text-[11px]"><Play className="h-3 w-3" /> Start</Button>
+          <Button size="sm" onClick={start} className="h-7 gap-1 text-[10px]"><Play className="h-3 w-3" /> Start</Button>
         )}
-        <Button variant="outline" size="sm" disabled={status !== "running"} className="gap-1 text-[11px]" onClick={() => { setStatus("booting"); setTimeout(() => setStatus("running"), 1000); }}>
+        <Button variant="outline" size="sm" disabled={status !== "running"} className="h-7 gap-1 text-[10px]" onClick={() => { setStatus("booting"); setTimeout(() => setStatus("running"), 1000); }}>
           <RotateCw className="h-3 w-3" /> Restart
         </Button>
-        <Button variant="outline" size="sm" disabled={status !== "running"} className="gap-1 text-[11px]" onClick={() => toast.success("Snapshot saved")}>
+        <Button variant="outline" size="sm" disabled={status !== "running"} className="h-7 gap-1 text-[10px]" onClick={() => toast.success("Snapshot saved")}>
           <Save className="h-3 w-3" /> Snapshot
         </Button>
-        <Button variant="outline" size="sm" disabled={status !== "running"} className="gap-1 text-[11px]" onClick={() => toast.message("Reset queued")}>
-          <Power className="h-3 w-3" /> Reset
-        </Button>
-        <Button variant="outline" size="sm" disabled={status !== "running"} className="gap-1 text-[11px]" asChild>
+        <Button variant="outline" size="sm" disabled={status !== "running"} className="h-7 gap-1 text-[10px]" asChild>
           <Link to={`/student/labs/${lab.labId}`}><ExternalLink className="h-3 w-3" /> Open</Link>
-        </Button>
-        <Button variant="outline" size="sm" disabled={status !== "running"} className="gap-1 text-[11px]" onClick={() => toast.message("Fullscreen")}>
-          <Maximize2 className="h-3 w-3" /> Full
         </Button>
       </div>
     </Card>
