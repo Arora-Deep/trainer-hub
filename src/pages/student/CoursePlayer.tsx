@@ -432,6 +432,9 @@ export default function CoursePlayer() {
             {lesson.type === "exam" && (
               <InlineExam lesson={lesson} />
             )}
+            {lesson.type === "reasoning" && (
+              <InlineReasoning lesson={lesson} />
+            )}
           </CardContent>
         </Card>
 
