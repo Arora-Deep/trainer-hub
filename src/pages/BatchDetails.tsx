@@ -32,7 +32,9 @@ import {
   ClipboardList, Settings, GraduationCap, TrendingUp, Zap, BarChart3,
   AlertCircle, Globe, Building2, MoreVertical, RotateCcw, Power, PowerOff,
   Camera, Trash2, Star, Eye, EyeOff, Clipboard, Video, FileText, Award, ChevronRight, Edit,
+  Gamepad2, Trophy, Crown, Medal,
 } from "lucide-react";
+import { getLeaderboardsForBatch, formatLeaderboardTime } from "@/data/gameLeaderboards";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBatchStore } from "@/stores/batchStore";
 import { useCourseStore, getCourseAssessments, isAssessmentLesson, type Lesson } from "@/stores/courseStore";
@@ -231,6 +233,7 @@ export default function BatchDetails() {
               { value: "materials", label: "Material", icon: FileText },
               { value: "announcements", label: "Announcements", icon: Megaphone, count: batch.announcements.length },
               { value: "assessments", label: "Assessments", icon: ClipboardList },
+              { value: "games", label: "Games", icon: Gamepad2 },
               { value: "reports", label: "Reports", icon: TrendingUp },
               { value: "settings", label: "Settings", icon: Settings },
             ].map((tab) => (
