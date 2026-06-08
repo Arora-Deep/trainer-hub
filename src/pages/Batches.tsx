@@ -106,61 +106,50 @@ export default function Batches() {
       />
 
       {/* Enhanced Summary Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Total Batches", value: batches.length, icon: GraduationCap, desc: `${totalStudents} total students`, key: "all", tone: "primary" as const },
-          { label: "Live Now", value: filterCounts.live, icon: Zap, live: true, desc: "Currently running", key: "live", tone: "success" as const },
-          { label: "Upcoming", value: filterCounts.upcoming, icon: Calendar, desc: "Scheduled to start", key: "upcoming", tone: "warning" as const },
-          { label: "Completed", value: filterCounts.completed, icon: TrendingUp, desc: "Successfully finished", key: "completed", tone: "muted" as const },
-        ].map((stat, i) => {
-          const isActive = filter === stat.key;
-          return (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05, duration: 0.3 }}
+          { label: "Total Batches", value: batches.length, icon: GraduationCap, desc: `${totalStudents} total students` },
+          { label: "Live Now", value: filterCounts.live, icon: Zap, live: true, desc: "Currently running" },
+          { label: "Upcoming", value: filterCounts.upcoming, icon: Calendar, desc: "Scheduled to start" },
+          { label: "Completed", value: filterCounts.completed, icon: TrendingUp, desc: "Successfully finished" },
+        ].map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05, duration: 0.3 }}
+          >
+            <Card
+              className={cn(
+                "cursor-pointer transition-all hover:border-primary/20 group",
+                filter === (i === 0 ? "all" : i === 1 ? "live" : i === 2 ? "upcoming" : "completed") && "border-primary/30 bg-primary/[0.02]"
+              )}
+              onClick={() => setFilter(i === 0 ? "all" : i === 1 ? "live" : i === 2 ? "upcoming" : "completed")}
             >
-              <Card
-                className={cn(
-                  "cursor-pointer group transition-all duration-300 hover:shadow-md hover:border-primary/20",
-                  isActive && "border-primary/40 shadow-sm ring-1 ring-primary/10"
-                )}
-                onClick={() => setFilter(stat.key)}
-              >
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div
-                      className={cn(
-                        "flex h-9 w-9 items-center justify-center rounded-xl transition-colors",
-                        stat.tone === "primary" && "bg-primary/10 text-primary",
-                        stat.tone === "success" && "bg-success/10 text-success",
-                        stat.tone === "warning" && "bg-warning/10 text-warning",
-                        stat.tone === "muted" && "bg-muted text-muted-foreground"
-                      )}
-                    >
-                      <stat.icon className="h-4 w-4" />
-                    </div>
-                    {stat.live && stat.value > 0 && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
-                        <span className="relative flex h-1.5 w-1.5">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-3xl font-bold tabular-nums tracking-tight">{stat.value}</p>
+                      {stat.live && stat.value > 0 && (
+                        <span className="relative flex h-2 w-2">
                           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
-                          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
                         </span>
-                        LIVE
-                      </span>
-                    )}
+                      )}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">{stat.desc}</p>
                   </div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{stat.label}</p>
-                  <p className="text-[32px] font-bold tabular-nums tracking-tight leading-none mt-2">{stat.value}</p>
-                  <p className="text-[11px] text-muted-foreground mt-2">{stat.desc}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
+                  <div className="p-2.5 rounded-xl bg-muted group-hover:bg-primary/10 transition-colors">
+                    <stat.icon className="h-4.5 w-4.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
       </div>
-
 
       {/* Toolbar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -339,30 +328,21 @@ export default function Batches() {
                   transition={{ delay: i * 0.03, duration: 0.25 }}
                 >
                   <Card
-                    className="cursor-pointer group hover:border-primary/30 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden relative"
+                    className="cursor-pointer group hover:border-primary/20 transition-all duration-200"
                     onClick={() => navigate(`/batches/${batch.id}`)}
                   >
-                    {/* Top status accent line */}
-                    <div
-                      className={cn(
-                        "absolute top-0 left-0 right-0 h-0.5",
-                        batch.status === "live" && "bg-success",
-                        batch.status === "upcoming" && "bg-primary",
-                        batch.status === "completed" && "bg-muted-foreground/30"
-                      )}
-                    />
                     <CardContent className="p-5">
                       {/* Header */}
-                      <div className="flex items-start justify-between mb-5 gap-3">
-                        <div className="flex items-start gap-3 min-w-0 flex-1">
-                          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start gap-3">
+                          <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
                             <GraduationCap className="h-5 w-5 text-primary" />
                           </div>
                           <div className="min-w-0">
-                            <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate inline-flex items-center gap-1">
+                            <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
                               {batch.name}
                             </h3>
-                            <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{batch.courseName || "No course assigned"}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{batch.courseName || "No course assigned"}</p>
                           </div>
                         </div>
                         <StatusBadge
@@ -375,43 +355,35 @@ export default function Batches() {
 
                       {/* Meta Grid */}
                       <div className="grid grid-cols-2 gap-2 mb-4">
-                        <div className="rounded-xl border border-border/60 px-3 py-2.5">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Students</p>
-                          <p className="text-base font-bold tabular-nums mt-1">
-                            {batch.participants.length}
-                            <span className="text-xs font-normal text-muted-foreground">/{batch.seatCount}</span>
-                          </p>
+                        <div className="rounded-lg bg-muted/40 px-3 py-2">
+                          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Students</p>
+                          <p className="text-sm font-bold tabular-nums mt-0.5">{batch.participants.length}<span className="text-xs font-normal text-muted-foreground">/{batch.seatCount}</span></p>
                         </div>
-                        <div className="rounded-xl border border-border/60 px-3 py-2.5">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Medium</p>
-                          <p className="text-sm font-semibold capitalize mt-1 flex items-center gap-1.5">
-                            {mediumIcons[batch.medium]} {batch.medium}
-                          </p>
+                        <div className="rounded-lg bg-muted/40 px-3 py-2">
+                          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Medium</p>
+                          <p className="text-sm font-semibold capitalize mt-0.5 flex items-center gap-1">{mediumIcons[batch.medium]} {batch.medium}</p>
                         </div>
                       </div>
 
                       {/* Footer */}
-                      <div className="flex items-center justify-between pt-3 border-t border-border/60">
-                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <Calendar className="h-3 w-3" />
                           <span className="tabular-nums">{formatDateShort(batch.startDate)} — {formatDateShort(batch.endDate)}</span>
                         </div>
-                        <div className="flex items-center -space-x-1.5">
-                          {batch.instructors.slice(0, 3).map((inst, idx) => (
-                            <Avatar key={idx} className="h-6 w-6 border-2 border-background ring-0">
-                              <AvatarFallback className="text-[9px] bg-muted font-semibold">{inst.charAt(0)}</AvatarFallback>
+                        <div className="flex items-center gap-1.5">
+                          {batch.instructors.slice(0, 2).map((inst, idx) => (
+                            <Avatar key={idx} className="h-5 w-5 border border-background">
+                              <AvatarFallback className="text-[8px] bg-muted">{inst.charAt(0)}</AvatarFallback>
                             </Avatar>
                           ))}
-                          {batch.instructors.length > 3 && (
-                            <div className="h-6 w-6 rounded-full bg-muted border-2 border-background flex items-center justify-center">
-                              <span className="text-[9px] text-muted-foreground font-semibold">+{batch.instructors.length - 3}</span>
-                            </div>
+                          {batch.instructors.length > 2 && (
+                            <span className="text-[10px] text-muted-foreground">+{batch.instructors.length - 2}</span>
                           )}
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-
                 </motion.div>
               ))}
             </div>
