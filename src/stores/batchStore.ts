@@ -697,6 +697,22 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     }));
   },
 
+  addMaterial: (batchId, material) => {
+    const newMaterial: Material = {
+      ...material, id: `mat-${Date.now()}`,
+      uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    };
+    set((state) => ({
+      batches: state.batches.map((b) => b.id === batchId ? { ...b, materials: [newMaterial, ...(b.materials ?? [])] } : b),
+    }));
+  },
+
+  removeMaterial: (batchId, materialId) => {
+    set((state) => ({
+      batches: state.batches.map((b) => b.id === batchId ? { ...b, materials: (b.materials ?? []).filter((m) => m.id !== materialId) } : b),
+    }));
+  },
+
   setCourse: (batchId, courseId, courseName) => {
     set((state) => ({ batches: state.batches.map((b) => b.id === batchId ? { ...b, courseId, courseName } : b) }));
   },
