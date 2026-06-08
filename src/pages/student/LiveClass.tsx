@@ -892,6 +892,9 @@ export default function StudentLiveClass() {
           </Card>
         </div>
       )}
+
+      {/* ===== MATERIALS VIEW ===== */}
+      {viewMode === "materials" && <MaterialsPanel />}
     </div>
   );
 }
