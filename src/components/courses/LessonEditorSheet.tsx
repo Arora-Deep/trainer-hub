@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Video, FileText, HelpCircle, ClipboardList, Code2, FlaskConical, Flag, GraduationCap,
-  Upload, Link2, Library, Plus, X, FileUp, Trash2, Radio, ListChecks, MessageSquareQuote, Gamepad2,
+  Upload, Link2, Library, Plus, X, FileUp, Trash2, Radio, ListChecks, MessageSquareQuote, Gamepad2, Brain,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TemplatePickerDropdown } from "@/components/labs/TemplatePickerDropdown";
@@ -37,7 +37,11 @@ const typeMeta: Record<LessonType, { label: string; icon: any; hint: string }> =
   "mock-exam": { label: "Mock Exam", icon: GraduationCap, hint: "Practice exam — same shape as the real one, but ungraded." },
   survey: { label: "Survey", icon: MessageSquareQuote, hint: "Collect feedback from learners." },
   "game-based-learning": { label: "Game-based Learning", icon: Gamepad2, hint: "Gamified, interactive challenge — leaderboard, points and rounds." },
+  reasoning: { label: "AI Reasoning", icon: Brain, hint: "Open-ended question scored by AI on concept accuracy, reasoning quality, depth and clarity." },
 };
+
+// Lesson types hidden from the type picker (kept in the union for back-compat with legacy content).
+const HIDDEN_TYPES = new Set<LessonType>(["live-session", "survey"]);
 
 interface Props {
   open: boolean;
