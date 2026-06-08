@@ -49,6 +49,24 @@ interface TestResult {
   statusId?: number;
 }
 
+// Mock student submissions — frontend demo only
+const mockSubmissions = [
+  { id: "s1", student: "Aarav Sharma", avatar: "AS", status: "accepted" as const, score: 100, passed: 3, total: 3, language: "Python", time: 0.12, memoryKB: 2832, submittedAt: "2h ago", code: "def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen: return [seen[target - n], i]\n        seen[n] = i" },
+  { id: "s2", student: "Priya Menon", avatar: "PM", status: "wrong_answer" as const, score: 50, passed: 1, total: 3, language: "Python", time: 0.31, memoryKB: 3104, submittedAt: "3h ago", code: "def two_sum(nums, target):\n    for i in range(len(nums)):\n        for j in range(i+1, len(nums)):\n            if nums[i]+nums[j]==target: return [i,j]" },
+  { id: "s3", student: "Rahul Verma", avatar: "RV", status: "accepted" as const, score: 100, passed: 3, total: 3, language: "Python", time: 0.09, memoryKB: 2710, submittedAt: "5h ago", code: "def two_sum(nums, target):\n    d = {}\n    for i,n in enumerate(nums):\n        c = target - n\n        if c in d: return [d[c], i]\n        d[n] = i" },
+  { id: "s4", student: "Ananya Iyer", avatar: "AI", status: "time_limit" as const, score: 25, passed: 0, total: 3, language: "Python", time: 2.05, memoryKB: 4200, submittedAt: "1d ago", code: "# brute force triple loop\nfor i in nums:\n  for j in nums:\n    for k in nums: ..." },
+  { id: "s5", student: "Kabir Khanna", avatar: "KK", status: "runtime_error" as const, score: 0, passed: 0, total: 3, language: "Python", time: 0.04, memoryKB: 2440, submittedAt: "1d ago", code: "def two_sum(nums, target):\n    return nums[0] / 0" },
+  { id: "s6", student: "Meera Joshi", avatar: "MJ", status: "accepted" as const, score: 100, passed: 3, total: 3, language: "Python", time: 0.11, memoryKB: 2790, submittedAt: "2d ago", code: "def two_sum(nums, target):\n    seen = {}\n    for i,n in enumerate(nums):\n        if (target-n) in seen: return [seen[target-n], i]\n        seen[n]=i" },
+];
+
+const subStatusMeta: Record<string, { label: string; cls: string }> = {
+  accepted: { label: "Accepted", cls: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
+  wrong_answer: { label: "Wrong Answer", cls: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
+  time_limit: { label: "Time Limit", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+  runtime_error: { label: "Runtime Error", cls: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
+  compilation_error: { label: "Compile Error", cls: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
+};
+
 const ExerciseDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
