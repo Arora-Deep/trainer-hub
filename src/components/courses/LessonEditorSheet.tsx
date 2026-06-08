@@ -309,6 +309,37 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
               </div>
             )}
 
+            {form.type === "reasoning" && (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Reasoning type</Label>
+                  <Select value={form.reasoningType ?? "explain-choice"} onValueChange={(v) => setField("reasoningType", v as any)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="explain-choice">Explain a choice</SelectItem>
+                      <SelectItem value="compare-options">Compare options</SelectItem>
+                      <SelectItem value="improve-solution">Improve a solution</SelectItem>
+                      <SelectItem value="root-cause">Root cause analysis</SelectItem>
+                      <SelectItem value="scenario-response">Scenario response</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Question / prompt</Label>
+                  <Textarea rows={3} value={form.reasoningPrompt ?? ""} onChange={(e) => setField("reasoningPrompt", e.target.value)} placeholder="Ask a question that requires reasoning, not recall…" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Model answer (used by AI as the reference)</Label>
+                  <Textarea rows={4} value={form.reasoningModelAnswer ?? ""} onChange={(e) => setField("reasoningModelAnswer", e.target.value)} placeholder="A strong, complete answer the AI will compare student responses against." />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Evaluation rubric (one concept per line)</Label>
+                  <Textarea rows={4} value={form.reasoningRubric ?? ""} onChange={(e) => setField("reasoningRubric", e.target.value)} placeholder={"e.g.\nunknown iteration count\nsentinel / exit condition\ncompare for vs while\ninfinite loop risk"} />
+                  <p className="text-[11px] text-muted-foreground">Each line is a key concept the AI looks for. Students are scored on Concept Accuracy, Reasoning Quality, Alternative Analysis, Technical Depth, and Clarity (0–10 each).</p>
+                </div>
+              </div>
+            )}
+
             {form.type === "code-exercise" && (
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
