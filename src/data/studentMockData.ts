@@ -835,8 +835,6 @@ try {
               { id: "t3", input: "(hidden)", expectedOutput: "(hidden)", hidden: true, weight: 40 },
             ],
           },
-          { id: "l-11-8", title: "Insight: What confuses you most?", type: "survey", duration: "3m", completed: false, locked: false,
-            body: "Async insight question — your mentor reviews responses weekly." },
         ],
       },
       {
