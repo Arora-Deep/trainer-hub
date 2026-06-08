@@ -58,7 +58,7 @@ export default function ResetPassword() {
       <Card className="border-warning/30 bg-warning/5">
         <CardContent className="pt-4 flex gap-2 items-start text-xs">
           <ShieldAlert className="h-4 w-4 text-warning shrink-0 mt-0.5" />
-          <p className="text-muted-foreground">For security, CloudAdda admins never see or create passwords. Choose a delivery method below — the user receives a one-time link or code and sets their own password.</p>
+          <p className="text-muted-foreground">For security, Platform admins never see or create passwords. Choose a delivery method below — the user receives a one-time link or code and sets their own password.</p>
         </CardContent>
       </Card>
 

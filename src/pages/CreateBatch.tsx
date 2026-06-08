@@ -107,7 +107,7 @@ export default function CreateBatch() {
 
   // Step 4: Approval
   const [approvalRequested, setApprovalRequested] = useState(false);
-  const [cloudAddaApproval, setCloudAddaApproval] = useState<"pending" | "approved" | "rejected">("pending");
+  const [platformApproval, setPlatformApproval] = useState<"pending" | "approved" | "rejected">("pending");
   const [companyAdminApproval, setCompanyAdminApproval] = useState<"pending" | "approved" | "rejected">("pending");
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -162,8 +162,8 @@ export default function CreateBatch() {
     setApprovalRequested(true);
     toast({ title: "Approval Requested", description: "Your batch request has been sent for approval." });
     setTimeout(() => {
-      setCloudAddaApproval("approved");
-      toast({ title: "CloudAdda Approved", description: "CloudAdda has approved your batch request." });
+      setPlatformApproval("approved");
+      toast({ title: "Platform Approved", description: "Platform has approved your batch request." });
     }, 2000);
     setTimeout(() => {
       setCompanyAdminApproval("approved");
@@ -171,7 +171,7 @@ export default function CreateBatch() {
     }, 4000);
   };
 
-  const isApproved = cloudAddaApproval === "approved" && companyAdminApproval === "approved";
+  const isApproved = platformApproval === "approved" && companyAdminApproval === "approved";
 
   const canProceed = () => {
     switch (currentStep) {
@@ -213,7 +213,7 @@ export default function CreateBatch() {
           support: pricing.support,
           total: pricing.total,
         },
-        approval: { cloudAdda: cloudAddaApproval, companyAdmin: companyAdminApproval, requested: approvalRequested },
+        approval: { platform: platformApproval, companyAdmin: companyAdminApproval, requested: approvalRequested },
         createdAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
       };
     }
@@ -928,10 +928,10 @@ export default function CreateBatch() {
                   <CardContent className="space-y-3">
                     <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
                       <div className="flex items-center gap-2">
-                        <Server className={cn("h-4 w-4", cloudAddaApproval === "approved" ? "text-primary" : "text-muted-foreground")} />
-                        <span className="font-medium text-sm">CloudAdda</span>
+                        <Server className={cn("h-4 w-4", platformApproval === "approved" ? "text-primary" : "text-muted-foreground")} />
+                        <span className="font-medium text-sm">Platform</span>
                       </div>
-                      {getApprovalStatusBadge(cloudAddaApproval)}
+                      {getApprovalStatusBadge(platformApproval)}
                     </div>
                     <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
                       <div className="flex items-center gap-2">

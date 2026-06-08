@@ -39,7 +39,7 @@ interface NavConfig {
 }
 
 const adminNav: NavConfig = {
-  label: "CloudAdda",
+  label: "Platform",
   icon: Shield,
   groups: [
     { label: "Dashboard", icon: Home, items: [
@@ -167,7 +167,7 @@ const studentNav: NavConfig = {
 };
 
 const navConfigs: Record<Role, NavConfig> = {
-  cloudadda: adminNav,
+  platform: adminNav,
   trainer: trainerNav,
   student: studentNav,
 };
@@ -189,7 +189,7 @@ export function AppSidebar() {
 
   // Dynamic badge counts from notification store for admin
   const getBadgeCount = (path: string): number => {
-    if (role !== "cloudadda") return 0;
+    if (role !== "platform") return 0;
     if (path === "/admin/batches/requests") return notifCounts.requests;
     if (path === "/admin/support/tickets") return notifCounts.tickets;
     if (path === "/admin/alerts") return notifCounts.alerts;

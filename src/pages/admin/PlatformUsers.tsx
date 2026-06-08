@@ -23,14 +23,14 @@ type User = {
 };
 
 const seed: User[] = [
-  { id: "u1", name: "Super Admin", email: "admin@cloudadda.com", role: "CEO", department: "C-Suite", lastLogin: "5 min ago", status: "active", twoFA: true },
-  { id: "u2", name: "Ravi Menon", email: "ravi@cloudadda.com", role: "Support L2", department: "Support", lastLogin: "30 min ago", status: "active", twoFA: true },
-  { id: "u3", name: "Anita Rao", email: "anita@cloudadda.com", role: "Finance Lead", department: "Finance", lastLogin: "2 hours ago", status: "active", twoFA: false },
-  { id: "u4", name: "Devansh K.", email: "devansh@cloudadda.com", role: "Head of Infra", department: "IT / Infra", lastLogin: "1 hour ago", status: "active", twoFA: true },
-  { id: "u5", name: "Priya Shah", email: "priya@cloudadda.com", role: "Sales Manager", department: "Sales", lastLogin: "Yesterday", status: "active", twoFA: false },
-  { id: "u6", name: "Karan Doshi", email: "karan@cloudadda.com", role: "Customer Success", department: "Core Team", lastLogin: "10 min ago", status: "active", twoFA: true },
-  { id: "u7", name: "Old Admin", email: "old@cloudadda.com", role: "Auditor", department: "Core Team", lastLogin: "3 months ago", status: "disabled", twoFA: false },
-  { id: "u8", name: "Neha Iyer", email: "neha@cloudadda.com", role: "Support L1", department: "Support", lastLogin: "—", status: "invited", twoFA: false },
+  { id: "u1", name: "Super Admin", email: "admin@platform.com", role: "CEO", department: "C-Suite", lastLogin: "5 min ago", status: "active", twoFA: true },
+  { id: "u2", name: "Ravi Menon", email: "ravi@platform.com", role: "Support L2", department: "Support", lastLogin: "30 min ago", status: "active", twoFA: true },
+  { id: "u3", name: "Anita Rao", email: "anita@platform.com", role: "Finance Lead", department: "Finance", lastLogin: "2 hours ago", status: "active", twoFA: false },
+  { id: "u4", name: "Devansh K.", email: "devansh@platform.com", role: "Head of Infra", department: "IT / Infra", lastLogin: "1 hour ago", status: "active", twoFA: true },
+  { id: "u5", name: "Priya Shah", email: "priya@platform.com", role: "Sales Manager", department: "Sales", lastLogin: "Yesterday", status: "active", twoFA: false },
+  { id: "u6", name: "Karan Doshi", email: "karan@platform.com", role: "Customer Success", department: "Core Team", lastLogin: "10 min ago", status: "active", twoFA: true },
+  { id: "u7", name: "Old Admin", email: "old@platform.com", role: "Auditor", department: "Core Team", lastLogin: "3 months ago", status: "disabled", twoFA: false },
+  { id: "u8", name: "Neha Iyer", email: "neha@platform.com", role: "Support L1", department: "Support", lastLogin: "—", status: "invited", twoFA: false },
 ];
 
 const departments = ["C-Suite", "IT / Infra", "Core Team", "Sales", "Finance", "Support"];
@@ -79,7 +79,7 @@ export default function PlatformUsers() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Platform Users</h1>
-          <p className="text-muted-foreground text-sm mt-1">CloudAdda admin & staff accounts ({users.length})</p>
+          <p className="text-muted-foreground text-sm mt-1">Platform admin & staff accounts ({users.length})</p>
         </div>
         <Button className="gap-2" onClick={() => setInviteOpen(true)}><Plus className="h-4 w-4" /> Invite User</Button>
       </div>
@@ -167,7 +167,7 @@ export default function PlatformUsers() {
             <div className="space-y-1.5"><Label className="text-xs">Full name</Label>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Rohan Mehta" /></div>
             <div className="space-y-1.5"><Label className="text-xs">Work email</Label>
-              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="name@cloudadda.com" /></div>
+              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="name@platform.com" /></div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5"><Label className="text-xs">Department</Label>
                 <Select value={form.department} onValueChange={(v) => setForm({ ...form, department: v })}>

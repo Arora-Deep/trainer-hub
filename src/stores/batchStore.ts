@@ -85,7 +85,7 @@ export interface VMConfig {
     total: number;
   };
   approval: {
-    cloudAdda: "pending" | "approved" | "rejected";
+    platform: "pending" | "approved" | "rejected";
     companyAdmin: "pending" | "approved" | "rejected";
     requested: boolean;
   };
@@ -268,7 +268,7 @@ const initialBatches: Batch[] = [
         status: "configured",
         ipAddress: "10.0.1.100",
         provisionedAt: "2024-01-14T10:00:00Z",
-        consoleUrl: "https://console.cloudadda.io/vm/vm-adm-1",
+        consoleUrl: "https://console.platform.io/vm/vm-adm-1",
         credentials: { username: "root", password: "Tr@in3r!2024", sshPort: 22 },
       },
       snapshots: [
@@ -286,7 +286,7 @@ const initialBatches: Batch[] = [
       ],
       cloneStatus: "cloned",
       pricing: { compute: 3125, storage: 312.5, network: 125, support: 60, total: 3622.5 },
-      approval: { cloudAdda: "approved", companyAdmin: "approved", requested: true },
+      approval: { platform: "approved", companyAdmin: "approved", requested: true },
       createdAt: "Jan 10, 2024",
     },
     labConfigs: [],
@@ -519,7 +519,7 @@ const initialBatches: Batch[] = [
     materials: [
       { id: "mat-jv-1", name: "Java OOP — Walkthrough Video", type: "video", url: "https://www.youtube.com/watch?v=grEKMHGYyns", description: "Recorded walkthrough of inheritance, polymorphism and encapsulation with live coding.", uploadedBy: "Rahul Verma", uploadedAt: "Jun 5, 2026", size: "48 min" },
       { id: "mat-jv-2", name: "Java Fundamentals — Cheat Sheet", type: "document", url: "data:text/plain;charset=utf-8,JAVA%20FUNDAMENTALS%20CHEAT%20SHEET%0A%0A1.%20Primitive%20Types%3A%20byte%2C%20short%2C%20int%2C%20long%2C%20float%2C%20double%2C%20char%2C%20boolean%0A2.%20Control%20Flow%3A%20if%2Felse%2C%20switch%2C%20for%2C%20while%2C%20do-while%0A3.%20OOP%20Pillars%3A%20Encapsulation%2C%20Inheritance%2C%20Polymorphism%2C%20Abstraction%0A4.%20Collections%3A%20List%2C%20Set%2C%20Map%20(ArrayList%2C%20HashSet%2C%20HashMap)%0A5.%20Exception%20Handling%3A%20try%2Fcatch%2Ffinally%2C%20throws%0A6.%20Streams%3A%20list.stream().filter(...).map(...).collect(...)%0A", description: "Quick-reference text document covering syntax, OOP, collections and streams.", uploadedBy: "Rahul Verma", uploadedAt: "Jun 4, 2026", size: "12 KB" },
-      { id: "mat-jv-3", name: "Library Management — Starter Project (Link)", type: "link", url: "https://github.com/cloudadda/java-library-starter", description: "GitHub starter repo for the OOP capstone assignment.", uploadedBy: "Rahul Verma", uploadedAt: "Jun 6, 2026" },
+      { id: "mat-jv-3", name: "Library Management — Starter Project (Link)", type: "link", url: "https://github.com/platform/java-library-starter", description: "GitHub starter repo for the OOP capstone assignment.", uploadedBy: "Rahul Verma", uploadedAt: "Jun 6, 2026" },
     ],
     labConfigs: [],
     vmConfig: {
@@ -532,7 +532,7 @@ const initialBatches: Batch[] = [
         status: "configured",
         ipAddress: "10.0.10.100",
         provisionedAt: "2026-05-28T08:00:00Z",
-        consoleUrl: "https://console.cloudadda.io/vm/vm-adm-10",
+        consoleUrl: "https://console.platform.io/vm/vm-adm-10",
         credentials: { username: "trainer", password: "Tr@iner!Java24", sshPort: 22 },
       },
       snapshots: [
@@ -560,7 +560,7 @@ const initialBatches: Batch[] = [
       ],
       cloneStatus: "cloned",
       pricing: { compute: 4200, storage: 420, network: 160, support: 80, total: 4860 },
-      approval: { cloudAdda: "approved", companyAdmin: "approved", requested: true },
+      approval: { platform: "approved", companyAdmin: "approved", requested: true },
       createdAt: "May 28, 2026",
     },
   },
@@ -749,7 +749,7 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
                     status: "running" as const,
                     ipAddress: `10.0.1.${100 + Math.floor(Math.random() * 50)}`,
                     provisionedAt: new Date().toISOString(),
-                    consoleUrl: `https://console.cloudadda.io/vm/vm-adm-${batchId}`,
+                    consoleUrl: `https://console.platform.io/vm/vm-adm-${batchId}`,
                     credentials: { username: "root", password: `Tr@in${Math.random().toString(36).slice(2, 8)}!`, sshPort: 22 },
                   },
                 },

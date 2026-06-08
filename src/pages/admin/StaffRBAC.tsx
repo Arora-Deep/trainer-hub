@@ -14,11 +14,11 @@ const roles = [
 ];
 
 const users = [
-  { name: "Rahul Verma", email: "rahul@cloudadda.com", role: "Super Admin", lastLogin: "2 min ago", mfa: true },
-  { name: "Sneha Gupta", email: "sneha@cloudadda.com", role: "Ops Admin", lastLogin: "15 min ago", mfa: true },
-  { name: "Arun Kumar", email: "arun@cloudadda.com", role: "Support Agent", lastLogin: "1 hour ago", mfa: true },
-  { name: "Meera Patel", email: "meera@cloudadda.com", role: "Finance Admin", lastLogin: "3 hours ago", mfa: false },
-  { name: "Vikram Singh", email: "vikram@cloudadda.com", role: "Sales Admin", lastLogin: "1 day ago", mfa: true },
+  { name: "Rahul Verma", email: "rahul@platform.com", role: "Super Admin", lastLogin: "2 min ago", mfa: true },
+  { name: "Sneha Gupta", email: "sneha@platform.com", role: "Ops Admin", lastLogin: "15 min ago", mfa: true },
+  { name: "Arun Kumar", email: "arun@platform.com", role: "Support Agent", lastLogin: "1 hour ago", mfa: true },
+  { name: "Meera Patel", email: "meera@platform.com", role: "Finance Admin", lastLogin: "3 hours ago", mfa: false },
+  { name: "Vikram Singh", email: "vikram@platform.com", role: "Sales Admin", lastLogin: "1 day ago", mfa: true },
 ];
 
 export default function StaffRBAC() {
