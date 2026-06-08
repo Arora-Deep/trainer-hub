@@ -694,6 +694,26 @@ export const studentLabs: StudentLab[] = [
     batch: "AWS Batch 12", batchId: "1", deliveryMode: "live", sshPort: 22, username: "student",
     password: "Tf@2026", lastCommands: [], snapshots: [],
   },
+  // ── DEMO labs ──
+  {
+    id: "lab-10", name: "Java Dev Sandbox", template: "Java Dev Sandbox (JDK 21 + Maven)", os: "linux", status: "running",
+    timeRemaining: "1h 30m", ip: "10.0.10.18", cpu: 28, ram: 40, storage: 25, uptime: "35m",
+    batch: "Java Fundamentals — Cohort 24", batchId: "10", deliveryMode: "live",
+    accessKind: "lesson-time-limited", courseId: "10",
+    sshPort: 22, username: "student", password: "Jv@cohort24",
+    lastCommands: ["$ javac Main.java", "$ java Main", "$ mvn -q test"],
+    snapshots: [{ id: "s1", name: "Fresh JDK 21", createdAt: "May 10", size: "3.8 GB" }],
+  },
+  {
+    id: "lab-11", name: "Python 3.12 Workstation", template: "Python 3.12 Workstation", os: "linux", status: "running",
+    timeRemaining: "Always-on · 25.5h left", ip: "10.0.11.42", cpu: 22, ram: 38, storage: 22, uptime: "1h 10m",
+    batch: "Python Fundamentals — Self-Paced", batchId: "11", deliveryMode: "self-paced",
+    accessKind: "course-persistent", courseId: "11",
+    sshPort: 22, username: "student", password: "Py@fund2026",
+    lastCommands: ["$ python --version", "$ jupyter lab --port 8888", "$ pip install requests"],
+    totalAccessHours: 30, usedAccessHours: 4.5,
+    snapshots: [{ id: "s1", name: "Py 3.12 + Jupyter", createdAt: "May 1", size: "3.1 GB" }],
+  },
 ];
 
 export const getStudentLab = (id: string) => studentLabs.find((l) => l.id === id);
