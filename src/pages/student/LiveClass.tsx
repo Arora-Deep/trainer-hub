@@ -17,7 +17,7 @@ import {
   ChevronDown, ChevronUp, Circle, LayoutGrid, Columns2,
   PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen,
   RotateCw, Power, Save, StickyNote, Mic, Camera, Share2,
-  Download, Link2, Image as ImageIcon, X, CheckCircle, Lock, Sparkles,
+  Download, Link2, Image as ImageIcon, X, CheckCircle, Lock, Sparkles, ExternalLink,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
