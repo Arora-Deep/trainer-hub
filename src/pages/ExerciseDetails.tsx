@@ -178,6 +178,10 @@ const ExerciseDetails = () => {
                       </Badge>
                     )}
                   </TabsTrigger>
+                  <TabsTrigger value="submissions">
+                    Submissions
+                    <Badge variant="secondary" className="ml-2">{mockSubmissions.length}</Badge>
+                  </TabsTrigger>
                 </TabsList>
                 <div className="flex items-center gap-2">
                   <Badge className={getDifficultyColor(exercise.difficulty)}>
