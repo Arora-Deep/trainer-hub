@@ -26,9 +26,9 @@ export default function StudentCourses() {
   const [tab, setTab] = useState("all");
   const [mode, setMode] = useState("all");
 
-  const defaultActive = studentCourses.find((c) => c.status === "in_progress")?.id || studentCourses[0]?.id || "";
-  const [activeId, setActiveId] = useState(defaultActive);
-  const active = studentCourses.find((c) => c.id === activeId) || studentCourses[0];
+  const [activeId, setActiveId] = useState<string>(
+    studentCourses.find((c) => c.status === "in_progress")?.id || studentCourses[0]?.id || ""
+  );
 
   const filtered = useMemo(
     () =>
@@ -40,9 +40,6 @@ export default function StudentCourses() {
       }),
     [search, tab, mode]
   );
-
-  const activePct = active ? Math.round((active.completed / active.modules) * 100) : 0;
-  const activeNext = active?.nextLessonId || active?.chapters[0]?.lessons[0]?.id;
 
   return (
     <div className="space-y-6">
@@ -59,104 +56,6 @@ export default function StudentCourses() {
         ]}
       />
 
-
-      {/* Active training selector */}
-      {active && (
-        <Card>
-          <CardContent className="pt-6 space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 shrink-0">
-                <BookOpen className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs font-medium text-muted-foreground">Currently learning</span>
-              </div>
-              <Select value={activeId} onValueChange={setActiveId}>
-                <SelectTrigger className="h-10 flex-1 min-w-[260px] max-w-[480px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {studentCourses.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{c.name}</span>
-                        <span className="text-[10px] text-muted-foreground capitalize">· {c.deliveryMode}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button asChild className="gap-1.5 ml-auto">
-                <Link to={activeNext ? `/student/courses/${active.id}/learn/${activeNext}` : `/student/courses/${active.id}`}>
-                  <Play className="h-4 w-4" /> {active.status === "not_started" ? "Start" : "Continue"}
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <Link to={`/student/courses/${active.id}`}>Course details <ChevronRight className="h-3.5 w-3.5 ml-0.5" /></Link>
-              </Button>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-[1fr_280px]">
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  {modeBadge(active.deliveryMode)}
-                  <Badge variant="outline" className="text-[10px]">{active.category}</Badge>
-                  <span className="text-xs text-muted-foreground flex items-center gap-1"><Star className="h-3 w-3 text-warning fill-warning" /> {active.rating}</span>
-                  <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="h-3 w-3" />{active.instructor}</span>
-                  <span className="text-xs text-muted-foreground">· {active.batch}</span>
-                </div>
-                <p className="text-sm text-muted-foreground">{active.description}</p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs"><span className="text-muted-foreground">Progress</span><span className="font-medium">{active.completed}/{active.modules} · {activePct}%</span></div>
-                <Progress value={activePct} className="h-2" />
-                {active.deliveryMode === "self-paced" && active.totalAccessHours && (
-                  <div className="mt-2 p-2 rounded-md bg-amber-500/5 border border-amber-500/20">
-                    <div className="flex justify-between text-[11px]"><span className="text-muted-foreground flex items-center gap-1"><Timer className="h-3 w-3" />Lab access</span><span className="font-medium">{active.totalAccessHours - (active.usedAccessHours ?? 0)}h / {active.totalAccessHours}h</span></div>
-                  </div>
-                )}
-                {active.nextLiveSession && (
-                  <div className="mt-2 p-2 rounded-md bg-destructive/5 border border-destructive/20">
-                    <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Radio className="h-3 w-3" /> Next live</p>
-                    <p className="text-xs font-medium mt-0.5">{active.nextLiveSession.title}</p>
-                    <p className="text-[11px] text-muted-foreground">{active.nextLiveSession.date} · {active.nextLiveSession.time}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Course content accordion */}
-            <div className="pt-2 border-t">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold">Course Content</h3>
-                <span className="text-[11px] text-muted-foreground">{active.chapters.length} chapters · {active.modules} lessons</span>
-              </div>
-              <Accordion type="multiple" defaultValue={active.chapters.map((ch) => ch.id)}>
-                {active.chapters.map((ch, ci) => (
-                  <AccordionItem key={ch.id} value={ch.id}>
-                    <AccordionTrigger className="text-sm">
-                      <span className="flex items-center gap-2"><span className="text-muted-foreground">Chapter {ci + 1}</span> · {ch.title}<Badge variant="outline" className="text-[10px] ml-2">{ch.lessons.length} lessons</Badge></span>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-1 pl-2">
-                        {ch.lessons.map((l) => {
-                          const Icon = moduleIcons[l.type] || BookOpen;
-                          return (
-                            <Link key={l.id} to={l.locked ? "#" : `/student/courses/${active.id}/learn/${l.id}`} className={`flex items-center gap-3 p-2 rounded-md hover:bg-muted transition-colors ${l.locked ? "opacity-50 cursor-not-allowed" : ""}`}>
-                              {l.completed ? <CheckCircle className="h-4 w-4 text-success" /> : l.locked ? <Lock className="h-4 w-4 text-muted-foreground" /> : <Icon className="h-4 w-4 text-muted-foreground" />}
-                              <span className="text-sm flex-1">{l.title}</span>
-                              <Badge variant="outline" className="text-[10px] capitalize">{l.type}</Badge>
-                              <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{l.duration}</span>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Browse all */}
       <div className="space-y-3">

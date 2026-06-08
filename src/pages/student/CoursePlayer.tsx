@@ -7,16 +7,140 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import {
   ArrowLeft, ArrowRight, Check, ChevronLeft, CheckCircle, Lock, Video, FileText,
   FlaskConical, Award, BookOpen, Play, Download, MessageSquare, Code2, Flag, ShieldCheck,
   Calendar, Timer, Sparkles, ListChecks, Radio, Maximize2, ExternalLink,
 } from "lucide-react";
-import { getStudentCourse } from "@/data/studentMockData";
+import { getStudentCourse, type StudentLesson } from "@/data/studentMockData";
 import { useEnrollmentStore } from "@/stores/enrollmentStore";
 import { OnDemandLabPanel } from "@/components/learning/OnDemandLabPanel";
 import { PersistentLabPanel } from "@/components/learning/PersistentLabPanel";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+/* ── Inline assessments ── */
+function InlineQuiz({ lesson }: { lesson: StudentLesson }) {
+  const questions = useMemo(
+    () => [
+      { q: "Which service stores objects in AWS?", opts: ["EC2", "S3", "VPC", "IAM"], a: 1 },
+      { q: "What does CIDR stand for?", opts: ["Classless Inter-Domain Routing", "Cloud Internal Data Route", "Common IP Distribution Range", "Centralized IP Domain Resolution"], a: 0 },
+      { q: "Default VPC subnet is in how many AZs?", opts: ["1", "2", "All AZs in region", "3"], a: 2 },
+    ],
+    []
+  );
+  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [submitted, setSubmitted] = useState(false);
+  const score = submitted ? questions.reduce((s, q, i) => s + (answers[i] === q.a ? 1 : 0), 0) : 0;
+
+  if (submitted) {
+    return (
+      <div className="p-6 space-y-4">
+        <div className="text-center">
+          <Award className="h-10 w-10 mx-auto text-primary mb-2" />
+          <p className="text-lg font-semibold">{score} / {questions.length} correct</p>
+        </div>
+        <div className="space-y-3">
+          {questions.map((q, i) => (
+            <div key={i} className="text-sm">
+              <p className="font-medium mb-1">{i + 1}. {q.q}</p>
+              <p className={cn("text-xs", answers[i] === q.a ? "text-success" : "text-destructive")}>
+                Your answer: {q.opts[answers[i] ?? -1] ?? "—"}{" "}
+                {answers[i] !== q.a && <span className="text-muted-foreground">· Correct: {q.opts[q.a]}</span>}
+              </p>
+            </div>
+          ))}
+        </div>
+        <Button variant="outline" size="sm" onClick={() => { setSubmitted(false); setAnswers({}); }}>Retake</Button>
+      </div>
+    );
+  }
+  return (
+    <div className="p-6 space-y-5">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Award className="h-4 w-4 text-primary" /> {questions.length} questions · {lesson.duration}
+      </div>
+      {questions.map((q, i) => (
+        <div key={i} className="space-y-2">
+          <p className="text-sm font-medium">{i + 1}. {q.q}</p>
+          <RadioGroup value={answers[i]?.toString() ?? ""} onValueChange={(v) => setAnswers((a) => ({ ...a, [i]: Number(v) }))}>
+            {q.opts.map((opt, oi) => (
+              <div key={oi} className="flex items-center gap-2">
+                <RadioGroupItem value={oi.toString()} id={`cp-q${i}-${oi}`} />
+                <Label htmlFor={`cp-q${i}-${oi}`} className="text-sm font-normal cursor-pointer">{opt}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+      ))}
+      <div className="flex justify-end">
+        <Button size="sm" disabled={Object.keys(answers).length < questions.length} onClick={() => { setSubmitted(true); toast.success("Quiz submitted"); }}>
+          Submit quiz
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function InlineAssignment({ lesson }: { lesson: StudentLesson }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [notes, setNotes] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  if (submitted) {
+    return (
+      <div className="p-8 text-center space-y-2">
+        <CheckCircle className="h-10 w-10 mx-auto text-success" />
+        <p className="text-sm font-medium">Assignment submitted</p>
+        <p className="text-xs text-muted-foreground">{file?.name ?? "submission"} · awaiting review</p>
+      </div>
+    );
+  }
+  return (
+    <div className="p-6 space-y-4">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Brief</p>
+        <p className="text-sm text-muted-foreground">{lesson.body ?? "Complete the assignment and upload your submission below."}</p>
+      </div>
+      <div className="space-y-2">
+        <Label className="text-xs">Upload your file</Label>
+        <Input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-xs">Notes for reviewer (optional)</Label>
+        <Textarea rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} />
+      </div>
+      <div className="flex justify-end">
+        <Button size="sm" disabled={!file} onClick={() => { setSubmitted(true); toast.success("Assignment submitted"); }}>
+          Submit assignment
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function InlineExam({ lesson }: { lesson: StudentLesson }) {
+  const [started, setStarted] = useState(false);
+  if (!started) {
+    return (
+      <div className="p-8 text-center space-y-3">
+        <ShieldCheck className="h-10 w-10 mx-auto text-primary" />
+        <div>
+          <p className="text-sm font-medium">{lesson.title}</p>
+          <p className="text-xs text-muted-foreground">Timed exam · {lesson.duration}{lesson.proctored ? " · Proctored" : ""}</p>
+        </div>
+        {lesson.proctored && <Badge variant="outline" className="text-[10px]">Camera + lockdown browser required</Badge>}
+        <div className="pt-2">
+          <Button size="sm" className="gap-1.5" onClick={() => setStarted(true)}>
+            <Play className="h-4 w-4" /> Begin exam
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  return <InlineQuiz lesson={lesson} />;
+}
 
 const icons: Record<string, any> = {
   video: Video,
@@ -177,19 +301,11 @@ export default function CoursePlayer() {
                 <p className="text-sm text-muted-foreground">{lesson.body ?? "Read through the material below, then mark it complete."}</p>
               </div>
             )}
-            {lesson.type === "quiz" && (
-              <div className="p-8 text-center">
-                <Award className="h-10 w-10 mx-auto text-primary mb-3" />
-                <p className="text-sm text-muted-foreground mb-4">Knowledge check · {lesson.duration}</p>
-                <Button asChild className="gap-1.5"><Link to="/student/assessments"><Play className="h-4 w-4" /> Start quiz</Link></Button>
-              </div>
+            {(lesson.type === "quiz" || lesson.type === "mock-exam") && (
+              <InlineQuiz lesson={lesson} />
             )}
             {lesson.type === "assignment" && (
-              <div className="p-8 text-center">
-                <FileText className="h-10 w-10 mx-auto text-primary mb-3" />
-                <p className="text-sm text-muted-foreground mb-4">Assignment · upload your submission</p>
-                <Input type="file" className="max-w-sm mx-auto" />
-              </div>
+              <InlineAssignment lesson={lesson} />
             )}
             {lesson.type === "code-exercise" && (
               <div className="p-4 space-y-3">
@@ -310,19 +426,7 @@ export default function CoursePlayer() {
               </div>
             )}
             {lesson.type === "exam" && (
-              <div className="p-8 text-center space-y-3">
-                <ShieldCheck className="h-10 w-10 mx-auto text-primary" />
-                <div>
-                  <p className="text-sm font-medium">{lesson.title}</p>
-                  <p className="text-xs text-muted-foreground">Timed exam · {lesson.duration}{lesson.proctored ? " · Proctored" : ""}</p>
-                </div>
-                {lesson.proctored && (
-                  <Badge variant="outline" className="text-[10px]">Camera + lockdown browser required</Badge>
-                )}
-                <div className="pt-2">
-                  <Button asChild className="gap-1.5"><Link to="/student/assessments"><Play className="h-4 w-4" /> Begin exam</Link></Button>
-                </div>
-              </div>
+              <InlineExam lesson={lesson} />
             )}
           </CardContent>
         </Card>
