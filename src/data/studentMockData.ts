@@ -56,6 +56,13 @@ export interface StudentLesson {
   reasoningModelAnswer?: string;
   reasoningRubric?: string[];
   reasoningType?: "explain-choice" | "compare-options" | "improve-solution" | "root-cause" | "scenario-response";
+  // Code exercise fields (auto-graded with mock Judge0)
+  codeProblem?: string;
+  codeConstraints?: string;
+  codeStarter?: string;
+  codeSolution?: string;
+  codeHints?: string[];
+  codeTests?: { id: string; input: string; expectedOutput: string; hidden?: boolean; weight?: number }[];
 }
 
 export interface StudentChapter {
