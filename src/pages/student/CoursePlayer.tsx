@@ -301,19 +301,11 @@ export default function CoursePlayer() {
                 <p className="text-sm text-muted-foreground">{lesson.body ?? "Read through the material below, then mark it complete."}</p>
               </div>
             )}
-            {lesson.type === "quiz" && (
-              <div className="p-8 text-center">
-                <Award className="h-10 w-10 mx-auto text-primary mb-3" />
-                <p className="text-sm text-muted-foreground mb-4">Knowledge check · {lesson.duration}</p>
-                <Button asChild className="gap-1.5"><Link to="/student/assessments"><Play className="h-4 w-4" /> Start quiz</Link></Button>
-              </div>
+            {(lesson.type === "quiz" || lesson.type === "mock-exam") && (
+              <InlineQuiz lesson={lesson} />
             )}
             {lesson.type === "assignment" && (
-              <div className="p-8 text-center">
-                <FileText className="h-10 w-10 mx-auto text-primary mb-3" />
-                <p className="text-sm text-muted-foreground mb-4">Assignment · upload your submission</p>
-                <Input type="file" className="max-w-sm mx-auto" />
-              </div>
+              <InlineAssignment lesson={lesson} />
             )}
             {lesson.type === "code-exercise" && (
               <div className="p-4 space-y-3">
