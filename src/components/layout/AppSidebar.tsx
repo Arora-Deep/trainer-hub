@@ -126,7 +126,7 @@ const trainerNav: NavConfig = {
       { title: "Quizzes", icon: FileQuestion, path: "/quizzes" },
       { title: "Exercises", icon: Code2, path: "/exercises" },
       { title: "Exams", icon: ExamIcon, path: "/exams" },
-      { title: "Insight Questions", icon: Brain, path: "/insight-questions" },
+      { title: "AI Reasoning Eval", icon: Brain, path: "/insight-questions" },
       { title: "Game-based Learning", icon: Gamepad2, path: "/game-based-learning" },
     ]},
     { label: "More", icon: Award, items: [
