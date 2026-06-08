@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import {
   Users, UserPlus, MoreHorizontal, ExternalLink, Monitor, CalendarCheck,
-  BookOpen, GraduationCap, Search, Download, Upload, Mail, ArrowUpDown, Pencil, Check, X,
+  BookOpen, KeyRound, Search, Download, Upload, Mail, ArrowUpDown, Pencil, Check, X, Copy, Eye, EyeOff,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { Batch } from "@/stores/batchStore";
