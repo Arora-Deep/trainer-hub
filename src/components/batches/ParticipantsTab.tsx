@@ -211,7 +211,7 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
               ? { label: "Enrolled (Floating)", value: `${batch.enrolledCount ?? batch.participants.length}`, icon: Users }
               : { label: "Total Participants", value: `${batch.participants.length}/${batch.seatCount}`, icon: Users },
             { label: "VMs Running", value: vmCounts.running, icon: Monitor },
-            { label: "Avg Quiz Score", value: avgScore !== null ? `${avgScore}%` : "—", icon: GraduationCap },
+            { label: "Credentials Issued", value: batch.participants.length, icon: KeyRound },
             { label: "Avg Attendance", value: avgAttendance !== null ? `${avgAttendance}%` : "—", icon: CalendarCheck },
           ].map((stat, i) => (
             <motion.div
