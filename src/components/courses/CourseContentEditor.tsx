@@ -34,6 +34,7 @@ import {
   Upload,
   Eye,
   Library,
+  Brain,
 } from "lucide-react";
 import {
   DropdownMenu,
