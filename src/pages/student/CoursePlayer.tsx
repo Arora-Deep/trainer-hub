@@ -155,6 +155,8 @@ const icons: Record<string, any> = {
   exam: ShieldCheck,
   "mock-exam": ShieldCheck,
   survey: MessageSquare,
+  "game-based-learning": Sparkles,
+  reasoning: Brain,
 };
 
 const blockLabel: Record<string, string> = {
@@ -170,6 +172,8 @@ const blockLabel: Record<string, string> = {
   exam: "Exam",
   "mock-exam": "Mock Exam",
   survey: "Survey",
+  "game-based-learning": "Game",
+  reasoning: "AI Reasoning",
 };
 
 export default function CoursePlayer() {
