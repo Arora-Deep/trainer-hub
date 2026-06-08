@@ -56,6 +56,13 @@ export interface StudentLesson {
   reasoningModelAnswer?: string;
   reasoningRubric?: string[];
   reasoningType?: "explain-choice" | "compare-options" | "improve-solution" | "root-cause" | "scenario-response";
+  // Code exercise fields (auto-graded with mock Judge0)
+  codeProblem?: string;
+  codeConstraints?: string;
+  codeStarter?: string;
+  codeSolution?: string;
+  codeHints?: string[];
+  codeTests?: { id: string; input: string; expectedOutput: string; hidden?: boolean; weight?: number }[];
 }
 
 export interface StudentChapter {
@@ -449,7 +456,18 @@ export const studentCourses: StudentCourse[] = [
           { id: "l-10-7", title: "Live class: Control flow deep-dive", type: "live-session", duration: "1h 30m", completed: false, locked: false },
           { id: "l-10-8", title: "Insight: Where do you struggle most?", type: "survey", duration: "5m", completed: false, locked: false,
             body: "Trainer-pushed insight question to gauge cohort confidence before moving to OOP." },
-          { id: "l-10-9", title: "Lab: FizzBuzz & loops practice", type: "code-exercise", duration: "30m", completed: false, locked: false, language: "java" },
+          { id: "l-10-9", title: "Code exercise: FizzBuzz", type: "code-exercise", duration: "30m", completed: false, locked: false, language: "java",
+            codeProblem: "Write a program that reads an integer N from stdin and prints numbers from 1 to N, one per line, with these rules:\n• If the number is divisible by 3, print 'Fizz' instead.\n• If divisible by 5, print 'Buzz' instead.\n• If divisible by both 3 and 5, print 'FizzBuzz'.",
+            codeConstraints: "1 <= N <= 100",
+            codeStarter: "import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        int n = sc.nextInt();\n        // Your code here\n    }\n}",
+            codeSolution: "import java.util.Scanner;\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        int n = sc.nextInt();\n        for (int i = 1; i <= n; i++) {\n            if (i % 15 == 0) System.out.println(\"FizzBuzz\");\n            else if (i % 3 == 0) System.out.println(\"Fizz\");\n            else if (i % 5 == 0) System.out.println(\"Buzz\");\n            else System.out.println(i);\n        }\n    }\n}",
+            codeHints: ["Check divisibility by 15 (i.e. both 3 and 5) first.", "Use a single for loop from 1 to N inclusive."],
+            codeTests: [
+              { id: "t1", input: "5", expectedOutput: "1\n2\nFizz\n4\nBuzz", weight: 25 },
+              { id: "t2", input: "15", expectedOutput: "1\n2\nFizz\n4\nBuzz\nFizz\n7\n8\nFizz\nBuzz\n11\nFizz\n13\n14\nFizzBuzz", weight: 35 },
+              { id: "t3", input: "30", expectedOutput: "(hidden)", hidden: true, weight: 40 },
+            ],
+          },
           { id: "l-10-9b", title: "AI Reasoning: for loop vs while loop", type: "reasoning", duration: "8m", completed: false, locked: false,
             reasoningType: "explain-choice",
             reasoningPrompt: "You need to process records until a user enters EXIT. Would you use a for loop or a while loop? Explain your reasoning.",
@@ -576,7 +594,18 @@ export const studentCourses: StudentCourse[] = [
           { id: "l-11-5", title: "Variables, numbers, strings", type: "video", duration: "30m", completed: false, locked: false },
           { id: "l-11-6", title: "Lists, tuples, sets, dicts", type: "video", duration: "45m", completed: false, locked: false },
           { id: "l-11-7", title: "Code exercise: String manipulation", type: "code-exercise", duration: "30m", completed: false, locked: false,
-            language: "python" },
+            language: "python",
+            codeProblem: "Read a single line of text from stdin and print it back with:\n• All words reversed in order (last word first).\n• Each word's letters left untouched.\nWords are separated by a single space.",
+            codeConstraints: "1 <= length(text) <= 1000",
+            codeStarter: "def reverse_words(s: str) -> str:\n    # Your code here\n    pass\n\nif __name__ == '__main__':\n    text = input()\n    print(reverse_words(text))",
+            codeSolution: "def reverse_words(s):\n    return ' '.join(reversed(s.split(' ')))\n\nif __name__ == '__main__':\n    print(reverse_words(input()))",
+            codeHints: ["str.split(' ') returns the list of words.", "reversed() works on any sequence — combine with ' '.join()."],
+            codeTests: [
+              { id: "t1", input: "hello world", expectedOutput: "world hello", weight: 25 },
+              { id: "t2", input: "the quick brown fox", expectedOutput: "fox brown quick the", weight: 35 },
+              { id: "t3", input: "(hidden)", expectedOutput: "(hidden)", hidden: true, weight: 40 },
+            ],
+          },
           { id: "l-11-8", title: "Insight: What confuses you most?", type: "survey", duration: "3m", completed: false, locked: false,
             body: "Async insight question — your mentor reviews responses weekly." },
         ],
@@ -605,7 +634,18 @@ export const studentCourses: StudentCourse[] = [
         lessons: [
           { id: "l-11-14", title: "Classes, __init__, self", type: "video", duration: "45m", completed: false, locked: false },
           { id: "l-11-15", title: "Inheritance & dunder methods", type: "video", duration: "40m", completed: false, locked: false },
-          { id: "l-11-16", title: "Code exercise: Build a `BankAccount` class", type: "code-exercise", duration: "45m", completed: false, locked: false, language: "python" },
+          { id: "l-11-16", title: "Code exercise: BankAccount class", type: "code-exercise", duration: "45m", completed: false, locked: false, language: "python",
+            codeProblem: "Implement a BankAccount class supporting deposit(amount), withdraw(amount) and balance.\nRules:\n• Initial balance is 0.\n• withdraw() should not allow the balance to go below 0 — print 'Insufficient funds' and ignore the withdrawal.\n• Read operations from stdin: first line is N (number of ops), then N lines each like 'D 100' or 'W 50'. After processing, print the final balance.",
+            codeConstraints: "1 <= N <= 100\n0 <= amount <= 10000",
+            codeStarter: "class BankAccount:\n    def __init__(self):\n        # Your code here\n        pass\n    def deposit(self, amount):\n        pass\n    def withdraw(self, amount):\n        pass\n\nif __name__ == '__main__':\n    acc = BankAccount()\n    n = int(input())\n    for _ in range(n):\n        op, amt = input().split()\n        if op == 'D': acc.deposit(int(amt))\n        else: acc.withdraw(int(amt))\n    print(acc.balance)",
+            codeSolution: "class BankAccount:\n    def __init__(self):\n        self.balance = 0\n    def deposit(self, amount):\n        self.balance += amount\n    def withdraw(self, amount):\n        if amount > self.balance:\n            print('Insufficient funds')\n            return\n        self.balance -= amount",
+            codeHints: ["Track balance as an instance attribute set in __init__.", "Guard withdraw() before mutating balance."],
+            codeTests: [
+              { id: "t1", input: "3\nD 100\nD 50\nW 30", expectedOutput: "120", weight: 30 },
+              { id: "t2", input: "2\nD 50\nW 100", expectedOutput: "Insufficient funds\n50", weight: 30 },
+              { id: "t3", input: "(hidden)", expectedOutput: "(hidden)", hidden: true, weight: 40 },
+            ],
+          },
           { id: "l-11-17", title: "Quiz: OOP fundamentals", type: "quiz", duration: "15m", completed: false, locked: false },
         ],
       },

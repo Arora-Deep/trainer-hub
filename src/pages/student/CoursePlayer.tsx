@@ -404,6 +404,273 @@ function InlineReasoning({ lesson }: { lesson: StudentLesson }) {
   );
 }
 
+/* ── Inline code exercise (mock Judge0) ── */
+type CodeTestResult = { id: string; passed: boolean; actual: string; expected: string; hidden: boolean; weight: number; time: number; memoryKB: number };
+
+function InlineCodeExercise({ lesson }: { lesson: StudentLesson }) {
+  const tests = lesson.codeTests ?? [];
+  const totalWeight = tests.reduce((s, t) => s + (t.weight ?? 0), 0) || 100;
+  const [code, setCode] = useState(lesson.codeStarter ?? "// Write your solution here\n");
+  const [tab, setTab] = useState<"problem" | "results">("problem");
+  const [results, setResults] = useState<CodeTestResult[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showHints, setShowHints] = useState(false);
+  const [showSolution, setShowSolution] = useState(false);
+  const [customInput, setCustomInput] = useState(tests[0]?.input ?? "");
+  const [customOutput, setCustomOutput] = useState("");
+
+  // Heuristic "AI grader": passes when student code differs meaningfully from starter
+  // and roughly resembles the reference solution. Hidden tests deterministic per lesson.
+  const grade = () => {
+    const trimmed = code.replace(/\s+/g, " ").trim();
+    const starter = (lesson.codeStarter ?? "").replace(/\s+/g, " ").trim();
+    const sol = (lesson.codeSolution ?? "").replace(/\s+/g, " ").trim();
+    const changed = trimmed !== starter && trimmed.length > starter.length * 0.4;
+    const solTokens = new Set(sol.toLowerCase().split(/[^a-z0-9_]+/).filter(Boolean));
+    const codeTokens = new Set(trimmed.toLowerCase().split(/[^a-z0-9_]+/).filter(Boolean));
+    const overlap = sol ? [...solTokens].filter((t) => codeTokens.has(t)).length / solTokens.size : 1;
+    const quality = changed ? Math.min(1, 0.5 + overlap) : 0;
+    return tests.map((t, i) => {
+      // visible tests pass when quality > 0.55; hidden tests need stronger overlap
+      const threshold = t.hidden ? 0.7 : 0.55;
+      const passed = quality >= threshold;
+      return {
+        id: t.id,
+        passed,
+        expected: t.expectedOutput,
+        actual: passed ? t.expectedOutput : (changed ? simulateBadOutput(t.expectedOutput, i) : "(no output)"),
+        hidden: !!t.hidden,
+        weight: t.weight ?? Math.floor(100 / tests.length),
+        time: +(0.05 + Math.random() * 0.4).toFixed(3),
+        memoryKB: Math.floor(2400 + Math.random() * 800),
+      };
+    });
+  };
+
+  const handleRun = async () => {
+    setIsRunning(true);
+    setCustomOutput("");
+    await new Promise((r) => setTimeout(r, 800));
+    const trimmed = code.replace(/\s+/g, " ").trim();
+    const starter = (lesson.codeStarter ?? "").replace(/\s+/g, " ").trim();
+    const matchTest = tests.find((t) => t.input === customInput && !t.hidden);
+    const ok = trimmed !== starter && trimmed.length > starter.length * 0.5;
+    setCustomOutput(
+      matchTest && ok
+        ? matchTest.expectedOutput
+        : ok
+          ? "// Program ran. Output preview not available for custom input in demo mode."
+          : "// Edit the starter code and try again — looks like nothing was changed."
+    );
+    setIsRunning(false);
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setResults([]);
+    await new Promise((r) => setTimeout(r, 1400));
+    setResults(grade());
+    setIsSubmitting(false);
+    setTab("results");
+  };
+
+  const reset = () => {
+    setCode(lesson.codeStarter ?? "");
+    setResults([]);
+    setCustomOutput("");
+  };
+
+  const passedCount = results.filter((r) => r.passed).length;
+  const score = results.reduce((s, r) => s + (r.passed ? r.weight : 0), 0);
+  const allPassed = results.length > 0 && passedCount === results.length;
+
+  return (
+    <div className="p-4 space-y-3">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-[10px] capitalize">{lesson.language ?? "code"}</Badge>
+          <span className="text-xs text-muted-foreground">Auto-graded · {tests.length} test cases · {totalWeight} pts</span>
+        </div>
+        <div className="flex gap-1">
+          <Button variant={tab === "problem" ? "secondary" : "ghost"} size="sm" onClick={() => setTab("problem")}>Problem</Button>
+          <Button variant={tab === "results" ? "secondary" : "ghost"} size="sm" onClick={() => setTab("results")}>
+            Results{results.length > 0 && <Badge variant="outline" className="ml-1.5 text-[10px]">{passedCount}/{results.length}</Badge>}
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        {/* Left: problem / results */}
+        <div className="rounded-lg border border-border bg-muted/20 p-3 max-h-[520px] overflow-y-auto">
+          {tab === "problem" ? (
+            <div className="space-y-3 text-sm">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Problem</p>
+                <p className="whitespace-pre-wrap">{lesson.codeProblem ?? "No problem statement provided."}</p>
+              </div>
+              {lesson.codeConstraints && (
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Constraints</p>
+                  <pre className="text-xs font-mono bg-background border border-border rounded p-2 whitespace-pre-wrap">{lesson.codeConstraints}</pre>
+                </div>
+              )}
+              {tests.filter((t) => !t.hidden).length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Sample test cases</p>
+                  {tests.filter((t) => !t.hidden).map((t, i) => (
+                    <div key={t.id} className="rounded border border-border bg-background p-2">
+                      <p className="text-[10px] text-muted-foreground mb-1">Example {i + 1}</p>
+                      <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                        <div>
+                          <p className="text-[10px] text-muted-foreground font-sans">Input</p>
+                          <pre className="whitespace-pre-wrap">{t.input}</pre>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground font-sans">Expected</p>
+                          <pre className="whitespace-pre-wrap">{t.expectedOutput}</pre>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {tests.some((t) => t.hidden) && (
+                    <p className="text-[11px] text-muted-foreground">+ {tests.filter((t) => t.hidden).length} hidden test case(s) used for grading</p>
+                  )}
+                </div>
+              )}
+              {lesson.codeHints && lesson.codeHints.length > 0 && (
+                <div>
+                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setShowHints((v) => !v)}>
+                    <Sparkles className="h-3 w-3 mr-1" />{showHints ? "Hide hints" : "Show hints"}
+                  </Button>
+                  {showHints && (
+                    <ul className="mt-1 space-y-1 text-xs list-disc pl-5 text-muted-foreground">
+                      {lesson.codeHints.map((h, i) => <li key={i}>{h}</li>)}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : results.length === 0 ? (
+            <div className="flex flex-col items-center justify-center text-center text-xs text-muted-foreground py-10">
+              <ListChecks className="h-8 w-8 mb-2 opacity-60" />
+              Submit your code to see test results.
+            </div>
+          ) : (
+            <div className="space-y-3 text-sm">
+              <div className={cn("flex items-center justify-between gap-3 p-3 rounded-lg border",
+                allPassed ? "border-success/30 bg-success/5" : "border-destructive/30 bg-destructive/5")}>
+                <div className="flex items-center gap-2">
+                  {allPassed ? <CheckCircle className="h-6 w-6 text-success" /> : <AlertCircle className="h-6 w-6 text-destructive" />}
+                  <div>
+                    <p className="font-medium text-sm">{allPassed ? "All tests passed!" : "Some tests failed"}</p>
+                    <p className="text-[11px] text-muted-foreground">{passedCount} of {results.length} passed</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xl font-semibold">{score}<span className="text-xs text-muted-foreground">/{totalWeight}</span></p>
+                  <p className="text-[10px] text-muted-foreground">score</p>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                {results.map((r, i) => (
+                  <div key={r.id} className={cn("rounded border px-3 py-2",
+                    r.passed ? "border-success/30 bg-success/5" : "border-destructive/30 bg-destructive/5")}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-xs">
+                        {r.passed ? <CheckCircle className="h-3.5 w-3.5 text-success" /> : <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
+                        <span className="font-medium">Test {i + 1}</span>
+                        {r.hidden && <Badge variant="outline" className="text-[9px]">Hidden</Badge>}
+                        <span className="text-muted-foreground">· {r.weight} pts</span>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">{r.time}s · {r.memoryKB} KB</span>
+                    </div>
+                    {!r.passed && !r.hidden && (
+                      <div className="grid grid-cols-2 gap-2 mt-2 text-[11px] font-mono">
+                        <div>
+                          <p className="text-[10px] font-sans text-muted-foreground">Expected</p>
+                          <pre className="bg-background border border-border rounded p-1.5 whitespace-pre-wrap">{r.expected}</pre>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-sans text-muted-foreground">Your output</p>
+                          <pre className="bg-background border border-border rounded p-1.5 whitespace-pre-wrap">{r.actual}</pre>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right: editor + custom test */}
+        <div className="space-y-2">
+          <div className="rounded-lg border border-border overflow-hidden bg-background">
+            <div className="flex items-center justify-between px-3 py-1.5 border-b border-border bg-muted/40">
+              <div className="flex items-center gap-1.5 text-xs">
+                <Code2 className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="font-medium">Code editor</span>
+              </div>
+              <div className="flex gap-1">
+                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={reset}>Reset</Button>
+                {lesson.codeSolution && (
+                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setShowSolution((v) => !v)}>
+                    {showSolution ? "Hide solution" : "View solution"}
+                  </Button>
+                )}
+              </div>
+            </div>
+            <Textarea
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              rows={14}
+              spellCheck={false}
+              className="font-mono text-xs border-0 rounded-none focus-visible:ring-0 resize-none"
+            />
+            {showSolution && lesson.codeSolution && (
+              <pre className="text-[11px] font-mono bg-muted/40 border-t border-border p-2 max-h-40 overflow-auto whitespace-pre-wrap">{lesson.codeSolution}</pre>
+            )}
+          </div>
+
+          <div className="rounded-lg border border-border bg-background p-2 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Custom test</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-1">Input</p>
+                <Textarea rows={3} value={customInput} onChange={(e) => setCustomInput(e.target.value)} className="font-mono text-[11px]" />
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-1">Output</p>
+                <pre className="font-mono text-[11px] bg-muted/40 border border-border rounded p-2 min-h-[64px] whitespace-pre-wrap">{customOutput || "—"}</pre>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={handleRun} disabled={isRunning}>
+                {isRunning ? <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />Running…</> : <><Play className="h-3.5 w-3.5 mr-1" />Run</>}
+              </Button>
+              <Button size="sm" onClick={handleSubmit} disabled={isSubmitting}>
+                {isSubmitting ? <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />Grading…</> : <>Submit</>}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function simulateBadOutput(expected: string, seed: number) {
+  const lines = expected.split("\n");
+  if (lines.length === 0) return "";
+  // tweak the (seed % lines.length)-th line
+  const idx = seed % lines.length;
+  lines[idx] = "?" + (lines[idx] ?? "");
+  return lines.join("\n");
+}
+
 const icons: Record<string, any> = {
   video: Video,
   reading: FileText,
@@ -574,17 +841,7 @@ export default function CoursePlayer() {
               <InlineAssignment lesson={lesson} />
             )}
             {lesson.type === "code-exercise" && (
-              <div className="p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-[10px] capitalize">{lesson.language ?? "python"}</Badge>
-                  <span className="text-xs text-muted-foreground">Auto-graded via Judge0</span>
-                </div>
-                <Textarea rows={10} className="font-mono text-xs" value={code} onChange={(e) => setCode(e.target.value)} />
-                <div className="flex gap-2 justify-end">
-                  <Button variant="outline" size="sm">Run</Button>
-                  <Button size="sm" onClick={() => toast.success("Submitted · all tests passed")}>Submit</Button>
-                </div>
-              </div>
+              <InlineCodeExercise lesson={lesson} />
             )}
             {(lesson.type === "lab" || lesson.type === "ctf-scenario") && (
               <div className="p-5 space-y-4">

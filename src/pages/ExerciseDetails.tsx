@@ -49,6 +49,24 @@ interface TestResult {
   statusId?: number;
 }
 
+// Mock student submissions — frontend demo only
+const mockSubmissions = [
+  { id: "s1", student: "Aarav Sharma", avatar: "AS", status: "accepted" as const, score: 100, passed: 3, total: 3, language: "Python", time: 0.12, memoryKB: 2832, submittedAt: "2h ago", code: "def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen: return [seen[target - n], i]\n        seen[n] = i" },
+  { id: "s2", student: "Priya Menon", avatar: "PM", status: "wrong_answer" as const, score: 50, passed: 1, total: 3, language: "Python", time: 0.31, memoryKB: 3104, submittedAt: "3h ago", code: "def two_sum(nums, target):\n    for i in range(len(nums)):\n        for j in range(i+1, len(nums)):\n            if nums[i]+nums[j]==target: return [i,j]" },
+  { id: "s3", student: "Rahul Verma", avatar: "RV", status: "accepted" as const, score: 100, passed: 3, total: 3, language: "Python", time: 0.09, memoryKB: 2710, submittedAt: "5h ago", code: "def two_sum(nums, target):\n    d = {}\n    for i,n in enumerate(nums):\n        c = target - n\n        if c in d: return [d[c], i]\n        d[n] = i" },
+  { id: "s4", student: "Ananya Iyer", avatar: "AI", status: "time_limit" as const, score: 25, passed: 0, total: 3, language: "Python", time: 2.05, memoryKB: 4200, submittedAt: "1d ago", code: "# brute force triple loop\nfor i in nums:\n  for j in nums:\n    for k in nums: ..." },
+  { id: "s5", student: "Kabir Khanna", avatar: "KK", status: "runtime_error" as const, score: 0, passed: 0, total: 3, language: "Python", time: 0.04, memoryKB: 2440, submittedAt: "1d ago", code: "def two_sum(nums, target):\n    return nums[0] / 0" },
+  { id: "s6", student: "Meera Joshi", avatar: "MJ", status: "accepted" as const, score: 100, passed: 3, total: 3, language: "Python", time: 0.11, memoryKB: 2790, submittedAt: "2d ago", code: "def two_sum(nums, target):\n    seen = {}\n    for i,n in enumerate(nums):\n        if (target-n) in seen: return [seen[target-n], i]\n        seen[n]=i" },
+];
+
+const subStatusMeta: Record<string, { label: string; cls: string }> = {
+  accepted: { label: "Accepted", cls: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
+  wrong_answer: { label: "Wrong Answer", cls: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
+  time_limit: { label: "Time Limit", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+  runtime_error: { label: "Runtime Error", cls: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
+  compilation_error: { label: "Compile Error", cls: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
+};
+
 const ExerciseDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -64,6 +82,7 @@ const ExerciseDetails = () => {
   const [customOutput, setCustomOutput] = useState("");
   const [showHints, setShowHints] = useState(false);
   const [activeTab, setActiveTab] = useState("problem");
+  const [viewSubmission, setViewSubmission] = useState<typeof mockSubmissions[number] | null>(null);
 
   if (!exercise) {
     return (
@@ -177,6 +196,10 @@ const ExerciseDetails = () => {
                         {passedTests}/{testResults.length}
                       </Badge>
                     )}
+                  </TabsTrigger>
+                  <TabsTrigger value="submissions">
+                    Submissions
+                    <Badge variant="secondary" className="ml-2">{mockSubmissions.length}</Badge>
                   </TabsTrigger>
                 </TabsList>
                 <div className="flex items-center gap-2">
@@ -347,6 +370,54 @@ const ExerciseDetails = () => {
                   </>
                 )}
               </TabsContent>
+
+              <TabsContent value="submissions" className="mt-0 space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Submissions</p>
+                    <p className="text-xl font-semibold">{mockSubmissions.length}</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Accepted</p>
+                    <p className="text-xl font-semibold text-green-600">{mockSubmissions.filter((s) => s.status === "accepted").length}</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg score</p>
+                    <p className="text-xl font-semibold">{Math.round(mockSubmissions.reduce((s, x) => s + x.score, 0) / mockSubmissions.length)}</p>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50 text-xs text-muted-foreground">
+                      <tr>
+                        <th className="text-left font-medium px-3 py-2">Student</th>
+                        <th className="text-left font-medium px-3 py-2">Status</th>
+                        <th className="text-left font-medium px-3 py-2">Score</th>
+                        <th className="text-left font-medium px-3 py-2">Tests</th>
+                        <th className="text-left font-medium px-3 py-2">Time</th>
+                        <th className="text-right font-medium px-3 py-2">Submitted</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mockSubmissions.map((s) => (
+                        <tr key={s.id} className="border-t border-border hover:bg-muted/30 cursor-pointer" onClick={() => setViewSubmission(s)}>
+                          <td className="px-3 py-2">
+                            <div className="flex items-center gap-2">
+                              <div className="h-7 w-7 rounded-full bg-primary/10 text-primary text-[11px] font-medium flex items-center justify-center">{s.avatar}</div>
+                              <span className="font-medium">{s.student}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2"><Badge className={subStatusMeta[s.status].cls}>{subStatusMeta[s.status].label}</Badge></td>
+                          <td className="px-3 py-2 font-medium">{s.score}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{s.passed}/{s.total}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{s.time.toFixed(2)}s</td>
+                          <td className="px-3 py-2 text-right text-muted-foreground">{s.submittedAt}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </TabsContent>
             </CardContent>
           </Tabs>
         </Card>
@@ -456,6 +527,32 @@ const ExerciseDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Submission detail dialog */}
+      <Dialog open={!!viewSubmission} onOpenChange={(o) => !o && setViewSubmission(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {viewSubmission?.student}
+              {viewSubmission && <Badge className={subStatusMeta[viewSubmission.status].cls}>{subStatusMeta[viewSubmission.status].label}</Badge>}
+            </DialogTitle>
+          </DialogHeader>
+          {viewSubmission && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-4 gap-2 text-sm">
+                <div className="rounded border border-border p-2"><p className="text-[10px] uppercase text-muted-foreground">Score</p><p className="font-semibold">{viewSubmission.score}</p></div>
+                <div className="rounded border border-border p-2"><p className="text-[10px] uppercase text-muted-foreground">Tests</p><p className="font-semibold">{viewSubmission.passed}/{viewSubmission.total}</p></div>
+                <div className="rounded border border-border p-2"><p className="text-[10px] uppercase text-muted-foreground">Time</p><p className="font-semibold">{viewSubmission.time.toFixed(2)}s</p></div>
+                <div className="rounded border border-border p-2"><p className="text-[10px] uppercase text-muted-foreground">Memory</p><p className="font-semibold">{viewSubmission.memoryKB} KB</p></div>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Submitted code · {viewSubmission.language}</p>
+                <pre className="bg-muted p-3 rounded-lg max-h-96 overflow-auto text-xs font-mono whitespace-pre-wrap">{viewSubmission.code}</pre>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
