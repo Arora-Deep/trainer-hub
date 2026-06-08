@@ -52,6 +52,10 @@ export interface StudentLesson {
   estimatedHours?: number;
   language?: string;
   proctored?: boolean;
+  reasoningPrompt?: string;
+  reasoningModelAnswer?: string;
+  reasoningRubric?: string[];
+  reasoningType?: "explain-choice" | "compare-options" | "improve-solution" | "root-cause" | "scenario-response";
 }
 
 export interface StudentChapter {
