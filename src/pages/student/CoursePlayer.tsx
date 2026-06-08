@@ -841,17 +841,7 @@ export default function CoursePlayer() {
               <InlineAssignment lesson={lesson} />
             )}
             {lesson.type === "code-exercise" && (
-              <div className="p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-[10px] capitalize">{lesson.language ?? "python"}</Badge>
-                  <span className="text-xs text-muted-foreground">Auto-graded via Judge0</span>
-                </div>
-                <Textarea rows={10} className="font-mono text-xs" value={code} onChange={(e) => setCode(e.target.value)} />
-                <div className="flex gap-2 justify-end">
-                  <Button variant="outline" size="sm">Run</Button>
-                  <Button size="sm" onClick={() => toast.success("Submitted · all tests passed")}>Submit</Button>
-                </div>
-              </div>
+              <InlineCodeExercise lesson={lesson} />
             )}
             {(lesson.type === "lab" || lesson.type === "ctf-scenario") && (
               <div className="p-5 space-y-4">
