@@ -824,15 +824,34 @@ export default function CoursePlayer() {
         <Card>
           <CardContent className="p-0">
             {lesson.type === "video" && (
-              <div className="aspect-video bg-foreground/95 flex items-center justify-center text-background relative">
-                <Play className="h-14 w-14 opacity-70" />
-                <p className="absolute bottom-4 left-4 text-xs opacity-70">Video player · {lesson.duration}</p>
-              </div>
+              lesson.videoUrl && /youtube|vimeo/.test(lesson.videoUrl) ? (
+                <div className="aspect-video bg-black">
+                  <iframe
+                    src={lesson.videoUrl}
+                    title={lesson.title}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              ) : (
+                <div className="aspect-video bg-foreground/95 flex items-center justify-center text-background relative">
+                  <Play className="h-14 w-14 opacity-70" />
+                  <p className="absolute bottom-4 left-4 text-xs opacity-70">Video player · {lesson.duration}</p>
+                </div>
+              )
             )}
             {lesson.type === "reading" && (
-              <div className="p-8 prose prose-sm max-w-none">
-                <p className="text-sm text-muted-foreground">{lesson.body ?? "Read through the material below, then mark it complete."}</p>
-              </div>
+              lesson.bodyHtml ? (
+                <div
+                  className="p-8 prose prose-sm max-w-none prose-headings:font-semibold prose-h1:text-2xl prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-2 prose-p:leading-relaxed prose-code:text-xs prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-pre:bg-muted/60 prose-pre:text-foreground prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground prose-table:text-xs"
+                  dangerouslySetInnerHTML={{ __html: lesson.bodyHtml }}
+                />
+              ) : (
+                <div className="p-8 prose prose-sm max-w-none">
+                  <p className="text-sm text-muted-foreground">{lesson.body ?? "Read through the material below, then mark it complete."}</p>
+                </div>
+              )
             )}
             {(lesson.type === "quiz" || lesson.type === "mock-exam") && (
               <InlineQuiz lesson={lesson} />
