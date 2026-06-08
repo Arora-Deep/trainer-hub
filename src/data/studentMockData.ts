@@ -15,7 +15,8 @@ export type StudentLessonType =
   | "exam"
   | "mock-exam"
   | "survey"
-  | "game-based-learning";
+  | "game-based-learning"
+  | "reasoning";
 
 export type LabAllocationType = "persistent" | "module-unlock" | "time-limited" | "hour-pool";
 
