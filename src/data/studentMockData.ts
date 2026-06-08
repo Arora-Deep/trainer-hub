@@ -117,310 +117,6 @@ export interface StudentCourse {
 
 export const studentCourses: StudentCourse[] = [
   {
-    id: "1",
-    name: "AWS Cloud Practitioner",
-    category: "Cloud",
-    description: "Master the fundamentals of Amazon Web Services. Covers EC2, S3, VPC, IAM and more. Preps you for the AWS Cloud Practitioner certification.",
-    instructor: "James Wilson",
-    instructorBio: "15+ years cloud architecture. AWS Solutions Architect Professional.",
-    modules: 12,
-    completed: 8,
-    totalHours: 24,
-    status: "in_progress",
-    deliveryMode: "live",
-    rating: 4.8,
-    studyTime: "8h 20m",
-    lastAccessed: "2h ago",
-    batch: "AWS Batch 12",
-    batchId: "1",
-    prerequisites: [],
-    nextLessonId: "l-1-9",
-    nextLiveSession: { title: "VPC Deep Dive", date: "Today", time: "2:00 PM" },
-    studyData: [
-      { day: "Mon", hours: 1.5 }, { day: "Tue", hours: 2 }, { day: "Wed", hours: 0.5 },
-      { day: "Thu", hours: 1 }, { day: "Fri", hours: 1.5 }, { day: "Sat", hours: 1 }, { day: "Sun", hours: 0.8 },
-    ],
-    chapters: [
-      {
-        id: "ch-1-1", title: "Foundations",
-        lessons: [
-          { id: "l-1-1", title: "Introduction to AWS", type: "video", duration: "45m", completed: true, locked: false, body: "Overview of AWS global infrastructure, regions, AZs and core services." },
-          { id: "l-1-2", title: "IAM & Security", type: "video", duration: "1h 15m", completed: true, locked: false },
-          { id: "l-1-3", title: "Shared Responsibility Model", type: "reading", duration: "20m", completed: true, locked: false, body: "AWS secures the cloud; you secure what's in the cloud..." },
-        ],
-      },
-      {
-        id: "ch-1-2", title: "Compute & Storage",
-        lessons: [
-          { id: "l-1-4", title: "EC2 Fundamentals", type: "video", duration: "2h", completed: true, locked: false },
-          { id: "l-1-5", title: "EC2 Hands-on Lab", type: "lab", duration: "1h", completed: true, locked: false },
-          { id: "l-1-6", title: "S3 & Storage", type: "video", duration: "1h 30m", completed: true, locked: false },
-          { id: "l-1-7", title: "S3 Quiz", type: "quiz", duration: "20m", completed: true, locked: false },
-        ],
-      },
-      {
-        id: "ch-1-3", title: "Networking",
-        lessons: [
-          { id: "l-1-8", title: "Networking Basics", type: "reading", duration: "30m", completed: true, locked: false },
-          { id: "l-1-9", title: "VPC Deep Dive", type: "video", duration: "1h 30m", completed: false, locked: false },
-          {
-            id: "l-1-9b", title: "Lab Instructions: Build a VPC", type: "lab-instruction", duration: "10m",
-            completed: false, locked: false,
-            labInstruction: {
-              objective: "Provision a VPC with public + private subnets and verify connectivity end-to-end.",
-              prerequisites: ["Completed 'VPC Deep Dive' video", "Lab VM is running"],
-              tasks: [
-                { id: "t1", title: "Create a VPC with CIDR 10.0.0.0/16" },
-                { id: "t2", title: "Create one public and one private subnet" },
-                { id: "t3", title: "Attach an Internet Gateway and configure route tables" },
-                { id: "t4", title: "Launch a test EC2 in each subnet and verify reachability" },
-              ],
-              expectedOutcome: "You can SSH into the public EC2 and ping the private EC2 from within it.",
-              resources: [
-                { label: "AWS VPC official docs", url: "https://docs.aws.amazon.com/vpc/" },
-                { label: "VPC cheat sheet (PDF)", url: "#" },
-              ],
-            },
-          },
-          {
-            id: "l-1-10", title: "VPC Lab", type: "lab", duration: "1h 30m", completed: false, locked: false,
-            labTemplate: "AWS Networking Sandbox", labMode: "on-demand", estimatedHours: 2,
-            labAllocation: { type: "time-limited", sessionDurationHrs: 2 },
-          },
-          { id: "l-1-11", title: "Route 53 & CDN", type: "video", duration: "1h", completed: false, locked: true },
-          { id: "l-1-12", title: "Final Assessment", type: "quiz", duration: "45m", completed: false, locked: true },
-        ],
-      },
-    ],
-    resources: [
-      { id: "r1", name: "AWS Cheatsheet.pdf", type: "pdf", size: "2.1 MB", url: "#" },
-      { id: "r2", name: "VPC Slides.pdf", type: "slides", size: "4.7 MB", url: "#" },
-      { id: "r3", name: "AWS Free Tier", type: "link", url: "https://aws.amazon.com/free" },
-      { id: "r4", name: "Lab Starter Kit.zip", type: "zip", size: "12 MB", url: "#" },
-    ],
-  },
-  {
-    id: "2",
-    name: "Kubernetes Fundamentals",
-    category: "DevOps",
-    description: "Deep dive into Kubernetes — pods, services, deployments, Helm. Hands-on cluster management.",
-    instructor: "Sarah Chen",
-    instructorBio: "CNCF Ambassador. 10 years container orchestration.",
-    modules: 8, completed: 2, totalHours: 16, status: "in_progress",
-    deliveryMode: "live", rating: 4.6, studyTime: "3h 10m", lastAccessed: "1d ago",
-    batch: "K8s Batch 5", batchId: "2", prerequisites: ["Docker Essentials"],
-    nextLessonId: "l-2-3",
-    nextLiveSession: { title: "Pods & Deployments", date: "Tomorrow", time: "10:00 AM" },
-    studyData: [
-      { day: "Mon", hours: 0.5 }, { day: "Tue", hours: 1 }, { day: "Wed", hours: 0 },
-      { day: "Thu", hours: 0.5 }, { day: "Fri", hours: 0.5 }, { day: "Sat", hours: 0.5 }, { day: "Sun", hours: 0.2 },
-    ],
-    chapters: [
-      {
-        id: "ch-2-1", title: "Foundations",
-        lessons: [
-          { id: "l-2-1", title: "Intro to Container Orchestration", type: "video", duration: "30m", completed: true, locked: false },
-          { id: "l-2-2", title: "K8s Architecture", type: "video", duration: "1h", completed: true, locked: false },
-        ],
-      },
-      {
-        id: "ch-2-2", title: "Workloads",
-        lessons: [
-          { id: "l-2-3", title: "Pods & Deployments", type: "video", duration: "1h 30m", completed: false, locked: false },
-          { id: "l-2-4", title: "K8s Lab: First Cluster", type: "lab", duration: "2h", completed: false, locked: false },
-          { id: "l-2-5", title: "Services & Networking", type: "video", duration: "1h 15m", completed: false, locked: true },
-          { id: "l-2-6", title: "ConfigMaps & Secrets", type: "reading", duration: "30m", completed: false, locked: true },
-          { id: "l-2-7", title: "Helm Charts", type: "video", duration: "1h", completed: false, locked: true },
-          { id: "l-2-8", title: "K8s Final Quiz", type: "quiz", duration: "30m", completed: false, locked: true },
-        ],
-      },
-    ],
-    resources: [
-      { id: "r1", name: "K8s Cheatsheet.pdf", type: "pdf", size: "1.4 MB", url: "#" },
-      { id: "r2", name: "kubectl Reference", type: "link", url: "https://kubernetes.io/docs/reference/kubectl/" },
-    ],
-  },
-  {
-    id: "3",
-    name: "Docker Essentials",
-    category: "DevOps",
-    description: "Everything about Docker — building images to multi-container apps with Compose.",
-    instructor: "Mark Davis", instructorBio: "DevOps engineer at scale.",
-    modules: 6, completed: 6, totalHours: 10, status: "completed",
-    deliveryMode: "live", rating: 4.9, studyTime: "11h 45m", lastAccessed: "1w ago",
-    batch: "Docker Batch 8", batchId: "3", prerequisites: [],
-    studyData: [],
-    chapters: [
-      {
-        id: "ch-3-1", title: "Docker Core",
-        lessons: [
-          { id: "l-3-1", title: "What is Docker?", type: "video", duration: "30m", completed: true, locked: false },
-          { id: "l-3-2", title: "Images & Containers", type: "video", duration: "1h", completed: true, locked: false },
-          { id: "l-3-3", title: "Dockerfile & Build", type: "lab", duration: "1h 30m", completed: true, locked: false },
-          { id: "l-3-4", title: "Docker Compose", type: "video", duration: "1h", completed: true, locked: false },
-          { id: "l-3-5", title: "Networking & Volumes", type: "reading", duration: "45m", completed: true, locked: false },
-          { id: "l-3-6", title: "Docker Final Quiz", type: "quiz", duration: "30m", completed: true, locked: false },
-        ],
-      },
-    ],
-    resources: [
-      { id: "r1", name: "Docker Cheatsheet.pdf", type: "pdf", size: "900 KB", url: "#" },
-    ],
-  },
-  {
-    id: "4",
-    name: "Python for Data Science",
-    category: "Data Science",
-    description: "Self-paced Python journey from basics to pandas, numpy, and ML foundations. Hands-on labs available 24/7.",
-    instructor: "Mentor: Sarah Wilson",
-    instructorBio: "Data scientist. Mentors learners async via comments & weekly office hours.",
-    modules: 14, completed: 4, totalHours: 38, status: "in_progress",
-    deliveryMode: "self-paced", rating: 4.7, studyTime: "6h 40m", lastAccessed: "3h ago",
-    batch: "Python Self-Paced", batchId: "7", prerequisites: [],
-    nextLessonId: "l-4-5",
-    totalAccessHours: 120, usedAccessHours: 38,
-    persistentLab: {
-      labId: "lab-4",
-      templateName: "Python DS Sandbox",
-      totalHours: 20,
-      usedHours: 6.5,
-      ip: "10.0.3.21",
-      status: "running",
-    },
-    studyData: [
-      { day: "Mon", hours: 1 }, { day: "Tue", hours: 1.5 }, { day: "Wed", hours: 0.5 },
-      { day: "Thu", hours: 1 }, { day: "Fri", hours: 0.5 }, { day: "Sat", hours: 1 }, { day: "Sun", hours: 1.2 },
-    ],
-    chapters: [
-      {
-        id: "ch-4-1", title: "Python Basics",
-        lessons: [
-          { id: "l-4-1", title: "Setting up your environment", type: "video", duration: "20m", completed: true, locked: false },
-          { id: "l-4-2", title: "Variables & Types", type: "video", duration: "40m", completed: true, locked: false },
-          { id: "l-4-3", title: "Control Flow", type: "video", duration: "50m", completed: true, locked: false },
-          { id: "l-4-4", title: "Functions Lab", type: "lab", duration: "1h", completed: true, locked: false },
-        ],
-      },
-      {
-        id: "ch-4-2", title: "Data Wrangling",
-        lessons: [
-          { id: "l-4-5", title: "Intro to NumPy", type: "video", duration: "1h", completed: false, locked: false },
-          { id: "l-4-6", title: "Pandas Fundamentals", type: "video", duration: "1h 30m", completed: false, locked: false },
-          { id: "l-4-7", title: "DataFrame Lab", type: "lab", duration: "1h 30m", completed: false, locked: false },
-          { id: "l-4-8", title: "Cleaning Real Data", type: "assignment", duration: "2h", completed: false, locked: false },
-        ],
-      },
-      {
-        id: "ch-4-3", title: "Visualisation & ML",
-        lessons: [
-          { id: "l-4-9", title: "Matplotlib & Seaborn", type: "video", duration: "1h", completed: false, locked: false },
-          { id: "l-4-10", title: "Intro to Scikit-Learn", type: "video", duration: "1h 20m", completed: false, locked: false },
-          { id: "l-4-11", title: "Regression Lab", type: "lab", duration: "2h", completed: false, locked: false },
-          { id: "l-4-12", title: "Classification Lab", type: "lab", duration: "2h", completed: false, locked: false },
-          { id: "l-4-13", title: "Capstone Project", type: "assignment", duration: "5h", completed: false, locked: false },
-          { id: "l-4-14", title: "Final Assessment", type: "quiz", duration: "45m", completed: false, locked: false },
-        ],
-      },
-    ],
-    resources: [
-      { id: "r1", name: "Python Cheatsheet.pdf", type: "pdf", size: "1.8 MB", url: "#" },
-      { id: "r2", name: "Pandas Reference.pdf", type: "pdf", size: "3.2 MB", url: "#" },
-      { id: "r3", name: "Sample Datasets.zip", type: "zip", size: "24 MB", url: "#" },
-    ],
-  },
-  {
-    id: "5",
-    name: "Linux Server Hardening",
-    category: "Security",
-    description: "Self-paced hands-on hardening of Linux servers — SSH, firewalls, SELinux, auditing.",
-    instructor: "Mentor: Priya Nair",
-    instructorBio: "Security engineer. Async Q&A within 24 hours.",
-    modules: 9, completed: 0, totalHours: 22, status: "not_started",
-    deliveryMode: "self-paced", rating: 4.5, studyTime: "0h", lastAccessed: "—",
-    batch: "Linux Self-Paced", batchId: "8", prerequisites: [],
-    totalAccessHours: 80, usedAccessHours: 0,
-    persistentLab: {
-      labId: "lab-5",
-      templateName: "Linux Hardening Sandbox",
-      totalHours: 20,
-      usedHours: 0,
-      status: "stopped",
-    },
-    studyData: [],
-    chapters: [
-      {
-        id: "ch-5-1", title: "Baseline Hardening",
-        lessons: [
-          { id: "l-5-1", title: "Threat model & goals", type: "reading", duration: "20m", completed: false, locked: false },
-          { id: "l-5-2", title: "User accounts & sudo", type: "video", duration: "45m", completed: false, locked: false },
-          { id: "l-5-3", title: "SSH hardening lab", type: "lab", duration: "1h", completed: false, locked: false },
-        ],
-      },
-      {
-        id: "ch-5-2", title: "Network & Firewalls",
-        lessons: [
-          { id: "l-5-4", title: "iptables & nftables", type: "video", duration: "1h", completed: false, locked: false },
-          { id: "l-5-5", title: "UFW Lab", type: "lab", duration: "1h", completed: false, locked: false },
-          { id: "l-5-6", title: "fail2ban", type: "video", duration: "30m", completed: false, locked: false },
-        ],
-      },
-      {
-        id: "ch-5-3", title: "Auditing",
-        lessons: [
-          { id: "l-5-7", title: "auditd & logging", type: "video", duration: "45m", completed: false, locked: false },
-          { id: "l-5-8", title: "Lynis scan lab", type: "lab", duration: "1h", completed: false, locked: false },
-          { id: "l-5-9", title: "Final Assessment", type: "quiz", duration: "30m", completed: false, locked: false },
-        ],
-      },
-    ],
-    resources: [
-      { id: "r1", name: "CIS Benchmark Summary.pdf", type: "pdf", size: "2.6 MB", url: "#" },
-    ],
-  },
-  {
-    id: "6",
-    name: "GenAI Prompt Engineering",
-    category: "AI",
-    description: "Hybrid course — weekly live sessions + self-paced labs. Learn to design prompts that ship.",
-    instructor: "Dr. Anjali Rao",
-    instructorBio: "AI researcher. Hosts weekly live workshops with async labs in between.",
-    modules: 8, completed: 1, totalHours: 18, status: "in_progress",
-    deliveryMode: "hybrid", rating: 4.8, studyTime: "1h 15m", lastAccessed: "5h ago",
-    batch: "GenAI Hybrid Cohort", batchId: "9", prerequisites: [],
-    nextLessonId: "l-6-2",
-    nextLiveSession: { title: "Live: Prompt Patterns Workshop", date: "Wed, Mar 5", time: "6:00 PM" },
-    totalAccessHours: 40, usedAccessHours: 2,
-    studyData: [
-      { day: "Mon", hours: 0 }, { day: "Tue", hours: 0.5 }, { day: "Wed", hours: 0 },
-      { day: "Thu", hours: 0.5 }, { day: "Fri", hours: 0 }, { day: "Sat", hours: 0.25 }, { day: "Sun", hours: 0 },
-    ],
-    chapters: [
-      {
-        id: "ch-6-1", title: "Foundations",
-        lessons: [
-          { id: "l-6-1", title: "What is prompt engineering?", type: "video", duration: "30m", completed: true, locked: false },
-          { id: "l-6-2", title: "Prompt anatomy", type: "video", duration: "45m", completed: false, locked: false },
-          { id: "l-6-3", title: "Hands-on: First prompts", type: "lab", duration: "1h", completed: false, locked: false },
-        ],
-      },
-      {
-        id: "ch-6-2", title: "Patterns",
-        lessons: [
-          { id: "l-6-4", title: "Few-shot, CoT, ReAct", type: "video", duration: "1h", completed: false, locked: false },
-          { id: "l-6-5", title: "Pattern Lab", type: "lab", duration: "1h 30m", completed: false, locked: false },
-          { id: "l-6-6", title: "Evaluation basics", type: "reading", duration: "30m", completed: false, locked: false },
-          { id: "l-6-7", title: "Build a small agent", type: "assignment", duration: "3h", completed: false, locked: false },
-          { id: "l-6-8", title: "Final Assessment", type: "quiz", duration: "40m", completed: false, locked: false },
-        ],
-      },
-    ],
-    resources: [
-      { id: "r1", name: "Prompt Patterns.pdf", type: "pdf", size: "1.1 MB", url: "#" },
-      { id: "r2", name: "OpenAI Cookbook", type: "link", url: "https://cookbook.openai.com" },
-    ],
-  },
-  // ───────── DEMO: Java Fundamentals (Self-Paced) ─────────
-  {
     id: "10",
     name: "Java Fundamentals",
     category: "Programming",
@@ -779,7 +475,6 @@ try {
       { id: "r4", name: "Starter Project.zip", type: "zip", size: "8 MB", url: "#" },
     ],
   },
-  // ───────── DEMO: Python Fundamentals (VILT — Live Instructor-Led) ─────────
   {
     id: "11",
     name: "Python Fundamentals",
@@ -903,6 +598,311 @@ try {
       { id: "r4", name: "Official Python Docs", type: "link", url: "https://docs.python.org/3/" },
     ],
   },
+  {
+    id: "1",
+    name: "AWS Cloud Practitioner",
+    category: "Cloud",
+    description: "Master the fundamentals of Amazon Web Services. Covers EC2, S3, VPC, IAM and more. Preps you for the AWS Cloud Practitioner certification.",
+    instructor: "James Wilson",
+    instructorBio: "15+ years cloud architecture. AWS Solutions Architect Professional.",
+    modules: 12,
+    completed: 8,
+    totalHours: 24,
+    status: "in_progress",
+    deliveryMode: "live",
+    rating: 4.8,
+    studyTime: "8h 20m",
+    lastAccessed: "2h ago",
+    batch: "AWS Batch 12",
+    batchId: "1",
+    prerequisites: [],
+    nextLessonId: "l-1-9",
+    nextLiveSession: { title: "VPC Deep Dive", date: "Today", time: "2:00 PM" },
+    studyData: [
+      { day: "Mon", hours: 1.5 }, { day: "Tue", hours: 2 }, { day: "Wed", hours: 0.5 },
+      { day: "Thu", hours: 1 }, { day: "Fri", hours: 1.5 }, { day: "Sat", hours: 1 }, { day: "Sun", hours: 0.8 },
+    ],
+    chapters: [
+      {
+        id: "ch-1-1", title: "Foundations",
+        lessons: [
+          { id: "l-1-1", title: "Introduction to AWS", type: "video", duration: "45m", completed: true, locked: false, body: "Overview of AWS global infrastructure, regions, AZs and core services." },
+          { id: "l-1-2", title: "IAM & Security", type: "video", duration: "1h 15m", completed: true, locked: false },
+          { id: "l-1-3", title: "Shared Responsibility Model", type: "reading", duration: "20m", completed: true, locked: false, body: "AWS secures the cloud; you secure what's in the cloud..." },
+        ],
+      },
+      {
+        id: "ch-1-2", title: "Compute & Storage",
+        lessons: [
+          { id: "l-1-4", title: "EC2 Fundamentals", type: "video", duration: "2h", completed: true, locked: false },
+          { id: "l-1-5", title: "EC2 Hands-on Lab", type: "lab", duration: "1h", completed: true, locked: false },
+          { id: "l-1-6", title: "S3 & Storage", type: "video", duration: "1h 30m", completed: true, locked: false },
+          { id: "l-1-7", title: "S3 Quiz", type: "quiz", duration: "20m", completed: true, locked: false },
+        ],
+      },
+      {
+        id: "ch-1-3", title: "Networking",
+        lessons: [
+          { id: "l-1-8", title: "Networking Basics", type: "reading", duration: "30m", completed: true, locked: false },
+          { id: "l-1-9", title: "VPC Deep Dive", type: "video", duration: "1h 30m", completed: false, locked: false },
+          {
+            id: "l-1-9b", title: "Lab Instructions: Build a VPC", type: "lab-instruction", duration: "10m",
+            completed: false, locked: false,
+            labInstruction: {
+              objective: "Provision a VPC with public + private subnets and verify connectivity end-to-end.",
+              prerequisites: ["Completed 'VPC Deep Dive' video", "Lab VM is running"],
+              tasks: [
+                { id: "t1", title: "Create a VPC with CIDR 10.0.0.0/16" },
+                { id: "t2", title: "Create one public and one private subnet" },
+                { id: "t3", title: "Attach an Internet Gateway and configure route tables" },
+                { id: "t4", title: "Launch a test EC2 in each subnet and verify reachability" },
+              ],
+              expectedOutcome: "You can SSH into the public EC2 and ping the private EC2 from within it.",
+              resources: [
+                { label: "AWS VPC official docs", url: "https://docs.aws.amazon.com/vpc/" },
+                { label: "VPC cheat sheet (PDF)", url: "#" },
+              ],
+            },
+          },
+          {
+            id: "l-1-10", title: "VPC Lab", type: "lab", duration: "1h 30m", completed: false, locked: false,
+            labTemplate: "AWS Networking Sandbox", labMode: "on-demand", estimatedHours: 2,
+            labAllocation: { type: "time-limited", sessionDurationHrs: 2 },
+          },
+          { id: "l-1-11", title: "Route 53 & CDN", type: "video", duration: "1h", completed: false, locked: true },
+          { id: "l-1-12", title: "Final Assessment", type: "quiz", duration: "45m", completed: false, locked: true },
+        ],
+      },
+    ],
+    resources: [
+      { id: "r1", name: "AWS Cheatsheet.pdf", type: "pdf", size: "2.1 MB", url: "#" },
+      { id: "r2", name: "VPC Slides.pdf", type: "slides", size: "4.7 MB", url: "#" },
+      { id: "r3", name: "AWS Free Tier", type: "link", url: "https://aws.amazon.com/free" },
+      { id: "r4", name: "Lab Starter Kit.zip", type: "zip", size: "12 MB", url: "#" },
+    ],
+  },
+  {
+    id: "2",
+    name: "Kubernetes Fundamentals",
+    category: "DevOps",
+    description: "Deep dive into Kubernetes — pods, services, deployments, Helm. Hands-on cluster management.",
+    instructor: "Sarah Chen",
+    instructorBio: "CNCF Ambassador. 10 years container orchestration.",
+    modules: 8, completed: 2, totalHours: 16, status: "in_progress",
+    deliveryMode: "live", rating: 4.6, studyTime: "3h 10m", lastAccessed: "1d ago",
+    batch: "K8s Batch 5", batchId: "2", prerequisites: ["Docker Essentials"],
+    nextLessonId: "l-2-3",
+    nextLiveSession: { title: "Pods & Deployments", date: "Tomorrow", time: "10:00 AM" },
+    studyData: [
+      { day: "Mon", hours: 0.5 }, { day: "Tue", hours: 1 }, { day: "Wed", hours: 0 },
+      { day: "Thu", hours: 0.5 }, { day: "Fri", hours: 0.5 }, { day: "Sat", hours: 0.5 }, { day: "Sun", hours: 0.2 },
+    ],
+    chapters: [
+      {
+        id: "ch-2-1", title: "Foundations",
+        lessons: [
+          { id: "l-2-1", title: "Intro to Container Orchestration", type: "video", duration: "30m", completed: true, locked: false },
+          { id: "l-2-2", title: "K8s Architecture", type: "video", duration: "1h", completed: true, locked: false },
+        ],
+      },
+      {
+        id: "ch-2-2", title: "Workloads",
+        lessons: [
+          { id: "l-2-3", title: "Pods & Deployments", type: "video", duration: "1h 30m", completed: false, locked: false },
+          { id: "l-2-4", title: "K8s Lab: First Cluster", type: "lab", duration: "2h", completed: false, locked: false },
+          { id: "l-2-5", title: "Services & Networking", type: "video", duration: "1h 15m", completed: false, locked: true },
+          { id: "l-2-6", title: "ConfigMaps & Secrets", type: "reading", duration: "30m", completed: false, locked: true },
+          { id: "l-2-7", title: "Helm Charts", type: "video", duration: "1h", completed: false, locked: true },
+          { id: "l-2-8", title: "K8s Final Quiz", type: "quiz", duration: "30m", completed: false, locked: true },
+        ],
+      },
+    ],
+    resources: [
+      { id: "r1", name: "K8s Cheatsheet.pdf", type: "pdf", size: "1.4 MB", url: "#" },
+      { id: "r2", name: "kubectl Reference", type: "link", url: "https://kubernetes.io/docs/reference/kubectl/" },
+    ],
+  },
+  {
+    id: "3",
+    name: "Docker Essentials",
+    category: "DevOps",
+    description: "Everything about Docker — building images to multi-container apps with Compose.",
+    instructor: "Mark Davis", instructorBio: "DevOps engineer at scale.",
+    modules: 6, completed: 6, totalHours: 10, status: "completed",
+    deliveryMode: "live", rating: 4.9, studyTime: "11h 45m", lastAccessed: "1w ago",
+    batch: "Docker Batch 8", batchId: "3", prerequisites: [],
+    studyData: [],
+    chapters: [
+      {
+        id: "ch-3-1", title: "Docker Core",
+        lessons: [
+          { id: "l-3-1", title: "What is Docker?", type: "video", duration: "30m", completed: true, locked: false },
+          { id: "l-3-2", title: "Images & Containers", type: "video", duration: "1h", completed: true, locked: false },
+          { id: "l-3-3", title: "Dockerfile & Build", type: "lab", duration: "1h 30m", completed: true, locked: false },
+          { id: "l-3-4", title: "Docker Compose", type: "video", duration: "1h", completed: true, locked: false },
+          { id: "l-3-5", title: "Networking & Volumes", type: "reading", duration: "45m", completed: true, locked: false },
+          { id: "l-3-6", title: "Docker Final Quiz", type: "quiz", duration: "30m", completed: true, locked: false },
+        ],
+      },
+    ],
+    resources: [
+      { id: "r1", name: "Docker Cheatsheet.pdf", type: "pdf", size: "900 KB", url: "#" },
+    ],
+  },
+  {
+    id: "4",
+    name: "Python for Data Science",
+    category: "Data Science",
+    description: "Self-paced Python journey from basics to pandas, numpy, and ML foundations. Hands-on labs available 24/7.",
+    instructor: "Mentor: Sarah Wilson",
+    instructorBio: "Data scientist. Mentors learners async via comments & weekly office hours.",
+    modules: 14, completed: 4, totalHours: 38, status: "in_progress",
+    deliveryMode: "self-paced", rating: 4.7, studyTime: "6h 40m", lastAccessed: "3h ago",
+    batch: "Python Self-Paced", batchId: "7", prerequisites: [],
+    nextLessonId: "l-4-5",
+    totalAccessHours: 120, usedAccessHours: 38,
+    persistentLab: {
+      labId: "lab-4",
+      templateName: "Python DS Sandbox",
+      totalHours: 20,
+      usedHours: 6.5,
+      ip: "10.0.3.21",
+      status: "running",
+    },
+    studyData: [
+      { day: "Mon", hours: 1 }, { day: "Tue", hours: 1.5 }, { day: "Wed", hours: 0.5 },
+      { day: "Thu", hours: 1 }, { day: "Fri", hours: 0.5 }, { day: "Sat", hours: 1 }, { day: "Sun", hours: 1.2 },
+    ],
+    chapters: [
+      {
+        id: "ch-4-1", title: "Python Basics",
+        lessons: [
+          { id: "l-4-1", title: "Setting up your environment", type: "video", duration: "20m", completed: true, locked: false },
+          { id: "l-4-2", title: "Variables & Types", type: "video", duration: "40m", completed: true, locked: false },
+          { id: "l-4-3", title: "Control Flow", type: "video", duration: "50m", completed: true, locked: false },
+          { id: "l-4-4", title: "Functions Lab", type: "lab", duration: "1h", completed: true, locked: false },
+        ],
+      },
+      {
+        id: "ch-4-2", title: "Data Wrangling",
+        lessons: [
+          { id: "l-4-5", title: "Intro to NumPy", type: "video", duration: "1h", completed: false, locked: false },
+          { id: "l-4-6", title: "Pandas Fundamentals", type: "video", duration: "1h 30m", completed: false, locked: false },
+          { id: "l-4-7", title: "DataFrame Lab", type: "lab", duration: "1h 30m", completed: false, locked: false },
+          { id: "l-4-8", title: "Cleaning Real Data", type: "assignment", duration: "2h", completed: false, locked: false },
+        ],
+      },
+      {
+        id: "ch-4-3", title: "Visualisation & ML",
+        lessons: [
+          { id: "l-4-9", title: "Matplotlib & Seaborn", type: "video", duration: "1h", completed: false, locked: false },
+          { id: "l-4-10", title: "Intro to Scikit-Learn", type: "video", duration: "1h 20m", completed: false, locked: false },
+          { id: "l-4-11", title: "Regression Lab", type: "lab", duration: "2h", completed: false, locked: false },
+          { id: "l-4-12", title: "Classification Lab", type: "lab", duration: "2h", completed: false, locked: false },
+          { id: "l-4-13", title: "Capstone Project", type: "assignment", duration: "5h", completed: false, locked: false },
+          { id: "l-4-14", title: "Final Assessment", type: "quiz", duration: "45m", completed: false, locked: false },
+        ],
+      },
+    ],
+    resources: [
+      { id: "r1", name: "Python Cheatsheet.pdf", type: "pdf", size: "1.8 MB", url: "#" },
+      { id: "r2", name: "Pandas Reference.pdf", type: "pdf", size: "3.2 MB", url: "#" },
+      { id: "r3", name: "Sample Datasets.zip", type: "zip", size: "24 MB", url: "#" },
+    ],
+  },
+  {
+    id: "5",
+    name: "Linux Server Hardening",
+    category: "Security",
+    description: "Self-paced hands-on hardening of Linux servers — SSH, firewalls, SELinux, auditing.",
+    instructor: "Mentor: Priya Nair",
+    instructorBio: "Security engineer. Async Q&A within 24 hours.",
+    modules: 9, completed: 0, totalHours: 22, status: "not_started",
+    deliveryMode: "self-paced", rating: 4.5, studyTime: "0h", lastAccessed: "—",
+    batch: "Linux Self-Paced", batchId: "8", prerequisites: [],
+    totalAccessHours: 80, usedAccessHours: 0,
+    persistentLab: {
+      labId: "lab-5",
+      templateName: "Linux Hardening Sandbox",
+      totalHours: 20,
+      usedHours: 0,
+      status: "stopped",
+    },
+    studyData: [],
+    chapters: [
+      {
+        id: "ch-5-1", title: "Baseline Hardening",
+        lessons: [
+          { id: "l-5-1", title: "Threat model & goals", type: "reading", duration: "20m", completed: false, locked: false },
+          { id: "l-5-2", title: "User accounts & sudo", type: "video", duration: "45m", completed: false, locked: false },
+          { id: "l-5-3", title: "SSH hardening lab", type: "lab", duration: "1h", completed: false, locked: false },
+        ],
+      },
+      {
+        id: "ch-5-2", title: "Network & Firewalls",
+        lessons: [
+          { id: "l-5-4", title: "iptables & nftables", type: "video", duration: "1h", completed: false, locked: false },
+          { id: "l-5-5", title: "UFW Lab", type: "lab", duration: "1h", completed: false, locked: false },
+          { id: "l-5-6", title: "fail2ban", type: "video", duration: "30m", completed: false, locked: false },
+        ],
+      },
+      {
+        id: "ch-5-3", title: "Auditing",
+        lessons: [
+          { id: "l-5-7", title: "auditd & logging", type: "video", duration: "45m", completed: false, locked: false },
+          { id: "l-5-8", title: "Lynis scan lab", type: "lab", duration: "1h", completed: false, locked: false },
+          { id: "l-5-9", title: "Final Assessment", type: "quiz", duration: "30m", completed: false, locked: false },
+        ],
+      },
+    ],
+    resources: [
+      { id: "r1", name: "CIS Benchmark Summary.pdf", type: "pdf", size: "2.6 MB", url: "#" },
+    ],
+  },
+  {
+    id: "6",
+    name: "GenAI Prompt Engineering",
+    category: "AI",
+    description: "Hybrid course — weekly live sessions + self-paced labs. Learn to design prompts that ship.",
+    instructor: "Dr. Anjali Rao",
+    instructorBio: "AI researcher. Hosts weekly live workshops with async labs in between.",
+    modules: 8, completed: 1, totalHours: 18, status: "in_progress",
+    deliveryMode: "hybrid", rating: 4.8, studyTime: "1h 15m", lastAccessed: "5h ago",
+    batch: "GenAI Hybrid Cohort", batchId: "9", prerequisites: [],
+    nextLessonId: "l-6-2",
+    nextLiveSession: { title: "Live: Prompt Patterns Workshop", date: "Wed, Mar 5", time: "6:00 PM" },
+    totalAccessHours: 40, usedAccessHours: 2,
+    studyData: [
+      { day: "Mon", hours: 0 }, { day: "Tue", hours: 0.5 }, { day: "Wed", hours: 0 },
+      { day: "Thu", hours: 0.5 }, { day: "Fri", hours: 0 }, { day: "Sat", hours: 0.25 }, { day: "Sun", hours: 0 },
+    ],
+    chapters: [
+      {
+        id: "ch-6-1", title: "Foundations",
+        lessons: [
+          { id: "l-6-1", title: "What is prompt engineering?", type: "video", duration: "30m", completed: true, locked: false },
+          { id: "l-6-2", title: "Prompt anatomy", type: "video", duration: "45m", completed: false, locked: false },
+          { id: "l-6-3", title: "Hands-on: First prompts", type: "lab", duration: "1h", completed: false, locked: false },
+        ],
+      },
+      {
+        id: "ch-6-2", title: "Patterns",
+        lessons: [
+          { id: "l-6-4", title: "Few-shot, CoT, ReAct", type: "video", duration: "1h", completed: false, locked: false },
+          { id: "l-6-5", title: "Pattern Lab", type: "lab", duration: "1h 30m", completed: false, locked: false },
+          { id: "l-6-6", title: "Evaluation basics", type: "reading", duration: "30m", completed: false, locked: false },
+          { id: "l-6-7", title: "Build a small agent", type: "assignment", duration: "3h", completed: false, locked: false },
+          { id: "l-6-8", title: "Final Assessment", type: "quiz", duration: "40m", completed: false, locked: false },
+        ],
+      },
+    ],
+    resources: [
+      { id: "r1", name: "Prompt Patterns.pdf", type: "pdf", size: "1.1 MB", url: "#" },
+      { id: "r2", name: "OpenAI Cookbook", type: "link", url: "https://cookbook.openai.com" },
+    ],
+  },
+  // ───────── DEMO: Java Fundamentals (Self-Paced) ─────────
+  // ───────── DEMO: Python Fundamentals (VILT — Live Instructor-Led) ─────────
 ];
 
 export const getStudentCourse = (id: string) => studentCourses.find((c) => c.id === id);
