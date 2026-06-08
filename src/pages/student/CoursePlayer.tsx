@@ -973,6 +973,15 @@ export default function CoursePlayer() {
             {lesson.type === "reasoning" && (
               <InlineReasoning lesson={lesson} />
             )}
+            {lesson.type === "game-based-learning" && (
+              <GameLessonPanel
+                lessonId={lesson.id}
+                title={lesson.title}
+                gameType={lesson.gameType}
+                gameUrl={lesson.gameUrl}
+                description={lesson.body}
+              />
+            )}
           </CardContent>
         </Card>
 
