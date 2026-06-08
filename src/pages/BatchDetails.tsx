@@ -35,7 +35,7 @@ import {
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBatchStore } from "@/stores/batchStore";
-import { useCourseStore } from "@/stores/courseStore";
+import { useCourseStore, getCourseAssessments, isAssessmentLesson, type Lesson } from "@/stores/courseStore";
 import { useLabStore } from "@/stores/labStore";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
