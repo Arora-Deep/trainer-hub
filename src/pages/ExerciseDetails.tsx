@@ -64,6 +64,7 @@ const ExerciseDetails = () => {
   const [customOutput, setCustomOutput] = useState("");
   const [showHints, setShowHints] = useState(false);
   const [activeTab, setActiveTab] = useState("problem");
+  const [viewSubmission, setViewSubmission] = useState<typeof mockSubmissions[number] | null>(null);
 
   if (!exercise) {
     return (
