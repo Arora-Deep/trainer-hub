@@ -64,6 +64,9 @@ export interface StudentLesson {
   codeSolution?: string;
   codeHints?: string[];
   codeTests?: { id: string; input: string; expectedOutput: string; hidden?: boolean; weight?: number }[];
+  // Game-based learning fields
+  gameType?: "escape-room" | "hangman";
+  gameUrl?: string;
 }
 
 export interface StudentChapter {
@@ -709,8 +712,10 @@ try {
             videoUrl: "https://www.youtube.com/embed/yH3SuD8M6Ow" },
           { id: "l-10-22", title: "Multithreading & ExecutorService", type: "video", duration: "1h", completed: false, locked: false,
             videoUrl: "https://www.youtube.com/embed/4aYvLz4E1Ts" },
-          { id: "l-10-23", title: "Game: Concurrency Café", type: "game-based-learning", duration: "25m", completed: false, locked: false,
-            body: "Run a virtual café — assign threads to baristas without deadlocking the espresso machine." },
+          { id: "l-10-23", title: "Escape Room: The Java Mastery Vault", type: "game-based-learning", duration: "45m", completed: false, locked: false,
+            gameType: "escape-room",
+            gameUrl: "",
+            body: "Scenario-based escape room. Apply OOP, collections, exceptions and concurrency concepts to solve puzzles, unlock clues and escape the vault before the timer runs out. Climbs the batch leaderboard." },
           { id: "l-10-24", title: "Lab: Concurrent file processor", type: "lab", duration: "2h", completed: false, locked: false,
             labTemplate: "Java Dev Sandbox (JDK 21 + Maven)", labMode: "on-demand", estimatedHours: 2,
             labAllocation: { type: "time-limited", sessionDurationHrs: 2 } },
@@ -837,8 +842,10 @@ try {
           },
           { id: "l-11-11", title: "Reading: Pythonic style (PEP 8 essentials)", type: "reading", duration: "15m", completed: false, locked: false,
             body: "Idiomatic Python: list comprehensions, truthiness, EAFP vs LBYL, naming conventions and the Zen of Python." },
-          { id: "l-11-12", title: "Game: Python Pop Quiz Show", type: "game-based-learning", duration: "20m", completed: false, locked: false,
-            body: "A Kahoot-style quiz show with 25 rapid-fire questions. Earn XP for streaks." },
+          { id: "l-11-12", title: "Hangman: Python Syntax Slayer", type: "game-based-learning", duration: "20m", completed: false, locked: false,
+            gameType: "hangman",
+            gameUrl: "",
+            body: "Classic hangman — but every word is a Python keyword, built-in, or stdlib module. Earn XP, keep your streak alive and climb the batch leaderboard." },
           { id: "l-11-13", title: "Assignment: Build a number-guessing CLI", type: "assignment", duration: "1h 30m", completed: false, locked: false,
             body: "Build an interactive number-guessing game with difficulty levels. Submit a single .py file." },
         ],

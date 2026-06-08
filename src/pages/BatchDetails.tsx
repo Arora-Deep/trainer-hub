@@ -32,7 +32,9 @@ import {
   ClipboardList, Settings, GraduationCap, TrendingUp, Zap, BarChart3,
   AlertCircle, Globe, Building2, MoreVertical, RotateCcw, Power, PowerOff,
   Camera, Trash2, Star, Eye, EyeOff, Clipboard, Video, FileText, Award, ChevronRight, Edit,
+  Gamepad2, Trophy, Crown, Medal,
 } from "lucide-react";
+import { getLeaderboardsForBatch, formatLeaderboardTime } from "@/data/gameLeaderboards";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBatchStore } from "@/stores/batchStore";
 import { useCourseStore, getCourseAssessments, isAssessmentLesson, type Lesson } from "@/stores/courseStore";
@@ -231,6 +233,7 @@ export default function BatchDetails() {
               { value: "materials", label: "Material", icon: FileText },
               { value: "announcements", label: "Announcements", icon: Megaphone, count: batch.announcements.length },
               { value: "assessments", label: "Assessments", icon: ClipboardList },
+              { value: "games", label: "Games", icon: Gamepad2 },
               { value: "reports", label: "Reports", icon: TrendingUp },
               { value: "settings", label: "Settings", icon: Settings },
             ].map((tab) => (
@@ -1196,6 +1199,97 @@ export default function BatchDetails() {
                   </SheetContent>
                 </Sheet>
               </Card>
+            );
+          })()}
+        </TabsContent>
+
+        {/* Games Tab */}
+        <TabsContent value="games">
+          {(() => {
+            const boards = getLeaderboardsForBatch(batch.id);
+            if (boards.length === 0) {
+              return (
+                <Card>
+                  <CardContent className="py-16 text-center">
+                    <div className="h-14 w-14 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                      <Gamepad2 className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm font-medium">No games in this batch yet</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Add a Game-based Learning lesson to the course to see leaderboards here.
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            }
+            return (
+              <div className="space-y-6">
+                {boards.map((b) => (
+                  <Card key={b.lessonId}>
+                    <CardHeader className="flex flex-row items-start justify-between gap-4 pb-3">
+                      <div className="flex items-start gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-pink-500/20 flex items-center justify-center">
+                          <Gamepad2 className="h-5 w-5 text-violet-600" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-base">{b.gameTitle}</CardTitle>
+                          <CardDescription className="capitalize">
+                            {b.gameType.replace("-", " ")} · {b.totalPlayers} players · avg score {b.averageScore}
+                          </CardDescription>
+                        </div>
+                      </div>
+                      <Trophy className="h-5 w-5 text-amber-500" />
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/30 hover:bg-muted/30">
+                            <TableHead className="w-16">Rank</TableHead>
+                            <TableHead>Student</TableHead>
+                            <TableHead className="text-right">Score</TableHead>
+                            <TableHead className="text-right">Time</TableHead>
+                            <TableHead className="text-right">Attempts</TableHead>
+                            <TableHead className="text-right">Completed</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {b.entries.map((e) => (
+                            <TableRow key={e.studentId}>
+                              <TableCell>
+                                <div className="flex items-center gap-1.5">
+                                  {e.rank === 1 ? (
+                                    <Crown className="h-4 w-4 text-amber-500" />
+                                  ) : e.rank === 2 ? (
+                                    <Medal className="h-4 w-4 text-zinc-400" />
+                                  ) : e.rank === 3 ? (
+                                    <Medal className="h-4 w-4 text-orange-500" />
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">#{e.rank}</span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-7 w-7">
+                                    <AvatarFallback className="text-[10px]">
+                                      {e.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-sm font-medium">{e.name}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right font-semibold tabular-nums">{e.score}</TableCell>
+                              <TableCell className="text-right tabular-nums text-muted-foreground">{formatLeaderboardTime(e.timeSec)}</TableCell>
+                              <TableCell className="text-right tabular-nums text-muted-foreground">{e.attempts}x</TableCell>
+                              <TableCell className="text-right text-xs text-muted-foreground">{e.completedAt}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             );
           })()}
         </TabsContent>

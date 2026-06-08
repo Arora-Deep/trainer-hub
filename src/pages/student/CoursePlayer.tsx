@@ -18,6 +18,7 @@ import { getStudentCourse, type StudentLesson } from "@/data/studentMockData";
 import { useEnrollmentStore } from "@/stores/enrollmentStore";
 import { OnDemandLabPanel } from "@/components/learning/OnDemandLabPanel";
 import { PersistentLabPanel } from "@/components/learning/PersistentLabPanel";
+import { GameLessonPanel } from "@/components/learning/GameLessonPanel";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -972,6 +973,15 @@ export default function CoursePlayer() {
             )}
             {lesson.type === "reasoning" && (
               <InlineReasoning lesson={lesson} />
+            )}
+            {lesson.type === "game-based-learning" && (
+              <GameLessonPanel
+                lessonId={lesson.id}
+                title={lesson.title}
+                gameType={lesson.gameType}
+                gameUrl={lesson.gameUrl}
+                description={lesson.body}
+              />
             )}
           </CardContent>
         </Card>
