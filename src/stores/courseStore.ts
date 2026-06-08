@@ -324,7 +324,7 @@ const initialCourses: Course[] = [
       { id: "l-java-24", title: "Assignment: Capstone — Bank Account Simulator", type: "assignment", duration: "5 days", instructions: "Design a multi-account banking domain with transactions, transfers and an audit log. Use OOP, collections and exception handling." },
       { id: "l-java-25", title: "Game-Based Learning: Bug Bash Arena", type: "game-based-learning", duration: "30 min", summary: "Timed challenge — fix as many seeded bugs as you can in a Java codebase." },
       { id: "l-java-26", title: "Final Exam (Proctored)", type: "exam", duration: "60 min", proctored: true, passingScore: 70, attempts: 1, timeLimit: 60 },
-      { id: "l-java-27", title: "Insight Question: What will you build next?", type: "survey", duration: "3 min" },
+      { id: "l-java-27", title: "AI Reasoning: What will you build next?", type: "reasoning", duration: "5 min", reasoningType: "scenario-response", reasoningPrompt: "Describe a small Java project you'd build next week and the concepts from this course you'd use." },
     ]},
   ] },
   { id: "11", name: "Python Fundamentals", deliveryType: "self-paced", category: "Programming", description: "Self-paced Python fundamentals with persistent learner labs cloned from a trainer golden template.", batches: 1, lastUpdated: "Apr 25, 2026", status: "active", settings: { ...defaultSettings, deliveryType: 'self-paced', labPolicy: 'unlimited-during-validity', visibility: 'customer' }, owner: { type: 'trainer', id: 't-4', name: 'Neha Kapoor' }, moderation: 'approved', chapters: [
