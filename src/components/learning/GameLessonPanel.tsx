@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Gamepad2, Play, Trophy, Maximize2, Crown, Medal, Clock, Sparkles, RotateCcw } from "lucide-react";
+import { Gamepad2, Play, Trophy, Maximize2, Crown, Medal, Clock, Sparkles, RotateCcw, ExternalLink } from "lucide-react";
 import { getLeaderboardForLesson, formatLeaderboardTime } from "@/data/gameLeaderboards";
 
 interface Props {
@@ -29,16 +29,27 @@ const typeMeta: Record<string, { label: string; tone: string; tagline: string }>
 
 export function GameLessonPanel({ lessonId, title, gameType, gameUrl, description }: Props) {
   const [launched, setLaunched] = useState(false);
+  const stageRef = useRef<HTMLDivElement>(null);
   const leaderboard = getLeaderboardForLesson(lessonId);
   const meta = gameType ? typeMeta[gameType] : null;
   const isPlaceholder = !gameUrl || gameUrl.trim() === "";
 
-  const openFullscreen = () => {
+  const openInNewTab = () => {
     if (gameUrl) window.open(gameUrl, "_blank", "noopener,noreferrer");
   };
 
+  const requestFullscreen = () => {
+    const el = stageRef.current;
+    if (!el) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      el.requestFullscreen?.();
+    }
+  };
+
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+    <div className="space-y-4">
       {/* Game stage */}
       <Card className="overflow-hidden">
         <CardHeader className="pb-3">
@@ -62,8 +73,11 @@ export function GameLessonPanel({ lessonId, title, gameType, gameUrl, descriptio
                 <Button size="sm" variant="outline" onClick={() => setLaunched(false)}>
                   <RotateCcw className="h-3.5 w-3.5 mr-1" /> Reset
                 </Button>
-                <Button size="sm" variant="outline" onClick={openFullscreen}>
+                <Button size="sm" variant="outline" onClick={requestFullscreen}>
                   <Maximize2 className="h-3.5 w-3.5 mr-1" /> Fullscreen
+                </Button>
+                <Button size="sm" variant="outline" onClick={openInNewTab}>
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> New tab
                 </Button>
               </div>
             )}
@@ -71,7 +85,7 @@ export function GameLessonPanel({ lessonId, title, gameType, gameUrl, descriptio
         </CardHeader>
         <CardContent>
           {!launched ? (
-            <div className="rounded-xl border border-dashed border-border bg-muted/30 p-10 text-center space-y-4">
+            <div className="rounded-xl border border-dashed border-border bg-muted/30 p-16 text-center space-y-4">
               <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-pink-500/20 flex items-center justify-center">
                 <Sparkles className="h-8 w-8 text-violet-600" />
               </div>
@@ -96,39 +110,46 @@ export function GameLessonPanel({ lessonId, title, gameType, gameUrl, descriptio
               )}
             </div>
           ) : (
-            <div className="rounded-xl overflow-hidden border border-border bg-black/5 aspect-video">
+            <div
+              ref={stageRef}
+              className="rounded-xl overflow-hidden border border-border bg-black/5 w-full"
+              style={{ height: "min(80vh, 900px)" }}
+            >
               <iframe
                 src={gameUrl}
                 title={title}
-                className="w-full h-full"
+                className="w-full h-full block"
                 allow="fullscreen; clipboard-read; clipboard-write; autoplay"
+                allowFullScreen
               />
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Leaderboard */}
+      {/* Leaderboard below */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-amber-500" /> Batch Leaderboard
-          </CardTitle>
-          {leaderboard && (
-            <p className="text-[11px] text-muted-foreground">
-              {leaderboard.totalPlayers} players · avg {leaderboard.averageScore}
-            </p>
-          )}
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-amber-500" /> Batch Leaderboard
+            </CardTitle>
+            {leaderboard && (
+              <p className="text-[11px] text-muted-foreground">
+                {leaderboard.totalPlayers} players · avg {leaderboard.averageScore}
+              </p>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {leaderboard ? (
-            <div className="divide-y divide-border max-h-[420px] overflow-y-auto">
+            <div className="divide-y divide-border">
               {leaderboard.entries.map((e) => (
                 <div
                   key={e.studentId}
                   className={`flex items-center gap-3 px-4 py-2.5 text-sm ${e.isMe ? "bg-primary/5" : ""}`}
                 >
-                  <div className="w-6 flex justify-center">
+                  <div className="w-8 flex justify-center">
                     {e.rank === 1 ? (
                       <Crown className="h-4 w-4 text-amber-500" />
                     ) : e.rank === 2 ? (
@@ -139,21 +160,23 @@ export function GameLessonPanel({ lessonId, title, gameType, gameUrl, descriptio
                       <span className="text-xs font-medium text-muted-foreground">#{e.rank}</span>
                     )}
                   </div>
-                  <Avatar className="h-7 w-7">
+                  <Avatar className="h-8 w-8">
                     <AvatarFallback className="text-[10px]">
                       {e.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-xs font-medium truncate">{e.name}</p>
+                      <p className="text-sm font-medium truncate">{e.name}</p>
                       {e.isMe && <Badge className="text-[9px] h-4 px-1 bg-primary/15 text-primary border-0">You</Badge>}
                     </div>
-                    <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-2.5 w-2.5" /> {formatLeaderboardTime(e.timeSec)} · {e.attempts}x
+                    <p className="text-[11px] text-muted-foreground flex items-center gap-2">
+                      <span className="flex items-center gap-1"><Clock className="h-2.5 w-2.5" /> {formatLeaderboardTime(e.timeSec)}</span>
+                      <span>· {e.attempts} attempt{e.attempts > 1 ? "s" : ""}</span>
+                      <span>· {e.completedAt}</span>
                     </p>
                   </div>
-                  <span className="text-sm font-semibold tabular-nums">{e.score}</span>
+                  <span className="text-base font-semibold tabular-nums">{e.score}</span>
                 </div>
               ))}
             </div>
