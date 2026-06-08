@@ -3,10 +3,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Download, ExternalLink, FileText, FileArchive, Link as LinkIcon, Presentation } from "lucide-react";
+import { Download, ExternalLink, FileText, FileArchive, Link as LinkIcon, Presentation, Video, Image as ImageIcon } from "lucide-react";
 import { getStudentCourse } from "@/data/studentMockData";
+import { useBatchStore } from "@/stores/batchStore";
 
-const icons: Record<string, any> = { pdf: FileText, slides: Presentation, zip: FileArchive, link: LinkIcon };
+const icons: Record<string, any> = { pdf: FileText, slides: Presentation, zip: FileArchive, link: LinkIcon, video: Video, document: FileText, image: ImageIcon, other: FileText };
 
 export default function CourseResources() {
   const { id = "" } = useParams();
