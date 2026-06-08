@@ -279,6 +279,9 @@ const initialCourses: Course[] = [
       { id: "l-py-6", title: "Final exam", type: "exam", duration: "45 min", proctored: true },
     ]},
   ]},
+  // DEMO courses
+  { id: "10", name: "Java Fundamentals", deliveryType: "instructor-led", category: "Programming", description: "VILT Java fundamentals bootcamp with daily live classes and dedicated lab VMs.", batches: 1, lastUpdated: "May 20, 2026", status: "active", settings: { ...defaultSettings, deliveryType: 'instructor-led' }, owner: { type: 'trainer', id: 't-3', name: 'Rahul Verma' }, moderation: 'approved', chapters: [] },
+  { id: "11", name: "Python Fundamentals", deliveryType: "self-paced", category: "Programming", description: "Self-paced Python fundamentals with persistent learner labs cloned from a trainer golden template.", batches: 1, lastUpdated: "Apr 25, 2026", status: "active", settings: { ...defaultSettings, deliveryType: 'self-paced', labPolicy: 'unlimited-during-validity', visibility: 'customer' }, owner: { type: 'trainer', id: 't-4', name: 'Neha Kapoor' }, moderation: 'approved', chapters: [] },
 ];
 
 export const useCourseStore = create<CourseStore>((set, get) => ({
