@@ -290,7 +290,7 @@ const initialCourses: Course[] = [
     { id: "ch-java-1", title: "Getting Started with Java", lessons: [
       { id: "l-java-1", title: "Welcome & Course Roadmap", type: "video", duration: "10 min", summary: "Trainer kicks off the cohort and walks through the 6-week schedule." },
       { id: "l-java-2", title: "Reading: The Java Platform (JVM, JRE, JDK)", type: "reading", duration: "15 min", body: "Java is a class-based, object-oriented language compiled to bytecode and executed on the Java Virtual Machine (JVM). This reading covers the JDK toolchain (javac, java, jshell), how the JVM loads classes, JIT compilation, and why 'write once, run anywhere' still matters in 2026." },
-      { id: "l-java-3", title: "Live Session: JDK 21 setup walkthrough", type: "live-session", duration: "45 min", liveSession: { date: "Jun 09, 2026", time: "10:00 AM IST", durationMin: 45, agenda: "Install JDK 21, verify with java -version, run first HelloWorld." } },
+      { id: "l-java-3", title: "Video: JDK 21 setup walkthrough", type: "video", duration: "45 min", videoUrl: "https://www.youtube.com/embed/dRMvujm3a88" },
       { id: "l-java-4", title: "Lab: Hello Java on your VM", type: "lab", duration: "30 min", lab: { templateId: 'tpl-java', templateName: 'Java Dev VM (JDK 21)', mode: 'persistent' } },
       { id: "l-java-5", title: "Quiz: Java Platform Basics", type: "quiz", duration: "10 min", passingScore: 70, attempts: 2 },
     ]},
@@ -298,7 +298,7 @@ const initialCourses: Course[] = [
       { id: "l-java-6", title: "Video: Primitive types & operators", type: "video", duration: "22 min" },
       { id: "l-java-7", title: "Reading: Control flow cheatsheet", type: "reading", duration: "12 min", body: "if/else, switch expressions (Java 14+), for, while, do-while, enhanced-for, labelled break — with idiomatic examples." },
       { id: "l-java-8", title: "Exercise: FizzBuzz in Java", type: "code-exercise", duration: "20 min", language: "java", starterCode: "public class FizzBuzz {\n  public static void main(String[] args) {\n    // TODO\n  }\n}" },
-      { id: "l-java-9", title: "Insight Question: Why is String immutable?", type: "survey", duration: "5 min" },
+      { id: "l-java-9", title: "AI Reasoning: Why is String immutable?", type: "reasoning", duration: "10 min", reasoningType: "root-cause", reasoningPrompt: "Explain why the String class is immutable in Java and how that helps with security, the String pool and multithreading.", reasoningRubric: "string pool / interning\nsecurity / TOCTOU\nthread safety\ncached hashcode / HashMap keys" },
     ]},
     { id: "ch-java-3", title: "Object-Oriented Programming", lessons: [
       { id: "l-java-10", title: "Video: Classes, objects & constructors", type: "video", duration: "28 min" },
