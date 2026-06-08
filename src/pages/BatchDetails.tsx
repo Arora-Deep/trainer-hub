@@ -35,7 +35,7 @@ import {
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBatchStore } from "@/stores/batchStore";
-import { useCourseStore } from "@/stores/courseStore";
+import { useCourseStore, getCourseAssessments, isAssessmentLesson, type Lesson } from "@/stores/courseStore";
 import { useLabStore } from "@/stores/labStore";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -92,6 +92,7 @@ export default function BatchDetails() {
   const [selectedVMIds, setSelectedVMIds] = useState<string[]>([]);
   const [consoleSheetVM, setConsoleSheetVM] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [openAssessment, setOpenAssessment] = useState<Lesson | null>(null);
 
   if (!batch) {
     return (
@@ -982,24 +983,221 @@ export default function BatchDetails() {
 
         {/* Assessments Tab */}
         <TabsContent value="assessments">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-base">Assessments</CardTitle>
-                <CardDescription>Create and manage quizzes and tests</CardDescription>
-              </div>
-              <Button size="sm"><ClipboardList className="mr-2 h-4 w-4" />Create Assessment</Button>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
-                  <ClipboardList className="h-8 w-8 text-muted-foreground/50" />
-                </div>
-                <h3 className="text-lg font-semibold">No assessments yet</h3>
-                <p className="text-sm text-muted-foreground max-w-sm mt-1.5">Create quizzes and tests to evaluate student progress.</p>
-              </div>
-            </CardContent>
-          </Card>
+          {(() => {
+            const assignedCourse = courses.find((c) => c.id === batch.courseId) || courses.find((c) => c.name === batch.courseName);
+            const assessments = assignedCourse ? getCourseAssessments(assignedCourse) : [];
+            const typeMeta: Record<string, { label: string; tone: string }> = {
+              quiz: { label: "Quiz", tone: "bg-blue-500/10 text-blue-600" },
+              assignment: { label: "Assignment", tone: "bg-amber-500/10 text-amber-600" },
+              "code-exercise": { label: "Code Exercise", tone: "bg-violet-500/10 text-violet-600" },
+              exam: { label: "Exam", tone: "bg-red-500/10 text-red-600" },
+              "game-based-learning": { label: "Game", tone: "bg-pink-500/10 text-pink-600" },
+            };
+
+            // Deterministic mock submission data per (participant, lesson)
+            const submissionFor = (participantId: string, lesson: Lesson) => {
+              const seed = (participantId + lesson.id).split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+              const r = seed % 10;
+              if (r < 2) return { status: "not_submitted" as const, score: null as number | null, submittedAt: null as string | null, attempts: 0 };
+              if (r < 3) return { status: "in_progress" as const, score: null, submittedAt: null, attempts: 1 };
+              const score = 55 + (seed % 46); // 55-100
+              const days = (seed % 5) + 1;
+              const submittedAt = `Jun ${days + 1}, 2026`;
+              return { status: "submitted" as const, score, submittedAt, attempts: (seed % 2) + 1 };
+            };
+
+            const cohortStats = (lesson: Lesson) => {
+              const subs = batch.participants.map((p) => submissionFor(p.id, lesson));
+              const submitted = subs.filter((s) => s.status === "submitted");
+              const avg = submitted.length ? Math.round(submitted.reduce((a, s) => a + (s.score ?? 0), 0) / submitted.length) : null;
+              return { total: batch.participants.length, submitted: submitted.length, avg };
+            };
+
+            if (!assignedCourse) {
+              return (
+                <Card>
+                  <CardContent className="py-16 text-center">
+                    <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4 mx-auto">
+                      <ClipboardList className="h-8 w-8 text-muted-foreground/50" />
+                    </div>
+                    <h3 className="text-lg font-semibold">No course assigned</h3>
+                    <p className="text-sm text-muted-foreground max-w-sm mt-1.5 mx-auto">Assign a course to this batch to see its assessments here.</p>
+                  </CardContent>
+                </Card>
+              );
+            }
+
+            return (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base">Assessments</CardTitle>
+                    <CardDescription>{assessments.length} assessment{assessments.length === 1 ? "" : "s"} pulled from {assignedCourse.name}. Click any row to see participant submissions.</CardDescription>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => navigate(`/courses/${assignedCourse.id}/builder`)}>
+                    <Edit className="mr-1.5 h-3.5 w-3.5" />Edit in course
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {assessments.length === 0 ? (
+                    <div className="py-16 text-center">
+                      <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4 mx-auto">
+                        <ClipboardList className="h-8 w-8 text-muted-foreground/50" />
+                      </div>
+                      <h3 className="text-lg font-semibold">No assessments in this course yet</h3>
+                      <p className="text-sm text-muted-foreground mt-1.5">Add a quiz, assignment, code exercise, exam or game from the course builder.</p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/30 hover:bg-muted/30">
+                          <TableHead className="font-medium">Assessment</TableHead>
+                          <TableHead className="font-medium">Type</TableHead>
+                          <TableHead className="font-medium">Chapter</TableHead>
+                          <TableHead className="font-medium">Submissions</TableHead>
+                          <TableHead className="font-medium">Avg Score</TableHead>
+                          <TableHead className="w-20"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {assessments.map((entry) => {
+                          const stats = cohortStats(entry.lesson);
+                          const meta = typeMeta[entry.lesson.type] || { label: entry.lesson.type, tone: "bg-muted text-muted-foreground" };
+                          return (
+                            <TableRow
+                              key={entry.lesson.id}
+                              className="cursor-pointer group"
+                              onClick={() => setOpenAssessment(entry.lesson)}
+                            >
+                              <TableCell>
+                                <div className="font-medium text-sm">{entry.lesson.title}</div>
+                                <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                  <Clock className="h-3 w-3" />{entry.lesson.duration}
+                                  {entry.lesson.proctored && <Badge variant="outline" className="text-[9px] h-4 px-1.5 ml-1">Proctored</Badge>}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full", meta.tone)}>{meta.label}</span>
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground">Ch {entry.chapterIndex + 1} · {entry.chapterTitle}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium tabular-nums">{stats.submitted}/{stats.total}</span>
+                                  <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                                    <div className="h-full bg-primary" style={{ width: `${stats.total ? (stats.submitted / stats.total) * 100 : 0}%` }} />
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-sm tabular-nums">
+                                {stats.avg !== null ? <span className={cn("font-semibold", stats.avg >= 80 ? "text-success" : stats.avg >= 60 ? "text-warning" : "text-destructive")}>{stats.avg}%</span> : <span className="text-muted-foreground">—</span>}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity inline-block" />
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+
+                {/* Submissions Sheet */}
+                <Sheet open={!!openAssessment} onOpenChange={(o) => !o && setOpenAssessment(null)}>
+                  <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+                    {openAssessment && (() => {
+                      const stats = cohortStats(openAssessment);
+                      const meta = typeMeta[openAssessment.type] || { label: openAssessment.type, tone: "bg-muted text-muted-foreground" };
+                      return (
+                        <>
+                          <SheetHeader className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full", meta.tone)}>{meta.label}</span>
+                              {openAssessment.proctored && <Badge variant="outline" className="text-[9px]">Proctored</Badge>}
+                            </div>
+                            <SheetTitle>{openAssessment.title}</SheetTitle>
+                            <SheetDescription>
+                              {openAssessment.duration} · {batch.name}
+                            </SheetDescription>
+                          </SheetHeader>
+
+                          <div className="grid grid-cols-3 gap-3 my-5">
+                            <div className="p-3 rounded-xl border bg-muted/20">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Submitted</p>
+                              <p className="text-lg font-bold tabular-nums">{stats.submitted}/{stats.total}</p>
+                            </div>
+                            <div className="p-3 rounded-xl border bg-muted/20">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Avg Score</p>
+                              <p className="text-lg font-bold tabular-nums">{stats.avg !== null ? `${stats.avg}%` : "—"}</p>
+                            </div>
+                            <div className="p-3 rounded-xl border bg-muted/20">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pending</p>
+                              <p className="text-lg font-bold tabular-nums">{stats.total - stats.submitted}</p>
+                            </div>
+                          </div>
+
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="bg-muted/30 hover:bg-muted/30">
+                                <TableHead className="font-medium">Participant</TableHead>
+                                <TableHead className="font-medium">Status</TableHead>
+                                <TableHead className="font-medium">Score</TableHead>
+                                <TableHead className="font-medium">Submitted</TableHead>
+                                <TableHead className="w-20"></TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {batch.participants.map((p) => {
+                                const sub = submissionFor(p.id, openAssessment);
+                                return (
+                                  <TableRow key={p.id}>
+                                    <TableCell>
+                                      <div className="flex items-center gap-2">
+                                        <Avatar className="h-7 w-7">
+                                          <AvatarFallback className="text-[10px]">{p.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                          <p className="text-sm font-medium leading-tight">{p.name}</p>
+                                          <p className="text-[11px] text-muted-foreground">{p.email}</p>
+                                        </div>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      {sub.status === "submitted" && <StatusBadge status="success" label="Submitted" />}
+                                      {sub.status === "in_progress" && <StatusBadge status="warning" label="In progress" />}
+                                      {sub.status === "not_submitted" && <StatusBadge status="default" label="Not submitted" />}
+                                    </TableCell>
+                                    <TableCell>
+                                      {sub.score !== null ? (
+                                        <span className={cn("text-sm font-semibold tabular-nums", sub.score >= 80 ? "text-success" : sub.score >= 60 ? "text-warning" : "text-destructive")}>
+                                          {sub.score}%
+                                        </span>
+                                      ) : (
+                                        <span className="text-sm text-muted-foreground">—</span>
+                                      )}
+                                      {sub.attempts > 0 && <p className="text-[10px] text-muted-foreground">{sub.attempts} attempt{sub.attempts > 1 ? "s" : ""}</p>}
+                                    </TableCell>
+                                    <TableCell className="text-xs text-muted-foreground">{sub.submittedAt ?? "—"}</TableCell>
+                                    <TableCell className="text-right">
+                                      {sub.status === "submitted" && (
+                                        <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => toast({ title: "Opening submission", description: `${p.name}'s submission for "${openAssessment.title}"` })}>
+                                          View
+                                        </Button>
+                                      )}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </>
+                      );
+                    })()}
+                  </SheetContent>
+                </Sheet>
+              </Card>
+            );
+          })()}
         </TabsContent>
 
         {/* Reports Tab */}
