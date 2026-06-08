@@ -516,6 +516,11 @@ const initialBatches: Batch[] = [
       { id: "ann-jv-1", title: "OOP live class moved to 11 AM", content: "Today's OOP live session shifts to 11:00 AM IST.", date: "Jun 8, 2026" },
       { id: "ann-jv-2", title: "Library System assignment released", content: "Due Sunday — submit GitHub link + 3-min demo.", date: "Jun 6, 2026" },
     ],
+    materials: [
+      { id: "mat-jv-1", name: "Java OOP — Walkthrough Video", type: "video", url: "https://www.youtube.com/watch?v=grEKMHGYyns", description: "Recorded walkthrough of inheritance, polymorphism and encapsulation with live coding.", uploadedBy: "Rahul Verma", uploadedAt: "Jun 5, 2026", size: "48 min" },
+      { id: "mat-jv-2", name: "Java Fundamentals — Cheat Sheet", type: "document", url: "data:text/plain;charset=utf-8,JAVA%20FUNDAMENTALS%20CHEAT%20SHEET%0A%0A1.%20Primitive%20Types%3A%20byte%2C%20short%2C%20int%2C%20long%2C%20float%2C%20double%2C%20char%2C%20boolean%0A2.%20Control%20Flow%3A%20if%2Felse%2C%20switch%2C%20for%2C%20while%2C%20do-while%0A3.%20OOP%20Pillars%3A%20Encapsulation%2C%20Inheritance%2C%20Polymorphism%2C%20Abstraction%0A4.%20Collections%3A%20List%2C%20Set%2C%20Map%20(ArrayList%2C%20HashSet%2C%20HashMap)%0A5.%20Exception%20Handling%3A%20try%2Fcatch%2Ffinally%2C%20throws%0A6.%20Streams%3A%20list.stream().filter(...).map(...).collect(...)%0A", description: "Quick-reference text document covering syntax, OOP, collections and streams.", uploadedBy: "Rahul Verma", uploadedAt: "Jun 4, 2026", size: "12 KB" },
+      { id: "mat-jv-3", name: "Library Management — Starter Project (Link)", type: "link", url: "https://github.com/cloudadda/java-library-starter", description: "GitHub starter repo for the OOP capstone assignment.", uploadedBy: "Rahul Verma", uploadedAt: "Jun 6, 2026" },
+    ],
     labConfigs: [],
     vmConfig: {
       id: "vm-10",
