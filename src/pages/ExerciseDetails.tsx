@@ -370,6 +370,54 @@ const ExerciseDetails = () => {
                   </>
                 )}
               </TabsContent>
+
+              <TabsContent value="submissions" className="mt-0 space-y-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Submissions</p>
+                    <p className="text-xl font-semibold">{mockSubmissions.length}</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Accepted</p>
+                    <p className="text-xl font-semibold text-green-600">{mockSubmissions.filter((s) => s.status === "accepted").length}</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg score</p>
+                    <p className="text-xl font-semibold">{Math.round(mockSubmissions.reduce((s, x) => s + x.score, 0) / mockSubmissions.length)}</p>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50 text-xs text-muted-foreground">
+                      <tr>
+                        <th className="text-left font-medium px-3 py-2">Student</th>
+                        <th className="text-left font-medium px-3 py-2">Status</th>
+                        <th className="text-left font-medium px-3 py-2">Score</th>
+                        <th className="text-left font-medium px-3 py-2">Tests</th>
+                        <th className="text-left font-medium px-3 py-2">Time</th>
+                        <th className="text-right font-medium px-3 py-2">Submitted</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mockSubmissions.map((s) => (
+                        <tr key={s.id} className="border-t border-border hover:bg-muted/30 cursor-pointer" onClick={() => setViewSubmission(s)}>
+                          <td className="px-3 py-2">
+                            <div className="flex items-center gap-2">
+                              <div className="h-7 w-7 rounded-full bg-primary/10 text-primary text-[11px] font-medium flex items-center justify-center">{s.avatar}</div>
+                              <span className="font-medium">{s.student}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2"><Badge className={subStatusMeta[s.status].cls}>{subStatusMeta[s.status].label}</Badge></td>
+                          <td className="px-3 py-2 font-medium">{s.score}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{s.passed}/{s.total}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{s.time.toFixed(2)}s</td>
+                          <td className="px-3 py-2 text-right text-muted-foreground">{s.submittedAt}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </TabsContent>
             </CardContent>
           </Tabs>
         </Card>
