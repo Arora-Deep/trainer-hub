@@ -527,6 +527,32 @@ const ExerciseDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Submission detail dialog */}
+      <Dialog open={!!viewSubmission} onOpenChange={(o) => !o && setViewSubmission(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {viewSubmission?.student}
+              {viewSubmission && <Badge className={subStatusMeta[viewSubmission.status].cls}>{subStatusMeta[viewSubmission.status].label}</Badge>}
+            </DialogTitle>
+          </DialogHeader>
+          {viewSubmission && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-4 gap-2 text-sm">
+                <div className="rounded border border-border p-2"><p className="text-[10px] uppercase text-muted-foreground">Score</p><p className="font-semibold">{viewSubmission.score}</p></div>
+                <div className="rounded border border-border p-2"><p className="text-[10px] uppercase text-muted-foreground">Tests</p><p className="font-semibold">{viewSubmission.passed}/{viewSubmission.total}</p></div>
+                <div className="rounded border border-border p-2"><p className="text-[10px] uppercase text-muted-foreground">Time</p><p className="font-semibold">{viewSubmission.time.toFixed(2)}s</p></div>
+                <div className="rounded border border-border p-2"><p className="text-[10px] uppercase text-muted-foreground">Memory</p><p className="font-semibold">{viewSubmission.memoryKB} KB</p></div>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Submitted code · {viewSubmission.language}</p>
+                <pre className="bg-muted p-3 rounded-lg max-h-96 overflow-auto text-xs font-mono whitespace-pre-wrap">{viewSubmission.code}</pre>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
