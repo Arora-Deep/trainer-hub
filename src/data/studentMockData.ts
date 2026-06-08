@@ -614,6 +614,12 @@ export const studentCourses: StudentCourse[] = [
         lessons: [
           { id: "l-11-18", title: "Reading & writing files", type: "video", duration: "30m", completed: false, locked: false },
           { id: "l-11-19", title: "try / except / finally", type: "video", duration: "25m", completed: false, locked: false },
+          { id: "l-11-19b", title: "AI Reasoning: try/except vs if-check (EAFP vs LBYL)", type: "reasoning", duration: "10m", completed: false, locked: false,
+            reasoningType: "compare-options",
+            reasoningPrompt: "In Python, would you use a try/except block to handle a missing dictionary key, or check with `if key in dict` first? Compare the two — when is each appropriate? (EAFP vs LBYL)",
+            reasoningModelAnswer: "Python idiom favours EAFP — 'easier to ask forgiveness than permission' — so a try/except KeyError is generally cleaner and faster on the happy path because exceptions are cheap when not raised, and there is no race condition between the check and the access. LBYL (if key in dict) is preferable when the missing case is the common path (exceptions are expensive then), when the check has no race risk, or for readability when multiple conditions are pre-validated together. Bonus: `.get()` is the Pythonic middle ground for a single key.",
+            reasoningRubric: ["EAFP vs LBYL terminology", "performance on happy path", "race conditions / TOCTOU", "readability", "dict.get() alternative"],
+          },
           { id: "l-11-20", title: "Working with modules & venv", type: "video", duration: "30m", completed: false, locked: false },
           { id: "l-11-21", title: "Game: Debug Detective", type: "game-based-learning", duration: "30m", completed: false, locked: false,
             body: "5 broken Python programs — find the bug, choose the fix, climb the leaderboard." },
