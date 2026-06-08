@@ -126,6 +126,18 @@ export interface LessonVMAccess {
   unlockOn: "lesson-start" | "lesson-complete" | "previous-complete";
 }
 
+export type MaterialType = "video" | "document" | "link" | "slide" | "image" | "other";
+export interface Material {
+  id: string;
+  name: string;
+  type: MaterialType;
+  url: string;
+  description?: string;
+  size?: string;
+  uploadedBy?: string;
+  uploadedAt: string;
+}
+
 export interface Batch {
   id: string;
   name: string;
@@ -149,6 +161,7 @@ export interface Batch {
   participants: Participant[];
   assignedLabs: AssignedLab[];
   announcements: Announcement[];
+  materials?: Material[];
   vmConfig?: VMConfig;
   labConfigs: VMConfig[];
   // Self-paced support (optional, additive)
@@ -173,6 +186,8 @@ interface BatchStore {
   assignLab: (batchId: string, lab: Omit<AssignedLab, "id" | "completions">) => void;
   removeLab: (batchId: string, labAssignmentId: string) => void;
   addAnnouncement: (batchId: string, announcement: Omit<Announcement, "id" | "date">) => void;
+  addMaterial: (batchId: string, material: Omit<Material, "id" | "uploadedAt">) => void;
+  removeMaterial: (batchId: string, materialId: string) => void;
   setCourse: (batchId: string, courseId: string, courseName: string) => void;
   setVMConfig: (batchId: string, vmConfig: VMConfig) => void;
   provisionTrainerVM: (batchId: string) => void;
@@ -679,6 +694,22 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
     };
     set((state) => ({
       batches: state.batches.map((b) => b.id === batchId ? { ...b, announcements: [newAnnouncement, ...b.announcements] } : b),
+    }));
+  },
+
+  addMaterial: (batchId, material) => {
+    const newMaterial: Material = {
+      ...material, id: `mat-${Date.now()}`,
+      uploadedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    };
+    set((state) => ({
+      batches: state.batches.map((b) => b.id === batchId ? { ...b, materials: [newMaterial, ...(b.materials ?? [])] } : b),
+    }));
+  },
+
+  removeMaterial: (batchId, materialId) => {
+    set((state) => ({
+      batches: state.batches.map((b) => b.id === batchId ? { ...b, materials: (b.materials ?? []).filter((m) => m.id !== materialId) } : b),
     }));
   },
 

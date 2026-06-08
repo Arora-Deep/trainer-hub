@@ -3,14 +3,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Download, ExternalLink, FileText, FileArchive, Link as LinkIcon, Presentation } from "lucide-react";
+import { Download, ExternalLink, FileText, FileArchive, Link as LinkIcon, Presentation, Video, Image as ImageIcon } from "lucide-react";
 import { getStudentCourse } from "@/data/studentMockData";
+import { useBatchStore } from "@/stores/batchStore";
 
-const icons: Record<string, any> = { pdf: FileText, slides: Presentation, zip: FileArchive, link: LinkIcon };
+const icons: Record<string, any> = { pdf: FileText, slides: Presentation, zip: FileArchive, link: LinkIcon, video: Video, document: FileText, image: ImageIcon, other: FileText };
 
 export default function CourseResources() {
   const { id = "" } = useParams();
   const c = getStudentCourse(id);
+  const batches = useBatchStore((s) => s.batches);
+  const trainerMaterials = batches
+    .filter((b) => !c || b.courseId === c.id)
+    .flatMap((b) => (b.materials ?? []).map((m) => ({ ...m, batchName: b.name })));
   if (!c) return <Card><CardContent className="py-12 text-center">Course not found.</CardContent></Card>;
 
   return (
@@ -39,8 +44,38 @@ export default function CourseResources() {
             </Card>
           );
         })}
-        {c.resources.length === 0 && <Card className="md:col-span-2"><CardContent className="py-12 text-center text-sm text-muted-foreground">No resources yet.</CardContent></Card>}
+        {c.resources.length === 0 && trainerMaterials.length === 0 && <Card className="md:col-span-2"><CardContent className="py-12 text-center text-sm text-muted-foreground">No resources yet.</CardContent></Card>}
       </div>
+
+      {trainerMaterials.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold">Material shared by your trainer</h2>
+            <Badge variant="outline" className="text-[10px]">{trainerMaterials.length}</Badge>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {trainerMaterials.map((m) => {
+              const Icon = icons[m.type] || FileText;
+              const isLink = m.type === "link";
+              return (
+                <Card key={m.id}>
+                  <CardContent className="py-4 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center"><Icon className="h-5 w-5 text-primary" /></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{m.name}</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-2"><Badge variant="outline" className="text-[10px] uppercase">{m.type}</Badge>{m.batchName}</p>
+                      {m.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{m.description}</p>}
+                    </div>
+                    <Button size="sm" variant="outline" className="gap-1.5" asChild>
+                      <a href={m.url} target="_blank" rel="noreferrer">{isLink ? <ExternalLink className="h-3.5 w-3.5" /> : <Download className="h-3.5 w-3.5" />} {isLink ? "Open" : "Download"}</a>
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
