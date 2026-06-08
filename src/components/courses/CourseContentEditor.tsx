@@ -66,6 +66,7 @@ const lessonTypeIcons: Record<LessonType, typeof Video> = {
   exam: GraduationCap,
   "mock-exam": GraduationCap,
   survey: HelpCircle,
+  "game-based-learning": HelpCircle,
 };
 
 const lessonTypeLabels: Record<LessonType, string> = {
@@ -81,6 +82,7 @@ const lessonTypeLabels: Record<LessonType, string> = {
   exam: "Exam",
   "mock-exam": "Mock Exam",
   survey: "Survey",
+  "game-based-learning": "Game-based Learning",
 };
 
 export function CourseContentEditor({ courseId, chapters }: CourseContentEditorProps) {

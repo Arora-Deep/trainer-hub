@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Video, FileText, HelpCircle, ClipboardList, Code2, FlaskConical, Flag, GraduationCap,
-  Upload, Link2, Library, Plus, X, FileUp, Trash2, Radio, ListChecks, MessageSquareQuote,
+  Upload, Link2, Library, Plus, X, FileUp, Trash2, Radio, ListChecks, MessageSquareQuote, Gamepad2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TemplatePickerDropdown } from "@/components/labs/TemplatePickerDropdown";
@@ -36,6 +36,7 @@ const typeMeta: Record<LessonType, { label: string; icon: any; hint: string }> =
   exam: { label: "Exam", icon: GraduationCap, hint: "Final graded assessment, optionally proctored." },
   "mock-exam": { label: "Mock Exam", icon: GraduationCap, hint: "Practice exam — same shape as the real one, but ungraded." },
   survey: { label: "Survey", icon: MessageSquareQuote, hint: "Collect feedback from learners." },
+  "game-based-learning": { label: "Game-based Learning", icon: Gamepad2, hint: "Gamified, interactive challenge — leaderboard, points and rounds." },
 };
 
 interface Props {
