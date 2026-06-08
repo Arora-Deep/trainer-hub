@@ -403,6 +403,216 @@ export const studentCourses: StudentCourse[] = [
       { id: "r2", name: "OpenAI Cookbook", type: "link", url: "https://cookbook.openai.com" },
     ],
   },
+  // ───────── DEMO: Java Fundamentals (VILT — 15 students) ─────────
+  {
+    id: "10",
+    name: "Java Fundamentals",
+    category: "Programming",
+    description:
+      "Instructor-led Java fundamentals bootcamp covering syntax, OOP, collections, exception handling, file IO, multithreading and JDBC. Daily live classes with hands-on labs on a shared cluster.",
+    instructor: "Rahul Verma",
+    instructorBio:
+      "Java champion with 12+ years of enterprise Java experience. Oracle Certified Professional, ex-tech lead at a Fortune 500 bank.",
+    modules: 10, completed: 3, totalHours: 40, status: "in_progress",
+    deliveryMode: "live", rating: 4.9, studyTime: "9h 30m", lastAccessed: "1h ago",
+    batch: "Java Fundamentals — Cohort 24", batchId: "10", prerequisites: [],
+    nextLessonId: "l-10-7",
+    nextLiveSession: { title: "OOP: Classes & Objects (Live)", date: "Today", time: "11:00 AM" },
+    studyData: [
+      { day: "Mon", hours: 2 }, { day: "Tue", hours: 1.5 }, { day: "Wed", hours: 2 },
+      { day: "Thu", hours: 1 }, { day: "Fri", hours: 1.5 }, { day: "Sat", hours: 1 }, { day: "Sun", hours: 0.5 },
+    ],
+    chapters: [
+      {
+        id: "ch-10-1", title: "Getting Started",
+        lessons: [
+          { id: "l-10-1", title: "Welcome & course roadmap", type: "video", duration: "12m", completed: true, locked: false,
+            body: "An overview of what you will learn over the next 4 weeks — from your first 'Hello World' to building a JDBC-backed CLI app." },
+          { id: "l-10-2", title: "Reading: Why Java still matters in 2026", type: "reading", duration: "15m", completed: true, locked: false,
+            body: "Java remains the backbone of enterprise systems — banks, telecoms, Android, Big Data (Kafka, Spark, Hadoop) all run on the JVM. This chapter walks through where Java fits today, its ecosystem, and why JVM languages still dominate large-scale production." },
+          { id: "l-10-3", title: "Installing JDK 21 & IntelliJ IDEA", type: "video", duration: "20m", completed: true, locked: false },
+          { id: "l-10-4", title: "Lab: Your first Java program", type: "lab", duration: "45m", completed: false, locked: false,
+            labTemplate: "Java Dev Sandbox (JDK 21 + Maven)", labMode: "on-demand", estimatedHours: 1,
+            labAllocation: { type: "time-limited", sessionDurationHrs: 2 } },
+          { id: "l-10-5", title: "Quiz: Setup & basics", type: "quiz", duration: "10m", completed: false, locked: false },
+        ],
+      },
+      {
+        id: "ch-10-2", title: "Syntax, Variables & Control Flow",
+        lessons: [
+          { id: "l-10-6", title: "Primitive types, operators, casting", type: "video", duration: "35m", completed: false, locked: false },
+          { id: "l-10-7", title: "Live class: Control flow deep-dive", type: "live-session", duration: "1h 30m", completed: false, locked: false },
+          { id: "l-10-8", title: "Insight: Where do you struggle most?", type: "survey", duration: "5m", completed: false, locked: false,
+            body: "Trainer-pushed insight question to gauge cohort confidence before moving to OOP." },
+          { id: "l-10-9", title: "Lab: FizzBuzz & loops practice", type: "code-exercise", duration: "30m", completed: false, locked: false, language: "java" },
+          { id: "l-10-10", title: "Quiz: Control flow", type: "quiz", duration: "15m", completed: false, locked: false },
+        ],
+      },
+      {
+        id: "ch-10-3", title: "Object-Oriented Programming",
+        lessons: [
+          { id: "l-10-11", title: "Classes, objects, constructors", type: "video", duration: "40m", completed: false, locked: false },
+          { id: "l-10-12", title: "Inheritance & polymorphism", type: "video", duration: "45m", completed: false, locked: false },
+          { id: "l-10-13", title: "Reading: SOLID principles in plain English", type: "reading", duration: "20m", completed: false, locked: false,
+            body: "A practical walkthrough of Single Responsibility, Open/Closed, Liskov, Interface Segregation and Dependency Inversion — using a banking domain example." },
+          { id: "l-10-14", title: "Game: OOP Concept Quest", type: "game-based-learning", duration: "30m", completed: false, locked: false,
+            body: "A scenario-based escape room where you debug a misbehaving zoo simulation by applying the right OOP concept at each room." },
+          { id: "l-10-15", title: "Assignment: Build a Library Management System", type: "assignment", duration: "3h", completed: false, locked: false,
+            body: "Design a small library system with Book, Member and Loan classes. Submit GitHub repo + screen recording." },
+        ],
+      },
+      {
+        id: "ch-10-4", title: "Collections & Generics",
+        lessons: [
+          { id: "l-10-16", title: "List, Set, Map — when to use what", type: "video", duration: "50m", completed: false, locked: false },
+          { id: "l-10-17", title: "Generics & wildcards", type: "video", duration: "35m", completed: false, locked: false },
+          { id: "l-10-18", title: "Lab: Refactor with collections", type: "lab", duration: "1h 30m", completed: false, locked: false,
+            labTemplate: "Java Dev Sandbox (JDK 21 + Maven)", labMode: "on-demand", estimatedHours: 2,
+            labAllocation: { type: "time-limited", sessionDurationHrs: 2 } },
+          { id: "l-10-19", title: "Quiz: Collections framework", type: "quiz", duration: "20m", completed: false, locked: false },
+        ],
+      },
+      {
+        id: "ch-10-5", title: "Exceptions, IO & Multithreading",
+        lessons: [
+          { id: "l-10-20", title: "Checked vs unchecked exceptions", type: "video", duration: "30m", completed: false, locked: false },
+          { id: "l-10-21", title: "File IO with java.nio", type: "video", duration: "40m", completed: false, locked: false },
+          { id: "l-10-22", title: "Multithreading & ExecutorService", type: "video", duration: "1h", completed: false, locked: false },
+          { id: "l-10-23", title: "Game: Concurrency Café", type: "game-based-learning", duration: "25m", completed: false, locked: false,
+            body: "Run a virtual café — assign threads to baristas without deadlocking the espresso machine." },
+          { id: "l-10-24", title: "Lab: Concurrent file processor", type: "lab", duration: "2h", completed: false, locked: false,
+            labTemplate: "Java Dev Sandbox (JDK 21 + Maven)", labMode: "on-demand", estimatedHours: 2,
+            labAllocation: { type: "time-limited", sessionDurationHrs: 2 } },
+        ],
+      },
+      {
+        id: "ch-10-6", title: "JDBC & Capstone",
+        lessons: [
+          { id: "l-10-25", title: "JDBC basics & PreparedStatement", type: "video", duration: "45m", completed: false, locked: false },
+          { id: "l-10-26", title: "Capstone: CLI Expense Tracker", type: "assignment", duration: "6h", completed: false, locked: false,
+            body: "Build a CLI expense tracker backed by PostgreSQL using JDBC. Submission: GitHub repo + 5-min demo video." },
+          { id: "l-10-27", title: "Final exam (proctored)", type: "exam", duration: "1h 30m", completed: false, locked: false, proctored: true },
+        ],
+      },
+    ],
+    resources: [
+      { id: "r1", name: "Java Cheatsheet.pdf", type: "pdf", size: "1.6 MB", url: "#" },
+      { id: "r2", name: "OOP Patterns Slides.pdf", type: "slides", size: "3.4 MB", url: "#" },
+      { id: "r3", name: "Oracle Java Docs", type: "link", url: "https://docs.oracle.com/en/java/" },
+      { id: "r4", name: "Starter Project.zip", type: "zip", size: "8 MB", url: "#" },
+    ],
+  },
+  // ───────── DEMO: Python Fundamentals (Self-Paced — 50 students) ─────────
+  {
+    id: "11",
+    name: "Python Fundamentals",
+    category: "Programming",
+    description:
+      "Self-paced Python fundamentals — from syntax to OOP, file handling, and a final mini-project. Launch your own Python lab anytime from a pre-baked trainer template.",
+    instructor: "Mentor: Neha Kapoor",
+    instructorBio:
+      "Senior Python engineer, ex-Razorpay. Mentors learners async with weekly office hours every Saturday.",
+    modules: 10, completed: 2, totalHours: 32, status: "in_progress",
+    deliveryMode: "self-paced", rating: 4.8, studyTime: "4h 15m", lastAccessed: "5h ago",
+    batch: "Python Fundamentals — Self-Paced", batchId: "11", prerequisites: [],
+    nextLessonId: "l-11-5",
+    totalAccessHours: 60, usedAccessHours: 12,
+    persistentLab: {
+      labId: "lab-11",
+      templateName: "Python 3.12 Workstation",
+      totalHours: 30,
+      usedHours: 4.5,
+      ip: "10.0.11.42",
+      status: "running",
+    },
+    studyData: [
+      { day: "Mon", hours: 0.5 }, { day: "Tue", hours: 1 }, { day: "Wed", hours: 0.75 },
+      { day: "Thu", hours: 0.5 }, { day: "Fri", hours: 0.5 }, { day: "Sat", hours: 0.5 }, { day: "Sun", hours: 0.5 },
+    ],
+    chapters: [
+      {
+        id: "ch-11-1", title: "Setup & First Steps",
+        lessons: [
+          { id: "l-11-1", title: "Welcome to Python", type: "video", duration: "10m", completed: true, locked: false,
+            body: "Python is the world's most popular language for scripting, data science, ML and automation. This course takes you from zero to confidently writing Python programs." },
+          { id: "l-11-2", title: "Reading: Why Python?", type: "reading", duration: "12m", completed: true, locked: false,
+            body: "Python's readability, batteries-included stdlib and massive ecosystem make it the default language for prototyping. We compare it with JavaScript, Java and Go." },
+          { id: "l-11-3", title: "Launch your Python lab", type: "lab-instruction", duration: "5m", completed: false, locked: false,
+            labInstruction: {
+              objective: "Open the always-on Python 3.12 Workstation and verify your environment.",
+              prerequisites: ["Click 'Launch Lab' in the persistent lab card"],
+              tasks: [
+                { id: "t1", title: "Open the web terminal" },
+                { id: "t2", title: "Run `python --version` (expect 3.12.x)" },
+                { id: "t3", title: "Run `jupyter lab --port 8888 --no-browser`" },
+              ],
+              expectedOutcome: "Jupyter Lab opens on port 8888 and you can create a new notebook.",
+              resources: [{ label: "Python 3.12 release notes", url: "https://docs.python.org/3.12/whatsnew/3.12.html" }],
+            },
+          },
+          { id: "l-11-4", title: "Quiz: Setup check", type: "quiz", duration: "8m", completed: false, locked: false },
+        ],
+      },
+      {
+        id: "ch-11-2", title: "Syntax & Data Types",
+        lessons: [
+          { id: "l-11-5", title: "Variables, numbers, strings", type: "video", duration: "30m", completed: false, locked: false },
+          { id: "l-11-6", title: "Lists, tuples, sets, dicts", type: "video", duration: "45m", completed: false, locked: false },
+          { id: "l-11-7", title: "Code exercise: String manipulation", type: "code-exercise", duration: "30m", completed: false, locked: false,
+            language: "python" },
+          { id: "l-11-8", title: "Insight: What confuses you most?", type: "survey", duration: "3m", completed: false, locked: false,
+            body: "Async insight question — your mentor reviews responses weekly." },
+        ],
+      },
+      {
+        id: "ch-11-3", title: "Control Flow & Functions",
+        lessons: [
+          { id: "l-11-9", title: "if / elif / else, loops", type: "video", duration: "35m", completed: false, locked: false },
+          { id: "l-11-10", title: "Functions, args, *args, **kwargs", type: "video", duration: "40m", completed: false, locked: false },
+          { id: "l-11-11", title: "Reading: Pythonic style (PEP 8 essentials)", type: "reading", duration: "15m", completed: false, locked: false,
+            body: "Idiomatic Python: list comprehensions, truthiness, EAFP vs LBYL, naming conventions and the Zen of Python." },
+          { id: "l-11-12", title: "Game: Python Pop Quiz Show", type: "game-based-learning", duration: "20m", completed: false, locked: false,
+            body: "A Kahoot-style quiz show with 25 rapid-fire questions. Earn XP for streaks." },
+          { id: "l-11-13", title: "Assignment: Build a number-guessing CLI", type: "assignment", duration: "1h 30m", completed: false, locked: false,
+            body: "Build an interactive number-guessing game with difficulty levels. Submit a single .py file." },
+        ],
+      },
+      {
+        id: "ch-11-4", title: "OOP in Python",
+        lessons: [
+          { id: "l-11-14", title: "Classes, __init__, self", type: "video", duration: "45m", completed: false, locked: false },
+          { id: "l-11-15", title: "Inheritance & dunder methods", type: "video", duration: "40m", completed: false, locked: false },
+          { id: "l-11-16", title: "Code exercise: Build a `BankAccount` class", type: "code-exercise", duration: "45m", completed: false, locked: false, language: "python" },
+          { id: "l-11-17", title: "Quiz: OOP fundamentals", type: "quiz", duration: "15m", completed: false, locked: false },
+        ],
+      },
+      {
+        id: "ch-11-5", title: "Files, Errors & Modules",
+        lessons: [
+          { id: "l-11-18", title: "Reading & writing files", type: "video", duration: "30m", completed: false, locked: false },
+          { id: "l-11-19", title: "try / except / finally", type: "video", duration: "25m", completed: false, locked: false },
+          { id: "l-11-20", title: "Working with modules & venv", type: "video", duration: "30m", completed: false, locked: false },
+          { id: "l-11-21", title: "Game: Debug Detective", type: "game-based-learning", duration: "30m", completed: false, locked: false,
+            body: "5 broken Python programs — find the bug, choose the fix, climb the leaderboard." },
+        ],
+      },
+      {
+        id: "ch-11-6", title: "Mini Project & Wrap-up",
+        lessons: [
+          { id: "l-11-22", title: "Capstone: Personal Expense Tracker (JSON-backed)", type: "assignment", duration: "4h", completed: false, locked: false,
+            body: "Build a CLI expense tracker that persists to JSON, supports categories, and prints monthly summaries." },
+          { id: "l-11-23", title: "Final quiz", type: "quiz", duration: "30m", completed: false, locked: false },
+          { id: "l-11-24", title: "What's next: paths for data, web, automation", type: "reading", duration: "10m", completed: false, locked: false },
+        ],
+      },
+    ],
+    resources: [
+      { id: "r1", name: "Python Cheatsheet.pdf", type: "pdf", size: "1.2 MB", url: "#" },
+      { id: "r2", name: "PEP 8 Quick Reference.pdf", type: "pdf", size: "600 KB", url: "#" },
+      { id: "r3", name: "Sample Datasets.zip", type: "zip", size: "8 MB", url: "#" },
+      { id: "r4", name: "Official Python Docs", type: "link", url: "https://docs.python.org/3/" },
+    ],
+  },
 ];
 
 export const getStudentCourse = (id: string) => studentCourses.find((c) => c.id === id);
