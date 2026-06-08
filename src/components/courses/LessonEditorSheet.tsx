@@ -129,7 +129,7 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
             <Select value={form.type} onValueChange={(v: LessonType) => setForm((p) => ({ ...p, type: v, source: isAssessmentLesson(v) ? (p.source ?? "inline") : undefined }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {(Object.keys(typeMeta) as LessonType[]).map((t) => {
+                {(Object.keys(typeMeta) as LessonType[]).filter((t) => !HIDDEN_TYPES.has(t) || t === form.type).map((t) => {
                   const I = typeMeta[t].icon;
                   return (
                     <SelectItem key={t} value={t}>
