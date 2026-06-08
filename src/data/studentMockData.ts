@@ -416,21 +416,29 @@ export const studentCourses: StudentCourse[] = [
       { id: "r2", name: "OpenAI Cookbook", type: "link", url: "https://cookbook.openai.com" },
     ],
   },
-  // ───────── DEMO: Java Fundamentals (VILT — 15 students) ─────────
+  // ───────── DEMO: Java Fundamentals (Self-Paced) ─────────
   {
     id: "10",
     name: "Java Fundamentals",
     category: "Programming",
     description:
-      "Instructor-led Java fundamentals bootcamp covering syntax, OOP, collections, exception handling, file IO, multithreading and JDBC. Daily live classes with hands-on labs on a shared cluster.",
-    instructor: "Rahul Verma",
+      "Self-paced Java fundamentals bootcamp covering syntax, OOP, collections, exception handling, file IO, multithreading and JDBC. Learn on your own schedule with rich reading material, videos and hands-on labs on an always-on JDK 21 sandbox.",
+    instructor: "Mentor: Rahul Verma",
     instructorBio:
-      "Java champion with 12+ years of enterprise Java experience. Oracle Certified Professional, ex-tech lead at a Fortune 500 bank.",
+      "Java champion with 12+ years of enterprise Java experience. Oracle Certified Professional, ex-tech lead at a Fortune 500 bank. Holds weekly async office hours.",
     modules: 10, completed: 3, totalHours: 40, status: "in_progress",
-    deliveryMode: "live", rating: 4.9, studyTime: "9h 30m", lastAccessed: "1h ago",
-    batch: "Java Fundamentals — Cohort 24", batchId: "10", prerequisites: [],
+    deliveryMode: "self-paced", rating: 4.9, studyTime: "9h 30m", lastAccessed: "1h ago",
+    batch: "Java Fundamentals — Self-Paced", batchId: "10", prerequisites: [],
     nextLessonId: "l-10-7",
-    nextLiveSession: { title: "OOP: Classes & Objects (Live)", date: "Today", time: "11:00 AM" },
+    totalAccessHours: 80, usedAccessHours: 18,
+    persistentLab: {
+      labId: "lab-10",
+      templateName: "Java Dev Sandbox (JDK 21 + Maven)",
+      totalHours: 40,
+      usedHours: 9.5,
+      ip: "10.0.10.18",
+      status: "running",
+    },
     studyData: [
       { day: "Mon", hours: 2 }, { day: "Tue", hours: 1.5 }, { day: "Wed", hours: 2 },
       { day: "Thu", hours: 1 }, { day: "Fri", hours: 1.5 }, { day: "Sat", hours: 1 }, { day: "Sun", hours: 0.5 },
@@ -766,29 +774,21 @@ try {
       { id: "r4", name: "Starter Project.zip", type: "zip", size: "8 MB", url: "#" },
     ],
   },
-  // ───────── DEMO: Python Fundamentals (Self-Paced — 50 students) ─────────
+  // ───────── DEMO: Python Fundamentals (VILT — Live Instructor-Led) ─────────
   {
     id: "11",
     name: "Python Fundamentals",
     category: "Programming",
     description:
-      "Self-paced Python fundamentals — from syntax to OOP, file handling, and a final mini-project. Launch your own Python lab anytime from a pre-baked trainer template.",
-    instructor: "Mentor: Neha Kapoor",
+      "Instructor-led Python fundamentals — from syntax to OOP, file handling, and a final mini-project. Daily live sessions with Neha, paired with quizzes, code exercises and AI reasoning assessments. Lab access is provisioned through your batch.",
+    instructor: "Neha Kapoor",
     instructorBio:
-      "Senior Python engineer, ex-Razorpay. Mentors learners async with weekly office hours every Saturday.",
+      "Senior Python engineer, ex-Razorpay. Runs live cohorts and weekly Q&A sessions.",
     modules: 10, completed: 2, totalHours: 32, status: "in_progress",
-    deliveryMode: "self-paced", rating: 4.8, studyTime: "4h 15m", lastAccessed: "5h ago",
-    batch: "Python Fundamentals — Self-Paced", batchId: "11", prerequisites: [],
+    deliveryMode: "live", rating: 4.8, studyTime: "4h 15m", lastAccessed: "5h ago",
+    batch: "Python Fundamentals — Cohort 7", batchId: "11", prerequisites: [],
     nextLessonId: "l-11-5",
-    totalAccessHours: 60, usedAccessHours: 12,
-    persistentLab: {
-      labId: "lab-11",
-      templateName: "Python 3.12 Workstation",
-      totalHours: 30,
-      usedHours: 4.5,
-      ip: "10.0.11.42",
-      status: "running",
-    },
+    nextLiveSession: { title: "Variables, numbers & strings (Live)", date: "Today", time: "6:00 PM" },
     studyData: [
       { day: "Mon", hours: 0.5 }, { day: "Tue", hours: 1 }, { day: "Wed", hours: 0.75 },
       { day: "Thu", hours: 0.5 }, { day: "Fri", hours: 0.5 }, { day: "Sat", hours: 0.5 }, { day: "Sun", hours: 0.5 },
@@ -801,19 +801,6 @@ try {
             body: "Python is the world's most popular language for scripting, data science, ML and automation. This course takes you from zero to confidently writing Python programs." },
           { id: "l-11-2", title: "Reading: Why Python?", type: "reading", duration: "12m", completed: true, locked: false,
             body: "Python's readability, batteries-included stdlib and massive ecosystem make it the default language for prototyping. We compare it with JavaScript, Java and Go." },
-          { id: "l-11-3", title: "Launch your Python lab", type: "lab-instruction", duration: "5m", completed: false, locked: false,
-            labInstruction: {
-              objective: "Open the always-on Python 3.12 Workstation and verify your environment.",
-              prerequisites: ["Click 'Launch Lab' in the persistent lab card"],
-              tasks: [
-                { id: "t1", title: "Open the web terminal" },
-                { id: "t2", title: "Run `python --version` (expect 3.12.x)" },
-                { id: "t3", title: "Run `jupyter lab --port 8888 --no-browser`" },
-              ],
-              expectedOutcome: "Jupyter Lab opens on port 8888 and you can create a new notebook.",
-              resources: [{ label: "Python 3.12 release notes", url: "https://docs.python.org/3.12/whatsnew/3.12.html" }],
-            },
-          },
           { id: "l-11-4", title: "Quiz: Setup check", type: "quiz", duration: "8m", completed: false, locked: false },
         ],
       },
@@ -993,22 +980,13 @@ export const studentLabs: StudentLab[] = [
   // ── DEMO labs ──
   {
     id: "lab-10", name: "Java Dev Sandbox", template: "Java Dev Sandbox (JDK 21 + Maven)", os: "linux", status: "running",
-    timeRemaining: "1h 30m", ip: "10.0.10.18", cpu: 28, ram: 40, storage: 25, uptime: "35m",
-    batch: "Java Fundamentals — Cohort 24", batchId: "10", deliveryMode: "live",
-    accessKind: "lesson-time-limited", courseId: "10",
-    sshPort: 22, username: "student", password: "Jv@cohort24",
+    timeRemaining: "Always-on · 30.5h left", ip: "10.0.10.18", cpu: 28, ram: 40, storage: 25, uptime: "35m",
+    batch: "Java Fundamentals — Self-Paced", batchId: "10", deliveryMode: "self-paced",
+    accessKind: "course-persistent", courseId: "10",
+    sshPort: 22, username: "student", password: "Jv@self2026",
     lastCommands: ["$ javac Main.java", "$ java Main", "$ mvn -q test"],
+    totalAccessHours: 40, usedAccessHours: 9.5,
     snapshots: [{ id: "s1", name: "Fresh JDK 21", createdAt: "May 10", size: "3.8 GB" }],
-  },
-  {
-    id: "lab-11", name: "Python 3.12 Workstation", template: "Python 3.12 Workstation", os: "linux", status: "running",
-    timeRemaining: "Always-on · 25.5h left", ip: "10.0.11.42", cpu: 22, ram: 38, storage: 22, uptime: "1h 10m",
-    batch: "Python Fundamentals — Self-Paced", batchId: "11", deliveryMode: "self-paced",
-    accessKind: "course-persistent", courseId: "11",
-    sshPort: 22, username: "student", password: "Py@fund2026",
-    lastCommands: ["$ python --version", "$ jupyter lab --port 8888", "$ pip install requests"],
-    totalAccessHours: 30, usedAccessHours: 4.5,
-    snapshots: [{ id: "s1", name: "Py 3.12 + Jupyter", createdAt: "May 1", size: "3.1 GB" }],
   },
 ];
 
@@ -1159,8 +1137,8 @@ export const studentAssessments: StudentAssessment[] = [
   // ── DEMO assessments ──
   {
     id: "a-10", title: "Java OOP Quiz", type: "Quiz", course: "Java Fundamentals", courseId: "10",
-    batch: "Java Fundamentals — Cohort 24", dueDate: "Fri, Jun 12", score: null, maxScore: 100, status: "pending",
-    timeLimitMin: 25, attempts: 0, maxAttempts: 2, deliveryMode: "live",
+    batch: "Java Fundamentals — Self-Paced", dueDate: "Any time", score: null, maxScore: 100, status: "pending",
+    timeLimitMin: 25, attempts: 0, maxAttempts: 2, deliveryMode: "self-paced",
     instructions: "Quick check on classes, inheritance, polymorphism and SOLID. 6 questions, 25 minutes.",
     syllabus: ["Classes & objects", "Inheritance", "Polymorphism", "SOLID basics"],
     questions: [
@@ -1191,8 +1169,8 @@ export const studentAssessments: StudentAssessment[] = [
   },
   {
     id: "a-13", title: "Python Basics Quiz", type: "Quiz", course: "Python Fundamentals", courseId: "11",
-    batch: "Python Fundamentals — Self-Paced", dueDate: "Any time", score: null, maxScore: 100, status: "pending",
-    timeLimitMin: 20, attempts: 0, maxAttempts: 3, deliveryMode: "self-paced",
+    batch: "Python Fundamentals — Cohort 7", dueDate: "Fri, Jun 12", score: null, maxScore: 100, status: "pending",
+    timeLimitMin: 20, attempts: 0, maxAttempts: 3, deliveryMode: "live",
     instructions: "Self-paced quiz on Python syntax and data types. Retake up to 3 times.",
     syllabus: ["Variables", "Strings", "Lists & dicts", "Truthiness"],
     questions: [
@@ -1205,8 +1183,8 @@ export const studentAssessments: StudentAssessment[] = [
   },
   {
     id: "a-14", title: "BankAccount OOP Exercise", type: "Exercise", course: "Python Fundamentals", courseId: "11",
-    batch: "Python Fundamentals — Self-Paced", dueDate: "Any time", score: null, maxScore: 40, status: "not_started",
-    timeLimitMin: 60, attempts: 0, maxAttempts: 5, deliveryMode: "self-paced",
+    batch: "Python Fundamentals — Cohort 7", dueDate: "Mon, Jun 22", score: null, maxScore: 40, status: "not_started",
+    timeLimitMin: 60, attempts: 0, maxAttempts: 5, deliveryMode: "live",
     instructions: "Implement a `BankAccount` class with deposit, withdraw, transfer and history methods. Tests are pre-loaded.",
     syllabus: ["Classes", "Methods", "Exceptions"], questions: [],
     starterCode: "class BankAccount:\n    def __init__(self, owner, balance=0):\n        # TODO\n        pass\n",
@@ -1214,8 +1192,8 @@ export const studentAssessments: StudentAssessment[] = [
   },
   {
     id: "a-15", title: "Expense Tracker Capstone", type: "Assignment", course: "Python Fundamentals", courseId: "11",
-    batch: "Python Fundamentals — Self-Paced", dueDate: "Any time", score: null, maxScore: 100, status: "not_started",
-    timeLimitMin: 240, attempts: 0, maxAttempts: 1, deliveryMode: "self-paced",
+    batch: "Python Fundamentals — Cohort 7", dueDate: "Sun, Jun 28", score: null, maxScore: 100, status: "not_started",
+    timeLimitMin: 240, attempts: 0, maxAttempts: 1, deliveryMode: "live",
     instructions: "Build a CLI expense tracker backed by JSON. Submit a single .zip with code + README.",
     syllabus: ["File IO", "JSON", "CLI args", "Classes"],
     questions: [], submission: { type: "file", placeholder: "Upload .zip" },
