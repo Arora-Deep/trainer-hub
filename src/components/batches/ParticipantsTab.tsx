@@ -371,10 +371,10 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
                     <SortableHeader field="name">Participant</SortableHeader>
                   </TableHead>
                   <TableHead className="font-medium">
-                    <SortableHeader field="quizScore">
-                      <GraduationCap className="h-3.5 w-3.5" />
-                      Quiz Score
-                    </SortableHeader>
+                    <div className="flex items-center gap-1.5">
+                      <KeyRound className="h-3.5 w-3.5" />
+                      Login Credentials
+                    </div>
                   </TableHead>
                   <TableHead className="font-medium">
                     <div className="flex items-center gap-1.5">
