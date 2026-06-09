@@ -14,10 +14,10 @@ interface TemplatePickerDropdownProps {
 }
 
 const osOptions = ["All", "Linux", "Windows"] as const;
-const providerOptions = ["All", "platform", "aws", "azure", "gcp"] as const;
+const providerOptions = ["All", "cloudadda", "aws", "azure", "gcp"] as const;
 const providerLabels: Record<string, string> = {
   all: "All Providers",
-  platform: "Platform",
+  cloudadda: "CloudAdda",
   aws: "AWS",
   azure: "Azure",
   gcp: "GCP",

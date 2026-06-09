@@ -234,7 +234,7 @@ const Quizzes = () => {
               onChange={(e) => setImportFile(e.target.files?.[0] || null)}
             />
             <p className="text-[11px] text-muted-foreground">
-              Supports Platform JSON, CSV templates, Excel and QTI 2.1 packages.
+              Supports CloudAdda JSON, CSV templates, Excel and QTI 2.1 packages.
             </p>
           </div>
           <DialogFooter>

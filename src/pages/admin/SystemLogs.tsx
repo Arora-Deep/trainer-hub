@@ -6,7 +6,7 @@ const logs = [
   { event: "Batch created", user: "Rajesh Kumar", entity: "K8s Batch #15", time: "15 min ago" },
   { event: "Node heartbeat missed", user: "System", entity: "compute-mumbai-3", time: "30 min ago" },
   { event: "Invoice generated", user: "System", entity: "INV-3007", time: "1 hour ago" },
-  { event: "User login", user: "admin@platform.com", entity: "Session", time: "2 hours ago" },
+  { event: "User login", user: "admin@cloudadda.com", entity: "Session", time: "2 hours ago" },
   { event: "Template updated", user: "Infra Ops", entity: "Kubernetes Lab v2", time: "3 hours ago" },
   { event: "Credit adjustment", user: "Finance Team", entity: "DataScience Bootcamp", time: "4 hours ago" },
   { event: "Maintenance scheduled", user: "Infra Ops", entity: "gpu-mumbai-1", time: "5 hours ago" },

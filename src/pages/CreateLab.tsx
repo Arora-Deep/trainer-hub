@@ -83,7 +83,7 @@ export default function CreateLab() {
   
   // Approval State
   const [approvalRequested, setApprovalRequested] = useState(false);
-  const [platformApproval, setPlatformApproval] = useState<"pending" | "approved" | "rejected">("pending");
+  const [cloudAddaApproval, setCloudAddaApproval] = useState<"pending" | "approved" | "rejected">("pending");
   const [companyAdminApproval, setCompanyAdminApproval] = useState<"pending" | "approved" | "rejected">("pending");
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -112,15 +112,15 @@ export default function CreateLab() {
     setApprovalRequested(true);
     toast({
       title: "Approval Requested",
-      description: "Your lab request has been sent for approval to Platform and your Company Admin.",
+      description: "Your lab request has been sent for approval to CloudAdda and your Company Admin.",
     });
     
     // Simulate approval process (in reality, this would be an API call)
     setTimeout(() => {
-      setPlatformApproval("approved");
+      setCloudAddaApproval("approved");
       toast({
-        title: "Platform Approved",
-        description: "Platform has approved your lab request.",
+        title: "CloudAdda Approved",
+        description: "CloudAdda has approved your lab request.",
       });
     }, 3000);
     
@@ -134,7 +134,7 @@ export default function CreateLab() {
   };
 
   const isFormValid = labName && dateRange.from && dateRange.to && vmTemplates.every(t => t.templateId && t.instanceName);
-  const isApproved = platformApproval === "approved" && companyAdminApproval === "approved";
+  const isApproved = cloudAddaApproval === "approved" && companyAdminApproval === "approved";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,7 +142,7 @@ export default function CreateLab() {
     if (!isApproved) {
       toast({
         title: "Approval Required",
-        description: "Please wait for approval from both Platform and Company Admin.",
+        description: "Please wait for approval from both CloudAdda and Company Admin.",
         variant: "destructive",
       });
       return;
@@ -796,9 +796,9 @@ export default function CreateLab() {
                   <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
                     <div className="flex items-center gap-2">
                       <Cloud className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">Platform</span>
+                      <span className="text-sm font-medium">CloudAdda</span>
                     </div>
-                    {getApprovalStatusBadge(platformApproval)}
+                    {getApprovalStatusBadge(cloudAddaApproval)}
                   </div>
                   
                   <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">

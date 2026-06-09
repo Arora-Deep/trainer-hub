@@ -466,7 +466,7 @@ export default function BatchDetails() {
                           </div>
                           {trainerStatus === "running" && (
                             <div className="flex items-center gap-2">
-                              <Button size="sm" variant="outline" onClick={() => { toast({ title: "Console Launched" }); window.open(`https://console.platform.com/vm/${batch.id}`, "_blank"); }}>
+                              <Button size="sm" variant="outline" onClick={() => { toast({ title: "Console Launched" }); window.open(`https://console.cloudadda.com/vm/${batch.id}`, "_blank"); }}>
                                 <ExternalLink className="mr-2 h-4 w-4" />Console
                               </Button>
                               <Button size="sm" onClick={() => { markTrainerVMConfigured(batch.id); toast({ title: "Configured" }); }}>
@@ -1381,7 +1381,7 @@ export default function BatchDetails() {
                         <Power className="mr-1.5 h-3 w-3" />Start
                       </Button>
                     )}
-                    <Button size="sm" variant="outline" className="text-xs" onClick={() => { window.open(`https://console.platform.io/vm/${consoleVM.id}`, "_blank"); }}>
+                    <Button size="sm" variant="outline" className="text-xs" onClick={() => { window.open(`https://console.cloudadda.io/vm/${consoleVM.id}`, "_blank"); }}>
                       <ExternalLink className="mr-1.5 h-3 w-3" />External
                     </Button>
                   </div>

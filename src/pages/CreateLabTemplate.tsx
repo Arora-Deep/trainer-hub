@@ -64,7 +64,7 @@ const osOptions = {
 };
 
 const cloudProviders = [
-  { value: "platform", label: "Platform", icon: "🟣", regions: ["in-mum-1", "in-del-1", "in-blr-1"] },
+  { value: "cloudadda", label: "CloudAdda", icon: "🟣", regions: ["in-mum-1", "in-del-1", "in-blr-1"] },
   { value: "aws", label: "Amazon Web Services", icon: "🟠", regions: ["us-east-1", "us-west-2", "eu-west-1", "ap-south-1"] },
   { value: "azure", label: "Microsoft Azure", icon: "🔵", regions: ["eastus", "westus2", "westeurope", "southeastasia"] },
   { value: "gcp", label: "Google Cloud", icon: "🔴", regions: ["us-central1", "us-east1", "europe-west1", "asia-south1"] },
@@ -99,7 +99,7 @@ export default function CreateLabTemplate() {
     description: "",
     type: "Linux" as "Linux" | "Windows",
     os: "",
-    cloudProvider: "platform",
+    cloudProvider: "cloudadda",
     region: "in-mum-1",
     vcpus: 2,
     memory: 4,
@@ -194,7 +194,7 @@ export default function CreateLabTemplate() {
       type: formData.type,
       os: osName,
       osVersion: osLabel.split(" ").slice(1).join(" "),
-      cloudProvider: formData.cloudProvider as "platform" | "aws" | "azure" | "gcp",
+      cloudProvider: formData.cloudProvider as "cloudadda" | "aws" | "azure" | "gcp",
       region: formData.region,
       vcpus: formData.vcpus,
       memory: formData.memory,
@@ -233,7 +233,7 @@ export default function CreateLabTemplate() {
       type: formData.type,
       os: osName,
       osVersion: osLabel.split(" ").slice(1).join(" "),
-      cloudProvider: formData.cloudProvider as "platform" | "aws" | "azure" | "gcp",
+      cloudProvider: formData.cloudProvider as "cloudadda" | "aws" | "azure" | "gcp",
       region: formData.region,
       vcpus: formData.vcpus,
       memory: formData.memory,

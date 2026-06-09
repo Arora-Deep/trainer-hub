@@ -538,7 +538,7 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
                             className="h-7 text-xs"
                             onClick={() => {
                               toast({ title: "VM Console", description: `Opening ${participant.name}'s VM console...` });
-                              window.open(`https://console.platform.com/vm/${batch.id}/${participant.id}`, "_blank");
+                              window.open(`https://console.cloudadda.com/vm/${batch.id}/${participant.id}`, "_blank");
                             }}
                           >
                             <ExternalLink className="mr-1 h-3 w-3" />

@@ -15,9 +15,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { LevelChip } from "@/components/gamification/LevelChip";
 
-const roleIcons: Record<Role, typeof Shield> = { platform: Shield, trainer: GraduationCap, student: Users };
+const roleIcons: Record<Role, typeof Shield> = { cloudadda: Shield, trainer: GraduationCap, student: Users };
 const roleColors: Record<Role, string> = {
-  platform: "bg-destructive/10 text-destructive border-destructive/20",
+  cloudadda: "bg-destructive/10 text-destructive border-destructive/20",
   trainer: "bg-primary/10 text-primary border-primary/20",
   student: "bg-success/10 text-success border-success/20",
 };
@@ -115,7 +115,7 @@ export function AppHeader() {
 
       <div className="flex items-center gap-1">
         {/* Quick Actions - Admin only */}
-        {role === "platform" && (
+        {role === "cloudadda" && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs">
@@ -234,14 +234,14 @@ export function AppHeader() {
               </Avatar>
               <div className="hidden md:flex flex-col items-start">
                 <span className="text-sm font-medium leading-none">Super Admin</span>
-                <span className="text-[10px] text-muted-foreground leading-none mt-0.5">admin@platform.com</span>
+                <span className="text-[10px] text-muted-foreground leading-none mt-0.5">admin@cloudadda.com</span>
               </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel className="font-normal">
               <p className="text-sm font-medium">Super Admin</p>
-              <p className="text-xs text-muted-foreground">admin@platform.com</p>
+              <p className="text-xs text-muted-foreground">admin@cloudadda.com</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="cursor-pointer text-sm">Profile</DropdownMenuItem>

@@ -192,9 +192,9 @@ export default function CustomerDetail() {
   });
 
   const auditLogs = [
-    { action: "Quota updated", user: "admin@platform.com", time: "2026-02-28 14:30", details: "CPU: 400 → 500" },
-    { action: "Credits applied", user: "finance@platform.com", time: "2026-02-27 10:00", details: "₹5,000 credit" },
-    { action: "Plan changed", user: "sales@platform.com", time: "2026-02-20 09:15", details: "Professional → Enterprise" },
+    { action: "Quota updated", user: "admin@cloudadda.com", time: "2026-02-28 14:30", details: "CPU: 400 → 500" },
+    { action: "Credits applied", user: "finance@cloudadda.com", time: "2026-02-27 10:00", details: "₹5,000 credit" },
+    { action: "Plan changed", user: "sales@cloudadda.com", time: "2026-02-20 09:15", details: "Professional → Enterprise" },
     { action: "Admin invited", user: customer.email, time: "2026-02-15 11:00", details: `manager@${customer.domain}` },
   ];
 
@@ -795,7 +795,7 @@ export default function CustomerDetail() {
                 <div className="space-y-1.5"><Label className="text-xs">Footer Text</Label><Input placeholder="© 2026 Company. All rights reserved." className="h-9 text-sm" /></div>
                 <div className="space-y-1.5"><Label className="text-xs">Support Email (shown in portal)</Label><Input placeholder="support@company.com" className="h-9 text-sm" /></div>
               </div>
-              <div className="flex items-center gap-3"><Switch defaultChecked={false} /><Label className="text-xs">Hide "Powered by Platform" branding</Label></div>
+              <div className="flex items-center gap-3"><Switch defaultChecked={false} /><Label className="text-xs">Hide "Powered by CloudAdda" branding</Label></div>
               <div className="flex items-center gap-3"><Switch defaultChecked /><Label className="text-xs">Use custom email templates with company branding</Label></div>
             </CardContent>
           </Card>
@@ -1287,7 +1287,7 @@ export default function CustomerDetail() {
                 ))}
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5"><Label className="text-xs">Webhook Endpoint URL</Label><Input placeholder="https://company.com/webhooks/platform" className="h-9 text-sm" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Webhook Endpoint URL</Label><Input placeholder="https://company.com/webhooks/cloudadda" className="h-9 text-sm" /></div>
                 <div className="space-y-1.5"><Label className="text-xs">Webhook Secret Key</Label><Input placeholder="whsec_..." type="password" className="h-9 text-sm" /></div>
                 <div className="space-y-1.5"><Label className="text-xs">LTI Consumer Key</Label><Input placeholder="lti-consumer-key" className="h-9 text-sm" /></div>
                 <div className="space-y-1.5"><Label className="text-xs">LTI Shared Secret</Label><Input placeholder="lti-shared-secret" type="password" className="h-9 text-sm" /></div>

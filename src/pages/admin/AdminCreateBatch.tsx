@@ -107,7 +107,7 @@ export default function AdminCreateBatch() {
   const showPricing = canViewPricing(adminSubRole);
 
   // Step 5 approval
-  const [platformApproval, setPlatformApproval] = useState<"pending" | "approved" | "rejected">("pending");
+  const [cloudAddaApproval, setCloudAddaApproval] = useState<"pending" | "approved" | "rejected">("pending");
   const [companyAdminApproval, setCompanyAdminApproval] = useState<"pending" | "approved" | "rejected">("pending");
   const [approvalRequested, setApprovalRequested] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -137,7 +137,7 @@ export default function AdminCreateBatch() {
       case 2: return name.trim() && instructors.some((i) => i.trim());
       case 3: return dateRange.from && dateRange.to;
       case 4: return !enableVMs || addedVMs.length > 0;
-      case 5: return !enableVMs || skipApproval || (platformApproval === "approved" && companyAdminApproval === "approved");
+      case 5: return !enableVMs || skipApproval || (cloudAddaApproval === "approved" && companyAdminApproval === "approved");
       default: return true;
     }
   };
@@ -145,7 +145,7 @@ export default function AdminCreateBatch() {
   const handleRequestApproval = () => {
     setApprovalRequested(true);
     toast({ title: "Approval Requested" });
-    setTimeout(() => { setPlatformApproval("approved"); toast({ title: "Platform Approved" }); }, 1500);
+    setTimeout(() => { setCloudAddaApproval("approved"); toast({ title: "CloudAdda Approved" }); }, 1500);
     setTimeout(() => { setCompanyAdminApproval("approved"); toast({ title: "Company Admin Approved" }); }, 3000);
   };
 
@@ -169,7 +169,7 @@ export default function AdminCreateBatch() {
         cloneStatus: "not_cloned",
         pricing: { compute: pricing.compute, storage: pricing.storage, network: pricing.network, support: pricing.support, total: pricing.total },
         approval: {
-          platform: skipApproval ? "approved" : platformApproval,
+          cloudAdda: skipApproval ? "approved" : cloudAddaApproval,
           companyAdmin: skipApproval ? "approved" : companyAdminApproval,
           requested: skipApproval || approvalRequested,
         },
@@ -703,7 +703,7 @@ export default function AdminCreateBatch() {
                     <Card>
                       <CardHeader><CardTitle className="text-base flex items-center gap-2"><Shield className="h-4 w-4 text-primary" /> Approval</CardTitle></CardHeader>
                       <CardContent className="space-y-3">
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border"><span className="text-sm">Platform</span>{getApprovalStatusBadge(platformApproval)}</div>
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border"><span className="text-sm">CloudAdda</span>{getApprovalStatusBadge(cloudAddaApproval)}</div>
                         <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border"><span className="text-sm">Company Admin</span>{getApprovalStatusBadge(companyAdminApproval)}</div>
                         {!approvalRequested && (
                           <Button type="button" className="w-full" onClick={handleRequestApproval}><Send className="mr-2 h-4 w-4" /> Request Approval</Button>

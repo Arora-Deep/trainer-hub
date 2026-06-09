@@ -555,7 +555,7 @@ export default function AdminBatchDetail() {
                 <div className="flex items-center gap-2">
                   {vmConfig?.cloneStatus === "cloned" && (
                     <Badge variant="secondary" className="text-[10px] bg-info/10 text-info border-info/20 gap-1">
-                      <Shield className="h-2.5 w-2.5" /> Provisioned by Platform
+                      <Shield className="h-2.5 w-2.5" /> Provisioned by CloudAdda
                     </Badge>
                   )}
                   <Badge variant="secondary" className={cn("text-xs capitalize", statusColor[trainerVMStatus])}>
@@ -1126,7 +1126,7 @@ export default function AdminBatchDetail() {
           {/* Console Simulation Area */}
           <div className="flex-1 bg-[#1a1b26] p-4 font-mono text-sm overflow-auto">
             <div className="text-green-400 space-y-1">
-              <p className="text-muted-foreground/50 text-xs">--- Platform Console ---</p>
+              <p className="text-muted-foreground/50 text-xs">--- CloudAdda Console ---</p>
               <p className="text-green-400/70">Connected to {trainerVM?.ipAddress || "10.0.1.100"}</p>
               <p className="text-green-400/70">Last login: {new Date().toLocaleString()}</p>
               <p className="mt-2">&nbsp;</p>

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type Role = "platform" | "trainer" | "student";
+export type Role = "cloudadda" | "trainer" | "student";
 export type AdminSubRole = "super_admin" | "ops" | "finance" | "support" | "sales" | "auditor";
 
 interface RoleState {
@@ -18,13 +18,13 @@ export const useRoleStore = create<RoleState>((set) => ({
 }));
 
 export const roleLabels: Record<Role, string> = {
-  platform: "Platform Admin",
+  cloudadda: "CloudAdda Admin",
   trainer: "Trainer Portal",
   student: "Student Portal",
 };
 
 export const roleDashboardPaths: Record<Role, string> = {
-  platform: "/admin/dashboard",
+  cloudadda: "/admin/dashboard",
   trainer: "/",
   student: "/student/dashboard",
 };

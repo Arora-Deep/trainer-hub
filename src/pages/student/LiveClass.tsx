@@ -111,7 +111,7 @@ type SideRail = "materials" | "chat" | "students" | null;
 const sessionMaterials = [
   { name: "Lab guide.pdf", size: "1.2 MB", icon: FileText },
   { name: "Slides — VPC peering.pdf", size: "3.4 MB", icon: FileText },
-  { name: "github.com/platform/aws-labs", size: "Repository", icon: Link2 },
+  { name: "github.com/cloudadda/aws-labs", size: "Repository", icon: Link2 },
   { name: "Architecture diagram.png", size: "820 KB", icon: ImageIcon },
 ];
 

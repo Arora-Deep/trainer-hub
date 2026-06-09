@@ -134,7 +134,7 @@ export function MeetingsTab({ batchName }: MeetingsTabProps) {
   };
 
   const copyLink = (link: string) => {
-    navigator.clipboard.writeText(link || `https://platform.meet/join/${Date.now()}`);
+    navigator.clipboard.writeText(link || `https://cloudadda.meet/join/${Date.now()}`);
     toast({ title: "Meeting link copied" });
   };
 
@@ -468,7 +468,7 @@ export function MeetingsTab({ batchName }: MeetingsTabProps) {
               <Select value={scheduleForm.platform} onValueChange={(v) => setScheduleForm({...scheduleForm, platform: v})}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="built-in">⚡ Built-in (Platform Meet)</SelectItem>
+                  <SelectItem value="built-in">⚡ Built-in (CloudAdda Meet)</SelectItem>
                   <SelectItem value="google-meet">🟢 Google Meet</SelectItem>
                   <SelectItem value="zoom">🔵 Zoom</SelectItem>
                 </SelectContent>

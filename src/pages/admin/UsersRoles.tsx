@@ -6,11 +6,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Plus, UserCog } from "lucide-react";
 
 const users = [
-  { id: "1", name: "Admin User", email: "admin@platform.com", role: "Super Admin", status: "active", lastLogin: "Just now" },
-  { id: "2", name: "Ops Manager", email: "ops@platform.com", role: "Operations", status: "active", lastLogin: "2h ago" },
-  { id: "3", name: "Support Agent", email: "support@platform.com", role: "Support", status: "active", lastLogin: "1d ago" },
-  { id: "4", name: "Billing Admin", email: "billing@platform.com", role: "Billing", status: "active", lastLogin: "3h ago" },
-  { id: "5", name: "Dev Ops", email: "devops@platform.com", role: "Operations", status: "inactive", lastLogin: "2w ago" },
+  { id: "1", name: "Admin User", email: "admin@cloudadda.com", role: "Super Admin", status: "active", lastLogin: "Just now" },
+  { id: "2", name: "Ops Manager", email: "ops@cloudadda.com", role: "Operations", status: "active", lastLogin: "2h ago" },
+  { id: "3", name: "Support Agent", email: "support@cloudadda.com", role: "Support", status: "active", lastLogin: "1d ago" },
+  { id: "4", name: "Billing Admin", email: "billing@cloudadda.com", role: "Billing", status: "active", lastLogin: "3h ago" },
+  { id: "5", name: "Dev Ops", email: "devops@cloudadda.com", role: "Operations", status: "inactive", lastLogin: "2w ago" },
 ];
 
 const roleColors: Record<string, string> = {
@@ -26,7 +26,7 @@ export default function AdminUsersRoles() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Users & Roles</h1>
-          <p className="text-muted-foreground text-sm mt-1">Manage internal Platform team members</p>
+          <p className="text-muted-foreground text-sm mt-1">Manage internal CloudAdda team members</p>
         </div>
         <Button className="gap-2"><Plus className="h-4 w-4" /> Add User</Button>
       </div>

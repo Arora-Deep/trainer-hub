@@ -18,11 +18,11 @@ import {
 export default function AdminSettings() {
   const [s, setS] = useState({
     // Org
-    orgName: "Platform",
-    legalName: "Platform Technologies Pvt Ltd",
+    orgName: "CloudAdda",
+    legalName: "CloudAdda Technologies Pvt Ltd",
     gstin: "27AABCU9603R1ZX",
     address: "WeWork, Mumbai 400070",
-    supportEmail: "support@platform.com",
+    supportEmail: "support@cloudadda.com",
     timezone: "Asia/Kolkata",
     currency: "INR",
     // Defaults
@@ -35,7 +35,7 @@ export default function AdminSettings() {
     // Billing
     invoicePrefix: "INV-2026-",
     paymentTerms: "30",
-    erpnextEnabled: true, erpnextUrl: "https://erp.platform.com",
+    erpnextEnabled: true, erpnextUrl: "https://erp.cloudadda.com",
     erpnextApiKey: "•••••••••",
     stripeEnabled: false,
     // Notifications

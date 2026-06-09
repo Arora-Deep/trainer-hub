@@ -930,7 +930,7 @@ function ResourcesView({
   const materials = [
     { i: <FileText className="h-4 w-4" />, t: "Lab guide.pdf", s: "1.2 MB" },
     { i: <FileText className="h-4 w-4" />, t: "Slides — VPC peering.pdf", s: "3.4 MB" },
-    { i: <Link2 className="h-4 w-4" />, t: "github.com/platform/aws-labs", s: "Repository" },
+    { i: <Link2 className="h-4 w-4" />, t: "github.com/cloudadda/aws-labs", s: "Repository" },
     { i: <FileText className="h-4 w-4" />, t: "Architecture diagram.png", s: "820 KB" },
   ];
 
