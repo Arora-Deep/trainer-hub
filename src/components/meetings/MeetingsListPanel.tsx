@@ -57,10 +57,10 @@ export function MeetingsListPanel({ meetings, basePath = "/meetings", viewer = f
               <span className="flex items-center gap-1"><CalendarIcon className="h-3 w-3" /> {fmt(m.scheduledAt)}</span>
               <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {m.durationMins}m</span>
               <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {m.attendees.length}/{m.maxAttendees}</span>
-              {m.status === "ended" && eng !== undefined && (
+              {!viewer && m.status === "ended" && eng !== undefined && (
                 <span className="flex items-center gap-1"><Activity className="h-3 w-3" /> {eng}% engagement</span>
               )}
-              {m.status === "ended" && att !== undefined && (
+              {!viewer && m.status === "ended" && att !== undefined && (
                 <span className="flex items-center gap-1"><BarChart3 className="h-3 w-3" /> {att}% attended</span>
               )}
             </div>
