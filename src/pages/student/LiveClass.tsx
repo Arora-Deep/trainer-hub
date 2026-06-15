@@ -761,22 +761,66 @@ export default function StudentLiveClass() {
       {viewMode === "lab" && (
         <ResizablePanelGroup direction="horizontal" className="min-h-[760px]">
           <ResizablePanel defaultSize={70} minSize={30}>
-          <div className="h-full pr-2">
-          {/* Console — primary */}
-          <Card className="overflow-hidden h-full">
-            <div className="flex items-center justify-between border-b border-border px-3 py-2">
-              <div className="flex items-center gap-2">
-                <Terminal className="h-4 w-4 text-success" />
-                <span className="text-sm font-semibold">Lab Console</span>
-                <Badge className="bg-success/10 text-success text-[10px]">● Connected</Badge>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs gap-1"><Save className="h-3.5 w-3.5" /> Snapshot</Button>
-                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs gap-1"><RotateCw className="h-3.5 w-3.5" /> Restart</Button>
-              </div>
+          <div className="h-full pr-2 flex gap-2">
+            {/* Left VM switcher rail */}
+            <div className="w-14 shrink-0 rounded-xl border border-border bg-card/50 backdrop-blur p-1.5 flex flex-col items-center gap-1.5">
+              <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mt-1">VMs</div>
+              {[
+                { id: "vm-web", name: "Web", short: "W", active: true },
+                { id: "vm-db", name: "DB", short: "D", active: false },
+                { id: "vm-app", name: "App", short: "A", active: false },
+                { id: "vm-bastion", name: "Bastion", short: "B", active: false },
+              ].map((v) => (
+                <TooltipProvider key={v.id}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => toast.success(`Switched to ${v.name} VM`)}
+                        className={cn(
+                          "h-10 w-10 rounded-lg flex flex-col items-center justify-center transition-all relative",
+                          v.active
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "bg-muted hover:bg-muted/70 text-foreground"
+                        )}
+                      >
+                        <Monitor className="h-3.5 w-3.5" />
+                        <span className="text-[9px] mt-0.5 font-medium">{v.short}</span>
+                        {v.active && <span className="absolute -right-0.5 -top-0.5 h-2 w-2 bg-success rounded-full ring-2 ring-card" />}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right"><p className="text-xs">{v.name} VM</p></TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ))}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => toast.info("VM picker coming soon")}
+                      className="h-10 w-10 rounded-lg border border-dashed border-border text-muted-foreground hover:text-foreground hover:border-primary/40 flex items-center justify-center mt-auto"
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right"><p className="text-xs">All VMs</p></TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
-            <div className="h-[700px]"><ConsolePanel terminalInput={terminalInput} setTerminalInput={setTerminalInput} /></div>
-          </Card>
+            {/* Console — primary */}
+            <Card className="overflow-hidden h-full flex-1">
+              <div className="flex items-center justify-between border-b border-border px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <Terminal className="h-4 w-4 text-success" />
+                  <span className="text-sm font-semibold">Lab Console</span>
+                  <Badge className="bg-success/10 text-success text-[10px]">● Web VM</Badge>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs gap-1"><Save className="h-3.5 w-3.5" /> Snapshot</Button>
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs gap-1"><RotateCw className="h-3.5 w-3.5" /> Restart</Button>
+                </div>
+              </div>
+              <div className="h-[700px]"><ConsolePanel terminalInput={terminalInput} setTerminalInput={setTerminalInput} /></div>
+            </Card>
           </div>
           </ResizablePanel>
           <ResizableHandle withHandle />

@@ -35,6 +35,8 @@ export function BatchSettingsTab({ batch }: BatchSettingsTabProps) {
   const [allowSelfEnrollment, setAllowSelfEnrollment] = useState(batch.settings.allowSelfEnrollment);
   const [certification, setCertification] = useState(batch.settings.certification);
   const [hideLMS, setHideLMS] = useState(batch.hideLMS ?? false);
+  const [vlanEnabled, setVlanEnabled] = useState(batch.vlanEnabled ?? false);
+  const [vlanId, setVlanId] = useState(batch.vlanId ?? "");
 
   const handleSave = () => {
     updateBatch(batch.id, {
@@ -45,6 +47,8 @@ export function BatchSettingsTab({ batch }: BatchSettingsTabProps) {
       additionalDetails: additionalDetails.trim(),
       settings: { published, allowSelfEnrollment, certification },
       hideLMS,
+      vlanEnabled,
+      vlanId: vlanEnabled ? vlanId.trim() : "",
     });
     toast({ title: "Saved", description: "Batch settings updated successfully." });
   };
@@ -122,6 +126,22 @@ export function BatchSettingsTab({ batch }: BatchSettingsTabProps) {
           <div className="flex items-center justify-between rounded-lg border border-border p-4">
             <div><p className="font-medium text-sm">Hide LMS / Content view</p><p className="text-xs text-muted-foreground">Students in this batch won't see courses, lessons or assessments — labs only</p></div>
             <Switch checked={hideLMS} onCheckedChange={setHideLMS} />
+          </div>
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-sm">Dedicated VLAN</p>
+                <p className="text-xs text-muted-foreground">Isolate this batch's VMs on its own VLAN segment</p>
+              </div>
+              <Switch checked={vlanEnabled} onCheckedChange={setVlanEnabled} />
+            </div>
+            {vlanEnabled && (
+              <div className="space-y-1.5 pt-2 border-t">
+                <Label htmlFor="vlanId" className="text-xs">VLAN ID</Label>
+                <Input id="vlanId" placeholder="e.g. 100" value={vlanId} onChange={(e) => setVlanId(e.target.value)} className="max-w-[200px]" />
+                <p className="text-[11px] text-muted-foreground">Valid range: 1 – 4094. Confirm with networking before save.</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

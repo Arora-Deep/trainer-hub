@@ -155,6 +155,18 @@ export default function BatchDetails() {
   const snapshots = vm?.snapshots || [];
   const goldenSnapshot = snapshots.find(s => s.isGolden);
 
+  // Clone gating: only allow re-clone within 2 days of batch start (or once batch is live)
+  const daysToStart = (() => {
+    try {
+      const start = new Date(batch.startDate);
+      return Math.ceil((start.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    } catch { return 999; }
+  })();
+  const cloneAllowed = batch.status === "live" || daysToStart <= 2;
+  const cloneGateLabel = cloneAllowed
+    ? ""
+    : `Cloning unlocks 2 days before the batch starts (in ${daysToStart - 2} more day${daysToStart - 2 === 1 ? "" : "s"})`;
+
   const toggleVMSelection = (vmId: string) => {
     setSelectedVMIds(prev => prev.includes(vmId) ? prev.filter(id => id !== vmId) : [...prev, vmId]);
   };
@@ -630,7 +642,7 @@ export default function BatchDetails() {
                             <RotateCcw className="mr-1.5 h-3.5 w-3.5" />Restore All
                           </Button>
                         )}
-                        <Button size="sm" variant="outline" onClick={() => { recloneAllVMs(batch.id); toast({ title: "Recloning All VMs", description: "All participant VMs are being recloned from golden snapshot..." }); }}>
+                        <Button size="sm" variant="outline" disabled={!cloneAllowed} title={cloneGateLabel} onClick={() => { recloneAllVMs(batch.id); toast({ title: "Recloning All VMs", description: "All participant VMs are being recloned from golden snapshot..." }); }}>
                           <Copy className="mr-1.5 h-3.5 w-3.5" />Reclone All
                         </Button>
                       </div>
