@@ -942,6 +942,7 @@ export const studentLabs: StudentLab[] = [
     timeRemaining: "1h 45m", ip: "10.0.1.42", cpu: 45, ram: 62, storage: 30, uptime: "2h 15m",
     batch: "AWS Batch 12", batchId: "1", deliveryMode: "live",
     accessKind: "lesson-time-limited", courseId: "1",
+    availableUntil: "Jul 30, 2026",
     sshPort: 22, username: "student",
     password: "Aws@2026!", lastCommands: ["$ aws ec2 describe-vpcs", "$ aws ec2 create-subnet --vpc-id vpc-0a1b", "$ aws ec2 describe-route-tables"],
     snapshots: [{ id: "s1", name: "Fresh start", createdAt: "Mar 1", size: "4.2 GB" }, { id: "s2", name: "Post Subnet", createdAt: "Mar 3", size: "5.1 GB" }],
@@ -950,6 +951,7 @@ export const studentLabs: StudentLab[] = [
     id: "lab-2", name: "K8s Cluster Lab", template: "Kubernetes Fundamentals", os: "linux", status: "running",
     timeRemaining: "2h 30m", ip: "10.0.2.18", cpu: 78, ram: 85, storage: 55, uptime: "1h 30m",
     batch: "K8s Batch 5", batchId: "2", deliveryMode: "live", sshPort: 22, username: "student",
+    availableUntil: "Aug 15, 2026",
     password: "K8s@cluster1", lastCommands: ["$ kubectl get pods -A", "$ kubectl apply -f deploy.yaml", "$ kubectl logs nginx-pod"],
     snapshots: [{ id: "s1", name: "Fresh cluster", createdAt: "Mar 2", size: "6.0 GB" }],
   },
@@ -957,6 +959,7 @@ export const studentLabs: StudentLab[] = [
     id: "lab-3", name: "Docker Lab", template: "Docker Essentials", os: "linux", status: "stopped",
     timeRemaining: "-", ip: "-", cpu: 0, ram: 0, storage: 20, uptime: "-",
     batch: "Docker Batch 8", batchId: "3", deliveryMode: "live", sshPort: 22, username: "student",
+    availableUntil: "Jun 28, 2026",
     password: "Docker@2026", lastCommands: [], snapshots: [],
   },
   {
@@ -983,6 +986,7 @@ export const studentLabs: StudentLab[] = [
     id: "lab-6", name: "Terraform Lab", template: "Terraform Basics", os: "linux", status: "completed",
     timeRemaining: "-", ip: "-", cpu: 0, ram: 0, storage: 45, uptime: "4h 20m",
     batch: "AWS Batch 12", batchId: "1", deliveryMode: "live", sshPort: 22, username: "student",
+    availableUntil: "Jul 30, 2026",
     password: "Tf@2026", lastCommands: [], snapshots: [],
   },
   // ── DEMO labs ──
