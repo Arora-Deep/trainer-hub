@@ -184,11 +184,16 @@ export default function StudentSchedule() {
 }
 
 function StudentMeetingsStrip() {
-  const meetings = useMeetingStore((s) => s.getMeetingsForStudent(CURRENT_STUDENT_ID, CURRENT_STUDENT_BATCH_ID));
-  const upcoming = meetings.filter(m => m.status === "scheduled" || m.status === "live")
+  const allMeetings = useMeetingStore((s) => s.meetings);
+  const getMeetingsForStudent = useMeetingStore((s) => s.getMeetingsForStudent);
+  const meetings = useMemo(
+    () => getMeetingsForStudent(CURRENT_STUDENT_ID, CURRENT_STUDENT_BATCH_ID),
+    [allMeetings, getMeetingsForStudent]
+  );
+  const upcoming = useMemo(() => meetings.filter(m => m.status === "scheduled" || m.status === "live")
     .sort((a, b) => +new Date(a.scheduledAt) - +new Date(b.scheduledAt))
-    .slice(0, 4);
-  const recordings = meetings.filter(m => m.status === "ended" && m.recordings.length > 0).slice(0, 4);
+    .slice(0, 4), [meetings]);
+  const recordings = useMemo(() => meetings.filter(m => m.status === "ended" && m.recordings.length > 0).slice(0, 4), [meetings]);
   if (!upcoming.length && !recordings.length) return null;
   return (
     <Card>
