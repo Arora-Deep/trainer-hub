@@ -103,69 +103,82 @@ export default function StudentSchedule() {
       />
 
 
-      <LiveNowBanner />
+      <Tabs defaultValue="calendar" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="calendar" className="gap-1.5 text-xs"><Calendar className="h-3.5 w-3.5" /> Calendar</TabsTrigger>
+          <TabsTrigger value="office-hours" className="gap-1.5 text-xs"><CalendarClock className="h-3.5 w-3.5" /> Office Hours</TabsTrigger>
+        </TabsList>
 
-      <StudentMeetingsStrip />
+        <TabsContent value="calendar" className="space-y-6 mt-0">
+          <LiveNowBanner />
 
-      <div className="flex items-center gap-2 flex-wrap">
-        {[
-          { v: "all", label: "All" },
-          { v: "live", label: "Live" },
-          { v: "lab", label: "Lab" },
-          { v: "self-paced", label: "Self-paced" },
-          { v: "assessment", label: "Assessment" },
-        ].map((c) => (
-          <button key={c.v} onClick={() => setFilter(c.v)} className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${filter === c.v ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}>
-            {c.label}
-          </button>
-        ))}
-      </div>
+          <StudentMeetingsStrip />
 
-      {view === "list" && (
-        <div className="space-y-6">
-          {Object.entries(grouped).map(([date, sessions]) => (
-            <div key={date}>
-              <div className="flex items-center gap-2 mb-3">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-semibold">{date}</h3>
-                {date === "Today" && <Badge className="bg-primary/10 text-primary text-[10px] border-0">Today</Badge>}
-              </div>
-              <div className="space-y-2 ml-6 border-l-2 border-border pl-4">
-                {sessions.map((s) => {
-                  const tc = typeConfig[s.type];
-                  return (
-                    <Card key={s.id} className={s.status === "completed" ? "opacity-60" : ""}>
-                      <CardContent className="py-3">
-                        <div className="flex items-center gap-3">
-                          <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${tc.bg}`}><tc.icon className={`h-4 w-4 ${tc.color}`} /></div>
-                          <Link to={`/student/schedule/${s.id}`} className="flex-1 min-w-0 group">
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-medium truncate group-hover:text-primary">{s.title}</p>
-                              <Badge variant="outline" className="text-[10px]">{tc.label}</Badge>
+          <div className="flex items-center gap-2 flex-wrap">
+            {[
+              { v: "all", label: "All" },
+              { v: "live", label: "Live" },
+              { v: "lab", label: "Lab" },
+              { v: "self-paced", label: "Self-paced" },
+              { v: "assessment", label: "Assessment" },
+            ].map((c) => (
+              <button key={c.v} onClick={() => setFilter(c.v)} className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${filter === c.v ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}>
+                {c.label}
+              </button>
+            ))}
+          </div>
+
+          {view === "list" && (
+            <div className="space-y-6">
+              {Object.entries(grouped).map(([date, sessions]) => (
+                <div key={date}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <h3 className="text-sm font-semibold">{date}</h3>
+                    {date === "Today" && <Badge className="bg-primary/10 text-primary text-[10px] border-0">Today</Badge>}
+                  </div>
+                  <div className="space-y-2 ml-6 border-l-2 border-border pl-4">
+                    {sessions.map((s) => {
+                      const tc = typeConfig[s.type];
+                      return (
+                        <Card key={s.id} className={s.status === "completed" ? "opacity-60" : ""}>
+                          <CardContent className="py-3">
+                            <div className="flex items-center gap-3">
+                              <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${tc.bg}`}><tc.icon className={`h-4 w-4 ${tc.color}`} /></div>
+                              <Link to={`/student/schedule/${s.id}`} className="flex-1 min-w-0 group">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm font-medium truncate group-hover:text-primary">{s.title}</p>
+                                  <Badge variant="outline" className="text-[10px]">{tc.label}</Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground">{s.batch} · {s.instructor}</p>
+                              </Link>
+                              <div className="text-right text-xs text-muted-foreground shrink-0">
+                                <p className="flex items-center gap-1 justify-end"><Clock className="h-3 w-3" />{s.time}</p>
+                                <p>{s.duration}</p>
+                              </div>
+                              {s.status === "today" && s.type === "live" && <Button size="sm" className="gap-1.5"><Play className="h-3.5 w-3.5" /> Join</Button>}
+                              {s.status === "today" && s.type === "lab" && <Button size="sm" variant="outline" className="gap-1.5"><Monitor className="h-3.5 w-3.5" /> Launch</Button>}
+                              {s.type === "self-paced" && s.status !== "completed" && <Button size="sm" variant="outline" className="gap-1.5"><Play className="h-3.5 w-3.5" /> Start</Button>}
+                              {s.status === "completed" && <Badge variant="secondary" className="text-[10px] bg-success/10 text-success">✓ Done</Badge>}
                             </div>
-                            <p className="text-xs text-muted-foreground">{s.batch} · {s.instructor}</p>
-                          </Link>
-                          <div className="text-right text-xs text-muted-foreground shrink-0">
-                            <p className="flex items-center gap-1 justify-end"><Clock className="h-3 w-3" />{s.time}</p>
-                            <p>{s.duration}</p>
-                          </div>
-                          {s.status === "today" && s.type === "live" && <Button size="sm" className="gap-1.5"><Play className="h-3.5 w-3.5" /> Join</Button>}
-                          {s.status === "today" && s.type === "lab" && <Button size="sm" variant="outline" className="gap-1.5"><Monitor className="h-3.5 w-3.5" /> Launch</Button>}
-                          {s.type === "self-paced" && s.status !== "completed" && <Button size="sm" variant="outline" className="gap-1.5"><Play className="h-3.5 w-3.5" /> Start</Button>}
-                          {s.status === "completed" && <Badge variant="secondary" className="text-[10px] bg-success/10 text-success">✓ Done</Badge>}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+          )}
 
-      {view === "week" && <WeekView />}
-      {view === "month" && <MonthView />}
+          {view === "week" && <WeekView />}
+          {view === "month" && <MonthView />}
+        </TabsContent>
+
+        <TabsContent value="office-hours" className="mt-0">
+          <StudentOfficeHours />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
