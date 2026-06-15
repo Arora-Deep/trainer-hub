@@ -4,9 +4,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, Monitor, Play, Video, BookOpen, Award, Sparkles } from "lucide-react";
+import { Calendar, Clock, Monitor, Play, Video, BookOpen, Award, Sparkles, Radio, FileVideo } from "lucide-react";
 import { studentSchedule } from "@/data/studentMockData";
 import { StudentPageHero } from "@/components/gamification/StudentPageHero";
+import { LiveNowBanner } from "@/components/meetings/LiveNowBanner";
+import { useMeetingStore, CURRENT_STUDENT_ID, CURRENT_STUDENT_BATCH_ID } from "@/stores/meetingStore";
 
 const typeConfig: Record<string, { icon: any; color: string; bg: string; label: string }> = {
   live: { icon: Video, color: "text-destructive", bg: "bg-destructive/10", label: "Live Class" },
@@ -46,6 +48,10 @@ export default function StudentSchedule() {
         }
       />
 
+
+      <LiveNowBanner />
+
+      <StudentMeetingsStrip />
 
       <div className="flex items-center gap-2 flex-wrap">
         {[
