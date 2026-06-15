@@ -7,11 +7,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarDays, Users, PlayCircle, CheckCircle2, Search } from "lucide-react";
+import { CalendarDays, Users, PlayCircle, CheckCircle2, Search, Clock, Plus, Trash2 } from "lucide-react";
 import { useBatchStore, type Batch } from "@/stores/batchStore";
+import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 const statusToBadge = (s: Batch["status"]) =>
@@ -124,6 +126,7 @@ export default function Schedule() {
           <TabsTrigger value="calendar">Calendar</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="kanban">Kanban</TabsTrigger>
+          <TabsTrigger value="free">Free Time</TabsTrigger>
         </TabsList>
 
         {/* CALENDAR */}
