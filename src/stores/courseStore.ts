@@ -125,6 +125,13 @@ export interface Lesson {
   reasoningModelAnswer?: string;
   reasoningRubric?: string;
   reasoningType?: 'explain-choice' | 'compare-options' | 'improve-solution' | 'root-cause' | 'scenario-response';
+  reasoningQuestions?: {
+    id: string;
+    prompt: string;
+    modelAnswer?: string;
+    rubric?: string;
+    type?: 'explain-choice' | 'compare-options' | 'improve-solution' | 'root-cause' | 'scenario-response';
+  }[];
 }
 
 
