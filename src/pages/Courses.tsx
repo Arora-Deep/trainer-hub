@@ -11,9 +11,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, MoreHorizontal, BookOpen, Users, Plus, ArrowUpRight } from "lucide-react";
+import { Search, MoreHorizontal, BookOpen, Users, Plus, ArrowUpRight, Upload, Filter } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCourseStore } from "@/stores/courseStore";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 const statusConfig: Record<string, { status: "success" | "warning" | "default"; label: string }> = {
   active: { status: "success", label: "Active" },
