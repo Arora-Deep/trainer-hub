@@ -42,7 +42,7 @@ const typeMeta: Record<LessonType, { label: string; icon: any; hint: string }> =
 };
 
 // Lesson types hidden from the type picker (kept in the union for back-compat with legacy content).
-const HIDDEN_TYPES = new Set<LessonType>(["live-session", "survey"]);
+const HIDDEN_TYPES = new Set<LessonType>(["live-session", "survey", "mock-exam"]);
 
 interface Props {
   open: boolean;
@@ -83,6 +83,9 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
     form.type === "quiz" ? "/quizzes/create"
     : form.type === "assignment" ? "/assignments/create"
     : form.type === "code-exercise" ? "/exercises/create"
+    : form.type === "exam" ? "/quizzes/create"
+    : form.type === "ctf-scenario" ? "/exercises/create"
+    : form.type === "game-based-learning" ? "/game-based-learning"
     : null;
 
   const handleFileAttach = (files: FileList | null) => {
@@ -127,7 +130,7 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
 
           <div className="space-y-1.5">
             <Label className="text-xs">Type</Label>
-            <Select value={form.type} onValueChange={(v: LessonType) => setForm((p) => ({ ...p, type: v, source: isAssessmentLesson(v) ? (p.source ?? "inline") : undefined }))}>
+            <Select value={form.type} onValueChange={(v: LessonType) => setForm((p) => ({ ...p, type: v, source: isAssessmentLesson(v) ? (p.source ?? "library") : undefined }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {(Object.keys(typeMeta) as LessonType[]).filter((t) => !HIDDEN_TYPES.has(t) || t === form.type).map((t) => {
@@ -309,36 +312,89 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
               </div>
             )}
 
-            {form.type === "reasoning" && (
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Reasoning type</Label>
-                  <Select value={form.reasoningType ?? "explain-choice"} onValueChange={(v) => setField("reasoningType", v as any)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="explain-choice">Explain a choice</SelectItem>
-                      <SelectItem value="compare-options">Compare options</SelectItem>
-                      <SelectItem value="improve-solution">Improve a solution</SelectItem>
-                      <SelectItem value="root-cause">Root cause analysis</SelectItem>
-                      <SelectItem value="scenario-response">Scenario response</SelectItem>
-                    </SelectContent>
-                  </Select>
+            {form.type === "reasoning" && (() => {
+              // Multi-question editor. Migrate legacy single-prompt shape on first edit.
+              const questions = form.reasoningQuestions ?? (
+                form.reasoningPrompt
+                  ? [{
+                      id: "rq-1",
+                      prompt: form.reasoningPrompt,
+                      modelAnswer: form.reasoningModelAnswer,
+                      rubric: form.reasoningRubric,
+                      type: form.reasoningType ?? "explain-choice",
+                    }]
+                  : []
+              );
+              const update = (next: typeof questions) => setField("reasoningQuestions", next as any);
+              const patch = (idx: number, p: Partial<typeof questions[number]>) =>
+                update(questions.map((q, i) => (i === idx ? { ...q, ...p } : q)));
+              const remove = (idx: number) => update(questions.filter((_, i) => i !== idx));
+              const add = () => update([
+                ...questions,
+                { id: `rq-${Date.now()}`, prompt: "", modelAnswer: "", rubric: "", type: "explain-choice" },
+              ]);
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-xs">Reasoning questions</Label>
+                      <p className="text-[11px] text-muted-foreground">Add one or more open-ended questions. Each is scored independently and combined into a final lesson score.</p>
+                    </div>
+                    <Button type="button" size="sm" variant="outline" onClick={add} className="gap-1.5">
+                      <Plus className="h-3.5 w-3.5" /> Add question
+                    </Button>
+                  </div>
+
+                  {questions.length === 0 && (
+                    <div className="text-center text-xs text-muted-foreground border border-dashed rounded-lg p-6">
+                      No questions yet. Click "Add question" to create the first one.
+                    </div>
+                  )}
+
+                  {questions.map((q, idx) => (
+                    <Card key={q.id} className="border-border/70">
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline" className="text-[10px]">Question {idx + 1}</Badge>
+                          {questions.length > 1 && (
+                            <Button type="button" variant="ghost" size="sm" className="h-7 text-destructive hover:text-destructive gap-1" onClick={() => remove(idx)}>
+                              <Trash2 className="h-3.5 w-3.5" /> Remove
+                            </Button>
+                          )}
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Reasoning type</Label>
+                          <Select value={q.type ?? "explain-choice"} onValueChange={(v) => patch(idx, { type: v as any })}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="explain-choice">Explain a choice</SelectItem>
+                              <SelectItem value="compare-options">Compare options</SelectItem>
+                              <SelectItem value="improve-solution">Improve a solution</SelectItem>
+                              <SelectItem value="root-cause">Root cause analysis</SelectItem>
+                              <SelectItem value="scenario-response">Scenario response</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Question / prompt</Label>
+                          <Textarea rows={3} value={q.prompt ?? ""} onChange={(e) => patch(idx, { prompt: e.target.value })} placeholder="Ask a question that requires reasoning, not recall…" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Model answer (used by AI as the reference)</Label>
+                          <Textarea rows={3} value={q.modelAnswer ?? ""} onChange={(e) => patch(idx, { modelAnswer: e.target.value })} placeholder="A strong, complete answer the AI will compare student responses against." />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Evaluation rubric (one concept per line)</Label>
+                          <Textarea rows={3} value={(q.rubric as string) ?? ""} onChange={(e) => patch(idx, { rubric: e.target.value })} placeholder={"e.g.\nunknown iteration count\nsentinel / exit condition"} />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+
+                  <p className="text-[11px] text-muted-foreground">Students are scored on Concept Accuracy, Reasoning Quality, Alternative Analysis, Technical Depth, and Clarity (0–10 each) per question.</p>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Question / prompt</Label>
-                  <Textarea rows={3} value={form.reasoningPrompt ?? ""} onChange={(e) => setField("reasoningPrompt", e.target.value)} placeholder="Ask a question that requires reasoning, not recall…" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Model answer (used by AI as the reference)</Label>
-                  <Textarea rows={4} value={form.reasoningModelAnswer ?? ""} onChange={(e) => setField("reasoningModelAnswer", e.target.value)} placeholder="A strong, complete answer the AI will compare student responses against." />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Evaluation rubric (one concept per line)</Label>
-                  <Textarea rows={4} value={form.reasoningRubric ?? ""} onChange={(e) => setField("reasoningRubric", e.target.value)} placeholder={"e.g.\nunknown iteration count\nsentinel / exit condition\ncompare for vs while\ninfinite loop risk"} />
-                  <p className="text-[11px] text-muted-foreground">Each line is a key concept the AI looks for. Students are scored on Concept Accuracy, Reasoning Quality, Alternative Analysis, Technical Depth, and Clarity (0–10 each).</p>
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
             {form.type === "code-exercise" && (
               <div className="space-y-3">
@@ -369,23 +425,23 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
             {isAssess && (
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2">
-                  {(["inline", "library"] as const).map((s) => (
+                  {(["library", "inline"] as const).map((s) => (
                     <button
                       key={s}
                       type="button"
                       onClick={() => setForm((p) => ({ ...p, source: s, refId: s === "inline" ? undefined : p.refId }))}
                       className={cn(
                         "flex items-center gap-2 rounded-md border px-3 py-2 text-xs transition-all",
-                        (form.source ?? "inline") === s ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted/40"
+                        (form.source ?? "library") === s ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted/40"
                       )}
                     >
                       {s === "library" ? <Library className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                      <span className="font-medium">{s === "inline" ? "Create new" : "Pick from library"}</span>
+                      <span className="font-medium">{s === "library" ? "Pick from library" : "Create new"}</span>
                     </button>
                   ))}
                 </div>
 
-                {form.source === "library" ? (
+                {(form.source ?? "library") === "library" ? (
                   <Select value={form.refId ?? ""} onValueChange={(v) => {
                     const opt = libraryOptions.find((o) => o.id === v);
                     setForm((p) => ({ ...p, refId: v, title: opt?.label ?? p.title }));
@@ -393,15 +449,27 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
                     <SelectTrigger><SelectValue placeholder="Choose an item…" /></SelectTrigger>
                     <SelectContent>
                       {libraryOptions.length === 0 ? (
-                        <div className="px-3 py-2 text-xs text-muted-foreground">No items yet.</div>
+                        <div className="px-3 py-2 text-xs text-muted-foreground">No items yet — use "Create new" to build one.</div>
                       ) : libraryOptions.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 ) : createNewHref ? (
-                  <Button variant="outline" size="sm" asChild className="w-full">
-                    <Link to={createNewHref} target="_blank"><Plus className="h-3.5 w-3.5 mr-1" />Open full builder in new tab</Link>
-                  </Button>
-                ) : null}
+                  <div className="rounded-md border border-dashed bg-background/60 p-3 space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Open the full {typeMeta[form.type].label.toLowerCase()} builder to set questions, rubric and grading. Your new item will appear in the library and you can link it back to this lesson.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button size="sm" asChild>
+                        <Link to={createNewHref}><Plus className="h-3.5 w-3.5 mr-1" />Open {typeMeta[form.type].label} builder</Link>
+                      </Button>
+                      <Button size="sm" variant="outline" asChild>
+                        <Link to={createNewHref} target="_blank">Open in new tab</Link>
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground">This assessment type is configured inline below.</p>
+                )}
 
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">

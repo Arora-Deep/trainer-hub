@@ -19,6 +19,7 @@ import { useEnrollmentStore } from "@/stores/enrollmentStore";
 import { OnDemandLabPanel } from "@/components/learning/OnDemandLabPanel";
 import { PersistentLabPanel } from "@/components/learning/PersistentLabPanel";
 import { GameLessonPanel } from "@/components/learning/GameLessonPanel";
+import { MeetingLessonPanel } from "@/components/meetings/MeetingLessonPanel";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -261,26 +262,51 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 function InlineReasoning({ lesson }: { lesson: StudentLesson }) {
-  const [answer, setAnswer] = useState("");
-  const [evaluating, setEvaluating] = useState(false);
-  const [result, setResult] = useState<ReasoningResult | null>(null);
-  const [showModel, setShowModel] = useState(false);
+  // Normalize to a list of questions (back-compat with legacy single-prompt lessons).
+  const questions = (lesson.reasoningQuestions && lesson.reasoningQuestions.length > 0)
+    ? lesson.reasoningQuestions
+    : (lesson.reasoningPrompt
+        ? [{
+            id: "rq-legacy",
+            prompt: lesson.reasoningPrompt,
+            modelAnswer: lesson.reasoningModelAnswer,
+            rubric: lesson.reasoningRubric ?? [],
+            type: lesson.reasoningType,
+          }]
+        : []);
 
-  const rubric = lesson.reasoningRubric ?? [];
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [results, setResults] = useState<Record<string, ReasoningResult>>({});
+  const [evaluating, setEvaluating] = useState(false);
+  const [showModel, setShowModel] = useState<Record<string, boolean>>({});
+
+  const setAnswer = (id: string, v: string) => setAnswers((a) => ({ ...a, [id]: v }));
+
+  const allAnswered = questions.every((q) => (answers[q.id] ?? "").trim().split(/\s+/).filter(Boolean).length >= 5);
+  const allEvaluated = questions.length > 0 && questions.every((q) => results[q.id]);
 
   const onSubmit = () => {
-    if (answer.trim().split(/\s+/).length < 5) {
-      toast.error("Write at least a couple of sentences before submitting.");
+    if (!allAnswered) {
+      toast.error("Write at least a couple of sentences for every question.");
       return;
     }
     setEvaluating(true);
     setTimeout(() => {
-      setResult(evaluateReasoning(answer, rubric));
+      const next: Record<string, ReasoningResult> = {};
+      questions.forEach((q) => {
+        const rubric = (Array.isArray(q.rubric) ? q.rubric : []) as string[];
+        next[q.id] = evaluateReasoning(answers[q.id] ?? "", rubric);
+      });
+      setResults(next);
       setEvaluating(false);
     }, 1400);
   };
 
-  const reset = () => { setResult(null); setAnswer(""); setShowModel(false); };
+  const reset = () => { setResults({}); setAnswers({}); setShowModel({}); };
+
+  const aggregate = allEvaluated
+    ? questions.reduce((s, q) => s + results[q.id].finalScore, 0) / questions.length
+    : 0;
 
   return (
     <div className="p-6 space-y-5">
@@ -288,118 +314,152 @@ function InlineReasoning({ lesson }: { lesson: StudentLesson }) {
         <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-transparent gap-1">
           <Brain className="h-3 w-3" /> AI Reasoning Evaluation
         </Badge>
-        {lesson.reasoningType && (
-          <Badge variant="outline" className="text-[10px]">{TYPE_LABEL[lesson.reasoningType]}</Badge>
-        )}
-        <span className="text-xs text-muted-foreground">Scored across 5 dimensions · {lesson.duration}</span>
+        <span className="text-xs text-muted-foreground">
+          {questions.length} question{questions.length === 1 ? "" : "s"} · Scored across 5 dimensions · {lesson.duration}
+        </span>
       </div>
 
-      <div className="p-4 rounded-lg border border-border bg-muted/30">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Question</p>
-        <p className="text-sm leading-relaxed">{lesson.reasoningPrompt}</p>
-      </div>
-
-      {!result && (
-        <div className="space-y-3">
-          <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Your answer</Label>
-          <Textarea
-            rows={7}
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            placeholder="Explain your reasoning in your own words. Compare alternatives where relevant, and justify *why*…"
-            disabled={evaluating}
-            className="text-sm"
-          />
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] text-muted-foreground">{answer.trim().split(/\s+/).filter(Boolean).length} words</span>
-            <Button size="sm" onClick={onSubmit} disabled={evaluating || !answer.trim()} className="gap-1.5">
-              {evaluating ? <><Loader2 className="h-4 w-4 animate-spin" /> AI evaluating…</> : <><Sparkles className="h-4 w-4" /> Evaluate with AI</>}
-            </Button>
-          </div>
+      {questions.length === 0 && (
+        <div className="text-center text-sm text-muted-foreground border border-dashed rounded-lg p-8">
+          No reasoning questions configured for this lesson yet.
         </div>
       )}
 
-      {result && (
-        <div className="space-y-5">
-          {/* Final score */}
-          <Card className="border-primary/30">
-            <CardContent className="pt-5 text-center">
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Final reasoning score</p>
-              <p className={cn("text-4xl font-bold mt-1", dimColor(result.finalScore))}>
-                {result.finalScore.toFixed(1)}<span className="text-lg text-muted-foreground">/10</span>
-              </p>
+      {questions.map((q, idx) => {
+        const result = results[q.id];
+        return (
+          <Card key={q.id} className="border-border/70">
+            <CardContent className="p-5 space-y-4">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className="text-[10px]">Question {idx + 1} of {questions.length}</Badge>
+                {q.type && <Badge variant="outline" className="text-[10px]">{TYPE_LABEL[q.type]}</Badge>}
+              </div>
+
+              <div className="p-4 rounded-lg border border-border bg-muted/30">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Question</p>
+                <p className="text-sm leading-relaxed">{q.prompt}</p>
+              </div>
+
+              {!result && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Your answer</Label>
+                  <Textarea
+                    rows={6}
+                    value={answers[q.id] ?? ""}
+                    onChange={(e) => setAnswer(q.id, e.target.value)}
+                    placeholder="Explain your reasoning in your own words. Compare alternatives where relevant, and justify *why*…"
+                    disabled={evaluating}
+                    className="text-sm"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    {(answers[q.id] ?? "").trim().split(/\s+/).filter(Boolean).length} words
+                  </p>
+                </div>
+              )}
+
+              {result && (
+                <div className="space-y-4">
+                  <Card className="border-primary/30">
+                    <CardContent className="pt-4 text-center">
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Question score</p>
+                      <p className={cn("text-3xl font-bold mt-1", dimColor(result.finalScore))}>
+                        {result.finalScore.toFixed(1)}<span className="text-base text-muted-foreground">/10</span>
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Dimension scores</p>
+                    <div className="space-y-3">
+                      <DimBar label="Concept Accuracy" value={result.scores.conceptAccuracy} />
+                      <DimBar label="Reasoning Quality" value={result.scores.reasoningQuality} />
+                      <DimBar label="Alternative Analysis" value={result.scores.alternativeAnalysis} />
+                      <DimBar label="Technical Depth" value={result.scores.technicalDepth} />
+                      <DimBar label="Clarity" value={result.scores.clarity} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="p-3 rounded-lg border border-success/30 bg-success/5">
+                      <p className="text-xs font-semibold text-success flex items-center gap-1.5 mb-2"><TrendingUp className="h-3.5 w-3.5" /> Strengths</p>
+                      <ul className="text-xs space-y-1 list-disc list-inside text-foreground/80">
+                        {result.strengths.map((s, i) => <li key={i}>{s}</li>)}
+                      </ul>
+                    </div>
+                    <div className="p-3 rounded-lg border border-warning/30 bg-warning/5">
+                      <p className="text-xs font-semibold text-warning flex items-center gap-1.5 mb-2"><TrendingDown className="h-3.5 w-3.5" /> What could be better</p>
+                      <ul className="text-xs space-y-1 list-disc list-inside text-foreground/80">
+                        {result.weaknesses.map((s, i) => <li key={i}>{s}</li>)}
+                      </ul>
+                    </div>
+                    {result.missingConcepts.length > 0 && (
+                      <div className="p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+                        <p className="text-xs font-semibold text-destructive flex items-center gap-1.5 mb-2"><AlertCircle className="h-3.5 w-3.5" /> Missing concepts</p>
+                        <ul className="text-xs space-y-1 list-disc list-inside text-foreground/80">
+                          {result.missingConcepts.map((s, i) => <li key={i}>{s}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    <div className="p-3 rounded-lg border border-primary/30 bg-primary/5">
+                      <p className="text-xs font-semibold text-primary flex items-center gap-1.5 mb-2"><MapPin className="h-3.5 w-3.5" /> Suggested learning areas</p>
+                      <ul className="text-xs space-y-1 list-disc list-inside text-foreground/80">
+                        {result.suggestedTopics.map((s, i) => <li key={i}>{s}</li>)}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Your answer</p>
+                    <p className="text-sm leading-relaxed p-3 rounded-lg bg-muted/40 border border-border whitespace-pre-wrap">{answers[q.id]}</p>
+                  </div>
+
+                  {q.modelAnswer && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                          <Target className="h-3.5 w-3.5" /> Model answer
+                        </p>
+                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowModel((m) => ({ ...m, [q.id]: !m[q.id] }))}>
+                          {showModel[q.id] ? "Hide" : "Reveal"}
+                        </Button>
+                      </div>
+                      {showModel[q.id] && (
+                        <p className="text-sm leading-relaxed p-3 rounded-lg bg-primary/5 border border-primary/20">{q.modelAnswer}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
+        );
+      })}
 
-          {/* Dimension scores */}
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Dimension scores</p>
-            <div className="space-y-3">
-              <DimBar label="Concept Accuracy" value={result.scores.conceptAccuracy} />
-              <DimBar label="Reasoning Quality" value={result.scores.reasoningQuality} />
-              <DimBar label="Alternative Analysis" value={result.scores.alternativeAnalysis} />
-              <DimBar label="Technical Depth" value={result.scores.technicalDepth} />
-              <DimBar label="Clarity" value={result.scores.clarity} />
-            </div>
-          </div>
+      {questions.length > 0 && !allEvaluated && (
+        <div className="flex items-center justify-end gap-2 pt-2">
+          <Button size="sm" onClick={onSubmit} disabled={evaluating || !allAnswered} className="gap-1.5">
+            {evaluating ? <><Loader2 className="h-4 w-4 animate-spin" /> AI evaluating…</> : <><Sparkles className="h-4 w-4" /> Evaluate {questions.length > 1 ? "all answers" : "with AI"}</>}
+          </Button>
+        </div>
+      )}
 
-          {/* Feedback grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="p-3 rounded-lg border border-success/30 bg-success/5">
-              <p className="text-xs font-semibold text-success flex items-center gap-1.5 mb-2"><TrendingUp className="h-3.5 w-3.5" /> Strengths</p>
-              <ul className="text-xs space-y-1 list-disc list-inside text-foreground/80">
-                {result.strengths.map((s, i) => <li key={i}>{s}</li>)}
-              </ul>
-            </div>
-            <div className="p-3 rounded-lg border border-warning/30 bg-warning/5">
-              <p className="text-xs font-semibold text-warning flex items-center gap-1.5 mb-2"><TrendingDown className="h-3.5 w-3.5" /> What could be better</p>
-              <ul className="text-xs space-y-1 list-disc list-inside text-foreground/80">
-                {result.weaknesses.map((s, i) => <li key={i}>{s}</li>)}
-              </ul>
-            </div>
-            {result.missingConcepts.length > 0 && (
-              <div className="p-3 rounded-lg border border-destructive/30 bg-destructive/5">
-                <p className="text-xs font-semibold text-destructive flex items-center gap-1.5 mb-2"><AlertCircle className="h-3.5 w-3.5" /> Missing concepts</p>
-                <ul className="text-xs space-y-1 list-disc list-inside text-foreground/80">
-                  {result.missingConcepts.map((s, i) => <li key={i}>{s}</li>)}
-                </ul>
-              </div>
-            )}
-            <div className="p-3 rounded-lg border border-primary/30 bg-primary/5">
-              <p className="text-xs font-semibold text-primary flex items-center gap-1.5 mb-2"><MapPin className="h-3.5 w-3.5" /> Suggested learning areas</p>
-              <ul className="text-xs space-y-1 list-disc list-inside text-foreground/80">
-                {result.suggestedTopics.map((s, i) => <li key={i}>{s}</li>)}
-              </ul>
-            </div>
-          </div>
-
-          {/* Your answer + model */}
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Your answer</p>
-            <p className="text-sm leading-relaxed p-3 rounded-lg bg-muted/40 border border-border whitespace-pre-wrap">{answer}</p>
-          </div>
-
-          {lesson.reasoningModelAnswer && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                  <Target className="h-3.5 w-3.5" /> Model answer
+      {allEvaluated && (
+        <>
+          {questions.length > 1 && (
+            <Card className="border-primary/40 bg-primary/5">
+              <CardContent className="pt-5 text-center">
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Final lesson score (avg of {questions.length})</p>
+                <p className={cn("text-4xl font-bold mt-1", dimColor(aggregate))}>
+                  {aggregate.toFixed(1)}<span className="text-lg text-muted-foreground">/10</span>
                 </p>
-                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowModel((v) => !v)}>
-                  {showModel ? "Hide" : "Reveal"}
-                </Button>
-              </div>
-              {showModel && (
-                <p className="text-sm leading-relaxed p-3 rounded-lg bg-primary/5 border border-primary/20">{lesson.reasoningModelAnswer}</p>
-              )}
-            </div>
+              </CardContent>
+            </Card>
           )}
-
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" size="sm" onClick={reset}>Try again</Button>
             <Button size="sm" onClick={() => toast.success("Reasoning lesson complete")}>Save & continue</Button>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
@@ -959,14 +1019,12 @@ export default function CoursePlayer() {
               </div>
             )}
             {lesson.type === "live-session" && (
-              <div className="p-8 text-center space-y-3">
-                <Radio className="h-10 w-10 mx-auto text-destructive" />
-                <div>
-                  <p className="text-sm font-medium">{lesson.title}</p>
-                  <p className="text-xs text-muted-foreground">Live instructor-led session · {lesson.duration}</p>
-                </div>
-                <Button asChild className="gap-1.5"><Link to="/student/live-class"><Play className="h-4 w-4" /> Join live class</Link></Button>
-              </div>
+              <MeetingLessonPanel
+                courseId={c.id}
+                lessonId={lesson.id}
+                lessonTitle={lesson.title}
+                duration={lesson.duration}
+              />
             )}
             {lesson.type === "exam" && (
               <InlineExam lesson={lesson} />

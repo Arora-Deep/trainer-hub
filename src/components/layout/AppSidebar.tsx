@@ -8,7 +8,7 @@ import {
   Cpu, HardDrive, Network, Activity, LifeBuoy, Receipt, Lock, FileBarChart,
   Gauge, AlertTriangle, Clock, Wrench, BookMarked, Zap, Globe, Eye,
   DollarSign, Scale, Key, Database, Send, Flag, Workflow, Container,
-  Video, Calendar, Radio, MessageSquarePlus, ClipboardCheck, Brain, GraduationCap as ExamIcon, Gamepad2,
+  Video, Calendar, Radio, MessageSquarePlus, ClipboardCheck, Brain, GraduationCap as ExamIcon, Gamepad2, Megaphone, CalendarClock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -125,6 +125,7 @@ const trainerNav: NavConfig = {
       { title: "Programs", icon: Layers, path: "/programs" },
     ]},
     { label: "Assessments", icon: ClipboardCheck, items: [
+      { title: "Library", icon: BookMarked, path: "/assessments" },
       { title: "Assignments", icon: ClipboardList, path: "/assignments" },
       { title: "Quizzes", icon: FileQuestion, path: "/quizzes" },
       { title: "Exercises", icon: Code2, path: "/exercises" },
@@ -134,6 +135,7 @@ const trainerNav: NavConfig = {
     ]},
     { label: "More", icon: Award, items: [
       { title: "Certifications", icon: Award, path: "/certifications" },
+      { title: "Announcements", icon: MessageSquarePlus, path: "/announcements" },
       { title: "Engagement", icon: Zap, path: "/engagement" },
       { title: "Request Lab / Quote", icon: MessageSquarePlus, path: "/request-lab" },
     ]},
@@ -154,7 +156,8 @@ const studentNav: NavConfig = {
       { title: "Active Labs", icon: Monitor, path: "/student/labs" },
       { title: "My Courses", icon: BookOpen, path: "/student/courses" },
       { title: "Schedule", icon: Calendar, path: "/student/schedule" },
-      
+      { title: "Office Hours", icon: CalendarClock, path: "/student/office-hours" },
+      { title: "Announcements", icon: Megaphone, path: "/student/announcements" },
     ]},
     { label: "Progression", icon: Zap, items: [
       { title: "Portfolio", icon: UserCog, path: "/student/portfolio" },

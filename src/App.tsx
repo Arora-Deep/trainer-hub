@@ -44,6 +44,8 @@ import Trainers from "./pages/Trainers";
 import TrainerDetail from "./pages/TrainerDetail";
 import Meetings from "./pages/Meetings";
 import MeetingDetail from "./pages/MeetingDetail";
+import AssessmentLibrary from "./pages/AssessmentLibrary";
+import Announcements from "./pages/Announcements";
 
 import NotFound from "./pages/NotFound";
 
@@ -111,6 +113,7 @@ import CertificateVerify from "./pages/student/CertificateVerify";
 import StudentSchedule from "./pages/student/Schedule";
 import SessionDetail from "./pages/student/SessionDetail";
 import StudentLiveClass from "./pages/student/LiveClass";
+import StudentMeetingRoom from "./pages/student/MeetingRoom";
 import StudentSupport from "./pages/student/Support";
 import StudentProgress from "./pages/student/Progress";
 import StudentPaths from "./pages/student/Paths";
@@ -119,6 +122,8 @@ import StudentChallenges from "./pages/student/Challenges";
 import StudentLeaderboard from "./pages/student/Leaderboard";
 import StudentPortfolio from "./pages/student/Portfolio";
 import PortfolioPublic from "./pages/student/PortfolioPublic";
+import StudentAnnouncements from "./pages/student/Announcements";
+import StudentOfficeHours from "./pages/student/OfficeHours";
 import { Navigate } from "react-router-dom";
 import Engagement from "./pages/Engagement";
 
@@ -174,6 +179,8 @@ const App = () => (
             <Route path="/trainers/:id" element={<TrainerDetail />} />
             <Route path="/meetings" element={<Meetings />} />
             <Route path="/meetings/:id" element={<MeetingDetail />} />
+            <Route path="/assessments" element={<AssessmentLibrary />} />
+            <Route path="/announcements" element={<Announcements />} />
 
             {/* Admin routes */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -240,6 +247,7 @@ const App = () => (
             <Route path="/student/schedule" element={<StudentSchedule />} />
             <Route path="/student/schedule/:id" element={<SessionDetail />} />
             <Route path="/student/live-class" element={<StudentLiveClass />} />
+            <Route path="/student/meeting/:id" element={<StudentMeetingRoom />} />
             <Route path="/student/support" element={<StudentSupport />} />
             <Route path="/student/progress" element={<StudentProgress />} />
             <Route path="/student/paths" element={<StudentPaths />} />
@@ -247,6 +255,8 @@ const App = () => (
             <Route path="/student/challenges" element={<StudentChallenges />} />
             <Route path="/student/leaderboard" element={<StudentLeaderboard />} />
             <Route path="/student/portfolio" element={<StudentPortfolio />} />
+            <Route path="/student/announcements" element={<StudentAnnouncements />} />
+            <Route path="/student/office-hours" element={<StudentOfficeHours />} />
             {/* Redirects from old routes */}
             <Route path="/student/profile" element={<Navigate to="/student/portfolio" replace />} />
             <Route path="/student/quests" element={<Navigate to="/student/challenges" replace />} />

@@ -1,74 +1,77 @@
-# Trainer Portal Expansion
+# Plan — Trainer Portal Gap Fixes (Phase 1)
 
-Three new modules in the trainer (training-company-admin) portal, built on existing Zustand stores and the established design system (Apple-minimal, drawers over modals, Recharts, status chips).
+Same pattern as the rest of the portal: Zustand stores + mock seed data + new pages/components wired into existing routes. No backend. Student portal fixes follow in Phase 2 after this lands.
 
----
+## 1. Unified Assessment Library
+Goal: one place to browse/search Quizzes, Assignments, Exercises and attach them to lessons/batches.
+- New page `src/pages/AssessmentLibrary.tsx` at `/assessments` — tabs (All / Quizzes / Assignments / Exercises), search, course filter, status (draft/published) filter.
+- Reuses existing `quizStore`, `assignmentStore`, `exerciseStore` via a thin `useAssessments()` selector hook (`src/hooks/useAssessments.ts`) that normalizes them into one shape `{id, type, title, course, status, attempts, avgScore}`.
+- Row actions: Edit (routes to existing Create* pages in edit mode), Duplicate, Attach to lesson, Attach to batch, Delete.
+- Add lifecycle field `status: "draft" | "in_review" | "published" | "archived"` to all 3 stores (quiz already has draft/published — extend; same for assignment/exercise). Add `publish()` / `archive()` actions.
+- Sidebar: group existing Quizzes/Assignments/Exercises under a single "Assessments" collapsible with "Library" at the top.
 
-## 1. Schedule (tabbed view of all batches)
+## 2. Batch → Content Progress Rollup
+Goal: trainer sees "what's due this week" and per-student progress per batch.
+- New `src/stores/progressStore.ts` — mock seed: per-batch × per-student × per-item (lesson/quiz/assignment/exercise/lab) status (`not_started | in_progress | submitted | graded`), score, submittedAt.
+- New tab in `BatchDetails.tsx`: **Progress** — two views:
+  - *This week*: list of items due in next 7 days, completion % bar, count of submissions to grade.
+  - *Students*: table of participants × completion %, last activity, at-risk flag (computed: <50% & past midpoint).
+- New component `src/components/batches/ProgressRollupTab.tsx` + sub `StudentProgressDrawer.tsx` (right drawer with item-by-item breakdown — per design memory).
+- Bulk actions on Students table: Send reminder (toast), Mark excused.
 
-New route: `/schedule` — sidebar entry under **Main**, icon `CalendarDays`.
+## 3. Meetings Module Polish
+- **Recurring edit UX**: in `ScheduleMeetingDrawer`, when editing a recurring meeting show "Edit this / Edit this and following / Edit series" radio (mock — applies to all for now but UI exists).
+- **Recording attach**: add an "Upload recording" button on `MeetingDetail` past meetings → opens dialog with URL/file input → appends to `meeting.recordings[]`.
+- **Co-host view**: add `coHostIds` already in model; surface a "Co-hosting" filter on `/meetings` and a badge on cards.
+- **Notifications**: on meeting create/update/cancel, push to existing `notificationStore` (kind: "meeting"). Same for "starts in 15 min" simulated via store action `simulateReminders()` called on app mount.
+- **Office hours booking**: new `src/pages/student/OfficeHoursBooking.tsx` (Phase 2 wiring) — slot table generated from `meetingStore.getOfficeHoursSlots(trainerId)`. Trainer-side: a `Slots` tab inside Meetings to define recurring availability windows (mock).
 
-Pulls from `batchStore`. Single page with three tabs:
+## 4. Labs Consolidation
+- Keep existing pages, just clarify in sidebar: group "Lab Templates" + "Lab Instances" + "Requests" under one "Labs" collapsible.
+- Add a small banner on `Labs.tsx` index explaining Template vs Instance with links.
+- No store changes.
 
-- **Calendar** — month/week grid (using existing `Calendar` component + custom event overlays). Each day shows colored dots per batch; click a day → right drawer listing batches on that day with quick actions (View, Open Meeting, Roster).
-- **Timeline** — horizontal Gantt-style. Rows = batches, x-axis = dates. Bars colored by status (Upcoming = yellow, Live = green, Completed = white/grey, Cancelled = red). Hover tooltip with batch summary; click → batch details.
-- **Kanban** — three columns: Upcoming / Live / Completed. Batch cards show name, trainer, participant count, dates, lab status chip. Drag is out-of-scope for v1.
+## 5. Reporting & Export
+- New `src/lib/exportCsv.ts` helper.
+- Add "Export CSV" buttons on: `BatchReportsTab`, `AttendanceTable` (already mentioned), Assessment Library results, Progress Rollup Students table.
+- New `src/components/reports/StudentDeepDive.tsx` drawer — opens from any student row across the trainer portal; tabs: Overview / Assessments / Attendance / Engagement / Labs. Pulls from `progressStore` + `meetingStore`.
 
-Shared top bar: filters (trainer, course, customer, status), search, and a "Today" jump.
+## 6. Announcements & Messaging (lightweight)
+- New `src/stores/announcementStore.ts` — `{id, batchId|null (global), title, body, postedBy, postedAt, pinned}`.
+- New tab on `BatchDetails.tsx`: **Announcements** — compose form + list. Toast + push to `notificationStore` on post.
+- New trainer page `src/pages/Announcements.tsx` at `/announcements` for cross-batch view.
+- Student-side rendering wired in Phase 2.
 
----
+## 7. Sidebar Grouping (minor, no removals)
+`AppSidebar.tsx` trainer section reorganized into collapsibles:
+- **Teach**: Programs, Courses, Paths, Certifications
+- **Assess**: Assessment Library, Quizzes, Assignments, Exercises, Exams
+- **Run**: Batches, Schedule, Meetings, Live Training
+- **Labs**: Labs, Templates, Requests
+- **People**: Trainers, Students
+- **Insight**: Engagement, Reports, Announcements
+Order preserved within groups; nothing removed.
 
-## 2. Trainer Management
+## Out of scope for this phase
+Student "Next action" card, student calendar export, autosave on attempts, course-player bookmarks/notes, mobile audits, role-gating audit — all moved to **Phase 2 (Student Portal)** which I'll plan after Phase 1 ships.
 
-New route: `/trainers` — sidebar entry under **Main**, icon `UserSquare2`. Visible to all trainer-portal users for now (gating added later when RBAC ships).
+## Files
 
-New store: `trainerStore.ts` (Zustand) with seeded dummy trainers:
-`id, name, email, avatar, skills[], certifications[], bio, hourlyRate, joinedAt, status (active/inactive), assignedBatchIds[], metrics { avgRating, npsScore, completionRate, attendanceRate, batchesDelivered, studentsTrained, ratingTrend[] }`.
+**New**
+- `src/pages/AssessmentLibrary.tsx`, `src/pages/Announcements.tsx`
+- `src/hooks/useAssessments.ts`
+- `src/stores/progressStore.ts`, `src/stores/announcementStore.ts`
+- `src/components/batches/ProgressRollupTab.tsx`, `src/components/batches/StudentProgressDrawer.tsx`, `src/components/batches/AnnouncementsTab.tsx`
+- `src/components/reports/StudentDeepDive.tsx`
+- `src/lib/exportCsv.ts`
 
-**Pages/components:**
+**Modified**
+- `src/stores/quizStore.ts`, `assignmentStore.ts`, `exerciseStore.ts` (lifecycle fields + publish/archive)
+- `src/stores/meetingStore.ts` (office-hour slots, reminder simulation, notification hooks)
+- `src/stores/notificationStore.ts` (meeting/announcement kinds)
+- `src/pages/BatchDetails.tsx` (Progress + Announcements tabs)
+- `src/pages/Meetings.tsx`, `src/pages/MeetingDetail.tsx` (slots, recording upload, recurring edit)
+- `src/components/layout/AppSidebar.tsx` (grouping)
+- `src/App.tsx` (new routes)
 
-- **Trainer Directory** (`/trainers`) — table + grid toggle. Columns: trainer, skills (chips), batches (count), avg rating, completion %, status. "Add Trainer" button → right drawer form (name, email, skills multi-select, certs, bio, hourly rate). Row click → Trainer Detail.
-- **Trainer Detail** (`/trainers/:id`) — header with avatar + StatCards (Avg Rating, NPS, Completion %, Attendance %, Batches Delivered). Tabs:
-  - *Overview* — bio, skills, certifications, edit button (drawer).
-  - *Performance* — Recharts: rating trend line, completion bar by batch, student feedback breakdown pie, score distribution.
-  - *Batches* — list of assigned batches with status chips; "Assign to Batch" button → drawer that picks an upcoming/live batch (with simple schedule-conflict warning if dates overlap another assignment).
-  - *Feedback* — dummy student review cards (rating + comment + batch).
-
-**Batch assignment integration:** add `trainerId` to batches in `batchStore` (already present in some places — normalize). Batch detail's header shows trainer chip linking back to trainer profile.
-
----
-
-## 3. Meetings (BigBlueButton — mock UI)
-
-New route: `/meetings` — sidebar entry under **More**, icon `Video`. UI shell only; no real BBB calls yet (placeholders ready for later integration).
-
-New store: `meetingStore.ts` seeded with dummy meetings:
-`id, title, batchId, trainerId, scheduledAt, durationMins, status (scheduled/live/ended), joinUrl (#), recordingUrl (#), attendeeCount, maxAttendees`.
-
-**Pages:**
-
-- **Meetings List** (`/meetings`) — tabs: Live Now / Upcoming / Past. Cards show title, batch, trainer, time, status chip, primary action (Join / Start / View Recording). "Schedule Meeting" button → drawer (title, batch select, date/time, duration, welcome message, record toggle, mute on join, waiting room).
-- **Meeting Detail** (`/meetings/:id`) — meeting info, attendees mock list, recordings list, "Open BBB Room" button (opens `joinUrl` placeholder in new tab; toast: "BBB integration pending"). Settings tab with BBB-style options (camera/mic, layout, breakout rooms) — all UI only.
-- Surface "Open Meeting" buttons inline on Schedule cards and Batch Detail when a meeting exists for that batch.
-
-A small `bbbConfig.ts` placeholder file documents the future env vars (`BBB_SERVER_URL`, `BBB_SHARED_SECRET`) so wiring real integration later is a drop-in.
-
----
-
-## Technical notes
-
-- **Files added:**
-  - `src/pages/Schedule.tsx` + `src/components/schedule/{CalendarView,TimelineView,KanbanView,ScheduleFilters,DayBatchesDrawer}.tsx`
-  - `src/pages/Trainers.tsx`, `src/pages/TrainerDetail.tsx` + `src/components/trainers/{TrainerDrawer,PerformanceCharts,AssignBatchDrawer,FeedbackList}.tsx`
-  - `src/pages/Meetings.tsx`, `src/pages/MeetingDetail.tsx` + `src/components/meetings/{ScheduleMeetingDrawer,MeetingCard,AttendeesList,RecordingsList}.tsx`
-  - `src/stores/trainerStore.ts`, `src/stores/meetingStore.ts`
-  - `src/lib/bbbConfig.ts` (placeholder)
-- **Files edited:**
-  - `src/components/layout/AppSidebar.tsx` — add Schedule, Trainers, Meetings entries to `trainerNav`.
-  - `src/App.tsx` — register the new routes.
-  - `src/stores/batchStore.ts` — ensure `trainerId` on each batch; add helper selectors `getBatchesByStatus`, `getBatchesByDateRange`.
-  - `src/pages/BatchDetails.tsx` — trainer chip in header; "Meetings" quick link if any exist for the batch.
-- **Patterns reused:** PageHeader, StatCard, StatusBadge, right-side Sheet drawers, Recharts with existing gradient/rounded-top styling, status color mapping.
-- **Out of scope (this pass):** real BBB API calls, RBAC gating on trainer management, drag-and-drop in Kanban, recurring meetings, ICS export.
-
-After build, I'll also update `mem://index.md` with references to the three new modules.
+Confirm and I'll switch to build mode and ship Phase 1.
