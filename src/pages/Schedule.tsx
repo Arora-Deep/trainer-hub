@@ -290,3 +290,95 @@ export default function Schedule() {
     </div>
   );
 }
+
+// Local-only Free Time scratchpad — trainer can block out "available for office hours / VM prep" slots.
+// Lightweight client state (no backend); persists for the session.
+function FreeTimePanel() {
+  type Block = { id: string; date: string; startTime: string; endTime: string; note: string };
+  const [blocks, setBlocks] = useState<Block[]>([
+    { id: "b1", date: new Date().toISOString().slice(0, 10), startTime: "18:00", endTime: "20:00", note: "Office hours" },
+  ]);
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [startTime, setStartTime] = useState("17:00");
+  const [endTime, setEndTime] = useState("19:00");
+  const [note, setNote] = useState("");
+
+  const add = () => {
+    if (!date || !startTime || !endTime) return;
+    setBlocks((b) => [...b, { id: `b-${Date.now()}`, date, startTime, endTime, note: note.trim() }]);
+    setNote("");
+    toast({ title: "Free slot added", description: `${date} · ${startTime} – ${endTime}` });
+  };
+
+  const remove = (id: string) => setBlocks((b) => b.filter((x) => x.id !== id));
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, Block[]>();
+    blocks.forEach((b) => {
+      const arr = map.get(b.date) || [];
+      arr.push(b);
+      map.set(b.date, arr);
+    });
+    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [blocks]);
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+      <Card className="p-4 space-y-3 h-fit">
+        <div className="flex items-center gap-2 text-sm font-semibold"><Clock className="h-4 w-4 text-primary" /> Add free slot</div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Date</Label>
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Start</Label>
+            <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">End</Label>
+            <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Note (optional)</Label>
+          <Input placeholder="Office hours / VM prep" value={note} onChange={(e) => setNote(e.target.value)} />
+        </div>
+        <Button onClick={add} className="w-full gap-1.5"><Plus className="h-4 w-4" /> Add slot</Button>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Free slots are visible to admins and unlock optional post-batch VM console access during these windows.
+        </p>
+      </Card>
+
+      <Card className="p-4">
+        <div className="text-sm font-semibold mb-3">My free slots</div>
+        {grouped.length === 0 ? (
+          <div className="text-sm text-muted-foreground text-center py-12">No free slots yet — add one on the left.</div>
+        ) : (
+          <div className="space-y-4">
+            {grouped.map(([d, items]) => (
+              <div key={d}>
+                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                  {new Date(d).toDateString()}
+                </div>
+                <div className="space-y-1.5">
+                  {items.map((it) => (
+                    <div key={it.id} className="flex items-center justify-between p-2.5 rounded-lg border bg-primary/[0.03]">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-mono tabular-nums">{it.startTime} – {it.endTime}</span>
+                        {it.note && <span className="text-sm text-muted-foreground">{it.note}</span>}
+                      </div>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => remove(it.id)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
