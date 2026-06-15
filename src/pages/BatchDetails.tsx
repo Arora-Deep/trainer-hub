@@ -233,6 +233,7 @@ export default function BatchDetails() {
               { value: "course", label: "Course", icon: BookOpen },
               { value: "materials", label: "Material", icon: FileText },
               { value: "announcements", label: "Announcements", icon: Megaphone, count: batch.announcements.length },
+              { value: "meetings", label: "Meetings", icon: Video },
               { value: "assessments", label: "Assessments", icon: ClipboardList },
               { value: "games", label: "Games", icon: Gamepad2 },
               { value: "reports", label: "Reports", icon: TrendingUp },
