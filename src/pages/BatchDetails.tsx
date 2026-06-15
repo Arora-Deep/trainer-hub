@@ -243,6 +243,7 @@ export default function BatchDetails() {
               { value: "participants", label: "Participants", icon: Users, count: batch.participants.length },
               { value: "vms", label: "VMs", icon: Monitor },
               { value: "course", label: "Course", icon: BookOpen },
+              { value: "meetings", label: "Meetings", icon: Video },
               { value: "materials", label: "Material", icon: FileText },
               { value: "announcements", label: "Announcements", icon: Megaphone, count: batch.announcements.length },
               { value: "assessments", label: "Assessments", icon: ClipboardList },
@@ -936,6 +937,11 @@ export default function BatchDetails() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Meetings Tab */}
+        <TabsContent value="meetings">
+          <MeetingsTab batchId={batch.id} batchName={batch.name} />
         </TabsContent>
 
         {/* Materials Tab */}
