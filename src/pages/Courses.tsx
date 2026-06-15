@@ -11,9 +11,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, MoreHorizontal, BookOpen, Users, Plus, ArrowUpRight } from "lucide-react";
+import { Search, MoreHorizontal, BookOpen, Users, Plus, ArrowUpRight, Upload, Filter } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCourseStore } from "@/stores/courseStore";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 const statusConfig: Record<string, { status: "success" | "warning" | "default"; label: string }> = {
   active: { status: "success", label: "Active" },
@@ -24,6 +30,16 @@ const statusConfig: Record<string, { status: "success" | "warning" | "default"; 
 export default function Courses() {
   const navigate = useNavigate();
   const courses = useCourseStore((state) => state.courses);
+  const [filter, setFilter] = useState<"all" | "active" | "draft" | "archived">("all");
+  const [search, setSearch] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+
+  const filtered = courses.filter((c) => {
+    if (filter !== "all" && c.status !== filter) return false;
+    if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
 
   return (
     <div className="space-y-6 animate-in-up">
@@ -32,20 +48,33 @@ export default function Courses() {
         description="Browse and manage all available courses"
         breadcrumbs={[{ label: "Courses" }]}
         actions={
-          <Button onClick={() => navigate("/courses/create")} className="btn-gradient">
-            <Plus className="h-4 w-4" />
-            Create Course
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
+              <Upload className="h-4 w-4" /> Import Course
+            </Button>
+            <Button onClick={() => navigate("/courses/create")} className="btn-gradient">
+              <Plus className="h-4 w-4" />
+              Create Course
+            </Button>
+          </div>
         }
       />
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-border/50">
-          <CardTitle className="text-base font-semibold">All Courses</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-border/50 gap-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            {(["all", "active", "draft", "archived"] as const).map((f) => (
+              <Button key={f} variant={filter === f ? "default" : "outline"} size="sm" onClick={() => setFilter(f)} className="capitalize">
+                {f === "all" ? "All courses" : f}
+              </Button>
+            ))}
+          </div>
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
             <Input
               placeholder="Search courses..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               className="pl-10 w-64 bg-muted/40 border-0 rounded-xl focus-visible:ring-2 focus-visible:ring-primary/20"
             />
           </div>
@@ -63,7 +92,7 @@ export default function Courses() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {courses.map((course) => (
+              {filtered.map((course) => (
                 <TableRow key={course.id} className="table-row-premium group border-b border-border/30 last:border-0">
                   <TableCell>
                     <Link
@@ -113,10 +142,35 @@ export default function Courses() {
                   </TableCell>
                 </TableRow>
               ))}
+              {filtered.length === 0 && (
+                <TableRow><TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">No courses match your filter.</TableCell></TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Course Content</DialogTitle>
+            <DialogDescription>Upload a SCORM/Common Cartridge zip, course JSON or CSV outline.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label className="text-xs">Course File</Label>
+            <Input type="file" accept=".json,.csv,.xlsx,.zip,.imscc" onChange={(e) => setImportFile(e.target.files?.[0] || null)} />
+            <p className="text-[11px] text-muted-foreground">Supports SCORM 1.2/2004, IMS Common Cartridge, CloudAdda JSON and CSV outlines.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImportOpen(false)}>Cancel</Button>
+            <Button disabled={!importFile} onClick={() => {
+              toast({ title: "Course imported", description: `${importFile?.name} queued — chapters will appear shortly.` });
+              setImportFile(null);
+              setImportOpen(false);
+            }}>Import</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

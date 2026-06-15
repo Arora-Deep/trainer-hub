@@ -40,8 +40,17 @@ export default function QuizDetails() {
         description={quiz.course}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" className="gap-2"><Edit className="h-4 w-4" /> Edit</Button>
-            <Button className="gap-2"><Play className="h-4 w-4" /> Preview</Button>
+            <Button variant="outline" className="gap-2" onClick={() => navigate(`/quizzes/create?duplicate=${quiz.id}`)}><Edit className="h-4 w-4" /> Edit</Button>
+            <Button
+              className="gap-2"
+              onClick={() => {
+                if (quiz.questions.length === 0) {
+                  alert("This quiz has no questions yet. Add questions before previewing.");
+                  return;
+                }
+                window.alert(`Preview mode — ${quiz.questions.length} questions, ${quiz.duration} min. (Demo: opens in the student view in production.)`);
+              }}
+            ><Play className="h-4 w-4" /> Preview</Button>
           </div>
         }
       />
