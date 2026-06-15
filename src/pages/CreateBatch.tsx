@@ -976,7 +976,17 @@ export default function CreateBatch() {
                   <CardContent>
                     <div className="text-center py-4">
                       <span className="text-4xl font-bold text-primary">${pricing.total.toFixed(0)}</span>
-                      <p className="text-sm text-muted-foreground mt-1">{pricing.totalVMs} VMs for {pricing.days} days</p>
+                      <p className="text-sm text-muted-foreground mt-1">{pricing.totalVMs} VMs ({seatCount} participants + 1 trainer) · {pricing.days} days</p>
+                    </div>
+                    <div className="border-t pt-3 mt-2 space-y-1.5">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Per participant</span>
+                        <span className="font-semibold tabular-nums">${seatCount > 0 ? (pricing.total / seatCount).toFixed(0) : "0"}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Trainer VM</span>
+                        <span className="font-semibold tabular-nums">${pricing.totalVMs > 0 ? (pricing.total / pricing.totalVMs).toFixed(0) : "0"}</span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
