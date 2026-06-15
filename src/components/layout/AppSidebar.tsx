@@ -8,7 +8,7 @@ import {
   Cpu, HardDrive, Network, Activity, LifeBuoy, Receipt, Lock, FileBarChart,
   Gauge, AlertTriangle, Clock, Wrench, BookMarked, Zap, Globe, Eye,
   DollarSign, Scale, Key, Database, Send, Flag, Workflow, Container,
-  Video, Calendar, Radio, MessageSquarePlus, ClipboardCheck, Brain, GraduationCap as ExamIcon, Gamepad2,
+  Video, Calendar, Radio, MessageSquarePlus, ClipboardCheck, Brain, GraduationCap as ExamIcon, Gamepad2, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -66,6 +66,7 @@ const adminNav: NavConfig = {
       { title: "Replace VM", icon: Workflow, path: "/admin/labs/replace" },
       { title: "Reset Lab", icon: Zap, path: "/admin/labs/reset" },
       { title: "Lab Templates", icon: Boxes, path: "/admin/labs/templates" },
+      { title: "Sandbox Requests", icon: Sparkles, path: "/admin/labs/sandbox-requests" },
       { title: "ISO Library", icon: Image, path: "/admin/labs/iso" },
     ]},
     { label: "Catalog", icon: BookMarked, items: [
@@ -81,6 +82,7 @@ const adminNav: NavConfig = {
     ]},
     { label: "Infrastructure", icon: Server, items: [
       { title: "Nodes", icon: Cpu, path: "/admin/infra/nodes" },
+      { title: "Node VM Pool", icon: Monitor, path: "/admin/infra/node-vms" },
       { title: "Resource Usage", icon: Boxes, path: "/admin/infra/resource-usage" },
       { title: "Capacity Planning", icon: BarChart3, path: "/admin/infra/capacity" },
       { title: "Maintenance Mode", icon: Wrench, path: "/admin/infra/maintenance" },
@@ -135,6 +137,7 @@ const trainerNav: NavConfig = {
     { label: "More", icon: Award, items: [
       { title: "Certifications", icon: Award, path: "/certifications" },
       { title: "Engagement", icon: Zap, path: "/engagement" },
+      { title: "My Sandbox VMs", icon: Sparkles, path: "/sandbox-vms" },
       { title: "Request Lab / Quote", icon: MessageSquarePlus, path: "/request-lab" },
     ]},
   ],

@@ -1,101 +1,62 @@
-# Mega Update Plan (Mock/UI only)
+# Admin Infra & Lab Controls — Implementation Plan
 
-All changes are frontend-only (Zustand + local state, no Lovable Cloud). Skipping: nav color inversion, editable dashboard, reclone warning alerts.
-
----
-
-## 1. Trainer Portal — Global VM Controls
-In the trainer batch detail VM tab, add a sticky toolbar above the VM list:
-- **Re-clone All** (confirm dialog)
-- **Start All** / **Stop All**
-- **Restore All to Initial State** (confirm dialog)
-Toast feedback on each action; updates `batchStore` VM statuses in bulk.
-
-## 2. Quiz Not Opening — Fix
-Investigate `/quizzes/:id` route + `QuizDetails.tsx`. Likely a broken link / missing route from recent lesson-editor rewire (`createNewHref` → `/quizzes/create`). Fix routing and ensure quiz list "Open" action works.
-
-## 3. Imports
-Add an **Import** button (with dropdown menu or modal supporting JSON/CSV paste) on:
-- Trainer **Courses** (import course content)
-- Trainer **Quizzes** (import quiz)
-- Trainer **Assignments** (import assignments)
-Mock parser → adds items to respective Zustand stores. Includes "Download template" link.
-
-## 4. VM Availability — 24h option
-In trainer batch VM availability picker, add **24 Hours** preset. If user picks > 8 hours via slider/duration, auto-snap to "Full day (24h)" with a small inline hint.
-
-## 5. Hide Pricing from Trainer
-Pricing visible to Admin only. In trainer **Create Batch** VM step and review, hide ₹ cost columns/cards (gate via `roleStore.role === 'admin'`). Admin portal continues to show full costs.
-
-## 6. Modify Batch — Resource Upgrade Mid-Batch
-In **admin/ModifyBatch.tsx**, add new section **"Upgrade Resources"**: pick affected VMs (all / per-participant), choose new CPU/RAM tier (e.g. 2c/4g → 8c/16g), shows delta cost, confirm → updates batch + logs change in batch audit/timeline.
-
-## 7. Admin — Node Selection for VMs
-In admin Create Batch (VM step) and Provisioning flows, add **Target Node** dropdown (Auto / specific node from `Nodes` list) with capacity hints.
-
-## 8. Enable VLAN per Batch
-In admin Create Batch settings step add **Enable VLAN** toggle + VLAN ID input (mocked). Persist in batch settings.
-
-## 9. Pre-Provisioned VM Option in Create Batch (Admin)
-In VM step, add a third source alongside Template/Master: **"Use Pre-Provisioned VM"** — picks from a mock pool, skips template requirement.
-
-## 10. Configurable VM Access Window (Trainer Prep)
-When admin creates batch, trainer chooses **"When can I configure the VM?"** — relative to batch start (e.g. 2 days before / 7 days before / custom). Stored on batch; trainer portal respects this date.
-
-## 11. Trainer Portal Courses Page — Proper Rebuild
-Polish `/courses` (trainer): proper grid with cover, status chip, lesson count, last edited, search + filters (status, type), bulk select, primary "New Course" + "Import" CTAs. Match Apple-minimal design system.
-
-## 12. VM Cost = Participants + 1 Trainer VM
-Update cost calculations in admin Create Batch review and BatchProvisioning estimate to include +1 trainer VM. Show breakdown line.
-
-## 13. Trainer Create Batch — Per-Participant Cost in Review
-On the trainer Create Batch review step, show **Per Participant Cost** alongside **Total Cost** (admin sees both; trainer sees per-participant only per item 5? — clarify in build: keep per-participant visible since trainer needs to quote, hide raw infra ₹ tiers).
-
-## 14. Clone Button Gating + Trainer Post-Batch Access
-- Re-clone / clone actions disabled until **2 days before batch start** (tooltip explains).
-- After batch is **marked done**, trainer can still open VM console **if their free-time VM availability window covers now**.
-
-## 15. Approval Workflow + Draft Batches (Mock)
-- New batch created in trainer portal saves as **Draft** (status badge).
-- Sent for approval → admin portal **Approvals** queue shows it.
-- On approval (mock click) → status flips to Active, provisioning unlocks.
-- Visual states only; no real backend.
-
-## 16. Bulk Add Participants
-"Add Participant" button opens dialog with two tabs:
-- **Single** (existing form)
-- **Multiple** — paste CSV / bulk email list, preview rows, add all.
-
-## 17. Billing Adjustments for Participant Changes
-In admin Billing + batch detail, add a **Participant Adjustments** timeline (added/removed with date, prorated delta). Update displayed monthly usage to reflect adjustments (mock).
-
-## 18. Email in Participant Details + Send VM Credentials Action
-- Show email column in participant list + detail.
-- In row action menu add **"Send VM Login via Email"** → opens preview dialog, mock send, success toast.
-
-## 19. Disable LMS/Content View on Batch
-In Create/Modify Batch settings, add toggle **"Hide LMS / Content View for students in this batch"**. Student portal respects flag (hides Courses tab when true).
-
-## 20. Free Calendar Area
-Add **Free Time** layer on trainer Schedule page — drag/click to block out "free / available" slots distinct from sessions. Visual differentiation; used by item 14 gating.
-
-## 21. Live Training Console — VM Switch Buttons (Left Rail)
-In `LiveClass.tsx` / live training console, add a left vertical rail listing batch VMs with quick **Switch** buttons (active VM highlighted). Mock switch updates active VM panel.
-
-## 22. Trainer Portal — Student Login Details
-On trainer participant detail, add **"Login Credentials"** card showing student username + masked password with reveal + copy, plus resend link.
+All UI-only / mock data, extending existing Zustand stores. Follows existing Apple-minimalist patterns (right-side drawers, sticky headers, status chips).
 
 ---
 
-## Technical Notes
-- All state lives in existing Zustand stores; extend `batchStore`, `trainerStore`, `meetingStore`, plus add fields: `batch.status = 'draft' | 'pending_approval' | 'active' | 'completed'`, `batch.vlan`, `batch.targetNode`, `batch.trainerPrepDate`, `batch.hideLMS`, `batch.participantAdjustments[]`, `participant.email`, `participant.vmCredentials`.
-- Cost helper `calcBatchCost(seats, tier)` → `(seats + 1) * tierPrice` used everywhere.
-- Role gating uses existing `roleStore`.
-- New shared components: `BulkVMActionsBar`, `ImportDialog`, `ResourceUpgradeDialog`, `SendCredentialsDialog`, `VMSwitcherRail`.
+## 1. Node VM Pool & Assignment
 
-## Out of Scope (per your reply)
-- Nav color inversion
-- Editable/customizable dashboard
-- Reclone warning alerts
+**New page:** `src/pages/admin/NodeVMPool.tsx` (route `/admin/infra/node-vms`)
+- Filter bar: Node, Region, Status, Customer, Batch, "Unassigned only"
+- Table columns: VM Name · Node · vCPU/RAM/Disk · OS · IP · Status chip · Assigned to (student / batch / —) · Actions
+- Bulk selection with sticky action bar: **Assign to Student**, **Assign to Batch**, **Reassign**, **Release**
+- Assign drawer (right side): pick Customer → Batch → one/many Students (multi-select) or "Entire batch"; shows VM count vs. participant count with mismatch warning; reason field; confirm
 
-Ready to implement on approval.
+**Node drill-down:** extend `src/pages/admin/Nodes.tsx`
+- Row click opens existing node detail; add new **"VMs on this node"** tab that embeds the same `<NodeVMTable />` component scoped to that node, with the same assign drawer
+
+**Shared component:** `src/components/admin/NodeVMTable.tsx` + `AssignVMDrawer.tsx` so both views stay in sync.
+
+**Store:** extend `labStore.ts` with a `nodeVMs: NodeVM[]` collection and `assignNodeVM(vmId, target)` / `releaseNodeVM(vmId)` actions. Mock ~40 VMs across 5 nodes.
+
+---
+
+## 2. Self-Paced Lab Template Provisioning
+
+Two entry paths converging into one pipeline:
+
+**Path A — Direct provision (admin-initiated)**
+- New action on `src/pages/admin/Customers.tsx` row & customer detail: **"Provision Sandbox VM for Trainer"**
+- Opens drawer: pick Trainer (from customer's trainer list), base OS / size / region, purpose note → creates a `SandboxVM` in status `provisioning`
+
+**Path B — Trainer request (request-first)**
+- Trainer portal: new page `src/pages/RequestSandboxVM.tsx` (link in Labs sidebar) — form: desired OS, size, software notes, target self-paced course
+- Lands in new admin queue `src/pages/admin/SandboxVMRequests.tsx` (route `/admin/infra/sandbox-requests`)
+- Admin **Approve & Provision** → same pipeline as Path A
+
+**Pipeline status chip:** `Requested → Provisioning → Ready (trainer configuring) → Validation → Snapshot → Published`
+- Trainer side: `src/pages/SandboxVMs.tsx` lists their sandbox VMs with **Open Console**, **Mark Ready for Snapshot**
+- Admin side: detail drawer with **Snapshot & Promote to Template** button → creates new `LabTemplate` (kind: `self_paced`) in `labStore.templates`, auto-attaches to trainer's available templates, marks VM `Published`
+
+**Store:** new `sandboxVMStore.ts` (requests + sandbox VMs + status history) and a `kind?: 'self_paced' | 'instructor_led'` flag on `LabTemplate`.
+
+---
+
+## 3. Extra-Time Overrides (4 scopes)
+
+Single reusable drawer `src/components/admin/ExtendTimeDrawer.tsx` invoked from each scope's row action. Inputs: hours to add (1/2/4/8/custom), reason (required), notify trainer toggle.
+
+- **Per-VM** — action button on `src/pages/admin/VMManagement.tsx` row and `AssignVM.tsx`
+- **Per-batch (all VMs)** — action in `src/pages/admin/AdminBatchDetail.tsx` header overflow menu; applies bonus hours to every VM in batch
+- **Per-session/day window** — control in `src/components/batches/VMDaySchedule.tsx` (admin-only) to extend today's availability window (+1/2/3h)
+- **Template runtimeLimit override (per customer)** — on customer detail, "Template Overrides" section to bump `runtimeLimit` for a template scoped to that customer; stored as `templateOverrides: { customerId, templateId, runtimeLimit }[]` in `labStore`
+
+**Audit logging:** every extend / assign / promote / release action calls a shared `logAdminAction(actor, action, target, reason)` helper writing to a `useAuditStore` (or extend existing `notificationStore`). Visible in `src/pages/admin/AuditLogs.tsx` via the existing log table — add filter chips for new action types.
+
+---
+
+## Technical Summary
+
+- **New files:** `pages/admin/NodeVMPool.tsx`, `pages/admin/SandboxVMRequests.tsx`, `pages/RequestSandboxVM.tsx`, `pages/SandboxVMs.tsx`, `components/admin/NodeVMTable.tsx`, `components/admin/AssignVMDrawer.tsx`, `components/admin/ExtendTimeDrawer.tsx`, `stores/sandboxVMStore.ts`, `lib/auditLog.ts`
+- **Modified:** `labStore.ts` (nodeVMs, templateOverrides, template.kind), `App.tsx` (routes), `AppSidebar.tsx` (admin: Infra → Node VM Pool, Sandbox Requests; trainer: Labs → Request Sandbox VM, My Sandbox VMs), `Nodes.tsx`, `VMManagement.tsx`, `AdminBatchDetail.tsx`, `AssignVM.tsx`, `VMDaySchedule.tsx`, `Customers.tsx`/`CustomerDetail.tsx`, `AuditLogs.tsx`
+- **No backend** — all mock data, Zustand persistence, follows existing role-gating via `roleStore`
