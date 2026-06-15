@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Megaphone, Pin } from "lucide-react";
@@ -11,12 +12,20 @@ interface Props {
 }
 
 export function AnnouncementsFeed({ limit = 3, showViewAll = true }: Props) {
-  const byBatch = useAnnouncementStore((s) => s.byBatch);
-  const global = useAnnouncementStore((s) => s.global);
+  const announcements = useAnnouncementStore((s) => s.announcements);
 
-  const combined = [...byBatch(CURRENT_STUDENT_BATCH_ID), ...global()]
-    .sort((a, b) => (+b.pinned - +a.pinned) || (+new Date(b.postedAt) - +new Date(a.postedAt)))
-    .slice(0, limit);
+  const combined = useMemo(
+    () =>
+      announcements
+        .filter((a) => a.batchId === CURRENT_STUDENT_BATCH_ID || a.batchId === null)
+        .sort(
+          (a, b) =>
+            +b.pinned - +a.pinned ||
+            +new Date(b.postedAt) - +new Date(a.postedAt)
+        )
+        .slice(0, limit),
+    [announcements, limit]
+  );
 
   if (combined.length === 0) return null;
 
