@@ -324,8 +324,10 @@ export default function Dashboard() {
           </div>
         </Card>
       </div>
+      )}
 
       {/* Activity Chart – Full width, prominent like reference */}
+      {visible.activity && (
       <Card className="p-6">
         <div className="flex items-start justify-between mb-2">
           <div>
@@ -402,10 +404,12 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
       </Card>
+      )}
 
       {/* Bottom Grid */}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Upcoming Batches */}
+        {visible.upcoming && (
         <DataCard
           title="Upcoming Batches"
           icon={Calendar}
