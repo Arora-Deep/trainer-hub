@@ -39,6 +39,11 @@ import LessonView from "./pages/LessonView";
 import Exams from "./pages/Exams";
 import InsightQuestions from "./pages/InsightQuestions";
 import GameBasedLearning from "./pages/GameBasedLearning";
+import Schedule from "./pages/Schedule";
+import Trainers from "./pages/Trainers";
+import TrainerDetail from "./pages/TrainerDetail";
+import Meetings from "./pages/Meetings";
+import MeetingDetail from "./pages/MeetingDetail";
 
 import NotFound from "./pages/NotFound";
 
@@ -164,6 +169,11 @@ const App = () => (
             <Route path="/request-lab" element={<RequestLab />} />
             
             <Route path="/settings" element={<Settings />} />
+            <Route path="/schedule" element={<Schedule />} />
+            <Route path="/trainers" element={<Trainers />} />
+            <Route path="/trainers/:id" element={<TrainerDetail />} />
+            <Route path="/meetings" element={<Meetings />} />
+            <Route path="/meetings/:id" element={<MeetingDetail />} />
 
             {/* Admin routes */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
