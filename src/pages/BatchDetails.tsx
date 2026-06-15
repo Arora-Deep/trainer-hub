@@ -45,6 +45,7 @@ import { cn } from "@/lib/utils";
 import { ParticipantsTab } from "@/components/batches/ParticipantsTab";
 import { BatchSettingsTab } from "@/components/batches/BatchSettingsTab";
 import { MaterialsTab } from "@/components/batches/MaterialsTab";
+import { MeetingsTab } from "@/components/batches/MeetingsTab";
 import { BatchReportsTab } from "@/components/batches/BatchReportsTab";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -243,6 +244,7 @@ export default function BatchDetails() {
               { value: "participants", label: "Participants", icon: Users, count: batch.participants.length },
               { value: "vms", label: "VMs", icon: Monitor },
               { value: "course", label: "Course", icon: BookOpen },
+              { value: "meetings", label: "Meetings", icon: Video },
               { value: "materials", label: "Material", icon: FileText },
               { value: "announcements", label: "Announcements", icon: Megaphone, count: batch.announcements.length },
               { value: "assessments", label: "Assessments", icon: ClipboardList },
@@ -936,6 +938,11 @@ export default function BatchDetails() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Meetings Tab */}
+        <TabsContent value="meetings">
+          <MeetingsTab batchId={batch.id} batchName={batch.name} />
         </TabsContent>
 
         {/* Materials Tab */}

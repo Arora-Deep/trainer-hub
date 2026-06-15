@@ -25,6 +25,8 @@ import { cn } from "@/lib/utils";
 import { studentCourses, type StudentCourse, type StudentLesson } from "@/data/studentMockData";
 import SelfPacedLearningCentre from "@/pages/student/SelfPacedLearningCentre";
 import { useBatchStore, type Material } from "@/stores/batchStore";
+import { useMeetingStore } from "@/stores/meetingStore";
+import { MeetingsListPanel } from "@/components/meetings/MeetingsListPanel";
 
 /* ── Data ── */
 const lessonIcons: Record<StudentLesson["type"], typeof Video> = {
@@ -105,7 +107,7 @@ const statusIndicators: Record<string, { color: string; label: string }> = {
   away: { color: "bg-muted-foreground/40", label: "Away" },
 };
 
-type ViewMode = "default" | "content" | "lab" | "notes" | "materials";
+type ViewMode = "default" | "content" | "lab" | "meetings" | "notes" | "materials";
 type SideRail = "materials" | "chat" | "students" | null;
 
 const sessionMaterials = [
@@ -469,6 +471,7 @@ export default function StudentLiveClass() {
             <TabsTrigger value="default" className="text-xs gap-1.5"><LayoutGrid className="h-3.5 w-3.5" /> {isSelfPaced ? "Overview" : "Default"}</TabsTrigger>
             <TabsTrigger value="content" className="text-xs gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Content View</TabsTrigger>
             <TabsTrigger value="lab" className="text-xs gap-1.5"><Terminal className="h-3.5 w-3.5" /> Lab View</TabsTrigger>
+            <TabsTrigger value="meetings" className="text-xs gap-1.5"><Video className="h-3.5 w-3.5" /> Meetings</TabsTrigger>
             <TabsTrigger value="notes" className="text-xs gap-1.5"><StickyNote className="h-3.5 w-3.5" /> Notes</TabsTrigger>
             <TabsTrigger value="materials" className="text-xs gap-1.5"><FileText className="h-3.5 w-3.5" /> Materials</TabsTrigger>
           </TabsList>
@@ -939,6 +942,9 @@ export default function StudentLiveClass() {
         </div>
       )}
 
+      {/* ===== MEETINGS VIEW ===== */}
+      {viewMode === "meetings" && <MeetingsPanel />}
+
       {/* ===== MATERIALS VIEW ===== */}
       {viewMode === "materials" && <MaterialsPanel />}
     </div>
@@ -1001,5 +1007,32 @@ function MaterialsPanel() {
         )}
       </div>
     </Card>
+  );
+}
+
+/* ===== Meetings Panel (student view inside Learning Centre) ===== */
+function MeetingsPanel() {
+  const meetings = useMeetingStore((s) => s.meetings);
+  const live = meetings.filter((m) => m.status === "live");
+  const upcoming = meetings.filter((m) => m.status === "scheduled").sort((a, b) => +new Date(a.scheduledAt) - +new Date(b.scheduledAt));
+  const past = meetings.filter((m) => m.status === "ended").sort((a, b) => +new Date(b.scheduledAt) - +new Date(a.scheduledAt));
+
+  return (
+    <div className="space-y-5">
+      {live.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Radio className="h-3.5 w-3.5 text-destructive animate-pulse" /> Live now</h3>
+          <MeetingsListPanel meetings={live} basePath="/student/meetings" viewer />
+        </div>
+      )}
+      <div>
+        <h3 className="text-sm font-semibold mb-2">Upcoming</h3>
+        <MeetingsListPanel meetings={upcoming.slice(0, 6)} basePath="/student/meetings" viewer emptyText="No upcoming meetings." />
+      </div>
+      <div>
+        <h3 className="text-sm font-semibold mb-2">Recent recordings</h3>
+        <MeetingsListPanel meetings={past.slice(0, 6)} basePath="/student/meetings" viewer emptyText="No recordings yet." />
+      </div>
+    </div>
   );
 }

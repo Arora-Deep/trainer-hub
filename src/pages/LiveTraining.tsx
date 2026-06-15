@@ -21,6 +21,9 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useBatchStore } from "@/stores/batchStore";
 import { useCourseStore } from "@/stores/courseStore";
+import { useMeetingStore } from "@/stores/meetingStore";
+import { MeetingsListPanel } from "@/components/meetings/MeetingsListPanel";
+import { MeetingScheduleSheet } from "@/components/meetings/MeetingScheduleSheet";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -30,7 +33,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 type StudentState = "healthy" | "raised" | "warning" | "offline";
-type MainTab = "split" | "students" | "trainer" | "resources" | "analytics";
+type MainTab = "split" | "students" | "trainer" | "resources" | "meetings" | "analytics";
 type SplitSide = "students" | "chat" | null;
 
 const stateAccent: Record<StudentState, { dot: string; ring: string; label: string; text: string; bg: string }> = {
@@ -254,6 +257,7 @@ export default function LiveTraining() {
             <ViewTab active={mainTab === "students"} onClick={() => setMainTab("students")} icon={<Users className="h-3.5 w-3.5" />} label="Students" badge={grid.length} />
             <ViewTab active={mainTab === "trainer"} onClick={() => setMainTab("trainer")} icon={<Monitor className="h-3.5 w-3.5" />} label="Trainer" />
             <ViewTab active={mainTab === "resources"} onClick={() => setMainTab("resources")} icon={<BookOpen className="h-3.5 w-3.5" />} label="Resources" />
+            <ViewTab active={mainTab === "meetings"} onClick={() => setMainTab("meetings")} icon={<Video className="h-3.5 w-3.5" />} label="Meetings" />
             <ViewTab active={mainTab === "analytics"} onClick={() => setMainTab("analytics")} icon={<BarChart3 className="h-3.5 w-3.5" />} label="Analytics" />
           </div>
 
@@ -507,6 +511,9 @@ export default function LiveTraining() {
           )}
           {mainTab === "resources" && (
             <ResourcesView lessons={lessons} activeLessonIdx={activeLessonIdx} setActiveLessonIdx={setActiveLessonIdx} courseName={linkedCourse?.name || "Course"} />
+          )}
+          {mainTab === "meetings" && (
+            <MeetingsView batchId={batch.id} />
           )}
           {mainTab === "analytics" && (
             <AnalyticsView grid={grid} lessons={lessons} sessionTimer={sessionTimer} />
@@ -1942,5 +1949,46 @@ function SidePanelTab({ active, icon, label, badge, collapsed, onClick }: {
         <span className="ml-0.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[9px] font-semibold">{badge}</span>
       )}
     </button>
+  );
+}
+
+/* ===== Meetings View (live training tab) ===== */
+function MeetingsView({ batchId }: { batchId: string }) {
+  const allMeetings = useMeetingStore((s) => s.meetings);
+  const meetings = allMeetings.filter((m) => m.batchId === batchId);
+  const live = meetings.filter((m) => m.status === "live");
+  const upcoming = meetings.filter((m) => m.status === "scheduled").sort((a, b) => +new Date(a.scheduledAt) - +new Date(b.scheduledAt));
+  const past = meetings.filter((m) => m.status === "ended").sort((a, b) => +new Date(b.scheduledAt) - +new Date(a.scheduledAt));
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Batch Meetings</h2>
+          <p className="text-xs text-muted-foreground">Schedule & track BigBlueButton sessions for this batch.</p>
+        </div>
+        <Button size="sm" onClick={() => setOpen(true)}>
+          <Video className="h-3.5 w-3.5 mr-1.5" /> Schedule Meeting
+        </Button>
+      </div>
+
+      {live.length > 0 && (
+        <section className="space-y-2">
+          <h3 className="text-sm font-semibold flex items-center gap-2"><Radio className="h-3.5 w-3.5 text-destructive animate-pulse" /> Live now</h3>
+          <MeetingsListPanel meetings={live} />
+        </section>
+      )}
+      <section className="space-y-2">
+        <h3 className="text-sm font-semibold">Upcoming</h3>
+        <MeetingsListPanel meetings={upcoming} emptyText="Nothing scheduled yet." />
+      </section>
+      <section className="space-y-2">
+        <h3 className="text-sm font-semibold">Past sessions</h3>
+        <MeetingsListPanel meetings={past} emptyText="No past sessions for this batch." />
+      </section>
+
+      <MeetingScheduleSheet open={open} onOpenChange={setOpen} lockedBatchId={batchId} />
+    </div>
   );
 }

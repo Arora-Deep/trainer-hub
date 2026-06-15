@@ -154,6 +154,8 @@ const studentNav: NavConfig = {
       { title: "Active Labs", icon: Monitor, path: "/student/labs" },
       { title: "My Courses", icon: BookOpen, path: "/student/courses" },
       { title: "Schedule", icon: Calendar, path: "/student/schedule" },
+      { title: "Meetings", icon: Video, path: "/student/meetings" },
+      
       
     ]},
     { label: "Progression", icon: Zap, items: [
