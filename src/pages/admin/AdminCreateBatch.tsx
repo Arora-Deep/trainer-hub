@@ -101,6 +101,10 @@ export default function AdminCreateBatch() {
   const [vlanId, setVlanId] = useState("100");
   const [enableQemu, setEnableQemu] = useState(true);
   const [enableNestedVirt, setEnableNestedVirt] = useState(false);
+  const [targetNode, setTargetNode] = useState<string>("auto");
+  const [vmSource, setVmSource] = useState<"template" | "pre-provisioned">("template");
+  const [preProvisionedPoolId, setPreProvisionedPoolId] = useState<string>("");
+  const [trainerAccessDate, setTrainerAccessDate] = useState<string>("");
 
   // RBAC: pricing visibility
   const adminSubRole = useRoleStore((s) => s.adminSubRole);
@@ -593,6 +597,60 @@ export default function AdminCreateBatch() {
                               <Badge variant="secondary" className="text-[10px]">802.1Q</Badge>
                             </div>
                           )}
+
+                          <div className="p-2.5 rounded-lg border space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Label className="text-sm">Target Node</Label>
+                                <p className="text-[11px] text-muted-foreground">Pin VMs to a specific host (or auto-balance)</p>
+                              </div>
+                            </div>
+                            <Select value={targetNode} onValueChange={setTargetNode}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="auto">Auto — best fit</SelectItem>
+                                <SelectItem value="node-mum-01">node-mum-01 · 48% used · 64c/256GB</SelectItem>
+                                <SelectItem value="node-mum-02">node-mum-02 · 22% used · 96c/384GB</SelectItem>
+                                <SelectItem value="node-vir-01">node-vir-01 · 71% used · 48c/192GB</SelectItem>
+                                <SelectItem value="node-gpu-01">node-gpu-01 · 30% used · A100×4 · 128c/512GB</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="p-2.5 rounded-lg border space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <Label className="text-sm">VM Source</Label>
+                                <p className="text-[11px] text-muted-foreground">Use a fresh template or assign from a pre-provisioned pool (skips template build)</p>
+                              </div>
+                            </div>
+                            <Select value={vmSource} onValueChange={(v) => setVmSource(v as any)}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="template">Build from template</SelectItem>
+                                <SelectItem value="pre-provisioned">Use pre-provisioned VM pool</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {vmSource === "pre-provisioned" && (
+                              <Select value={preProvisionedPoolId} onValueChange={setPreProvisionedPoolId}>
+                                <SelectTrigger><SelectValue placeholder="Choose a warm pool" /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pool-ubuntu-24">Ubuntu 24.04 · 40 VMs ready</SelectItem>
+                                  <SelectItem value="pool-rocky-9">Rocky 9 · 22 VMs ready</SelectItem>
+                                  <SelectItem value="pool-win-server-2022">Windows Server 2022 · 15 VMs ready</SelectItem>
+                                  <SelectItem value="pool-k8s-lab">K8s Lab Cluster · 12 sets ready</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          </div>
+
+                          <div className="p-2.5 rounded-lg border space-y-2">
+                            <div>
+                              <Label className="text-sm">Trainer VM access from</Label>
+                              <p className="text-[11px] text-muted-foreground">When can the trainer start configuring the master VM? Defaults to {prepDays} days before start.</p>
+                            </div>
+                            <Input type="date" value={trainerAccessDate} onChange={(e) => setTrainerAccessDate(e.target.value)} />
+                          </div>
                         </CardContent>
                       </Card>
                     </>
