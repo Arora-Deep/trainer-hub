@@ -156,15 +156,9 @@ const studentNav: NavConfig = {
       { title: "Active Labs", icon: Monitor, path: "/student/labs" },
       { title: "My Courses", icon: BookOpen, path: "/student/courses" },
       { title: "Schedule", icon: Calendar, path: "/student/schedule" },
-      { title: "Office Hours", icon: CalendarClock, path: "/student/office-hours" },
-      { title: "Announcements", icon: Megaphone, path: "/student/announcements" },
     ]},
-    { label: "Progression", icon: Zap, items: [
-      { title: "Portfolio", icon: UserCog, path: "/student/portfolio" },
+    { label: "Achievements", icon: Award, items: [
       { title: "My Progress", icon: Activity, path: "/student/progress" },
-      { title: "Learning Paths", icon: Workflow, path: "/student/paths" },
-      { title: "Challenges", icon: Flag, path: "/student/challenges" },
-      { title: "Leaderboard", icon: Trophy, path: "/student/leaderboard" },
       { title: "Certificates", icon: Award, path: "/student/certificates" },
     ]},
   ],
