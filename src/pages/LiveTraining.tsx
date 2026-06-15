@@ -21,6 +21,9 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useBatchStore } from "@/stores/batchStore";
 import { useCourseStore } from "@/stores/courseStore";
+import { useMeetingStore } from "@/stores/meetingStore";
+import { MeetingsListPanel } from "@/components/meetings/MeetingsListPanel";
+import { MeetingScheduleSheet } from "@/components/meetings/MeetingScheduleSheet";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -30,7 +33,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 type StudentState = "healthy" | "raised" | "warning" | "offline";
-type MainTab = "split" | "students" | "trainer" | "resources" | "analytics";
+type MainTab = "split" | "students" | "trainer" | "resources" | "meetings" | "analytics";
 type SplitSide = "students" | "chat" | null;
 
 const stateAccent: Record<StudentState, { dot: string; ring: string; label: string; text: string; bg: string }> = {
@@ -254,6 +257,7 @@ export default function LiveTraining() {
             <ViewTab active={mainTab === "students"} onClick={() => setMainTab("students")} icon={<Users className="h-3.5 w-3.5" />} label="Students" badge={grid.length} />
             <ViewTab active={mainTab === "trainer"} onClick={() => setMainTab("trainer")} icon={<Monitor className="h-3.5 w-3.5" />} label="Trainer" />
             <ViewTab active={mainTab === "resources"} onClick={() => setMainTab("resources")} icon={<BookOpen className="h-3.5 w-3.5" />} label="Resources" />
+            <ViewTab active={mainTab === "meetings"} onClick={() => setMainTab("meetings")} icon={<Video className="h-3.5 w-3.5" />} label="Meetings" />
             <ViewTab active={mainTab === "analytics"} onClick={() => setMainTab("analytics")} icon={<BarChart3 className="h-3.5 w-3.5" />} label="Analytics" />
           </div>
 
@@ -507,6 +511,9 @@ export default function LiveTraining() {
           )}
           {mainTab === "resources" && (
             <ResourcesView lessons={lessons} activeLessonIdx={activeLessonIdx} setActiveLessonIdx={setActiveLessonIdx} courseName={linkedCourse?.name || "Course"} />
+          )}
+          {mainTab === "meetings" && (
+            <MeetingsView batchId={batch.id} />
           )}
           {mainTab === "analytics" && (
             <AnalyticsView grid={grid} lessons={lessons} sessionTimer={sessionTimer} />
