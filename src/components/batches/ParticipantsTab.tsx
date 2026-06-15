@@ -325,25 +325,45 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
               <DialogTrigger asChild>
                 <Button size="sm"><UserPlus className="mr-1.5 h-3.5 w-3.5" />Add Participant</Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-lg">
                 <DialogHeader>
-                  <DialogTitle>Add Participant</DialogTitle>
-                  <DialogDescription>Add a new participant to this batch.</DialogDescription>
+                  <DialogTitle>Add Participants</DialogTitle>
+                  <DialogDescription>Add a single participant or paste a list to add many at once.</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="participantName">Full Name</Label>
-                    <Input id="participantName" placeholder="e.g., John Doe" value={newParticipantName} onChange={(e) => setNewParticipantName(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="participantEmail">Email Address</Label>
-                    <Input id="participantEmail" type="email" placeholder="john@company.com" value={newParticipantEmail} onChange={(e) => setNewParticipantEmail(e.target.value)} />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setAddParticipantOpen(false)}>Cancel</Button>
-                  <Button onClick={handleAddParticipant}>Add Participant</Button>
-                </DialogFooter>
+                <Tabs defaultValue="single" className="mt-2">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="single">Single</TabsTrigger>
+                    <TabsTrigger value="bulk">Multiple</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="single" className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="participantName">Full Name</Label>
+                      <Input id="participantName" placeholder="e.g., John Doe" value={newParticipantName} onChange={(e) => setNewParticipantName(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="participantEmail">Email Address</Label>
+                      <Input id="participantEmail" type="email" placeholder="john@company.com" value={newParticipantEmail} onChange={(e) => setNewParticipantEmail(e.target.value)} />
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setAddParticipantOpen(false)}>Cancel</Button>
+                      <Button onClick={handleAddParticipant}>Add</Button>
+                    </DialogFooter>
+                  </TabsContent>
+                  <TabsContent value="bulk" className="space-y-3 py-4">
+                    <Label className="text-xs">Paste one per line — accepts <code className="bg-muted px-1 rounded">Name, Email</code>, <code className="bg-muted px-1 rounded">Name &lt;email&gt;</code> or just <code className="bg-muted px-1 rounded">email</code></Label>
+                    <textarea
+                      className="w-full min-h-[180px] rounded-md border border-input bg-background px-3 py-2 text-sm font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      placeholder={"Aarav Sharma, aarav@company.com\nIshita Verma <ishita@company.com>\nrohan@company.com"}
+                      value={bulkText}
+                      onChange={(e) => setBulkText(e.target.value)}
+                    />
+                    <p className="text-[11px] text-muted-foreground">{bulkText.split(/\r?\n/).filter(l => l.trim()).length} rows detected</p>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setAddParticipantOpen(false)}>Cancel</Button>
+                      <Button onClick={handleBulkAdd} disabled={!bulkText.trim()}>Add all</Button>
+                    </DialogFooter>
+                  </TabsContent>
+                </Tabs>
               </DialogContent>
             </Dialog>
           </div>
@@ -588,6 +608,9 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
                             </DropdownMenuItem>
                             <DropdownMenuItem>View Profile</DropdownMenuItem>
                             <DropdownMenuItem><Mail className="mr-2 h-3.5 w-3.5" />Send Message</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleSendCredentials(participant)}>
+                              <Send className="mr-2 h-3.5 w-3.5" />Email VM Login Credentials
+                            </DropdownMenuItem>
                             <DropdownMenuItem>Mark Attendance</DropdownMenuItem>
                             {participant.vmStatus === "running" && (
                               <DropdownMenuItem onClick={() => {
