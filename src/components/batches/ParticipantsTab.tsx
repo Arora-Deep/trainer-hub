@@ -15,6 +15,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Users, UserPlus, MoreHorizontal, ExternalLink, Monitor, CalendarCheck,
   BookOpen, KeyRound, Search, Download, Upload, Mail, ArrowUpDown, Pencil, Check, X, Copy, Eye, EyeOff,
