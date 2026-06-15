@@ -1951,3 +1951,44 @@ function SidePanelTab({ active, icon, label, badge, collapsed, onClick }: {
     </button>
   );
 }
+
+/* ===== Meetings View (live training tab) ===== */
+function MeetingsView({ batchId }: { batchId: string }) {
+  const allMeetings = useMeetingStore((s) => s.meetings);
+  const meetings = allMeetings.filter((m) => m.batchId === batchId);
+  const live = meetings.filter((m) => m.status === "live");
+  const upcoming = meetings.filter((m) => m.status === "scheduled").sort((a, b) => +new Date(a.scheduledAt) - +new Date(b.scheduledAt));
+  const past = meetings.filter((m) => m.status === "ended").sort((a, b) => +new Date(b.scheduledAt) - +new Date(a.scheduledAt));
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Batch Meetings</h2>
+          <p className="text-xs text-muted-foreground">Schedule & track BigBlueButton sessions for this batch.</p>
+        </div>
+        <Button size="sm" onClick={() => setOpen(true)}>
+          <Video className="h-3.5 w-3.5 mr-1.5" /> Schedule Meeting
+        </Button>
+      </div>
+
+      {live.length > 0 && (
+        <section className="space-y-2">
+          <h3 className="text-sm font-semibold flex items-center gap-2"><Radio className="h-3.5 w-3.5 text-destructive animate-pulse" /> Live now</h3>
+          <MeetingsListPanel meetings={live} />
+        </section>
+      )}
+      <section className="space-y-2">
+        <h3 className="text-sm font-semibold">Upcoming</h3>
+        <MeetingsListPanel meetings={upcoming} emptyText="Nothing scheduled yet." />
+      </section>
+      <section className="space-y-2">
+        <h3 className="text-sm font-semibold">Past sessions</h3>
+        <MeetingsListPanel meetings={past} emptyText="No past sessions for this batch." />
+      </section>
+
+      <MeetingScheduleSheet open={open} onOpenChange={setOpen} lockedBatchId={batchId} />
+    </div>
+  );
+}
