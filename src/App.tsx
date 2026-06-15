@@ -90,6 +90,10 @@ import AdminAuditLogs from "./pages/admin/AuditLogs";
 import AdminSettings from "./pages/admin/Settings";
 import CourseModeration from "./pages/admin/CourseModeration";
 import PlansAndPricing from "./pages/admin/PlansAndPricing";
+import NodeVMPool from "./pages/admin/NodeVMPool";
+import SandboxVMRequests from "./pages/admin/SandboxVMRequests";
+import RequestSandboxVM from "./pages/RequestSandboxVM";
+import SandboxVMs from "./pages/SandboxVMs";
 
 // Student pages
 import StudentDashboard from "./pages/student/Dashboard";
@@ -175,6 +179,8 @@ const App = () => (
             <Route path="/trainers/:id" element={<TrainerDetail />} />
             <Route path="/meetings" element={<Meetings />} />
             <Route path="/meetings/:id" element={<MeetingDetail />} />
+            <Route path="/request-sandbox-vm" element={<RequestSandboxVM />} />
+            <Route path="/sandbox-vms" element={<SandboxVMs />} />
 
             {/* Admin routes */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -206,6 +212,8 @@ const App = () => (
             <Route path="/admin/infra/resource-usage" element={<ResourceUsage />} />
             <Route path="/admin/infra/capacity" element={<CapacityPlanning />} />
             <Route path="/admin/infra/maintenance" element={<MaintenanceMode />} />
+            <Route path="/admin/infra/node-vms" element={<NodeVMPool />} />
+            <Route path="/admin/labs/sandbox-requests" element={<SandboxVMRequests />} />
             <Route path="/admin/support/tickets" element={<AdminTickets />} />
             <Route path="/admin/support/logs" element={<SupportLogs />} />
             <Route path="/admin/billing/invoices" element={<AdminInvoices />} />
