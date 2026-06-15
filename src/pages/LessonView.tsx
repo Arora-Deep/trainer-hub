@@ -196,7 +196,10 @@ export default function LessonView() {
     return (
       <div className="space-y-3">
         {lesson.body ? (
-          <article className="prose prose-sm max-w-none whitespace-pre-wrap">{lesson.body}</article>
+          <article
+            className="prose prose-sm max-w-none prose-headings:font-semibold prose-blockquote:border-l-primary prose-code:bg-muted prose-code:px-1 prose-code:rounded prose-pre:bg-muted"
+            dangerouslySetInnerHTML={{ __html: lesson.body }}
+          />
         ) : (
           <p className="text-sm text-muted-foreground">No content yet. Open the editor to add reading material.</p>
         )}

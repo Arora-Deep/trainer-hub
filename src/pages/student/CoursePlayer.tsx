@@ -843,14 +843,14 @@ export default function CoursePlayer() {
               )
             )}
             {lesson.type === "reading" && (
-              lesson.bodyHtml ? (
+              (lesson.bodyHtml || lesson.body) ? (
                 <div
                   className="p-8 prose prose-sm max-w-none prose-headings:font-semibold prose-h1:text-2xl prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-2 prose-p:leading-relaxed prose-code:text-xs prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-pre:bg-muted/60 prose-pre:text-foreground prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground prose-table:text-xs"
-                  dangerouslySetInnerHTML={{ __html: lesson.bodyHtml }}
+                  dangerouslySetInnerHTML={{ __html: lesson.bodyHtml ?? lesson.body ?? "" }}
                 />
               ) : (
                 <div className="p-8 prose prose-sm max-w-none">
-                  <p className="text-sm text-muted-foreground">{lesson.body ?? "Read through the material below, then mark it complete."}</p>
+                  <p className="text-sm text-muted-foreground">Read through the material below, then mark it complete.</p>
                 </div>
               )
             )}
