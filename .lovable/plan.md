@@ -1,74 +1,101 @@
-# Trainer Portal Expansion
+# Mega Update Plan (Mock/UI only)
 
-Three new modules in the trainer (training-company-admin) portal, built on existing Zustand stores and the established design system (Apple-minimal, drawers over modals, Recharts, status chips).
-
----
-
-## 1. Schedule (tabbed view of all batches)
-
-New route: `/schedule` — sidebar entry under **Main**, icon `CalendarDays`.
-
-Pulls from `batchStore`. Single page with three tabs:
-
-- **Calendar** — month/week grid (using existing `Calendar` component + custom event overlays). Each day shows colored dots per batch; click a day → right drawer listing batches on that day with quick actions (View, Open Meeting, Roster).
-- **Timeline** — horizontal Gantt-style. Rows = batches, x-axis = dates. Bars colored by status (Upcoming = yellow, Live = green, Completed = white/grey, Cancelled = red). Hover tooltip with batch summary; click → batch details.
-- **Kanban** — three columns: Upcoming / Live / Completed. Batch cards show name, trainer, participant count, dates, lab status chip. Drag is out-of-scope for v1.
-
-Shared top bar: filters (trainer, course, customer, status), search, and a "Today" jump.
+All changes are frontend-only (Zustand + local state, no Lovable Cloud). Skipping: nav color inversion, editable dashboard, reclone warning alerts.
 
 ---
 
-## 2. Trainer Management
+## 1. Trainer Portal — Global VM Controls
+In the trainer batch detail VM tab, add a sticky toolbar above the VM list:
+- **Re-clone All** (confirm dialog)
+- **Start All** / **Stop All**
+- **Restore All to Initial State** (confirm dialog)
+Toast feedback on each action; updates `batchStore` VM statuses in bulk.
 
-New route: `/trainers` — sidebar entry under **Main**, icon `UserSquare2`. Visible to all trainer-portal users for now (gating added later when RBAC ships).
+## 2. Quiz Not Opening — Fix
+Investigate `/quizzes/:id` route + `QuizDetails.tsx`. Likely a broken link / missing route from recent lesson-editor rewire (`createNewHref` → `/quizzes/create`). Fix routing and ensure quiz list "Open" action works.
 
-New store: `trainerStore.ts` (Zustand) with seeded dummy trainers:
-`id, name, email, avatar, skills[], certifications[], bio, hourlyRate, joinedAt, status (active/inactive), assignedBatchIds[], metrics { avgRating, npsScore, completionRate, attendanceRate, batchesDelivered, studentsTrained, ratingTrend[] }`.
+## 3. Imports
+Add an **Import** button (with dropdown menu or modal supporting JSON/CSV paste) on:
+- Trainer **Courses** (import course content)
+- Trainer **Quizzes** (import quiz)
+- Trainer **Assignments** (import assignments)
+Mock parser → adds items to respective Zustand stores. Includes "Download template" link.
 
-**Pages/components:**
+## 4. VM Availability — 24h option
+In trainer batch VM availability picker, add **24 Hours** preset. If user picks > 8 hours via slider/duration, auto-snap to "Full day (24h)" with a small inline hint.
 
-- **Trainer Directory** (`/trainers`) — table + grid toggle. Columns: trainer, skills (chips), batches (count), avg rating, completion %, status. "Add Trainer" button → right drawer form (name, email, skills multi-select, certs, bio, hourly rate). Row click → Trainer Detail.
-- **Trainer Detail** (`/trainers/:id`) — header with avatar + StatCards (Avg Rating, NPS, Completion %, Attendance %, Batches Delivered). Tabs:
-  - *Overview* — bio, skills, certifications, edit button (drawer).
-  - *Performance* — Recharts: rating trend line, completion bar by batch, student feedback breakdown pie, score distribution.
-  - *Batches* — list of assigned batches with status chips; "Assign to Batch" button → drawer that picks an upcoming/live batch (with simple schedule-conflict warning if dates overlap another assignment).
-  - *Feedback* — dummy student review cards (rating + comment + batch).
+## 5. Hide Pricing from Trainer
+Pricing visible to Admin only. In trainer **Create Batch** VM step and review, hide ₹ cost columns/cards (gate via `roleStore.role === 'admin'`). Admin portal continues to show full costs.
 
-**Batch assignment integration:** add `trainerId` to batches in `batchStore` (already present in some places — normalize). Batch detail's header shows trainer chip linking back to trainer profile.
+## 6. Modify Batch — Resource Upgrade Mid-Batch
+In **admin/ModifyBatch.tsx**, add new section **"Upgrade Resources"**: pick affected VMs (all / per-participant), choose new CPU/RAM tier (e.g. 2c/4g → 8c/16g), shows delta cost, confirm → updates batch + logs change in batch audit/timeline.
+
+## 7. Admin — Node Selection for VMs
+In admin Create Batch (VM step) and Provisioning flows, add **Target Node** dropdown (Auto / specific node from `Nodes` list) with capacity hints.
+
+## 8. Enable VLAN per Batch
+In admin Create Batch settings step add **Enable VLAN** toggle + VLAN ID input (mocked). Persist in batch settings.
+
+## 9. Pre-Provisioned VM Option in Create Batch (Admin)
+In VM step, add a third source alongside Template/Master: **"Use Pre-Provisioned VM"** — picks from a mock pool, skips template requirement.
+
+## 10. Configurable VM Access Window (Trainer Prep)
+When admin creates batch, trainer chooses **"When can I configure the VM?"** — relative to batch start (e.g. 2 days before / 7 days before / custom). Stored on batch; trainer portal respects this date.
+
+## 11. Trainer Portal Courses Page — Proper Rebuild
+Polish `/courses` (trainer): proper grid with cover, status chip, lesson count, last edited, search + filters (status, type), bulk select, primary "New Course" + "Import" CTAs. Match Apple-minimal design system.
+
+## 12. VM Cost = Participants + 1 Trainer VM
+Update cost calculations in admin Create Batch review and BatchProvisioning estimate to include +1 trainer VM. Show breakdown line.
+
+## 13. Trainer Create Batch — Per-Participant Cost in Review
+On the trainer Create Batch review step, show **Per Participant Cost** alongside **Total Cost** (admin sees both; trainer sees per-participant only per item 5? — clarify in build: keep per-participant visible since trainer needs to quote, hide raw infra ₹ tiers).
+
+## 14. Clone Button Gating + Trainer Post-Batch Access
+- Re-clone / clone actions disabled until **2 days before batch start** (tooltip explains).
+- After batch is **marked done**, trainer can still open VM console **if their free-time VM availability window covers now**.
+
+## 15. Approval Workflow + Draft Batches (Mock)
+- New batch created in trainer portal saves as **Draft** (status badge).
+- Sent for approval → admin portal **Approvals** queue shows it.
+- On approval (mock click) → status flips to Active, provisioning unlocks.
+- Visual states only; no real backend.
+
+## 16. Bulk Add Participants
+"Add Participant" button opens dialog with two tabs:
+- **Single** (existing form)
+- **Multiple** — paste CSV / bulk email list, preview rows, add all.
+
+## 17. Billing Adjustments for Participant Changes
+In admin Billing + batch detail, add a **Participant Adjustments** timeline (added/removed with date, prorated delta). Update displayed monthly usage to reflect adjustments (mock).
+
+## 18. Email in Participant Details + Send VM Credentials Action
+- Show email column in participant list + detail.
+- In row action menu add **"Send VM Login via Email"** → opens preview dialog, mock send, success toast.
+
+## 19. Disable LMS/Content View on Batch
+In Create/Modify Batch settings, add toggle **"Hide LMS / Content View for students in this batch"**. Student portal respects flag (hides Courses tab when true).
+
+## 20. Free Calendar Area
+Add **Free Time** layer on trainer Schedule page — drag/click to block out "free / available" slots distinct from sessions. Visual differentiation; used by item 14 gating.
+
+## 21. Live Training Console — VM Switch Buttons (Left Rail)
+In `LiveClass.tsx` / live training console, add a left vertical rail listing batch VMs with quick **Switch** buttons (active VM highlighted). Mock switch updates active VM panel.
+
+## 22. Trainer Portal — Student Login Details
+On trainer participant detail, add **"Login Credentials"** card showing student username + masked password with reveal + copy, plus resend link.
 
 ---
 
-## 3. Meetings (BigBlueButton — mock UI)
+## Technical Notes
+- All state lives in existing Zustand stores; extend `batchStore`, `trainerStore`, `meetingStore`, plus add fields: `batch.status = 'draft' | 'pending_approval' | 'active' | 'completed'`, `batch.vlan`, `batch.targetNode`, `batch.trainerPrepDate`, `batch.hideLMS`, `batch.participantAdjustments[]`, `participant.email`, `participant.vmCredentials`.
+- Cost helper `calcBatchCost(seats, tier)` → `(seats + 1) * tierPrice` used everywhere.
+- Role gating uses existing `roleStore`.
+- New shared components: `BulkVMActionsBar`, `ImportDialog`, `ResourceUpgradeDialog`, `SendCredentialsDialog`, `VMSwitcherRail`.
 
-New route: `/meetings` — sidebar entry under **More**, icon `Video`. UI shell only; no real BBB calls yet (placeholders ready for later integration).
+## Out of Scope (per your reply)
+- Nav color inversion
+- Editable/customizable dashboard
+- Reclone warning alerts
 
-New store: `meetingStore.ts` seeded with dummy meetings:
-`id, title, batchId, trainerId, scheduledAt, durationMins, status (scheduled/live/ended), joinUrl (#), recordingUrl (#), attendeeCount, maxAttendees`.
-
-**Pages:**
-
-- **Meetings List** (`/meetings`) — tabs: Live Now / Upcoming / Past. Cards show title, batch, trainer, time, status chip, primary action (Join / Start / View Recording). "Schedule Meeting" button → drawer (title, batch select, date/time, duration, welcome message, record toggle, mute on join, waiting room).
-- **Meeting Detail** (`/meetings/:id`) — meeting info, attendees mock list, recordings list, "Open BBB Room" button (opens `joinUrl` placeholder in new tab; toast: "BBB integration pending"). Settings tab with BBB-style options (camera/mic, layout, breakout rooms) — all UI only.
-- Surface "Open Meeting" buttons inline on Schedule cards and Batch Detail when a meeting exists for that batch.
-
-A small `bbbConfig.ts` placeholder file documents the future env vars (`BBB_SERVER_URL`, `BBB_SHARED_SECRET`) so wiring real integration later is a drop-in.
-
----
-
-## Technical notes
-
-- **Files added:**
-  - `src/pages/Schedule.tsx` + `src/components/schedule/{CalendarView,TimelineView,KanbanView,ScheduleFilters,DayBatchesDrawer}.tsx`
-  - `src/pages/Trainers.tsx`, `src/pages/TrainerDetail.tsx` + `src/components/trainers/{TrainerDrawer,PerformanceCharts,AssignBatchDrawer,FeedbackList}.tsx`
-  - `src/pages/Meetings.tsx`, `src/pages/MeetingDetail.tsx` + `src/components/meetings/{ScheduleMeetingDrawer,MeetingCard,AttendeesList,RecordingsList}.tsx`
-  - `src/stores/trainerStore.ts`, `src/stores/meetingStore.ts`
-  - `src/lib/bbbConfig.ts` (placeholder)
-- **Files edited:**
-  - `src/components/layout/AppSidebar.tsx` — add Schedule, Trainers, Meetings entries to `trainerNav`.
-  - `src/App.tsx` — register the new routes.
-  - `src/stores/batchStore.ts` — ensure `trainerId` on each batch; add helper selectors `getBatchesByStatus`, `getBatchesByDateRange`.
-  - `src/pages/BatchDetails.tsx` — trainer chip in header; "Meetings" quick link if any exist for the batch.
-- **Patterns reused:** PageHeader, StatCard, StatusBadge, right-side Sheet drawers, Recharts with existing gradient/rounded-top styling, status color mapping.
-- **Out of scope (this pass):** real BBB API calls, RBAC gating on trainer management, drag-and-drop in Kanban, recurring meetings, ICS export.
-
-After build, I'll also update `mem://index.md` with references to the three new modules.
+Ready to implement on approval.
