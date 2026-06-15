@@ -15,9 +15,10 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Users, UserPlus, MoreHorizontal, ExternalLink, Monitor, CalendarCheck,
-  BookOpen, KeyRound, Search, Download, Upload, Mail, ArrowUpDown, Pencil, Check, X, Copy, Eye, EyeOff,
+  BookOpen, KeyRound, Search, Download, Upload, Mail, ArrowUpDown, Pencil, Check, X, Copy, Eye, EyeOff, Send,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { Batch } from "@/stores/batchStore";
@@ -37,6 +38,7 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
   const [addParticipantOpen, setAddParticipantOpen] = useState(false);
   const [newParticipantName, setNewParticipantName] = useState("");
   const [newParticipantEmail, setNewParticipantEmail] = useState("");
+  const [bulkText, setBulkText] = useState("");
   const [search, setSearch] = useState("");
   const [vmFilter, setVmFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>("name");
@@ -82,6 +84,35 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
     addParticipant(batch.id, { name: newParticipantName.trim(), email: newParticipantEmail.trim() });
     toast({ title: "Success", description: "Participant added successfully" });
     setNewParticipantName(""); setNewParticipantEmail(""); setAddParticipantOpen(false);
+  };
+
+  const handleBulkAdd = () => {
+    const lines = bulkText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const parsed = lines.map(line => {
+      // Accept "Name <email>", "Name, email", or just "email"
+      const angle = line.match(/^(.+?)\s*<([^>]+)>$/);
+      if (angle) return { name: angle[1].trim(), email: angle[2].trim() };
+      const parts = line.split(/[,\t;]/).map(s => s.trim());
+      if (parts.length >= 2) return { name: parts[0], email: parts[1] };
+      if (parts[0].includes("@")) return { name: parts[0].split("@")[0], email: parts[0] };
+      return null;
+    }).filter((p): p is { name: string; email: string } => !!p && !!p.email);
+    if (!parsed.length) {
+      toast({ title: "Nothing to add", description: "Couldn't find any valid rows. Try Name, Email per line.", variant: "destructive" });
+      return;
+    }
+    parsed.forEach(p => addParticipant(batch.id, p));
+    toast({ title: "Added", description: `${parsed.length} participants added` });
+    setBulkText("");
+    setAddParticipantOpen(false);
+  };
+
+  const handleSendCredentials = (participant: { id: string; name: string; email: string }) => {
+    const creds = getCredentials(participant);
+    toast({
+      title: "Credentials sent",
+      description: `${participant.name} • Login (${creds.username}) emailed to ${participant.email}`,
+    });
   };
 
   const startEditing = (id: string, name: string, email: string) => {
