@@ -128,7 +128,7 @@ export const studentCourses: StudentCourse[] = [
     modules: 10, completed: 3, totalHours: 40, status: "in_progress",
     deliveryMode: "self-paced", rating: 4.9, studyTime: "9h 30m", lastAccessed: "1h ago",
     batch: "Java Fundamentals — Self-Paced", batchId: "10", prerequisites: [],
-    nextLessonId: "l-10-7",
+    nextLessonId: "l-10-4",
     totalAccessHours: 80, usedAccessHours: 18,
     persistentLab: {
       labId: "lab-10",
@@ -932,6 +932,7 @@ export interface StudentLab {
   lastCommands: string[];
   totalAccessHours?: number;
   usedAccessHours?: number;
+  availableUntil?: string; // for live-training VMs — date string
   snapshots: { id: string; name: string; createdAt: string; size: string }[];
 }
 
