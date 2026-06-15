@@ -17,6 +17,7 @@ import { useTrainerStore } from "@/stores/trainerStore";
 import { BBB_INTEGRATION_STATUS } from "@/lib/bbbConfig";
 import { MeetingCard } from "@/components/meetings/MeetingCard";
 import { ScheduleMeetingDrawer } from "@/components/meetings/ScheduleMeetingDrawer";
+import { OfficeHoursSlotsTab } from "@/components/meetings/OfficeHoursSlotsTab";
 import { Link } from "react-router-dom";
 
 export default function Meetings() {
@@ -133,6 +134,7 @@ export default function Meetings() {
             <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
             <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
             <TabsTrigger value="unassigned">Unassigned ({unassigned.length})</TabsTrigger>
+            <TabsTrigger value="slots">Office-hour Slots</TabsTrigger>
           </TabsList>
           <TabsContent value="live" className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
             {live.map(m => <MeetingCard key={m.id} m={m} />)}
@@ -149,6 +151,9 @@ export default function Meetings() {
           <TabsContent value="unassigned" className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
             {unassigned.map(m => <MeetingCard key={m.id} m={m} showBatch={false} />)}
             {!unassigned.length && <Card className="p-8 text-sm text-muted-foreground text-center md:col-span-2">All meetings are attached to a batch.</Card>}
+          </TabsContent>
+          <TabsContent value="slots" className="mt-4">
+            <OfficeHoursSlotsTab />
           </TabsContent>
         </Tabs>
       )}

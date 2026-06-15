@@ -122,6 +122,8 @@ import StudentChallenges from "./pages/student/Challenges";
 import StudentLeaderboard from "./pages/student/Leaderboard";
 import StudentPortfolio from "./pages/student/Portfolio";
 import PortfolioPublic from "./pages/student/PortfolioPublic";
+import StudentAnnouncements from "./pages/student/Announcements";
+import StudentOfficeHours from "./pages/student/OfficeHours";
 import { Navigate } from "react-router-dom";
 import Engagement from "./pages/Engagement";
 
@@ -253,6 +255,8 @@ const App = () => (
             <Route path="/student/challenges" element={<StudentChallenges />} />
             <Route path="/student/leaderboard" element={<StudentLeaderboard />} />
             <Route path="/student/portfolio" element={<StudentPortfolio />} />
+            <Route path="/student/announcements" element={<StudentAnnouncements />} />
+            <Route path="/student/office-hours" element={<StudentOfficeHours />} />
             {/* Redirects from old routes */}
             <Route path="/student/profile" element={<Navigate to="/student/portfolio" replace />} />
             <Route path="/student/quests" element={<Navigate to="/student/challenges" replace />} />

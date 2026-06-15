@@ -8,7 +8,7 @@ import {
   Cpu, HardDrive, Network, Activity, LifeBuoy, Receipt, Lock, FileBarChart,
   Gauge, AlertTriangle, Clock, Wrench, BookMarked, Zap, Globe, Eye,
   DollarSign, Scale, Key, Database, Send, Flag, Workflow, Container,
-  Video, Calendar, Radio, MessageSquarePlus, ClipboardCheck, Brain, GraduationCap as ExamIcon, Gamepad2,
+  Video, Calendar, Radio, MessageSquarePlus, ClipboardCheck, Brain, GraduationCap as ExamIcon, Gamepad2, Megaphone, CalendarClock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -156,7 +156,8 @@ const studentNav: NavConfig = {
       { title: "Active Labs", icon: Monitor, path: "/student/labs" },
       { title: "My Courses", icon: BookOpen, path: "/student/courses" },
       { title: "Schedule", icon: Calendar, path: "/student/schedule" },
-      
+      { title: "Office Hours", icon: CalendarClock, path: "/student/office-hours" },
+      { title: "Announcements", icon: Megaphone, path: "/student/announcements" },
     ]},
     { label: "Progression", icon: Zap, items: [
       { title: "Portfolio", icon: UserCog, path: "/student/portfolio" },
