@@ -444,8 +444,10 @@ export default function Dashboard() {
             </TableBody>
           </Table>
         </DataCard>
+        )}
 
         {/* Active Labs */}
+        {visible.labs && (
         <DataCard
           title="Active Labs"
           icon={FlaskConical}
@@ -493,8 +495,10 @@ export default function Dashboard() {
             </TableBody>
           </Table>
         </DataCard>
+        )}
 
         {/* Alerts */}
+        {visible.alerts && (
         <DataCard
           title="Alerts"
           icon={AlertTriangle}
@@ -527,8 +531,10 @@ export default function Dashboard() {
             ))}
           </div>
         </DataCard>
+        )}
 
         {/* Course Progress */}
+        {visible.progress && (
         <DataCard title="Course Progress" icon={TrendingUp} action={{ label: "View all", href: "/courses" }}>
           <div className="space-y-5">
             {courseProgress.map((course, index) => (
@@ -549,6 +555,7 @@ export default function Dashboard() {
             ))}
           </div>
         </DataCard>
+        )}
       </div>
     </div>
   );
