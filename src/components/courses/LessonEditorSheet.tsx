@@ -42,7 +42,7 @@ const typeMeta: Record<LessonType, { label: string; icon: any; hint: string }> =
 };
 
 // Lesson types hidden from the type picker (kept in the union for back-compat with legacy content).
-const HIDDEN_TYPES = new Set<LessonType>(["live-session", "survey"]);
+const HIDDEN_TYPES = new Set<LessonType>(["live-session", "survey", "mock-exam"]);
 
 interface Props {
   open: boolean;
@@ -83,6 +83,9 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
     form.type === "quiz" ? "/quizzes/create"
     : form.type === "assignment" ? "/assignments/create"
     : form.type === "code-exercise" ? "/exercises/create"
+    : form.type === "exam" ? "/quizzes/create"
+    : form.type === "ctf-scenario" ? "/exercises/create"
+    : form.type === "game-based-learning" ? "/game-based-learning"
     : null;
 
   const handleFileAttach = (files: FileList | null) => {
@@ -127,7 +130,7 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
 
           <div className="space-y-1.5">
             <Label className="text-xs">Type</Label>
-            <Select value={form.type} onValueChange={(v: LessonType) => setForm((p) => ({ ...p, type: v, source: isAssessmentLesson(v) ? (p.source ?? "inline") : undefined }))}>
+            <Select value={form.type} onValueChange={(v: LessonType) => setForm((p) => ({ ...p, type: v, source: isAssessmentLesson(v) ? (p.source ?? "library") : undefined }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {(Object.keys(typeMeta) as LessonType[]).filter((t) => !HIDDEN_TYPES.has(t) || t === form.type).map((t) => {
@@ -369,23 +372,23 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
             {isAssess && (
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2">
-                  {(["inline", "library"] as const).map((s) => (
+                  {(["library", "inline"] as const).map((s) => (
                     <button
                       key={s}
                       type="button"
                       onClick={() => setForm((p) => ({ ...p, source: s, refId: s === "inline" ? undefined : p.refId }))}
                       className={cn(
                         "flex items-center gap-2 rounded-md border px-3 py-2 text-xs transition-all",
-                        (form.source ?? "inline") === s ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted/40"
+                        (form.source ?? "library") === s ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted/40"
                       )}
                     >
                       {s === "library" ? <Library className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-                      <span className="font-medium">{s === "inline" ? "Create new" : "Pick from library"}</span>
+                      <span className="font-medium">{s === "library" ? "Pick from library" : "Create new"}</span>
                     </button>
                   ))}
                 </div>
 
-                {form.source === "library" ? (
+                {(form.source ?? "library") === "library" ? (
                   <Select value={form.refId ?? ""} onValueChange={(v) => {
                     const opt = libraryOptions.find((o) => o.id === v);
                     setForm((p) => ({ ...p, refId: v, title: opt?.label ?? p.title }));
@@ -393,15 +396,27 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
                     <SelectTrigger><SelectValue placeholder="Choose an item…" /></SelectTrigger>
                     <SelectContent>
                       {libraryOptions.length === 0 ? (
-                        <div className="px-3 py-2 text-xs text-muted-foreground">No items yet.</div>
+                        <div className="px-3 py-2 text-xs text-muted-foreground">No items yet — use "Create new" to build one.</div>
                       ) : libraryOptions.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 ) : createNewHref ? (
-                  <Button variant="outline" size="sm" asChild className="w-full">
-                    <Link to={createNewHref} target="_blank"><Plus className="h-3.5 w-3.5 mr-1" />Open full builder in new tab</Link>
-                  </Button>
-                ) : null}
+                  <div className="rounded-md border border-dashed bg-background/60 p-3 space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Open the full {typeMeta[form.type].label.toLowerCase()} builder to set questions, rubric and grading. Your new item will appear in the library and you can link it back to this lesson.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button size="sm" asChild>
+                        <Link to={createNewHref}><Plus className="h-3.5 w-3.5 mr-1" />Open {typeMeta[form.type].label} builder</Link>
+                      </Button>
+                      <Button size="sm" variant="outline" asChild>
+                        <Link to={createNewHref} target="_blank">Open in new tab</Link>
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground">This assessment type is configured inline below.</p>
+                )}
 
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">
