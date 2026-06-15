@@ -99,7 +99,7 @@ export function MeetingsListPanel({ meetings, basePath = "/meetings", viewer = f
                 <Link to={`${basePath}/${m.id}`}>Details</Link>
               </Button>
               {m.bbb?.record && <Badge variant="secondary" className="text-[10px]">REC</Badge>}
-              {m.bbb?.waitingRoom || m.waitingRoom ? <Badge variant="secondary" className="text-[10px]">Lobby</Badge> : null}
+              {m.waitingRoom ? <Badge variant="secondary" className="text-[10px]">Lobby</Badge> : null}
             </div>
           </Card>
         );
