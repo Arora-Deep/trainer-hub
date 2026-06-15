@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { studentCourses, studentLabs } from "@/data/studentMockData";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { LiveNowBanner } from "@/components/meetings/LiveNowBanner";
 
 export default function StudentDashboard() {
   const nav = useNavigate();
@@ -39,6 +40,9 @@ export default function StudentDashboard() {
         title="Welcome back, Sarah"
         description="Here's what to focus on today."
       />
+
+      <LiveNowBanner />
+
 
       {/* Continue learning */}
       {continueCourse && (
