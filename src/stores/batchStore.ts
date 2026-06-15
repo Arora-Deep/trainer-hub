@@ -187,6 +187,8 @@ export interface Batch {
   trainerVMAccessDate?: string; // ISO date when trainer first gets prep VM access
   freeTimeBlocks?: FreeTimeBlock[];
   resourceUpgrades?: { date: string; from: string; to: string; note?: string }[];
+  vlanEnabled?: boolean;
+  vlanId?: string;
 }
 
 interface BatchStore {
