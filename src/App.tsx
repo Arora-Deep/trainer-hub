@@ -256,8 +256,7 @@ const App = () => (
             <Route path="/student/skill-tree" element={<Navigate to="/student/courses" replace />} />
             <Route path="/engagement" element={<Engagement />} />
           </Route>
-          {/* Public portfolio (no auth, no layout) */}
-          <Route path="/p/:handle" element={<PortfolioPublic />} />
+          {/* Public portfolio removed */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
