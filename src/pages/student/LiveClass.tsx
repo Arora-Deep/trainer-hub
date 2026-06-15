@@ -25,6 +25,8 @@ import { cn } from "@/lib/utils";
 import { studentCourses, type StudentCourse, type StudentLesson } from "@/data/studentMockData";
 import SelfPacedLearningCentre from "@/pages/student/SelfPacedLearningCentre";
 import { useBatchStore, type Material } from "@/stores/batchStore";
+import { useMeetingStore } from "@/stores/meetingStore";
+import { MeetingsListPanel } from "@/components/meetings/MeetingsListPanel";
 
 /* ── Data ── */
 const lessonIcons: Record<StudentLesson["type"], typeof Video> = {
