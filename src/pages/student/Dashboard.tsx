@@ -47,6 +47,10 @@ export default function StudentDashboard() {
 
       <NextActionCard />
 
+      <AnnouncementsFeed />
+
+
+
 
 
 
