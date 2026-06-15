@@ -255,6 +255,8 @@ const App = () => (
             <Route path="/student/challenges" element={<StudentChallenges />} />
             <Route path="/student/leaderboard" element={<StudentLeaderboard />} />
             <Route path="/student/portfolio" element={<StudentPortfolio />} />
+            <Route path="/student/announcements" element={<StudentAnnouncements />} />
+            <Route path="/student/office-hours" element={<StudentOfficeHours />} />
             {/* Redirects from old routes */}
             <Route path="/student/profile" element={<Navigate to="/student/portfolio" replace />} />
             <Route path="/student/quests" element={<Navigate to="/student/challenges" replace />} />
