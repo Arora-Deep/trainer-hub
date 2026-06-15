@@ -183,7 +183,7 @@ export default function StudentLabs() {
                         </Button>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button size="sm" variant="outline" className="gap-1.5"><Terminal className="h-3.5 w-3.5" /> Connect</Button>
+                            <Button size="sm" variant="outline" className="gap-1.5"><Info className="h-3.5 w-3.5" /> Details</Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-80 p-4 space-y-3">
                             <h4 className="text-xs font-semibold">Connection details</h4>
