@@ -1007,3 +1007,30 @@ function MaterialsPanel() {
     </Card>
   );
 }
+
+/* ===== Meetings Panel (student view inside Learning Centre) ===== */
+function MeetingsPanel() {
+  const meetings = useMeetingStore((s) => s.meetings);
+  const live = meetings.filter((m) => m.status === "live");
+  const upcoming = meetings.filter((m) => m.status === "scheduled").sort((a, b) => +new Date(a.scheduledAt) - +new Date(b.scheduledAt));
+  const past = meetings.filter((m) => m.status === "ended").sort((a, b) => +new Date(b.scheduledAt) - +new Date(a.scheduledAt));
+
+  return (
+    <div className="space-y-5">
+      {live.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Radio className="h-3.5 w-3.5 text-destructive animate-pulse" /> Live now</h3>
+          <MeetingsListPanel meetings={live} basePath="/student/meetings" viewer />
+        </div>
+      )}
+      <div>
+        <h3 className="text-sm font-semibold mb-2">Upcoming</h3>
+        <MeetingsListPanel meetings={upcoming.slice(0, 6)} basePath="/student/meetings" viewer emptyText="No upcoming meetings." />
+      </div>
+      <div>
+        <h3 className="text-sm font-semibold mb-2">Recent recordings</h3>
+        <MeetingsListPanel meetings={past.slice(0, 6)} basePath="/student/meetings" viewer emptyText="No recordings yet." />
+      </div>
+    </div>
+  );
+}
