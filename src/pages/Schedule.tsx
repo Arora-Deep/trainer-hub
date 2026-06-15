@@ -255,6 +255,11 @@ export default function Schedule() {
             })}
           </div>
         </TabsContent>
+
+        {/* FREE TIME — trainer marks slots where they are available for prep, office hours, or post-batch console access */}
+        <TabsContent value="free">
+          <FreeTimePanel />
+        </TabsContent>
       </Tabs>
 
       <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
