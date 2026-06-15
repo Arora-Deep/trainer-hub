@@ -111,15 +111,15 @@ export default function MeetingDetail() {
         )}
       </Card>
 
-      <Tabs defaultValue={a ? "analytics" : "attendees"}>
+      <Tabs defaultValue={a && isTrainerOrAdmin ? "analytics" : "attendees"}>
         <TabsList>
-          {a && <TabsTrigger value="analytics" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Analytics</TabsTrigger>}
+          {a && isTrainerOrAdmin && <TabsTrigger value="analytics" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Analytics</TabsTrigger>}
           <TabsTrigger value="attendees" className="gap-1.5"><Users className="h-3.5 w-3.5" /> Attendees ({meeting.attendees.length})</TabsTrigger>
           <TabsTrigger value="recordings" className="gap-1.5"><FileVideo className="h-3.5 w-3.5" /> Recordings ({meeting.recordings.length})</TabsTrigger>
           {isTrainerOrAdmin && <TabsTrigger value="settings">BBB Settings</TabsTrigger>}
         </TabsList>
 
-        {a && (
+        {a && isTrainerOrAdmin && (
           <TabsContent value="analytics" className="space-y-5 mt-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <MetricCard icon={<Sparkles className="h-4 w-4 text-primary" />} label="Engagement Score" value={`${a.engagementScore}%`} barValue={a.engagementScore} />
