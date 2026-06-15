@@ -3,14 +3,15 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, Monitor, Play, Video, BookOpen, Award, Sparkles, Radio, FileVideo, Download } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Calendar, Clock, Monitor, Play, Video, BookOpen, Award, Sparkles, Radio, FileVideo, Download, CalendarClock } from "lucide-react";
 import { studentSchedule } from "@/data/studentMockData";
 import { StudentPageHero } from "@/components/gamification/StudentPageHero";
 import { LiveNowBanner } from "@/components/meetings/LiveNowBanner";
 import { useMeetingStore, CURRENT_STUDENT_ID, CURRENT_STUDENT_BATCH_ID } from "@/stores/meetingStore";
 import { downloadIcs, type IcsEvent } from "@/lib/icsExport";
 import { toast } from "sonner";
+import StudentOfficeHours from "./OfficeHours";
 
 const parseDurationMin = (d: string): number => {
   let total = 0;
