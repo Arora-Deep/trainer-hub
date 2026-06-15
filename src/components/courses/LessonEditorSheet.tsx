@@ -83,6 +83,9 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
     form.type === "quiz" ? "/quizzes/create"
     : form.type === "assignment" ? "/assignments/create"
     : form.type === "code-exercise" ? "/exercises/create"
+    : form.type === "exam" ? "/quizzes/create"
+    : form.type === "ctf-scenario" ? "/exercises/create"
+    : form.type === "game-based-learning" ? "/game-based-learning"
     : null;
 
   const handleFileAttach = (files: FileList | null) => {
