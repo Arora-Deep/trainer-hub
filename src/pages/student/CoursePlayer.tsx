@@ -19,7 +19,6 @@ import { useEnrollmentStore } from "@/stores/enrollmentStore";
 import { OnDemandLabPanel } from "@/components/learning/OnDemandLabPanel";
 import { PersistentLabPanel } from "@/components/learning/PersistentLabPanel";
 import { GameLessonPanel } from "@/components/learning/GameLessonPanel";
-import { MeetingLessonPanel } from "@/components/meetings/MeetingLessonPanel";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -1019,12 +1018,14 @@ export default function CoursePlayer() {
               </div>
             )}
             {lesson.type === "live-session" && (
-              <MeetingLessonPanel
-                courseId={c.id}
-                lessonId={lesson.id}
-                lessonTitle={lesson.title}
-                duration={lesson.duration}
-              />
+              <div className="p-8 text-center space-y-3">
+                <Radio className="h-10 w-10 mx-auto text-destructive" />
+                <div>
+                  <p className="text-sm font-medium">{lesson.title}</p>
+                  <p className="text-xs text-muted-foreground">Live instructor-led session · {lesson.duration}</p>
+                </div>
+                <Button asChild className="gap-1.5"><Link to="/student/live-class"><Play className="h-4 w-4" /> Join live class</Link></Button>
+              </div>
             )}
             {lesson.type === "exam" && (
               <InlineExam lesson={lesson} />
