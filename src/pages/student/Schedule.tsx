@@ -4,11 +4,36 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, Monitor, Play, Video, BookOpen, Award, Sparkles, Radio, FileVideo } from "lucide-react";
+import { Calendar, Clock, Monitor, Play, Video, BookOpen, Award, Sparkles, Radio, FileVideo, Download } from "lucide-react";
 import { studentSchedule } from "@/data/studentMockData";
 import { StudentPageHero } from "@/components/gamification/StudentPageHero";
 import { LiveNowBanner } from "@/components/meetings/LiveNowBanner";
 import { useMeetingStore, CURRENT_STUDENT_ID, CURRENT_STUDENT_BATCH_ID } from "@/stores/meetingStore";
+import { downloadIcs, type IcsEvent } from "@/lib/icsExport";
+import { toast } from "sonner";
+
+const parseDurationMin = (d: string): number => {
+  let total = 0;
+  const h = d.match(/(\d+(?:\.\d+)?)\s*h/i);
+  const m = d.match(/(\d+)\s*m/i);
+  if (h) total += parseFloat(h[1]) * 60;
+  if (m) total += parseInt(m[1]);
+  return total || 60;
+};
+
+const parseTime = (iso: string, time: string): Date => {
+  const d = new Date(iso + "T09:00:00");
+  const match = time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+  if (match) {
+    let hr = parseInt(match[1]);
+    const min = parseInt(match[2]);
+    const ampm = match[3]?.toUpperCase();
+    if (ampm === "PM" && hr < 12) hr += 12;
+    if (ampm === "AM" && hr === 12) hr = 0;
+    d.setHours(hr, min, 0, 0);
+  }
+  return d;
+};
 
 const typeConfig: Record<string, { icon: any; color: string; bg: string; label: string }> = {
   live: { icon: Video, color: "text-destructive", bg: "bg-destructive/10", label: "Live Class" },
@@ -38,13 +63,41 @@ export default function StudentSchedule() {
           { icon: Award, label: "Tests", value: studentSchedule.filter(s => s.type === "assessment").length },
         ]}
         actions={
-          <Tabs value={view} onValueChange={setView}>
-            <TabsList className="bg-white/15 border border-white/25 backdrop-blur">
-              <TabsTrigger value="list" className="text-xs text-white data-[state=active]:bg-white data-[state=active]:text-foreground">List</TabsTrigger>
-              <TabsTrigger value="week" className="text-xs text-white data-[state=active]:bg-white data-[state=active]:text-foreground">Week</TabsTrigger>
-              <TabsTrigger value="month" className="text-xs text-white data-[state=active]:bg-white data-[state=active]:text-foreground">Month</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-xs text-white hover:bg-white/20 hover:text-white gap-1.5"
+              onClick={() => {
+                const events: IcsEvent[] = filtered
+                  .filter((s) => s.status !== "completed" && s.time !== "Any")
+                  .map((s) => {
+                    const start = parseTime(s.isoDate, s.time);
+                    const end = new Date(start.getTime() + parseDurationMin(s.duration) * 60000);
+                    return {
+                      uid: `${s.id}@cloudadda`,
+                      title: s.title,
+                      description: `${s.batch} · ${s.instructor}`,
+                      location: s.joinUrl || s.batch,
+                      start,
+                      end,
+                    };
+                  });
+                if (!events.length) return toast.error("Nothing to export");
+                downloadIcs("my-schedule", events);
+                toast.success(`${events.length} events exported`);
+              }}
+            >
+              <Download className="h-3.5 w-3.5" /> Export
+            </Button>
+            <Tabs value={view} onValueChange={setView}>
+              <TabsList className="bg-white/15 border border-white/25 backdrop-blur">
+                <TabsTrigger value="list" className="text-xs text-white data-[state=active]:bg-white data-[state=active]:text-foreground">List</TabsTrigger>
+                <TabsTrigger value="week" className="text-xs text-white data-[state=active]:bg-white data-[state=active]:text-foreground">Week</TabsTrigger>
+                <TabsTrigger value="month" className="text-xs text-white data-[state=active]:bg-white data-[state=active]:text-foreground">Month</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         }
       />
 
