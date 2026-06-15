@@ -108,6 +108,7 @@ import AssessmentResult from "./pages/student/AssessmentResult";
 import StudentCertificates from "./pages/student/Certificates";
 import CertificateDetail from "./pages/student/CertificateDetail";
 import CertificateVerify from "./pages/student/CertificateVerify";
+import StudentMeetings from "./pages/student/Meetings";
 import StudentSchedule from "./pages/student/Schedule";
 import SessionDetail from "./pages/student/SessionDetail";
 import StudentLiveClass from "./pages/student/LiveClass";
@@ -240,6 +241,8 @@ const App = () => (
             <Route path="/student/schedule" element={<StudentSchedule />} />
             <Route path="/student/schedule/:id" element={<SessionDetail />} />
             <Route path="/student/live-class" element={<StudentLiveClass />} />
+            <Route path="/student/meetings" element={<StudentMeetings />} />
+            <Route path="/student/meetings/:id" element={<MeetingDetail />} />
             <Route path="/student/support" element={<StudentSupport />} />
             <Route path="/student/progress" element={<StudentProgress />} />
             <Route path="/student/paths" element={<StudentPaths />} />
