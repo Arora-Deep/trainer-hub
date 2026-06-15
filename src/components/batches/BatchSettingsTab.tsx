@@ -34,6 +34,7 @@ export function BatchSettingsTab({ batch }: BatchSettingsTabProps) {
   const [published, setPublished] = useState(batch.settings.published);
   const [allowSelfEnrollment, setAllowSelfEnrollment] = useState(batch.settings.allowSelfEnrollment);
   const [certification, setCertification] = useState(batch.settings.certification);
+  const [hideLMS, setHideLMS] = useState(batch.hideLMS ?? false);
 
   const handleSave = () => {
     updateBatch(batch.id, {
@@ -43,6 +44,7 @@ export function BatchSettingsTab({ batch }: BatchSettingsTabProps) {
       medium,
       additionalDetails: additionalDetails.trim(),
       settings: { published, allowSelfEnrollment, certification },
+      hideLMS,
     });
     toast({ title: "Saved", description: "Batch settings updated successfully." });
   };
@@ -116,6 +118,10 @@ export function BatchSettingsTab({ batch }: BatchSettingsTabProps) {
           <div className="flex items-center justify-between rounded-lg border border-border p-4">
             <div><p className="font-medium text-sm">Certification</p><p className="text-xs text-muted-foreground">Issue certificates on completion</p></div>
             <Switch checked={certification} onCheckedChange={setCertification} />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-border p-4">
+            <div><p className="font-medium text-sm">Hide LMS / Content view</p><p className="text-xs text-muted-foreground">Students in this batch won't see courses, lessons or assessments — labs only</p></div>
+            <Switch checked={hideLMS} onCheckedChange={setHideLMS} />
           </div>
         </CardContent>
       </Card>
