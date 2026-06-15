@@ -130,7 +130,7 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
 
           <div className="space-y-1.5">
             <Label className="text-xs">Type</Label>
-            <Select value={form.type} onValueChange={(v: LessonType) => setForm((p) => ({ ...p, type: v, source: isAssessmentLesson(v) ? (p.source ?? "inline") : undefined }))}>
+            <Select value={form.type} onValueChange={(v: LessonType) => setForm((p) => ({ ...p, type: v, source: isAssessmentLesson(v) ? (p.source ?? "library") : undefined }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {(Object.keys(typeMeta) as LessonType[]).filter((t) => !HIDDEN_TYPES.has(t) || t === form.type).map((t) => {
