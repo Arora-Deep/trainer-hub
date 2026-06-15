@@ -125,6 +125,7 @@ const trainerNav: NavConfig = {
       { title: "Programs", icon: Layers, path: "/programs" },
     ]},
     { label: "Assessments", icon: ClipboardCheck, items: [
+      { title: "Library", icon: BookMarked, path: "/assessments" },
       { title: "Assignments", icon: ClipboardList, path: "/assignments" },
       { title: "Quizzes", icon: FileQuestion, path: "/quizzes" },
       { title: "Exercises", icon: Code2, path: "/exercises" },
@@ -134,6 +135,7 @@ const trainerNav: NavConfig = {
     ]},
     { label: "More", icon: Award, items: [
       { title: "Certifications", icon: Award, path: "/certifications" },
+      { title: "Announcements", icon: MessageSquarePlus, path: "/announcements" },
       { title: "Engagement", icon: Zap, path: "/engagement" },
       { title: "Request Lab / Quote", icon: MessageSquarePlus, path: "/request-lab" },
     ]},

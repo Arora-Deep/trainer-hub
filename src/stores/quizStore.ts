@@ -24,7 +24,7 @@ export interface Quiz {
     enableNegativeMarking: boolean;
     showSubmissionHistory: boolean;
   };
-  status: "draft" | "published";
+  status: "draft" | "in_review" | "published" | "archived";
   attempts: number;
   avgScore: number;
   createdAt: Date;
