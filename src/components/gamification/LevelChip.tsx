@@ -45,8 +45,8 @@ export function LevelChip() {
           <Stat label="Best" value={`${streak.longest}d`} icon={<Flame className="h-3 w-3 text-muted-foreground" />} />
         </div>
         <div className="grid grid-cols-2 gap-2 pt-1">
-          <button onClick={() => navigate("/student/certificates")} className="text-[11px] font-medium text-primary hover:underline text-left">
-            Certificates →
+          <button onClick={() => navigate("/student/portfolio")} className="text-[11px] font-medium text-primary hover:underline text-left">
+            View portfolio →
           </button>
           <button onClick={() => navigate("/student/progress")} className="text-[11px] font-medium text-primary hover:underline text-right">
             My progress →

@@ -10,85 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarDays, Users, PlayCircle, CheckCircle2, Search, Plus, X, Clock } from "lucide-react";
+import { CalendarDays, Users, PlayCircle, CheckCircle2, Search } from "lucide-react";
 import { useBatchStore, type Batch } from "@/stores/batchStore";
 import { cn } from "@/lib/utils";
-import { toast } from "@/hooks/use-toast";
-
-type FreeBlock = { id: string; day: string; start: string; end: string; label: string };
-
-function FreeTimeArea() {
-  const [blocks, setBlocks] = useState<FreeBlock[]>(() => {
-    try { return JSON.parse(localStorage.getItem("trainer-free-blocks") || "[]"); } catch { return []; }
-  });
-  const [draft, setDraft] = useState<FreeBlock>({ id: "", day: "Mon", start: "16:00", end: "18:00", label: "Office hours" });
-
-  const save = (next: FreeBlock[]) => {
-    setBlocks(next);
-    localStorage.setItem("trainer-free-blocks", JSON.stringify(next));
-  };
-
-  const add = () => {
-    if (!draft.label.trim()) return;
-    save([...blocks, { ...draft, id: `fb-${Date.now()}` }]);
-    toast({ title: "Free block added", description: `${draft.day} ${draft.start}–${draft.end}` });
-  };
-
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-  return (
-    <Card className="p-5 space-y-4">
-      <div>
-        <h3 className="text-sm font-semibold flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> Free / Available time blocks</h3>
-        <p className="text-xs text-muted-foreground mt-1">
-          Mark when you are open for office hours, async questions, or post-batch console access. Students see these as bookable windows.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_2fr_auto] gap-2 items-end p-3 rounded-lg border bg-muted/20">
-        <div>
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Day</label>
-          <select className="w-full mt-1 h-9 px-2 text-sm rounded-md border bg-background" value={draft.day} onChange={(e) => setDraft({ ...draft, day: e.target.value })}>
-            {days.map(d => <option key={d}>{d}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">From</label>
-          <Input type="time" value={draft.start} onChange={(e) => setDraft({ ...draft, start: e.target.value })} className="h-9 mt-1" />
-        </div>
-        <div>
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">To</label>
-          <Input type="time" value={draft.end} onChange={(e) => setDraft({ ...draft, end: e.target.value })} className="h-9 mt-1" />
-        </div>
-        <div>
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Label</label>
-          <Input value={draft.label} onChange={(e) => setDraft({ ...draft, label: e.target.value })} className="h-9 mt-1" placeholder="Office hours / async Q&A" />
-        </div>
-        <Button onClick={add} className="h-9 gap-1.5"><Plus className="h-3.5 w-3.5" />Add</Button>
-      </div>
-
-      {blocks.length === 0 ? (
-        <div className="py-12 text-center text-sm text-muted-foreground">
-          No free blocks yet. Add one above to make yourself bookable for office hours and post-batch console access.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-          {blocks.map(b => (
-            <div key={b.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
-              <div>
-                <p className="text-sm font-medium">{b.label}</p>
-                <p className="text-xs text-muted-foreground">{b.day} · {b.start}–{b.end}</p>
-              </div>
-              <button onClick={() => save(blocks.filter(x => x.id !== b.id))} className="text-muted-foreground hover:text-destructive">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </Card>
-  );
-}
 
 const statusToBadge = (s: Batch["status"]) =>
   s === "live" ? "success" : s === "upcoming" ? "warning" : "default";
@@ -200,7 +124,6 @@ export default function Schedule() {
           <TabsTrigger value="calendar">Calendar</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="kanban">Kanban</TabsTrigger>
-          <TabsTrigger value="free">Free Time</TabsTrigger>
         </TabsList>
 
         {/* CALENDAR */}
@@ -328,11 +251,6 @@ export default function Schedule() {
               );
             })}
           </div>
-        </TabsContent>
-
-        {/* FREE TIME */}
-        <TabsContent value="free">
-          <FreeTimeArea />
         </TabsContent>
       </Tabs>
 

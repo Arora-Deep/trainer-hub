@@ -14,44 +14,17 @@ export default function AssessmentAttempt() {
   const { id = "" } = useParams();
   const nav = useNavigate();
   const a = getStudentAssessment(id);
-  const draftKey = `assess-draft-${id}`;
-
-  // Hydrate from localStorage (one-time)
-  const draft = (() => {
-    try {
-      const raw = localStorage.getItem(draftKey);
-      return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
-  })();
-
-  const [idx, setIdx] = useState<number>(draft?.idx ?? 0);
-  const [answers, setAnswers] = useState<Record<string, number>>(draft?.answers ?? {});
-  const [flagged, setFlagged] = useState<Set<string>>(new Set(draft?.flagged ?? []));
-  const [code, setCode] = useState<string>(draft?.code ?? a?.starterCode ?? "");
-  const [text, setText] = useState<string>(draft?.text ?? "");
+  const [idx, setIdx] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [flagged, setFlagged] = useState<Set<string>>(new Set());
+  const [code, setCode] = useState(a?.starterCode ?? "");
+  const [text, setText] = useState("");
   const [secs, setSecs] = useState((a?.timeLimitMin ?? 30) * 60);
-  const [savedAt, setSavedAt] = useState<Date | null>(draft ? new Date(draft.savedAt) : null);
 
   useEffect(() => {
     const t = setInterval(() => setSecs((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(t);
   }, []);
-
-  // Autosave whenever answers/code/text/idx/flagged change (debounced)
-  useEffect(() => {
-    if (!a) return;
-    const t = setTimeout(() => {
-      const payload = {
-        idx, answers, flagged: Array.from(flagged), code, text,
-        savedAt: new Date().toISOString(),
-      };
-      try {
-        localStorage.setItem(draftKey, JSON.stringify(payload));
-        setSavedAt(new Date());
-      } catch {}
-    }, 500);
-    return () => clearTimeout(t);
-  }, [idx, answers, flagged, code, text, a, draftKey]);
 
   if (!a) return <Card><CardContent className="py-12 text-center">Not found.</CardContent></Card>;
 
@@ -62,13 +35,8 @@ export default function AssessmentAttempt() {
   const mm = Math.floor(secs / 60).toString().padStart(2, "0");
   const ss = (secs % 60).toString().padStart(2, "0");
 
-  const savedLabel = savedAt
-    ? `Saved · ${savedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-    : "Autosave on";
-
   const submit = () => {
     sessionStorage.setItem(`assess-${a.id}-answers`, JSON.stringify(answers));
-    localStorage.removeItem(draftKey);
     toast.success("Submitted!");
     nav(`/student/assessments/${a.id}/result`);
   };
@@ -80,12 +48,9 @@ export default function AssessmentAttempt() {
           <Link to={`/student/assessments/${a.id}`} className="text-xs text-muted-foreground flex items-center gap-1"><ArrowLeft className="h-3 w-3" /> Exit attempt</Link>
           <h1 className="text-lg font-bold mt-1">{a.title}</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] text-muted-foreground hidden sm:inline">{savedLabel}</span>
-          <Badge className={`text-sm gap-1.5 px-3 py-1.5 ${secs < 60 ? "bg-destructive/10 text-destructive" : "bg-muted text-foreground"}`}>
-            <Clock className="h-4 w-4" /> {mm}:{ss}
-          </Badge>
-        </div>
+        <Badge className={`text-sm gap-1.5 px-3 py-1.5 ${secs < 60 ? "bg-destructive/10 text-destructive" : "bg-muted text-foreground"}`}>
+          <Clock className="h-4 w-4" /> {mm}:{ss}
+        </Badge>
       </div>
 
       {isQuiz && (

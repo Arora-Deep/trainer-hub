@@ -8,7 +8,7 @@ import {
   Cpu, HardDrive, Network, Activity, LifeBuoy, Receipt, Lock, FileBarChart,
   Gauge, AlertTriangle, Clock, Wrench, BookMarked, Zap, Globe, Eye,
   DollarSign, Scale, Key, Database, Send, Flag, Workflow, Container,
-  Video, Calendar, Radio, MessageSquarePlus, ClipboardCheck, Brain, GraduationCap as ExamIcon, Gamepad2, Megaphone, CalendarClock,
+  Video, Calendar, Radio, MessageSquarePlus, ClipboardCheck, Brain, GraduationCap as ExamIcon, Gamepad2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -125,7 +125,6 @@ const trainerNav: NavConfig = {
       { title: "Programs", icon: Layers, path: "/programs" },
     ]},
     { label: "Assessments", icon: ClipboardCheck, items: [
-      { title: "Library", icon: BookMarked, path: "/assessments" },
       { title: "Assignments", icon: ClipboardList, path: "/assignments" },
       { title: "Quizzes", icon: FileQuestion, path: "/quizzes" },
       { title: "Exercises", icon: Code2, path: "/exercises" },
@@ -135,7 +134,6 @@ const trainerNav: NavConfig = {
     ]},
     { label: "More", icon: Award, items: [
       { title: "Certifications", icon: Award, path: "/certifications" },
-      { title: "Announcements", icon: MessageSquarePlus, path: "/announcements" },
       { title: "Engagement", icon: Zap, path: "/engagement" },
       { title: "Request Lab / Quote", icon: MessageSquarePlus, path: "/request-lab" },
     ]},
@@ -156,9 +154,14 @@ const studentNav: NavConfig = {
       { title: "Active Labs", icon: Monitor, path: "/student/labs" },
       { title: "My Courses", icon: BookOpen, path: "/student/courses" },
       { title: "Schedule", icon: Calendar, path: "/student/schedule" },
+      
     ]},
-    { label: "Achievements", icon: Award, items: [
+    { label: "Progression", icon: Zap, items: [
+      { title: "Portfolio", icon: UserCog, path: "/student/portfolio" },
       { title: "My Progress", icon: Activity, path: "/student/progress" },
+      { title: "Learning Paths", icon: Workflow, path: "/student/paths" },
+      { title: "Challenges", icon: Flag, path: "/student/challenges" },
+      { title: "Leaderboard", icon: Trophy, path: "/student/leaderboard" },
       { title: "Certificates", icon: Award, path: "/student/certificates" },
     ]},
   ],

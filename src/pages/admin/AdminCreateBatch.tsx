@@ -101,10 +101,6 @@ export default function AdminCreateBatch() {
   const [vlanId, setVlanId] = useState("100");
   const [enableQemu, setEnableQemu] = useState(true);
   const [enableNestedVirt, setEnableNestedVirt] = useState(false);
-  const [targetNode, setTargetNode] = useState("auto");
-  const [usePreProvVM, setUsePreProvVM] = useState(false);
-  const [preProvPoolId, setPreProvPoolId] = useState("pool-mum-1");
-  const [enableLms, setEnableLms] = useState(true);
 
   // RBAC: pricing visibility
   const adminSubRole = useRoleStore((s) => s.adminSubRole);
@@ -597,55 +593,6 @@ export default function AdminCreateBatch() {
                               <Badge variant="secondary" className="text-[10px]">802.1Q</Badge>
                             </div>
                           )}
-
-                          {/* Target node */}
-                          <div className="p-2.5 rounded-lg border space-y-1.5">
-                            <Label className="text-sm flex items-center gap-1.5"><Server className="h-3 w-3" /> Target Node</Label>
-                            <p className="text-[11px] text-muted-foreground">Pin the batch to a specific compute node, or let the scheduler decide.</p>
-                            <Select value={targetNode} onValueChange={setTargetNode}>
-                              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="auto">Auto-select (recommended)</SelectItem>
-                                <SelectItem value="node-mum-01">node-mum-01 · 64c/256GB · 18% used</SelectItem>
-                                <SelectItem value="node-mum-02">node-mum-02 · 64c/256GB · 42% used</SelectItem>
-                                <SelectItem value="node-mum-03">node-mum-03 · 96c/384GB · 71% used</SelectItem>
-                                <SelectItem value="node-blr-01">node-blr-01 · 64c/256GB · 9% used</SelectItem>
-                                <SelectItem value="node-gpu-01">node-gpu-01 · 32c/128GB + 4×A100 · 25% used</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {/* Pre-provisioned VM pool */}
-                          <div className="flex items-center justify-between p-2.5 rounded-lg border">
-                            <div>
-                              <Label className="text-sm">Use Pre-provisioned VM Pool</Label>
-                              <p className="text-[11px] text-muted-foreground">Skip template build — assign VMs from an existing warm pool</p>
-                            </div>
-                            <Switch checked={usePreProvVM} onCheckedChange={setUsePreProvVM} />
-                          </div>
-                          {usePreProvVM && (
-                            <div className="p-2.5 rounded-lg border bg-primary/5 space-y-1.5">
-                              <Label className="text-xs">Warm Pool</Label>
-                              <Select value={preProvPoolId} onValueChange={setPreProvPoolId}>
-                                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="pool-mum-1">Mumbai · Ubuntu 22.04 · 24 ready · 4c/8GB</SelectItem>
-                                  <SelectItem value="pool-mum-2">Mumbai · Windows 11 · 12 ready · 8c/16GB</SelectItem>
-                                  <SelectItem value="pool-blr-1">Bangalore · AWS Linux · 30 ready · 4c/8GB</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <p className="text-[10px] text-muted-foreground">Pool VMs are pre-imaged and ready to assign — no clone or boot wait.</p>
-                            </div>
-                          )}
-
-                          {/* LMS toggle */}
-                          <div className="flex items-center justify-between p-2.5 rounded-lg border">
-                            <div>
-                              <Label className="text-sm">Enable LMS / Content View</Label>
-                              <p className="text-[11px] text-muted-foreground">When off, students only see VMs & schedule — no courses, lessons or learning centre</p>
-                            </div>
-                            <Switch checked={enableLms} onCheckedChange={setEnableLms} />
-                          </div>
                         </CardContent>
                       </Card>
                     </>

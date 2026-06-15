@@ -45,26 +45,12 @@ export function VMDaySchedule({ dateRange, dailySchedules, onChange }: VMDaySche
     };
   };
 
-  const minutesBetween = (a: string, b: string) => {
-    const [ah, am] = a.split(":").map(Number);
-    const [bh, bm] = b.split(":").map(Number);
-    return (bh * 60 + bm) - (ah * 60 + am);
-  };
-
   const updateDay = (date: Date, field: "startTime" | "endTime", value: string) => {
     const dateStr = format(date, "yyyy-MM-dd");
     const existing = dailySchedules.find(s => s.date === dateStr);
-    let updated = existing
+    const updated = existing
       ? { ...existing, [field]: value }
       : { date: dateStr, startTime: "09:00", endTime: "18:00", [field]: value };
-
-    // ≥8h selected → auto-promote to full-day (24h) access
-    const span = minutesBetween(updated.startTime, updated.endTime);
-    if (span >= 8 * 60 && !(updated.startTime === "00:00" && updated.endTime === "23:30")) {
-      updated = { ...updated, startTime: "00:00", endTime: "23:30" };
-      // soft hint via console; toast import would create extra deps
-      try { (window as any).__lov_toast?.({ title: "Full-day access granted", description: "Selection ≥ 8 hours — switched to 24h." }); } catch {}
-    }
 
     const newSchedules = dailySchedules.filter(s => s.date !== dateStr);
     newSchedules.push(updated);

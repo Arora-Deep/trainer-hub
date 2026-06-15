@@ -112,35 +112,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-type WidgetKey = "stats" | "activity" | "upcoming" | "labs" | "alerts" | "progress";
-const ALL_WIDGETS: { key: WidgetKey; label: string }[] = [
-  { key: "stats", label: "Top stat cards" },
-  { key: "activity", label: "Activity chart" },
-  { key: "upcoming", label: "Upcoming batches" },
-  { key: "labs", label: "Active labs" },
-  { key: "alerts", label: "Alerts" },
-  { key: "progress", label: "Course progress" },
-];
-
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Switch } from "@/components/ui/switch";
-import { Settings as SettingsIcon } from "lucide-react";
-import { useState } from "react";
-
 export default function Dashboard() {
-  const [visible, setVisible] = useState<Record<WidgetKey, boolean>>(() => {
-    try {
-      const raw = localStorage.getItem("trainer-dashboard-widgets");
-      if (raw) return JSON.parse(raw);
-    } catch {}
-    return { stats: true, activity: true, upcoming: true, labs: true, alerts: true, progress: true };
-  });
-  const toggle = (k: WidgetKey) => {
-    const next = { ...visible, [k]: !visible[k] };
-    setVisible(next);
-    localStorage.setItem("trainer-dashboard-widgets", JSON.stringify(next));
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -152,25 +124,6 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <SettingsIcon className="h-3.5 w-3.5" /> Customize
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[360px]">
-              <SheetHeader><SheetTitle>Customize dashboard</SheetTitle></SheetHeader>
-              <p className="text-xs text-muted-foreground mt-1.5">Show or hide widgets. Saved to this browser.</p>
-              <div className="mt-4 space-y-2">
-                {ALL_WIDGETS.map(w => (
-                  <div key={w.key} className="flex items-center justify-between p-3 rounded-lg border">
-                    <span className="text-sm">{w.label}</span>
-                    <Switch checked={visible[w.key]} onCheckedChange={() => toggle(w.key)} />
-                  </div>
-                ))}
-              </div>
-            </SheetContent>
-          </Sheet>
           {quickActions.map((action) => (
             action.href ? (
               <Button
@@ -195,7 +148,6 @@ export default function Dashboard() {
       </div>
 
       {/* Top Stats Row – 3 columns like reference */}
-      {visible.stats && (
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Students Card – Big number with sub-metrics */}
         <Card className="p-6">
@@ -324,10 +276,8 @@ export default function Dashboard() {
           </div>
         </Card>
       </div>
-      )}
 
       {/* Activity Chart – Full width, prominent like reference */}
-      {visible.activity && (
       <Card className="p-6">
         <div className="flex items-start justify-between mb-2">
           <div>
@@ -404,12 +354,10 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
       </Card>
-      )}
 
       {/* Bottom Grid */}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Upcoming Batches */}
-        {visible.upcoming && (
         <DataCard
           title="Upcoming Batches"
           icon={Calendar}
@@ -444,10 +392,8 @@ export default function Dashboard() {
             </TableBody>
           </Table>
         </DataCard>
-        )}
 
         {/* Active Labs */}
-        {visible.labs && (
         <DataCard
           title="Active Labs"
           icon={FlaskConical}
@@ -495,10 +441,8 @@ export default function Dashboard() {
             </TableBody>
           </Table>
         </DataCard>
-        )}
 
         {/* Alerts */}
-        {visible.alerts && (
         <DataCard
           title="Alerts"
           icon={AlertTriangle}
@@ -531,10 +475,8 @@ export default function Dashboard() {
             ))}
           </div>
         </DataCard>
-        )}
 
         {/* Course Progress */}
-        {visible.progress && (
         <DataCard title="Course Progress" icon={TrendingUp} action={{ label: "View all", href: "/courses" }}>
           <div className="space-y-5">
             {courseProgress.map((course, index) => (
@@ -555,7 +497,6 @@ export default function Dashboard() {
             ))}
           </div>
         </DataCard>
-        )}
       </div>
     </div>
   );

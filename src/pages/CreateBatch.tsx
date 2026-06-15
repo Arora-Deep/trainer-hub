@@ -976,13 +976,8 @@ export default function CreateBatch() {
                   <CardContent>
                     <div className="text-center py-4">
                       <span className="text-4xl font-bold text-primary">${pricing.total.toFixed(0)}</span>
-                      <p className="text-sm text-muted-foreground mt-1">{pricing.totalVMs} VMs (incl. 1 trainer) · {pricing.days} days</p>
+                      <p className="text-sm text-muted-foreground mt-1">{pricing.totalVMs} VMs for {pricing.days} days</p>
                     </div>
-                    <div className="border-t pt-3 mt-2 flex justify-between text-sm">
-                      <span className="text-muted-foreground">Per participant</span>
-                      <span className="font-semibold">${seatCount > 0 ? (pricing.total / seatCount).toFixed(0) : "0"}</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-1 text-center">Per-participant cost = total ÷ seats. Trainer VM cost is absorbed into the batch.</p>
                   </CardContent>
                 </Card>
               )}
