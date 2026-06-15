@@ -1,10 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Megaphone, Pin } from "lucide-react";
 import { useAnnouncementStore } from "@/stores/announcementStore";
 import { CURRENT_STUDENT_BATCH_ID } from "@/stores/meetingStore";
-import { Link } from "react-router-dom";
 
 interface Props {
   limit?: number;
@@ -13,8 +12,9 @@ interface Props {
 
 export function AnnouncementsFeed({ limit = 3, showViewAll = true }: Props) {
   const announcements = useAnnouncementStore((s) => s.announcements);
+  const [expanded, setExpanded] = useState(false);
 
-  const combined = useMemo(
+  const all = useMemo(
     () =>
       announcements
         .filter((a) => a.batchId === CURRENT_STUDENT_BATCH_ID || a.batchId === null)
@@ -22,12 +22,15 @@ export function AnnouncementsFeed({ limit = 3, showViewAll = true }: Props) {
           (a, b) =>
             +b.pinned - +a.pinned ||
             +new Date(b.postedAt) - +new Date(a.postedAt)
-        )
-        .slice(0, limit),
-    [announcements, limit]
+        ),
+    [announcements]
   );
 
+  const combined = expanded ? all : all.slice(0, limit);
+
   if (combined.length === 0) return null;
+
+  const canExpand = all.length > limit;
 
   return (
     <section className="space-y-2">
@@ -35,10 +38,13 @@ export function AnnouncementsFeed({ limit = 3, showViewAll = true }: Props) {
         <h2 className="text-sm font-semibold tracking-tight flex items-center gap-1.5">
           <Megaphone className="h-3.5 w-3.5 text-primary" /> Announcements
         </h2>
-        {showViewAll && (
-          <Link to="/student/announcements" className="text-xs font-medium text-primary">
-            View all
-          </Link>
+        {showViewAll && canExpand && (
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            {expanded ? "Show less" : `View all (${all.length})`}
+          </button>
         )}
       </div>
       <Card>
