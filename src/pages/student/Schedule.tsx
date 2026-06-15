@@ -116,6 +116,73 @@ export default function StudentSchedule() {
   );
 }
 
+function StudentMeetingsStrip() {
+  const meetings = useMeetingStore((s) => s.getMeetingsForStudent(CURRENT_STUDENT_ID, CURRENT_STUDENT_BATCH_ID));
+  const upcoming = meetings.filter(m => m.status === "scheduled" || m.status === "live")
+    .sort((a, b) => +new Date(a.scheduledAt) - +new Date(b.scheduledAt))
+    .slice(0, 4);
+  const recordings = meetings.filter(m => m.status === "ended" && m.recordings.length > 0).slice(0, 4);
+  if (!upcoming.length && !recordings.length) return null;
+  return (
+    <Card>
+      <CardContent className="pt-5 pb-5 space-y-4">
+        {upcoming.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Radio className="h-3.5 w-3.5 text-destructive" />
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Live & upcoming meetings</h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {upcoming.map(m => (
+                <Link key={m.id} to={`/student/meeting/${m.id}`}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/40 transition">
+                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${m.status === "live" ? "bg-destructive/10" : "bg-primary/10"}`}>
+                    {m.status === "live" ? <Radio className="h-4 w-4 text-destructive animate-pulse" /> : <Video className="h-4 w-4 text-primary" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-medium truncate">{m.title}</p>
+                      {m.status === "live" && <Badge className="bg-destructive text-destructive-foreground text-[9px] h-4">LIVE</Badge>}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {new Date(m.scheduledAt).toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" })} · {m.trainerName}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+        {recordings.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <FileVideo className="h-3.5 w-3.5 text-amber-600" />
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recent recordings</h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {recordings.map(m => (
+                <Link key={m.id} to={`/student/meeting/${m.id}`} className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/40 transition">
+                  <div className="h-9 w-9 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                    <FileVideo className="h-4 w-4 text-amber-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{m.title}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {new Date(m.scheduledAt).toLocaleDateString()} · {m.recordings[0].durationMins} min
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+
+
 function WeekView() {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   return (
