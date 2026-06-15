@@ -45,6 +45,7 @@ import { cn } from "@/lib/utils";
 import { ParticipantsTab } from "@/components/batches/ParticipantsTab";
 import { BatchSettingsTab } from "@/components/batches/BatchSettingsTab";
 import { MaterialsTab } from "@/components/batches/MaterialsTab";
+import { MeetingsTab } from "@/components/batches/MeetingsTab";
 import { BatchReportsTab } from "@/components/batches/BatchReportsTab";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
