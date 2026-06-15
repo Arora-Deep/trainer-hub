@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   Monitor, Clock, ExternalLink, Power, RotateCcw, Terminal, Download,
   Activity, Copy, Check, Timer, Search, Cpu, MemoryStick, HardDrive,
-  PlayCircle, AlertTriangle, Snowflake, Camera,
+  PlayCircle, AlertTriangle, Snowflake, Camera, Radio, Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
