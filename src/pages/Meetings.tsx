@@ -134,6 +134,7 @@ export default function Meetings() {
             <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
             <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
             <TabsTrigger value="unassigned">Unassigned ({unassigned.length})</TabsTrigger>
+            <TabsTrigger value="slots">Office-hour Slots</TabsTrigger>
           </TabsList>
           <TabsContent value="live" className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
             {live.map(m => <MeetingCard key={m.id} m={m} />)}
@@ -150,6 +151,9 @@ export default function Meetings() {
           <TabsContent value="unassigned" className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
             {unassigned.map(m => <MeetingCard key={m.id} m={m} showBatch={false} />)}
             {!unassigned.length && <Card className="p-8 text-sm text-muted-foreground text-center md:col-span-2">All meetings are attached to a batch.</Card>}
+          </TabsContent>
+          <TabsContent value="slots" className="mt-4">
+            <OfficeHoursSlotsTab />
           </TabsContent>
         </Tabs>
       )}
