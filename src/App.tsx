@@ -250,17 +250,17 @@ const App = () => (
             <Route path="/student/meeting/:id" element={<StudentMeetingRoom />} />
             <Route path="/student/support" element={<StudentSupport />} />
             <Route path="/student/progress" element={<StudentProgress />} />
-            <Route path="/student/paths" element={<StudentPaths />} />
-            <Route path="/student/paths/:slug" element={<StudentPathDetail />} />
-            <Route path="/student/challenges" element={<StudentChallenges />} />
-            <Route path="/student/leaderboard" element={<StudentLeaderboard />} />
-            <Route path="/student/portfolio" element={<StudentPortfolio />} />
-            <Route path="/student/announcements" element={<StudentAnnouncements />} />
             <Route path="/student/office-hours" element={<StudentOfficeHours />} />
-            {/* Redirects from old routes */}
-            <Route path="/student/profile" element={<Navigate to="/student/portfolio" replace />} />
-            <Route path="/student/quests" element={<Navigate to="/student/challenges" replace />} />
-            <Route path="/student/skill-tree" element={<Navigate to="/student/paths" replace />} />
+            {/* Redirects from removed routes (kept for deep-link safety) */}
+            <Route path="/student/paths" element={<Navigate to="/student/courses" replace />} />
+            <Route path="/student/paths/:slug" element={<Navigate to="/student/courses" replace />} />
+            <Route path="/student/challenges" element={<Navigate to="/student/dashboard" replace />} />
+            <Route path="/student/leaderboard" element={<Navigate to="/student/dashboard" replace />} />
+            <Route path="/student/portfolio" element={<Navigate to="/student/certificates" replace />} />
+            <Route path="/student/announcements" element={<Navigate to="/student/dashboard" replace />} />
+            <Route path="/student/profile" element={<Navigate to="/student/certificates" replace />} />
+            <Route path="/student/quests" element={<Navigate to="/student/dashboard" replace />} />
+            <Route path="/student/skill-tree" element={<Navigate to="/student/courses" replace />} />
             <Route path="/engagement" element={<Engagement />} />
           </Route>
           {/* Public portfolio (no auth, no layout) */}
