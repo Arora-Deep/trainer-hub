@@ -1,88 +1,74 @@
-## Goal
+# Trainer Portal Expansion
 
-Make `/student/live-class` (the "Learning Centre") behave differently depending on the selected course's delivery mode, and tighten the Labs page so it only shows VMs a student can currently access.
+Three new modules in the trainer (training-company-admin) portal, built on existing Zustand stores and the established design system (Apple-minimal, drawers over modals, Recharts, status chips).
 
 ---
 
-## 1. Learning Centre — VILT courses (no change)
+## 1. Schedule (tabbed view of all batches)
 
-When the selected course is `deliveryMode: "live"` or `"hybrid"`, render today's existing live-class layout exactly as it is (instructor video / chat / synced lab console / participants / view modes).
+New route: `/schedule` — sidebar entry under **Main**, icon `CalendarDays`.
 
-The current "Self-paced" branches and amber notices in `LiveClass.tsx` are pulled out — the live UI no longer pretends to also serve self-paced.
+Pulls from `batchStore`. Single page with three tabs:
 
-## 2. Learning Centre — Self-Paced courses (new view)
+- **Calendar** — month/week grid (using existing `Calendar` component + custom event overlays). Each day shows colored dots per batch; click a day → right drawer listing batches on that day with quick actions (View, Open Meeting, Roster).
+- **Timeline** — horizontal Gantt-style. Rows = batches, x-axis = dates. Bars colored by status (Upcoming = yellow, Live = green, Completed = white/grey, Cancelled = red). Hover tooltip with batch summary; click → batch details.
+- **Kanban** — three columns: Upcoming / Live / Completed. Batch cards show name, trainer, participant count, dates, lab status chip. Drag is out-of-scope for v1.
 
-When the selected course is `deliveryMode: "self-paced"`, render a new layout inside the same page that feels like the existing `CoursePlayer` (the "My Courses → course" experience), not like a live class.
+Shared top bar: filters (trainer, course, customer, status), search, and a "Today" jump.
 
-Structure:
+---
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│ Course switcher · course title · self-paced badge · hours left │
-├──────────────┬────────────────────────────────┬────────────────┤
-│              │                                │                │
-│  Curriculum  │   Current lesson content       │  Course Lab    │
-│  (chapters,  │   (video / reading / quiz /    │  (only if      │
-│   lessons,   │    assignment / code / lab /   │   course has   │
-│   locked,    │    lab-instruction / exam /    │   a persistent │
-│   completed) │    live-session)               │   course VM)   │
-│              │   Prev / Mark complete / Next  │                │
-└──────────────┴────────────────────────────────┴────────────────┘
-```
+## 2. Trainer Management
 
-Lab handling — two modes:
+New route: `/trainers` — sidebar entry under **Main**, icon `UserSquare2`. Visible to all trainer-portal users for now (gating added later when RBAC ships).
 
-- **Course-wide persistent VM with hour pool** (e.g. 20h, accessible anytime): the right rail shows a "Course Lab" panel with VM status, hours-remaining meter, launch console button, and VM actions (Start / Stop / Restart / Snapshot / Reset / Open fullscreen). Available from every lesson, not gated by lesson type.
-- **Time-limited between-lesson lab** (current behaviour): when the current lesson itself is a `lab` / `lab-instruction`, the centre pane keeps today's inline `OnDemandLabPanel` / `LabWorkspace` launch flow. The right rail hides when no course-wide VM exists.
+New store: `trainerStore.ts` (Zustand) with seeded dummy trainers:
+`id, name, email, avatar, skills[], certifications[], bio, hourlyRate, joinedAt, status (active/inactive), assignedBatchIds[], metrics { avgRating, npsScore, completionRate, attendanceRate, batchesDelivered, studentsTrained, ratingTrend[] }`.
 
-### View toggle when student opens the VM
+**Pages/components:**
 
-On a self-paced course with a persistent VM, the top of the page exposes a small segmented control:
+- **Trainer Directory** (`/trainers`) — table + grid toggle. Columns: trainer, skills (chips), batches (count), avg rating, completion %, status. "Add Trainer" button → right drawer form (name, email, skills multi-select, certs, bio, hourly rate). Row click → Trainer Detail.
+- **Trainer Detail** (`/trainers/:id`) — header with avatar + StatCards (Avg Rating, NPS, Completion %, Attendance %, Batches Delivered). Tabs:
+  - *Overview* — bio, skills, certifications, edit button (drawer).
+  - *Performance* — Recharts: rating trend line, completion bar by batch, student feedback breakdown pie, score distribution.
+  - *Batches* — list of assigned batches with status chips; "Assign to Batch" button → drawer that picks an upcoming/live batch (with simple schedule-conflict warning if dates overlap another assignment).
+  - *Feedback* — dummy student review cards (rating + comment + batch).
 
-- **Lessons + Lab** (split, default) — curriculum / lesson / VM side-by-side as above.
-- **Lab only** — center pane is replaced by a full-width VM console; curriculum collapses to a slim rail; right controls remain.
+**Batch assignment integration:** add `trainerId` to batches in `batchStore` (already present in some places — normalize). Batch detail's header shows trainer chip linking back to trainer profile.
 
-(Existing "Content View / Lab View / Notes" tabs are removed in self-paced mode — replaced by these two states.)
+---
 
-## 3. Active Labs page (rename + scope change)
+## 3. Meetings (BigBlueButton — mock UI)
 
-- Sidebar item "My Labs" → **"Active Labs"** (`/student/labs` route unchanged).
-- The page only lists labs the student can currently use:
-  - Course-wide persistent VMs (self-paced courses with hour pools).
-  - Currently-running time-limited lesson labs.
-- Stopped lesson labs without an active session and completed/failed labs are hidden by default (still reachable via a "Show all" toggle for transparency).
-- Card copy clarifies access type: "Always available · 20h pool" vs "Lesson lab · 1h 30m left this session".
+New route: `/meetings` — sidebar entry under **More**, icon `Video`. UI shell only; no real BBB calls yet (placeholders ready for later integration).
 
-## 4. Data tweaks (`src/data/studentMockData.ts`)
+New store: `meetingStore.ts` seeded with dummy meetings:
+`id, title, batchId, trainerId, scheduledAt, durationMins, status (scheduled/live/ended), joinUrl (#), recordingUrl (#), attendeeCount, maxAttendees`.
 
-Add to `StudentCourse` for self-paced courses:
+**Pages:**
 
-```ts
-persistentLab?: {
-  labId: string;          // links to studentLabs
-  templateName: string;
-  totalHours: number;     // e.g. 20
-  usedHours: number;
-};
-```
+- **Meetings List** (`/meetings`) — tabs: Live Now / Upcoming / Past. Cards show title, batch, trainer, time, status chip, primary action (Join / Start / View Recording). "Schedule Meeting" button → drawer (title, batch select, date/time, duration, welcome message, record toggle, mute on join, waiting room).
+- **Meeting Detail** (`/meetings/:id`) — meeting info, attendees mock list, recordings list, "Open BBB Room" button (opens `joinUrl` placeholder in new tab; toast: "BBB integration pending"). Settings tab with BBB-style options (camera/mic, layout, breakout rooms) — all UI only.
+- Surface "Open Meeting" buttons inline on Schedule cards and Batch Detail when a meeting exists for that batch.
 
-Populate it on the Python (id 4) and Linux Hardening (id 5) self-paced courses. The hybrid GenAI course (id 6) gets one too.
+A small `bbbConfig.ts` placeholder file documents the future env vars (`BBB_SERVER_URL`, `BBB_SHARED_SECRET`) so wiring real integration later is a drop-in.
 
-Existing `studentLabs` entries gain an `accessKind: "course-persistent" | "lesson-time-limited"` so the Active Labs page can filter cleanly.
+---
 
-## 5. Files touched
+## Technical notes
 
-**Edit**
-- `src/data/studentMockData.ts` — add `persistentLab` on courses, `accessKind` on labs.
-- `src/components/layout/AppSidebar.tsx` — rename "My Labs" → "Active Labs".
-- `src/pages/student/LiveClass.tsx` — branch on delivery mode; mount new self-paced view, keep VILT as-is.
-- `src/pages/student/Labs.tsx` — filter to active-only by default, add "Show all" toggle, update copy and hero title.
+- **Files added:**
+  - `src/pages/Schedule.tsx` + `src/components/schedule/{CalendarView,TimelineView,KanbanView,ScheduleFilters,DayBatchesDrawer}.tsx`
+  - `src/pages/Trainers.tsx`, `src/pages/TrainerDetail.tsx` + `src/components/trainers/{TrainerDrawer,PerformanceCharts,AssignBatchDrawer,FeedbackList}.tsx`
+  - `src/pages/Meetings.tsx`, `src/pages/MeetingDetail.tsx` + `src/components/meetings/{ScheduleMeetingDrawer,MeetingCard,AttendeesList,RecordingsList}.tsx`
+  - `src/stores/trainerStore.ts`, `src/stores/meetingStore.ts`
+  - `src/lib/bbbConfig.ts` (placeholder)
+- **Files edited:**
+  - `src/components/layout/AppSidebar.tsx` — add Schedule, Trainers, Meetings entries to `trainerNav`.
+  - `src/App.tsx` — register the new routes.
+  - `src/stores/batchStore.ts` — ensure `trainerId` on each batch; add helper selectors `getBatchesByStatus`, `getBatchesByDateRange`.
+  - `src/pages/BatchDetails.tsx` — trainer chip in header; "Meetings" quick link if any exist for the batch.
+- **Patterns reused:** PageHeader, StatCard, StatusBadge, right-side Sheet drawers, Recharts with existing gradient/rounded-top styling, status color mapping.
+- **Out of scope (this pass):** real BBB API calls, RBAC gating on trainer management, drag-and-drop in Kanban, recurring meetings, ICS export.
 
-**New**
-- `src/pages/student/SelfPacedLearningCentre.tsx` — the curriculum + lesson + course-lab layout, with Split / Lab-only toggle. Reuses `CoursePlayer`'s block renderers and `LabWorkspace`'s console mock.
-
-## 6. Out of scope
-
-- Real VM orchestration / real video — all mock.
-- Trainer authoring side for `persistentLab` (already covered by lab allocation editor).
-- `/student/courses/:id/learn/:lessonId` (My Courses → CoursePlayer) keeps its current behaviour; no duplication.
+After build, I'll also update `mem://index.md` with references to the three new modules.
