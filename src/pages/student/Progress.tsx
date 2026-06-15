@@ -135,29 +135,6 @@ export default function Progress_Page() {
           </CardContent></Card>
         </Section>
 
-        <Section title="Active learning paths" icon={Route} onAll={() => navigate("/student/paths")}>
-          <Card><CardContent className="p-2">
-            {activePaths.map((p, i) => {
-              const pp = pathProgress(p);
-              return (
-                <button
-                  key={p.slug}
-                  onClick={() => navigate(`/student/paths/${p.slug}`)}
-                  className={`w-full text-left p-3 hover:bg-muted/40 transition-colors ${i !== activePaths.length - 1 ? "border-b border-border/50" : ""}`}
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <p className="text-sm font-medium">{p.name}</p>
-                    <span className="text-[11px] text-muted-foreground tabular-nums">{pp.done}/{pp.total}</span>
-                  </div>
-                  <Progress value={pp.pct} className="h-1" />
-                </button>
-              );
-            })}
-            {activePaths.length === 0 && (
-              <div className="p-6 text-center text-sm text-muted-foreground">No active paths.</div>
-            )}
-          </CardContent></Card>
-        </Section>
       </div>
 
       {/* Skill mastery */}
