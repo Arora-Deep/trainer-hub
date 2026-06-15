@@ -12,7 +12,7 @@ export interface AuditEntry {
 
 interface AuditState {
   entries: AuditEntry[];
-  log: (e: Omit<AuditEntry, "id" | "timestamp"> & { actor?: string }) => void;
+  log: (e: Omit<AuditEntry, "id" | "timestamp" | "actor"> & { actor?: string }) => void;
 }
 
 export const useAuditStore = create<AuditState>((set) => ({
