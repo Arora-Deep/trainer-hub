@@ -199,6 +199,10 @@ export default function AdminCreateBatch() {
         accessModel: deliveryMode === "self-paced" ? accessModel : undefined,
         totalAccessHours: deliveryMode === "self-paced" && accessModel === "full-course" ? totalAccessHours : undefined,
         enrollmentMode: deliveryMode === "self-paced" ? "floating" : "fixed",
+        targetNode: targetNode === "auto" ? undefined : targetNode,
+        usePreProvisionedVM: vmSource === "pre-provisioned",
+        preProvisionedPoolId: vmSource === "pre-provisioned" ? preProvisionedPoolId : undefined,
+        trainerVMAccessDate: trainerAccessDate || undefined,
       },
       vmConfig
     );
