@@ -44,8 +44,6 @@ import Trainers from "./pages/Trainers";
 import TrainerDetail from "./pages/TrainerDetail";
 import Meetings from "./pages/Meetings";
 import MeetingDetail from "./pages/MeetingDetail";
-import AssessmentLibrary from "./pages/AssessmentLibrary";
-import Announcements from "./pages/Announcements";
 
 import NotFound from "./pages/NotFound";
 
@@ -177,8 +175,6 @@ const App = () => (
             <Route path="/trainers/:id" element={<TrainerDetail />} />
             <Route path="/meetings" element={<Meetings />} />
             <Route path="/meetings/:id" element={<MeetingDetail />} />
-            <Route path="/assessments" element={<AssessmentLibrary />} />
-            <Route path="/announcements" element={<Announcements />} />
 
             {/* Admin routes */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />

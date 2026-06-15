@@ -15,7 +15,7 @@ export interface Assignment {
   submissionType: "file" | "link" | "text";
   allowedFileTypes: string[];
   maxFileSize: number; // in MB
-  status: "draft" | "active" | "completed" | "in_review" | "published" | "archived";
+  status: "draft" | "active" | "completed";
   submissions: number;
   pending: number;
   createdAt: Date;

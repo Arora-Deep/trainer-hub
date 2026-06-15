@@ -3,7 +3,7 @@ import { useCustomerStore } from "./customerStore";
 
 export interface Notification {
   id: string;
-  type: "batch_request" | "ticket" | "alert" | "provision_failure" | "billing" | "system" | "meeting" | "announcement" | "assessment";
+  type: "batch_request" | "ticket" | "alert" | "provision_failure" | "billing" | "system";
   title: string;
   description: string;
   timestamp: string;

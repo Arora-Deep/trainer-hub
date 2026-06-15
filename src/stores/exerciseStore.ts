@@ -26,7 +26,7 @@ export interface Exercise {
   wallTimeLimit?: number; // Wall clock time limit
   maxProcesses?: number; // Max number of processes
   enableNetworkAccess?: boolean; // Allow network access
-  status: "draft" | "in_review" | "published" | "archived";
+  status: "draft" | "published";
   submissions: number;
   successRate: number;
   createdAt: Date;
