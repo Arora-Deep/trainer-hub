@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   Monitor, Clock, ExternalLink, Power, RotateCcw, Terminal, Download,
   Activity, Copy, Check, Timer, Search, Cpu, MemoryStick, HardDrive,
-  PlayCircle, AlertTriangle, Snowflake, Camera,
+  PlayCircle, AlertTriangle, Snowflake, Camera, Radio, Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -149,30 +149,27 @@ export default function StudentLabs() {
 
                   {lab.status === "running" && (
                     <>
-                      <div className="grid grid-cols-3 gap-3 p-3 rounded-lg bg-muted/40 text-xs">
-                        <div>
-                          <div className="flex items-center gap-1 text-muted-foreground mb-1"><Cpu className="h-3 w-3" />CPU</div>
-                          <Progress value={lab.cpu} className="h-1.5" /><p className="mt-1 font-medium">{lab.cpu}%</p>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-1 text-muted-foreground mb-1"><MemoryStick className="h-3 w-3" />RAM</div>
-                          <Progress value={lab.ram} className="h-1.5" /><p className="mt-1 font-medium">{lab.ram}%</p>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-1 text-muted-foreground mb-1"><HardDrive className="h-3 w-3" />Disk</div>
-                          <Progress value={lab.storage} className="h-1.5" /><p className="mt-1 font-medium">{lab.storage}%</p>
-                        </div>
-                      </div>
-
-                      {isSelfPaced && lab.totalAccessHours && (
-                        <div className="mt-3 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                      {isSelfPaced && lab.totalAccessHours ? (
+                        <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
                           <div className="flex items-center justify-between text-[11px] mb-1">
-                            <span className="text-muted-foreground flex items-center gap-1"><Timer className="h-3 w-3" /> Lab access</span>
-                            <span className="font-medium">{remainingHrs}h / {lab.totalAccessHours}h left</span>
+                            <span className="text-muted-foreground flex items-center gap-1"><Timer className="h-3 w-3" /> Lab time</span>
+                            <span className="font-medium">
+                              <span className="text-foreground">{lab.usedAccessHours ?? 0}h used</span>
+                              <span className="mx-1 text-muted-foreground">·</span>
+                              <span className="text-foreground">{remainingHrs}h left</span>
+                              <span className="text-muted-foreground"> / {lab.totalAccessHours}h</span>
+                            </span>
                           </div>
                           <Progress value={((lab.usedAccessHours ?? 0) / lab.totalAccessHours) * 100} className="h-1.5" />
                         </div>
-                      )}
+                      ) : lab.deliveryMode === "live" ? (
+                        <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/20 flex items-center justify-between text-xs">
+                          <span className="flex items-center gap-1.5 text-muted-foreground">
+                            <Radio className="h-3 w-3 text-destructive" /> Live training VM
+                          </span>
+                          <span className="font-medium">Available till {lab.availableUntil ?? "batch end"}</span>
+                        </div>
+                      ) : null}
 
                       <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{lab.timeRemaining}</span>
@@ -186,7 +183,7 @@ export default function StudentLabs() {
                         </Button>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button size="sm" variant="outline" className="gap-1.5"><Terminal className="h-3.5 w-3.5" /> Connect</Button>
+                            <Button size="sm" variant="outline" className="gap-1.5"><Info className="h-3.5 w-3.5" /> Details</Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-80 p-4 space-y-3">
                             <h4 className="text-xs font-semibold">Connection details</h4>
