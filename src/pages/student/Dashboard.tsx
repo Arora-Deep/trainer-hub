@@ -10,6 +10,7 @@ import {
 import { studentCourses, studentLabs } from "@/data/studentMockData";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { LiveNowBanner } from "@/components/meetings/LiveNowBanner";
+import { NextActionCard } from "@/components/student/NextActionCard";
 
 export default function StudentDashboard() {
   const nav = useNavigate();
@@ -42,6 +43,10 @@ export default function StudentDashboard() {
       />
 
       <LiveNowBanner />
+
+      <NextActionCard />
+
+
 
 
       {/* Continue learning */}
