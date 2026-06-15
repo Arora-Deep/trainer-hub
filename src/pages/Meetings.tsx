@@ -17,6 +17,7 @@ import { useTrainerStore } from "@/stores/trainerStore";
 import { BBB_INTEGRATION_STATUS } from "@/lib/bbbConfig";
 import { MeetingCard } from "@/components/meetings/MeetingCard";
 import { ScheduleMeetingDrawer } from "@/components/meetings/ScheduleMeetingDrawer";
+import { OfficeHoursSlotsTab } from "@/components/meetings/OfficeHoursSlotsTab";
 import { Link } from "react-router-dom";
 
 export default function Meetings() {
