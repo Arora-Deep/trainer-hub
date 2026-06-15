@@ -71,19 +71,17 @@ export function HeroDashboard() {
           {/* CTAs */}
           <div className="mt-6 flex flex-wrap items-center gap-2">
             <button
-              onClick={() => navigate(activePath ? `/student/paths/${activePath.slug}` : "/student/paths")}
+              onClick={() => navigate("/student/courses")}
               className="sp-pill inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-colors"
             >
-              <Play className="h-4 w-4 fill-current" /> Continue path
+              <Play className="h-4 w-4 fill-current" /> Continue learning
             </button>
-            {activeChallenge && (
-              <button
-                onClick={() => navigate("/student/challenges")}
-                className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors"
-              >
-                Resume challenge <ArrowRight className="h-4 w-4" />
-              </button>
-            )}
+            <button
+              onClick={() => navigate("/student/progress")}
+              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors"
+            >
+              View progress <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
