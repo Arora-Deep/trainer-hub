@@ -312,36 +312,89 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
               </div>
             )}
 
-            {form.type === "reasoning" && (
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Reasoning type</Label>
-                  <Select value={form.reasoningType ?? "explain-choice"} onValueChange={(v) => setField("reasoningType", v as any)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="explain-choice">Explain a choice</SelectItem>
-                      <SelectItem value="compare-options">Compare options</SelectItem>
-                      <SelectItem value="improve-solution">Improve a solution</SelectItem>
-                      <SelectItem value="root-cause">Root cause analysis</SelectItem>
-                      <SelectItem value="scenario-response">Scenario response</SelectItem>
-                    </SelectContent>
-                  </Select>
+            {form.type === "reasoning" && (() => {
+              // Multi-question editor. Migrate legacy single-prompt shape on first edit.
+              const questions = form.reasoningQuestions ?? (
+                form.reasoningPrompt
+                  ? [{
+                      id: "rq-1",
+                      prompt: form.reasoningPrompt,
+                      modelAnswer: form.reasoningModelAnswer,
+                      rubric: form.reasoningRubric,
+                      type: form.reasoningType ?? "explain-choice",
+                    }]
+                  : []
+              );
+              const update = (next: typeof questions) => setField("reasoningQuestions", next as any);
+              const patch = (idx: number, p: Partial<typeof questions[number]>) =>
+                update(questions.map((q, i) => (i === idx ? { ...q, ...p } : q)));
+              const remove = (idx: number) => update(questions.filter((_, i) => i !== idx));
+              const add = () => update([
+                ...questions,
+                { id: `rq-${Date.now()}`, prompt: "", modelAnswer: "", rubric: "", type: "explain-choice" },
+              ]);
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-xs">Reasoning questions</Label>
+                      <p className="text-[11px] text-muted-foreground">Add one or more open-ended questions. Each is scored independently and combined into a final lesson score.</p>
+                    </div>
+                    <Button type="button" size="sm" variant="outline" onClick={add} className="gap-1.5">
+                      <Plus className="h-3.5 w-3.5" /> Add question
+                    </Button>
+                  </div>
+
+                  {questions.length === 0 && (
+                    <div className="text-center text-xs text-muted-foreground border border-dashed rounded-lg p-6">
+                      No questions yet. Click "Add question" to create the first one.
+                    </div>
+                  )}
+
+                  {questions.map((q, idx) => (
+                    <Card key={q.id} className="border-border/70">
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline" className="text-[10px]">Question {idx + 1}</Badge>
+                          {questions.length > 1 && (
+                            <Button type="button" variant="ghost" size="sm" className="h-7 text-destructive hover:text-destructive gap-1" onClick={() => remove(idx)}>
+                              <Trash2 className="h-3.5 w-3.5" /> Remove
+                            </Button>
+                          )}
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Reasoning type</Label>
+                          <Select value={q.type ?? "explain-choice"} onValueChange={(v) => patch(idx, { type: v as any })}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="explain-choice">Explain a choice</SelectItem>
+                              <SelectItem value="compare-options">Compare options</SelectItem>
+                              <SelectItem value="improve-solution">Improve a solution</SelectItem>
+                              <SelectItem value="root-cause">Root cause analysis</SelectItem>
+                              <SelectItem value="scenario-response">Scenario response</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Question / prompt</Label>
+                          <Textarea rows={3} value={q.prompt ?? ""} onChange={(e) => patch(idx, { prompt: e.target.value })} placeholder="Ask a question that requires reasoning, not recall…" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Model answer (used by AI as the reference)</Label>
+                          <Textarea rows={3} value={q.modelAnswer ?? ""} onChange={(e) => patch(idx, { modelAnswer: e.target.value })} placeholder="A strong, complete answer the AI will compare student responses against." />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Evaluation rubric (one concept per line)</Label>
+                          <Textarea rows={3} value={(q.rubric as string) ?? ""} onChange={(e) => patch(idx, { rubric: e.target.value })} placeholder={"e.g.\nunknown iteration count\nsentinel / exit condition"} />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+
+                  <p className="text-[11px] text-muted-foreground">Students are scored on Concept Accuracy, Reasoning Quality, Alternative Analysis, Technical Depth, and Clarity (0–10 each) per question.</p>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Question / prompt</Label>
-                  <Textarea rows={3} value={form.reasoningPrompt ?? ""} onChange={(e) => setField("reasoningPrompt", e.target.value)} placeholder="Ask a question that requires reasoning, not recall…" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Model answer (used by AI as the reference)</Label>
-                  <Textarea rows={4} value={form.reasoningModelAnswer ?? ""} onChange={(e) => setField("reasoningModelAnswer", e.target.value)} placeholder="A strong, complete answer the AI will compare student responses against." />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Evaluation rubric (one concept per line)</Label>
-                  <Textarea rows={4} value={form.reasoningRubric ?? ""} onChange={(e) => setField("reasoningRubric", e.target.value)} placeholder={"e.g.\nunknown iteration count\nsentinel / exit condition\ncompare for vs while\ninfinite loop risk"} />
-                  <p className="text-[11px] text-muted-foreground">Each line is a key concept the AI looks for. Students are scored on Concept Accuracy, Reasoning Quality, Alternative Analysis, Technical Depth, and Clarity (0–10 each).</p>
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
             {form.type === "code-exercise" && (
               <div className="space-y-3">
