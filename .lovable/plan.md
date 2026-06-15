@@ -1,77 +1,64 @@
-# Plan — Trainer Portal Gap Fixes (Phase 1)
+# Slim down the Student Portal
 
-Same pattern as the rest of the portal: Zustand stores + mock seed data + new pages/components wired into existing routes. No backend. Student portal fixes follow in Phase 2 after this lands.
+Goal: cut the gamification overload so corporate students who only show up once or twice see a focused shell. Main nav stays roughly as-is per your call; the Progression group gets the deep cut, plus the two folds you asked for.
 
-## 1. Unified Assessment Library
-Goal: one place to browse/search Quizzes, Assignments, Exercises and attach them to lessons/batches.
-- New page `src/pages/AssessmentLibrary.tsx` at `/assessments` — tabs (All / Quizzes / Assignments / Exercises), search, course filter, status (draft/published) filter.
-- Reuses existing `quizStore`, `assignmentStore`, `exerciseStore` via a thin `useAssessments()` selector hook (`src/hooks/useAssessments.ts`) that normalizes them into one shape `{id, type, title, course, status, attempts, avgScore}`.
-- Row actions: Edit (routes to existing Create* pages in edit mode), Duplicate, Attach to lesson, Attach to batch, Delete.
-- Add lifecycle field `status: "draft" | "in_review" | "published" | "archived"` to all 3 stores (quiz already has draft/published — extend; same for assignment/exercise). Add `publish()` / `archive()` actions.
-- Sidebar: group existing Quizzes/Assignments/Exercises under a single "Assessments" collapsible with "Library" at the top.
+## Final sidebar shape
 
-## 2. Batch → Content Progress Rollup
-Goal: trainer sees "what's due this week" and per-student progress per batch.
-- New `src/stores/progressStore.ts` — mock seed: per-batch × per-student × per-item (lesson/quiz/assignment/exercise/lab) status (`not_started | in_progress | submitted | graded`), score, submittedAt.
-- New tab in `BatchDetails.tsx`: **Progress** — two views:
-  - *This week*: list of items due in next 7 days, completion % bar, count of submissions to grade.
-  - *Students*: table of participants × completion %, last activity, at-risk flag (computed: <50% & past midpoint).
-- New component `src/components/batches/ProgressRollupTab.tsx` + sub `StudentProgressDrawer.tsx` (right drawer with item-by-item breakdown — per design memory).
-- Bulk actions on Students table: Send reminder (toast), Mark excused.
+**Main** (5 items, unchanged structure — two folded in)
+- My Dashboard *(now hosts the Announcements feed inline)*
+- Learning Centre
+- Active Labs
+- My Courses
+- Schedule *(now has an "Office Hours" tab for booking)*
 
-## 3. Meetings Module Polish
-- **Recurring edit UX**: in `ScheduleMeetingDrawer`, when editing a recurring meeting show "Edit this / Edit this and following / Edit series" radio (mock — applies to all for now but UI exists).
-- **Recording attach**: add an "Upload recording" button on `MeetingDetail` past meetings → opens dialog with URL/file input → appends to `meeting.recordings[]`.
-- **Co-host view**: add `coHostIds` already in model; surface a "Co-hosting" filter on `/meetings` and a badge on cards.
-- **Notifications**: on meeting create/update/cancel, push to existing `notificationStore` (kind: "meeting"). Same for "starts in 15 min" simulated via store action `simulateReminders()` called on app mount.
-- **Office hours booking**: new `src/pages/student/OfficeHoursBooking.tsx` (Phase 2 wiring) — slot table generated from `meetingStore.getOfficeHoursSlots(trainerId)`. Trainer-side: a `Slots` tab inside Meetings to define recurring availability windows (mock).
+**Achievements** (was "Progression" — 2 items)
+- My Progress
+- Certificates
 
-## 4. Labs Consolidation
-- Keep existing pages, just clarify in sidebar: group "Lab Templates" + "Lab Instances" + "Requests" under one "Labs" collapsible.
-- Add a small banner on `Labs.tsx` index explaining Template vs Instance with links.
-- No store changes.
+**Bottom:** Support
 
-## 5. Reporting & Export
-- New `src/lib/exportCsv.ts` helper.
-- Add "Export CSV" buttons on: `BatchReportsTab`, `AttendanceTable` (already mentioned), Assessment Library results, Progress Rollup Students table.
-- New `src/components/reports/StudentDeepDive.tsx` drawer — opens from any student row across the trainer portal; tabs: Overview / Assessments / Attendance / Engagement / Labs. Pulls from `progressStore` + `meetingStore`.
+Goes from **13 nav items → 8**. The Progression group shrinks from 6 → 2.
 
-## 6. Announcements & Messaging (lightweight)
-- New `src/stores/announcementStore.ts` — `{id, batchId|null (global), title, body, postedBy, postedAt, pinned}`.
-- New tab on `BatchDetails.tsx`: **Announcements** — compose form + list. Toast + push to `notificationStore` on post.
-- New trainer page `src/pages/Announcements.tsx` at `/announcements` for cross-batch view.
-- Student-side rendering wired in Phase 2.
+## What gets cut from the sidebar
 
-## 7. Sidebar Grouping (minor, no removals)
-`AppSidebar.tsx` trainer section reorganized into collapsibles:
-- **Teach**: Programs, Courses, Paths, Certifications
-- **Assess**: Assessment Library, Quizzes, Assignments, Exercises, Exams
-- **Run**: Batches, Schedule, Meetings, Live Training
-- **Labs**: Labs, Templates, Requests
-- **People**: Trainers, Students
-- **Insight**: Engagement, Reports, Announcements
-Order preserved within groups; nothing removed.
+| Item | Reason |
+|---|---|
+| Portfolio | Public showcase only matters for long-form bootcamp grads, not one-off corporate trainees |
+| Leaderboard | Cross-cohort ranking is noise when students visit twice |
+| Challenges | Extracurricular coding stuff outside their actual course |
+| Learning Paths | Corporate enrollments are course- or batch-scoped; paths are overkill |
+| Announcements (page) | Feed already lives on Dashboard via `AnnouncementsFeed` |
+| Office Hours (page) | Booking becomes a tab inside Schedule |
 
-## Out of scope for this phase
-Student "Next action" card, student calendar export, autosave on attempts, course-player bookmarks/notes, mobile audits, role-gating audit — all moved to **Phase 2 (Student Portal)** which I'll plan after Phase 1 ships.
+## What gets folded (kept, just moved)
 
-## Files
+- **Announcements → Dashboard.** Feed already renders there. Drop the `/student/announcements` sidebar link; the "All announcements" affordance becomes a "View all" expand on the Dashboard card.
+- **Office Hours → Schedule.** Schedule page gets two tabs: **Calendar** (existing view) and **Office Hours** (the booking UI from `OfficeHours.tsx`).
 
-**New**
-- `src/pages/AssessmentLibrary.tsx`, `src/pages/Announcements.tsx`
-- `src/hooks/useAssessments.ts`
-- `src/stores/progressStore.ts`, `src/stores/announcementStore.ts`
-- `src/components/batches/ProgressRollupTab.tsx`, `src/components/batches/StudentProgressDrawer.tsx`, `src/components/batches/AnnouncementsTab.tsx`
-- `src/components/reports/StudentDeepDive.tsx`
-- `src/lib/exportCsv.ts`
+## Technical changes
 
-**Modified**
-- `src/stores/quizStore.ts`, `assignmentStore.ts`, `exerciseStore.ts` (lifecycle fields + publish/archive)
-- `src/stores/meetingStore.ts` (office-hour slots, reminder simulation, notification hooks)
-- `src/stores/notificationStore.ts` (meeting/announcement kinds)
-- `src/pages/BatchDetails.tsx` (Progress + Announcements tabs)
-- `src/pages/Meetings.tsx`, `src/pages/MeetingDetail.tsx` (slots, recording upload, recurring edit)
-- `src/components/layout/AppSidebar.tsx` (grouping)
-- `src/App.tsx` (new routes)
+**`src/components/layout/AppSidebar.tsx`** — rewrite `studentNav`:
+- Main group: remove `Office Hours` and `Announcements` entries.
+- Rename "Progression" → "Achievements"; keep only `My Progress` and `Certificates`.
 
-Confirm and I'll switch to build mode and ship Phase 1.
+**`src/App.tsx`** — keep route files on disk (developer reference) but you can optionally delete these routes since they're no longer reachable from nav:
+- `/student/portfolio`, `/student/paths`, `/student/paths/:slug`, `/student/challenges`, `/student/leaderboard`, `/student/announcements`, `/student/office-hours`, `/student/portfolio/public/:handle`
+- Recommendation: **remove the routes** too, so the dev knows they're out of scope. Files stay in `src/pages/student/` as reference.
+
+**`src/pages/student/Schedule.tsx`** — wrap content in a `Tabs` with two tabs:
+- "Calendar" — current schedule view
+- "Office Hours" — render the existing `OfficeHours.tsx` body (extract into a small component or import the page component directly)
+
+**`src/pages/student/Dashboard.tsx`** — `AnnouncementsFeed` already renders here; add a "View all" toggle on the feed card (local state, no new page). Remove any "→ Announcements page" links.
+
+**`src/components/gamification/LevelChip.tsx`** — the header chip links to `/student/portfolio` and `/student/progress`. Repoint Portfolio → Certificates (or drop it), keep Progress.
+
+**`src/components/gamification/HeroDashboard.tsx`** — currently navigates to `/student/paths` and `/student/challenges`. Repoint "Continue path" → continue the current course (`/student/courses/:id`), drop the challenge CTA. This keeps the streak/hero visual without the dead links.
+
+**Cross-references to clean:** quick grep + repoint anywhere in student pages that links to the removed routes (`paths`, `challenges`, `leaderboard`, `portfolio`, `announcements`, `office-hours`).
+
+## Out of scope
+
+- No store/data deletions — `gamificationStore`, `officeHoursStore`, `announcementStore` stay so the dev can re-enable later or use the data inside Dashboard/Schedule.
+- No visual redesign of Dashboard or Schedule beyond inserting the folded content.
+- No trainer-side changes; trainers still manage office-hours slots and announcements as before.
