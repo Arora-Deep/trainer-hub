@@ -111,6 +111,7 @@ import CertificateVerify from "./pages/student/CertificateVerify";
 import StudentSchedule from "./pages/student/Schedule";
 import SessionDetail from "./pages/student/SessionDetail";
 import StudentLiveClass from "./pages/student/LiveClass";
+import StudentMeetingRoom from "./pages/student/MeetingRoom";
 import StudentSupport from "./pages/student/Support";
 import StudentProgress from "./pages/student/Progress";
 import StudentPaths from "./pages/student/Paths";
@@ -240,6 +241,7 @@ const App = () => (
             <Route path="/student/schedule" element={<StudentSchedule />} />
             <Route path="/student/schedule/:id" element={<SessionDetail />} />
             <Route path="/student/live-class" element={<StudentLiveClass />} />
+            <Route path="/student/meeting/:id" element={<StudentMeetingRoom />} />
             <Route path="/student/support" element={<StudentSupport />} />
             <Route path="/student/progress" element={<StudentProgress />} />
             <Route path="/student/paths" element={<StudentPaths />} />
