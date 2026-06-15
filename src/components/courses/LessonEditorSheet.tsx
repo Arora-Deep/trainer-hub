@@ -42,7 +42,7 @@ const typeMeta: Record<LessonType, { label: string; icon: any; hint: string }> =
 };
 
 // Lesson types hidden from the type picker (kept in the union for back-compat with legacy content).
-const HIDDEN_TYPES = new Set<LessonType>(["live-session", "survey"]);
+const HIDDEN_TYPES = new Set<LessonType>(["live-session", "survey", "mock-exam"]);
 
 interface Props {
   open: boolean;
