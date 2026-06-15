@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TemplatePickerDropdown } from "@/components/labs/TemplatePickerDropdown";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { useLabStore } from "@/stores/labStore";
 import { useQuizStore } from "@/stores/quizStore";
 import { useAssignmentStore } from "@/stores/assignmentStore";

@@ -387,7 +387,12 @@ function LessonEditor({ courseId, chapterId, lesson, onChange }: any) {
 
         {lesson.type === "reading" && (
           <Field label="Reading content">
-            <Textarea rows={6} value={lesson.body ?? ""} onChange={(e) => onChange({ body: e.target.value })} placeholder="Write the lesson body…" />
+            <RichTextEditor
+              value={lesson.body ?? ""}
+              onChange={(html) => onChange({ body: html })}
+              placeholder="Write the lesson body…"
+              minHeight={260}
+            />
           </Field>
         )}
 
