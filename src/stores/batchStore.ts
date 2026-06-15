@@ -138,6 +138,14 @@ export interface Material {
   uploadedAt: string;
 }
 
+export interface FreeTimeBlock {
+  id: string;
+  date: string; // yyyy-MM-dd
+  startTime: string; // HH:mm
+  endTime: string;
+  note?: string;
+}
+
 export interface Batch {
   id: string;
   name: string;
@@ -156,7 +164,7 @@ export interface Batch {
   additionalDetails: string;
   seatCount: number;
   medium: "online" | "offline" | "hybrid";
-  status: "upcoming" | "live" | "completed";
+  status: "upcoming" | "live" | "completed" | "draft" | "pending_approval";
   createdAt: string;
   participants: Participant[];
   assignedLabs: AssignedLab[];
@@ -171,6 +179,14 @@ export interface Batch {
   lessonVMAccess?: LessonVMAccess[];
   enrollmentMode?: EnrollmentMode;
   enrolledCount?: number;
+  // ── Additive admin / trainer extensions ──
+  hideLMS?: boolean;
+  targetNode?: string;
+  usePreProvisionedVM?: boolean;
+  preProvisionedPoolId?: string;
+  trainerVMAccessDate?: string; // ISO date when trainer first gets prep VM access
+  freeTimeBlocks?: FreeTimeBlock[];
+  resourceUpgrades?: { date: string; from: string; to: string; note?: string }[];
 }
 
 interface BatchStore {

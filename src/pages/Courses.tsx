@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -11,9 +13,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, MoreHorizontal, BookOpen, Users, Plus, ArrowUpRight } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Search, MoreHorizontal, BookOpen, Users, Plus, ArrowUpRight, Upload } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCourseStore } from "@/stores/courseStore";
+import { toast } from "@/hooks/use-toast";
 
 const statusConfig: Record<string, { status: "success" | "warning" | "default"; label: string }> = {
   active: { status: "success", label: "Active" },
@@ -24,6 +30,8 @@ const statusConfig: Record<string, { status: "success" | "warning" | "default"; 
 export default function Courses() {
   const navigate = useNavigate();
   const courses = useCourseStore((state) => state.courses);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
 
   return (
     <div className="space-y-6 animate-in-up">
@@ -32,10 +40,16 @@ export default function Courses() {
         description="Browse and manage all available courses"
         breadcrumbs={[{ label: "Courses" }]}
         actions={
-          <Button onClick={() => navigate("/courses/create")} className="btn-gradient">
-            <Plus className="h-4 w-4" />
-            Create Course
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
+              <Upload className="h-4 w-4" />
+              Import Course
+            </Button>
+            <Button onClick={() => navigate("/courses/create")} className="btn-gradient">
+              <Plus className="h-4 w-4" />
+              Create Course
+            </Button>
+          </div>
         }
       />
 
@@ -117,6 +131,39 @@ export default function Courses() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Course Content</DialogTitle>
+            <DialogDescription>
+              Upload a SCORM, JSON or ZIP package with chapters, lessons and resources.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label className="text-xs">Course Package</Label>
+            <Input
+              type="file"
+              accept=".zip,.json,.scorm,.xml,.csv"
+              onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Supports CloudAdda JSON, SCORM 1.2 / 2004, CommonCartridge ZIP and CSV chapter lists.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImportOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!importFile}
+              onClick={() => {
+                toast({ title: "Course imported", description: `${importFile?.name} queued — content will appear shortly.` });
+                setImportFile(null);
+                setImportOpen(false);
+              }}
+            >Import</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
