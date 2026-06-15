@@ -19,8 +19,15 @@ type Action = {
 };
 
 export function NextActionCard() {
-  const meetings = useMeetingStore((s) =>
-    s.getMeetingsForStudent(CURRENT_STUDENT_ID, CURRENT_STUDENT_BATCH_ID)
+  const allMeetings = useMeetingStore((s) => s.meetings);
+  const meetings = useMemo(
+    () =>
+      allMeetings.filter(
+        (m) =>
+          m.batchId === CURRENT_STUDENT_BATCH_ID ||
+          m.inviteeIds.includes(CURRENT_STUDENT_ID)
+      ),
+    [allMeetings]
   );
 
   const next = useMemo<Action | null>(() => {
