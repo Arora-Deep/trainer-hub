@@ -122,6 +122,8 @@ import StudentChallenges from "./pages/student/Challenges";
 import StudentLeaderboard from "./pages/student/Leaderboard";
 import StudentPortfolio from "./pages/student/Portfolio";
 import PortfolioPublic from "./pages/student/PortfolioPublic";
+import StudentAnnouncements from "./pages/student/Announcements";
+import StudentOfficeHours from "./pages/student/OfficeHours";
 import { Navigate } from "react-router-dom";
 import Engagement from "./pages/Engagement";
 
