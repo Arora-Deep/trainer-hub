@@ -37,6 +37,7 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
   const [addParticipantOpen, setAddParticipantOpen] = useState(false);
   const [newParticipantName, setNewParticipantName] = useState("");
   const [newParticipantEmail, setNewParticipantEmail] = useState("");
+  const [bulkText, setBulkText] = useState("");
   const [search, setSearch] = useState("");
   const [vmFilter, setVmFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>("name");
@@ -296,23 +297,56 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Add Participant</DialogTitle>
-                  <DialogDescription>Add a new participant to this batch.</DialogDescription>
+                  <DialogTitle>Add Participants</DialogTitle>
+                  <DialogDescription>Add one participant or paste many emails at once.</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="participantName">Full Name</Label>
-                    <Input id="participantName" placeholder="e.g., John Doe" value={newParticipantName} onChange={(e) => setNewParticipantName(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="participantEmail">Email Address</Label>
-                    <Input id="participantEmail" type="email" placeholder="john@company.com" value={newParticipantEmail} onChange={(e) => setNewParticipantEmail(e.target.value)} />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setAddParticipantOpen(false)}>Cancel</Button>
-                  <Button onClick={handleAddParticipant}>Add Participant</Button>
-                </DialogFooter>
+                <Tabs defaultValue="single" className="py-2">
+                  <TabsList className="grid grid-cols-2 w-full">
+                    <TabsTrigger value="single">Single</TabsTrigger>
+                    <TabsTrigger value="bulk">Bulk (paste emails)</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="single" className="space-y-4 pt-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="participantName">Full Name</Label>
+                      <Input id="participantName" placeholder="e.g., John Doe" value={newParticipantName} onChange={(e) => setNewParticipantName(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="participantEmail">Email Address</Label>
+                      <Input id="participantEmail" type="email" placeholder="john@company.com" value={newParticipantEmail} onChange={(e) => setNewParticipantEmail(e.target.value)} />
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setAddParticipantOpen(false)}>Cancel</Button>
+                      <Button onClick={handleAddParticipant}>Add Participant</Button>
+                    </DialogFooter>
+                  </TabsContent>
+                  <TabsContent value="bulk" className="space-y-3 pt-3">
+                    <Label>Emails (one per line, or comma-separated)</Label>
+                    <textarea
+                      value={bulkText}
+                      onChange={(e) => setBulkText(e.target.value)}
+                      placeholder={"jane@acme.com\nsam@acme.com, ravi@acme.com"}
+                      className="w-full h-32 p-2 text-sm rounded-md border bg-background"
+                    />
+                    <p className="text-[11px] text-muted-foreground">Names auto-derive from the email handle. You can rename them later.</p>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setAddParticipantOpen(false)}>Cancel</Button>
+                      <Button
+                        onClick={() => {
+                          const emails = bulkText.split(/[\s,;]+/).map(s => s.trim()).filter(s => s.includes("@"));
+                          if (!emails.length) { toast({ title: "No valid emails", variant: "destructive" }); return; }
+                          const participants = emails.map(email => ({
+                            name: email.split("@")[0].replace(/[._-]+/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+                            email,
+                          }));
+                          importParticipantsCSV(batch.id, participants);
+                          toast({ title: "Added", description: `${emails.length} participants added.` });
+                          setBulkText("");
+                          setAddParticipantOpen(false);
+                        }}
+                      >Add {bulkText.split(/[\s,;]+/).filter(s => s.includes("@")).length || ""} participants</Button>
+                    </DialogFooter>
+                  </TabsContent>
+                </Tabs>
               </DialogContent>
             </Dialog>
           </div>
@@ -557,6 +591,12 @@ export function ParticipantsTab({ batch }: ParticipantsTabProps) {
                             </DropdownMenuItem>
                             <DropdownMenuItem>View Profile</DropdownMenuItem>
                             <DropdownMenuItem><Mail className="mr-2 h-3.5 w-3.5" />Send Message</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              const c = getCredentials(participant);
+                              toast({ title: "Credentials emailed", description: `Login (${c.username}) sent to ${participant.email}.` });
+                            }}>
+                              <KeyRound className="mr-2 h-3.5 w-3.5" />Email VM Login Credentials
+                            </DropdownMenuItem>
                             <DropdownMenuItem>Mark Attendance</DropdownMenuItem>
                             {participant.vmStatus === "running" && (
                               <DropdownMenuItem onClick={() => {
