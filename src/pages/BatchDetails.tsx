@@ -613,6 +613,23 @@ export default function BatchDetails() {
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline" onClick={() => {
+                          vm.participantVMs.forEach(v => startParticipantVM(batch.id, v.id));
+                          toast({ title: "Starting All VMs", description: `${vm.participantVMs.length} VMs powering on` });
+                        }}>
+                          <Power className="mr-1.5 h-3.5 w-3.5" />Start All
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => {
+                          vm.participantVMs.forEach(v => stopParticipantVM(batch.id, v.id));
+                          toast({ title: "Stopping All VMs", description: `${vm.participantVMs.length} VMs powering off` });
+                        }}>
+                          <PowerOff className="mr-1.5 h-3.5 w-3.5" />Stop All
+                        </Button>
+                        {goldenSnapshot && (
+                          <Button size="sm" variant="outline" onClick={() => { resetAllVMs(batch.id, goldenSnapshot.id); toast({ title: "Restoring All VMs", description: "Resetting to golden snapshot..." }); }}>
+                            <RotateCcw className="mr-1.5 h-3.5 w-3.5" />Restore All
+                          </Button>
+                        )}
                         <Button size="sm" variant="outline" onClick={() => { recloneAllVMs(batch.id); toast({ title: "Recloning All VMs", description: "All participant VMs are being recloned from golden snapshot..." }); }}>
                           <Copy className="mr-1.5 h-3.5 w-3.5" />Reclone All
                         </Button>
