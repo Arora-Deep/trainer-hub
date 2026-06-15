@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -387,7 +388,12 @@ function LessonEditor({ courseId, chapterId, lesson, onChange }: any) {
 
         {lesson.type === "reading" && (
           <Field label="Reading content">
-            <Textarea rows={6} value={lesson.body ?? ""} onChange={(e) => onChange({ body: e.target.value })} placeholder="Write the lesson body…" />
+            <RichTextEditor
+              value={lesson.body ?? ""}
+              onChange={(html) => onChange({ body: html })}
+              placeholder="Write the lesson body…"
+              minHeight={260}
+            />
           </Field>
         )}
 

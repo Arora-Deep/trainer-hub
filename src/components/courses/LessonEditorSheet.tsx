@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TemplatePickerDropdown } from "@/components/labs/TemplatePickerDropdown";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { useLabStore } from "@/stores/labStore";
 import { useQuizStore } from "@/stores/quizStore";
 import { useAssignmentStore } from "@/stores/assignmentStore";
@@ -201,14 +202,13 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
             {form.type === "reading" && (
               <div className="space-y-1.5">
                 <Label className="text-xs">Content</Label>
-                <Textarea
-                  rows={10}
+                <RichTextEditor
                   value={form.body ?? ""}
-                  onChange={(e) => setField("body", e.target.value)}
-                  placeholder={"# Heading\n\nWrite lesson content here. Markdown is supported."}
-                  className="font-mono text-sm"
+                  onChange={(html) => setField("body", html)}
+                  placeholder="Start writing your lesson… use the toolbar for headings, lists, fonts, colors and more."
+                  minHeight={360}
                 />
-                <p className="text-[11px] text-muted-foreground">Tip: use markdown for headings, lists, code blocks.</p>
+                <p className="text-[11px] text-muted-foreground">Tip: use the toolbar for fonts, sizes, colors, lists, quotes and code blocks.</p>
               </div>
             )}
 

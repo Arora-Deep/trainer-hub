@@ -194,11 +194,14 @@ function LessonBlock({ lesson, courseId }: { lesson: StudentLesson; courseId: st
     );
   }
   if (lesson.type === "reading") {
-    return (
+    return lesson.body ? (
+      <div
+        className="p-8 prose prose-sm max-w-none prose-headings:font-semibold prose-blockquote:border-l-primary prose-code:bg-muted prose-code:px-1 prose-code:rounded prose-pre:bg-muted"
+        dangerouslySetInnerHTML={{ __html: lesson.body }}
+      />
+    ) : (
       <div className="p-8 prose prose-sm max-w-none">
-        <p className="text-sm text-muted-foreground">
-          {lesson.body ?? "Read through the material below, then mark it complete."}
-        </p>
+        <p className="text-sm text-muted-foreground">Read through the material below, then mark it complete.</p>
       </div>
     );
   }
