@@ -943,7 +943,7 @@ export default function StudentLiveClass() {
       )}
 
       {/* ===== MEETINGS VIEW ===== */}
-      {viewMode === "meetings" && <MeetingsPanel />}
+      {viewMode === "meetings" && <MeetingsPanel batchId={selectedCourse.batchId} batchName={selectedCourse.batch} />}
 
       {/* ===== MATERIALS VIEW ===== */}
       {viewMode === "materials" && <MaterialsPanel />}
@@ -1011,28 +1011,66 @@ function MaterialsPanel() {
 }
 
 /* ===== Meetings Panel (student view inside Learning Centre) ===== */
-function MeetingsPanel() {
+/* Shows only today's meeting(s) for the current batch with a Join button. */
+function MeetingsPanel({ batchId, batchName }: { batchId?: string; batchName?: string }) {
   const meetings = useMeetingStore((s) => s.meetings);
-  const live = meetings.filter((m) => m.status === "live");
-  const upcoming = meetings.filter((m) => m.status === "scheduled").sort((a, b) => +new Date(a.scheduledAt) - +new Date(b.scheduledAt));
-  const past = meetings.filter((m) => m.status === "ended").sort((a, b) => +new Date(b.scheduledAt) - +new Date(a.scheduledAt));
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const todays = meetings.filter((m) => {
+    if (m.status === "ended") return false;
+    const matchBatch = batchId ? m.batchId === batchId : true;
+    if (!matchBatch) return false;
+    const t = new Date(m.scheduledAt);
+    return t >= today && t < tomorrow;
+  }).sort((a, b) => +new Date(a.scheduledAt) - +new Date(b.scheduledAt));
+
+  if (todays.length === 0) {
+    return (
+      <Card className="p-10 text-center">
+        <Video className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+        <p className="text-sm font-medium">No meeting scheduled for today</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          {batchName ? `Nothing on the agenda for ${batchName} today.` : "Check back later."}
+        </p>
+      </Card>
+    );
+  }
+
+  const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 
   return (
-    <div className="space-y-5">
-      {live.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Radio className="h-3.5 w-3.5 text-destructive animate-pulse" /> Live now</h3>
-          <MeetingsListPanel meetings={live} basePath="/student/meetings" viewer />
-        </div>
-      )}
-      <div>
-        <h3 className="text-sm font-semibold mb-2">Upcoming</h3>
-        <MeetingsListPanel meetings={upcoming.slice(0, 6)} basePath="/student/meetings" viewer emptyText="No upcoming meetings." />
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Radio className="h-3.5 w-3.5 text-destructive animate-pulse" />
+        <h3 className="text-sm font-semibold">Today's session{todays.length > 1 ? "s" : ""}</h3>
+        <Badge variant="secondary" className="text-[10px]">{batchName ?? "Batch"}</Badge>
       </div>
-      <div>
-        <h3 className="text-sm font-semibold mb-2">Recent recordings</h3>
-        <MeetingsListPanel meetings={past.slice(0, 6)} basePath="/student/meetings" viewer emptyText="No recordings yet." />
-      </div>
+      {todays.map((m) => {
+        const isLive = m.status === "live";
+        return (
+          <Card key={m.id} className="p-4 flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-semibold truncate">{m.title}</div>
+              <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2 flex-wrap">
+                <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {fmtTime(m.scheduledAt)} · {m.durationMins}m</span>
+                <span>· {m.trainerName ?? "Trainer"}</span>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              disabled={!isLive}
+              onClick={() => {
+                toast("BBB integration pending — opening room…");
+                window.open(m.joinUrl, "_blank");
+              }}
+            >
+              <Play className="h-3.5 w-3.5 mr-1.5" />
+              {isLive ? "Join Now" : `Starts ${fmtTime(m.scheduledAt)}`}
+            </Button>
+          </Card>
+        );
+      })}
     </div>
   );
 }
