@@ -48,7 +48,7 @@ import { MaterialsTab } from "@/components/batches/MaterialsTab";
 import { MeetingsTab } from "@/components/batches/MeetingsTab";
 import { BatchReportsTab } from "@/components/batches/BatchReportsTab";
 import { RequestTemplateSheet } from "@/components/sandbox/RequestTemplateSheet";
-import { SelfPacedBatchView } from "@/components/batches/SelfPacedBatchView";
+
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
