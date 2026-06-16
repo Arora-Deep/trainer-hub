@@ -277,8 +277,7 @@ export default function CreateSelfPacedBatch() {
               <Row k="Window" v={`${enrollmentStart ? format(enrollmentStart, "MMM d, yyyy") : "—"} → ${enrollmentEnd ? format(enrollmentEnd, "MMM d, yyyy") : "—"}`} />
             )}
             <Row k="Max concurrent" v={String(maxConcurrentLearners)} />
-            <Row k="Access model (course)" v={course?.settings?.accessModel || "full-course"} />
-            <Row k="VM hours / learner (course)" v={`${course?.settings?.totalAccessHours ?? "—"} h`} />
+            <Row k="Validity after launch" v={`${course?.settings?.validityAfterLaunchDays ?? "—"} d`} />
             <Row k="Configured labs (course)" v={`${courseLabReadiness.ready} of ${courseLabReadiness.total}`} />
           </CardContent>
         </Card>
