@@ -417,6 +417,8 @@ export default function Batches() {
           </div>
         </div>
       )}
+
+      <BatchTypeChooser open={chooserOpen} onOpenChange={setChooserOpen} />
     </div>
   );
 }
