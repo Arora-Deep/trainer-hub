@@ -1440,6 +1440,13 @@ export default function BatchDetails() {
           )}
         </SheetContent>
       </Sheet>
+
+      <RequestTemplateSheet
+        open={requestTplOpen}
+        onOpenChange={setRequestTplOpen}
+        defaultCourse={batch.courseName}
+        contextLabel={batch.name}
+      />
     </div>
   );
 }
