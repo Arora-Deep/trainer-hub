@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Monitor, Sparkles, CheckCircle2, AlertCircle, Infinity as InfinityIcon, Clock } from "lucide-react";
+import { Plus, Monitor, Sparkles, CheckCircle2, AlertCircle, Infinity as InfinityIcon, Clock, MapPin, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCourseStore, type Course, type Lesson, type LabAccessType, type OnExpireBehavior } from "@/stores/courseStore";
 import { useLabStore } from "@/stores/labStore";
