@@ -159,12 +159,9 @@ const studentNav: NavConfig = {
       
       
     ]},
-    { label: "Progression", icon: Zap, items: [
+    { label: "Progress", icon: Zap, items: [
       { title: "Portfolio", icon: UserCog, path: "/student/portfolio" },
       { title: "My Progress", icon: Activity, path: "/student/progress" },
-      { title: "Learning Paths", icon: Workflow, path: "/student/paths" },
-      { title: "Challenges", icon: Flag, path: "/student/challenges" },
-      { title: "Leaderboard", icon: Trophy, path: "/student/leaderboard" },
       { title: "Certificates", icon: Award, path: "/student/certificates" },
     ]},
   ],
