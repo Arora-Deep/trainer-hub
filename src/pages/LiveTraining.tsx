@@ -939,13 +939,54 @@ function RowAction({ children, label, onClick }: { children: React.ReactNode; la
   );
 }
 
+function LessonContent({ lesson }: { lesson?: { id: string; title: string; module: string; duration?: string } }) {
+  if (!lesson) {
+    return <div className="p-8 text-center text-sm text-muted-foreground">No lesson selected.</div>;
+  }
+  return (
+    <div className="p-6 space-y-6">
+      <div>
+        <p className="text-[10px] uppercase tracking-wider text-primary font-medium">{lesson.module}</p>
+        <h3 className="text-xl font-semibold tracking-tight mt-1">{lesson.title}</h3>
+        {lesson.duration && <p className="text-xs text-muted-foreground mt-1">Duration · {lesson.duration}</p>}
+      </div>
+      <div className="aspect-video rounded-xl bg-zinc-900 flex items-center justify-center text-zinc-400 text-sm border border-border">
+        <Play className="h-6 w-6 mr-2" /> Lesson video
+      </div>
+      <div>
+        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Learning objectives</h4>
+        <ul className="space-y-1.5 text-sm">
+          <li className="flex gap-2"><Circle className="h-3 w-3 mt-1 shrink-0 text-muted-foreground" />Understand the core concept of {lesson.title}.</li>
+          <li className="flex gap-2"><Circle className="h-3 w-3 mt-1 shrink-0 text-muted-foreground" />Apply it hands-on in the lab environment.</li>
+          <li className="flex gap-2"><Circle className="h-3 w-3 mt-1 shrink-0 text-muted-foreground" />Validate progress with the embedded assessment.</li>
+        </ul>
+      </div>
+      <div>
+        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Overview</h4>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          This lesson walks through <span className="text-foreground font-medium">{lesson.title}</span> with worked examples and a guided exercise. The trainer demonstrates the workflow live while students follow along on their own VMs.
+        </p>
+      </div>
+      <div>
+        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Key points</h4>
+        <ol className="space-y-1.5 text-sm list-decimal list-inside text-muted-foreground">
+          <li>Introduce the topic and recap prerequisites.</li>
+          <li>Walk through the live demo step-by-step.</li>
+          <li>Run the guided exercise on the lab VM.</li>
+          <li>Wrap up with Q&amp;A and a short knowledge check.</li>
+        </ol>
+      </div>
+    </div>
+  );
+}
+
 function ResourcesView({
-  lessons, activeLessonIdx, setActiveLessonIdx, courseName,
+  lessons, activeLessonIdx, setActiveLessonIdx, courseName, onViewLessonContent,
 }: {
   lessons: { id: string; title: string; module: string; duration?: string }[];
   activeLessonIdx: number; setActiveLessonIdx: (i: number) => void; courseName: string;
+  onViewLessonContent: () => void;
 }) {
-  // group by module
   const grouped = useMemo(() => {
     const map = new Map<string, typeof lessons>();
     lessons.forEach(l => {
@@ -955,13 +996,6 @@ function ResourcesView({
     return Array.from(map.entries());
   }, [lessons]);
 
-  const materials = [
-    { i: <FileText className="h-4 w-4" />, t: "Lab guide.pdf", s: "1.2 MB" },
-    { i: <FileText className="h-4 w-4" />, t: "Slides — VPC peering.pdf", s: "3.4 MB" },
-    { i: <Link2 className="h-4 w-4" />, t: "github.com/cloudadda/aws-labs", s: "Repository" },
-    { i: <FileText className="h-4 w-4" />, t: "Architecture diagram.png", s: "820 KB" },
-  ];
-
   return (
     <>
       <div className="flex items-end justify-between mb-6">
@@ -969,121 +1003,92 @@ function ResourcesView({
           <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Course content</p>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight">{courseName}</h2>
         </div>
-        <Button variant="outline" size="sm">Push current lesson</Button>
+        <Button size="sm" onClick={onViewLessonContent}>
+          <BookOpen className="h-3.5 w-3.5 mr-1.5" /> View lesson content
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-        {/* Curriculum + active lesson preview */}
-        <div className="space-y-5">
-          {lessons[activeLessonIdx] && (
-            <div className="rounded-2xl border border-border bg-card overflow-hidden">
-              <div className="px-5 py-3 border-b border-border flex items-center justify-between">
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-wider text-primary font-medium">Now teaching</p>
-                  <h3 className="text-base font-semibold tracking-tight truncate mt-0.5">{lessons[activeLessonIdx].title}</h3>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{lessons[activeLessonIdx].module}{lessons[activeLessonIdx].duration ? ` · ${lessons[activeLessonIdx].duration}` : ""}</p>
-                </div>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 ring-1 ring-primary/20 shrink-0">
-                  <Play className="h-3 w-3 text-primary" />
-                  <span className="text-[10px] font-semibold tracking-wider text-primary">LIVE</span>
-                </span>
+      <div className="space-y-5 max-w-4xl">
+        {lessons[activeLessonIdx] && (
+          <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-wider text-primary font-medium">Now teaching</p>
+                <h3 className="text-base font-semibold tracking-tight truncate mt-0.5">{lessons[activeLessonIdx].title}</h3>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{lessons[activeLessonIdx].module}{lessons[activeLessonIdx].duration ? ` · ${lessons[activeLessonIdx].duration}` : ""}</p>
               </div>
-              <div className="px-5 py-5 space-y-4">
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  This lesson covers the key concepts and hands-on exercises for <span className="text-foreground font-medium">{lessons[activeLessonIdx].title}</span>. Students follow along on their own lab VMs while you walk through the material.
-                </p>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="rounded-xl border border-border p-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Lesson</p>
-                    <p className="text-sm font-semibold mt-1">{activeLessonIdx + 1} / {lessons.length}</p>
-                  </div>
-                  <div className="rounded-xl border border-border p-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Completed</p>
-                    <p className="text-sm font-semibold mt-1 text-success">{activeLessonIdx}</p>
-                  </div>
-                  <div className="rounded-xl border border-border p-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Remaining</p>
-                    <p className="text-sm font-semibold mt-1">{Math.max(0, lessons.length - activeLessonIdx - 1)}</p>
-                  </div>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 ring-1 ring-primary/20 shrink-0">
+                <Play className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-semibold tracking-wider text-primary">LIVE</span>
+              </span>
+            </div>
+            <div className="px-5 py-5 space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-xl border border-border p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Lesson</p>
+                  <p className="text-sm font-semibold mt-1">{activeLessonIdx + 1} / {lessons.length}</p>
                 </div>
-                <div className="flex items-center gap-2 pt-1">
-                  <Button size="sm" variant="outline" onClick={() => setActiveLessonIdx(Math.max(0, activeLessonIdx - 1))} disabled={activeLessonIdx === 0}>
-                    <ChevronLeft className="h-3.5 w-3.5" /> Previous
-                  </Button>
-                  <Button size="sm" onClick={() => setActiveLessonIdx(Math.min(lessons.length - 1, activeLessonIdx + 1))} disabled={activeLessonIdx >= lessons.length - 1}>
-                    Mark complete & next <ChevronRight className="h-3.5 w-3.5" />
-                  </Button>
+                <div className="rounded-xl border border-border p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Completed</p>
+                  <p className="text-sm font-semibold mt-1 text-success">{activeLessonIdx}</p>
+                </div>
+                <div className="rounded-xl border border-border p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Remaining</p>
+                  <p className="text-sm font-semibold mt-1">{Math.max(0, lessons.length - activeLessonIdx - 1)}</p>
                 </div>
               </div>
-            </div>
-          )}
-
-          {grouped.map(([module, items]) => (
-            <div key={module} className="rounded-2xl border border-border bg-card overflow-hidden">
-              <div className="px-5 py-3 border-b border-border flex items-center justify-between">
-                <h3 className="text-sm font-semibold tracking-tight">{module}</h3>
-                <span className="text-[11px] text-muted-foreground">{items.length} lessons</span>
+              <div className="flex items-center gap-2 pt-1">
+                <Button size="sm" variant="outline" onClick={onViewLessonContent}>
+                  <BookOpen className="h-3.5 w-3.5 mr-1.5" /> View lesson content
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setActiveLessonIdx(Math.max(0, activeLessonIdx - 1))} disabled={activeLessonIdx === 0}>
+                  <ChevronLeft className="h-3.5 w-3.5" /> Previous
+                </Button>
+                <Button size="sm" onClick={() => setActiveLessonIdx(Math.min(lessons.length - 1, activeLessonIdx + 1))} disabled={activeLessonIdx >= lessons.length - 1}>
+                  Mark complete & next <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
               </div>
-              <ul>
-                {items.map((l) => {
-                  const idx = lessons.findIndex(x => x.id === l.id);
-                  const done = idx < activeLessonIdx;
-                  const active = idx === activeLessonIdx;
-                  return (
-                    <li key={l.id}>
-                      <button
-                        onClick={() => setActiveLessonIdx(idx)}
-                        className={cn(
-                          "w-full flex items-center gap-3 px-5 py-3 text-left border-b border-border last:border-0 transition-colors",
-                          active ? "bg-primary/5" : "hover:bg-muted/40"
-                        )}
-                      >
-                        <span>
-                          {done ? <CheckCircle2 className="h-4 w-4 text-success" /> :
-                            active ? <Play className="h-4 w-4 text-primary" /> :
-                            <Circle className="h-4 w-4 text-muted-foreground" />}
-                        </span>
-                        <span className="flex-1 min-w-0">
-                          <span className={cn("block text-sm truncate", active && "font-medium")}>{l.title}</span>
-                        </span>
-                        {l.duration && <span className="text-[11px] text-muted-foreground">{l.duration}</span>}
-                        {active && <span className="text-[10px] font-medium uppercase tracking-wider text-primary">Now</span>}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
             </div>
-          ))}
-        </div>
-
-        {/* Materials sidebar */}
-        <div className="space-y-5">
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <h3 className="text-sm font-semibold tracking-tight mb-3">Session materials</h3>
-            <div className="space-y-1.5">
-              {materials.map((r, i) => (
-                <button key={i} className="w-full flex items-center justify-between rounded-lg px-2.5 py-2 text-left hover:bg-muted transition-colors">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-muted-foreground">{r.i}</span>
-                    <div className="min-w-0">
-                      <p className="text-[13px] truncate">{r.t}</p>
-                      <p className="text-[10px] text-muted-foreground">{r.s}</p>
-                    </div>
-                  </div>
-                  <Download className="h-3.5 w-3.5 text-muted-foreground" />
-                </button>
-              ))}
-            </div>
-            <Button variant="outline" size="sm" className="w-full mt-4">Share new resource</Button>
           </div>
+        )}
 
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <h3 className="text-sm font-semibold tracking-tight mb-1">Push to class</h3>
-            <p className="text-[11px] text-muted-foreground mb-3">Send a link, file, or command directly to every student VM.</p>
-            <Button size="sm" className="w-full">Open broadcast composer</Button>
+        {grouped.map(([module, items]) => (
+          <div key={module} className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+              <h3 className="text-sm font-semibold tracking-tight">{module}</h3>
+              <span className="text-[11px] text-muted-foreground">{items.length} lessons</span>
+            </div>
+            <ul>
+              {items.map((l) => {
+                const idx = lessons.findIndex(x => x.id === l.id);
+                const done = idx < activeLessonIdx;
+                const active = idx === activeLessonIdx;
+                return (
+                  <li key={l.id}>
+                    <button
+                      onClick={() => setActiveLessonIdx(idx)}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-5 py-3 text-left border-b border-border last:border-0 transition-colors",
+                        active ? "bg-primary/5" : "hover:bg-muted/40"
+                      )}
+                    >
+                      <span>
+                        {done ? <CheckCircle2 className="h-4 w-4 text-success" /> :
+                          active ? <Play className="h-4 w-4 text-primary" /> :
+                          <Circle className="h-4 w-4 text-muted-foreground" />}
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className={cn("block text-sm truncate", active && "font-medium")}>{l.title}</span>
+                      </span>
+                      {l.duration && <span className="text-[11px] text-muted-foreground">{l.duration}</span>}
+                      {active && <span className="text-[10px] font-medium uppercase tracking-wider text-primary">Now</span>}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
-        </div>
+        ))}
       </div>
     </>
   );
