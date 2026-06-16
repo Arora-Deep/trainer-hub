@@ -27,6 +27,7 @@ export function CourseLabsAccessTab({ course }: Props) {
 
   const [requestOpen, setRequestOpen] = useState(false);
   const [requestContext, setRequestContext] = useState("");
+  const [labQuery, setLabQuery] = useState("");
 
   const labLessons = useMemo(() => {
     const out: Array<{ chapterId: string; chapterTitle: string; lesson: Lesson }> = [];
