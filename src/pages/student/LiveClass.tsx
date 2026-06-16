@@ -555,49 +555,47 @@ export default function StudentLiveClass() {
         <ResizablePanelGroup direction="horizontal" className="min-h-[820px]">
           {!labExpanded && (
             <>
-              <ResizablePanel defaultSize={60} minSize={30}>
+              <ResizablePanel defaultSize={50} minSize={25}>
                 <div className="h-full pr-2">
-                  <ResizablePanelGroup direction="vertical">
-                    <ResizablePanel defaultSize={65} minSize={20}>
-                      <Card className="overflow-hidden h-full">
-                        <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-                          <div className="flex items-center gap-2">
-                            <BookOpen className="h-4 w-4 text-primary" />
-                            <span className="text-sm font-semibold">Course Content</span>
-                            <Badge variant="outline" className="text-[10px]">Synced with instructor</Badge>
-                          </div>
-                          <Button variant="ghost" size="icon" className="h-7 w-7"><Settings className="h-3.5 w-3.5" /></Button>
-                        </div>
-                        <div className="h-[calc(100%-44px)]"><CourseContentPanel course={selectedCourse} currentLessonId={currentLesson?.id} /></div>
-                      </Card>
-                    </ResizablePanel>
-                    <ResizableHandle withHandle />
-                    <ResizablePanel defaultSize={35} minSize={15}>
-                      <Card className="h-full">
-                        <CardContent className="py-0 px-0 h-full">
-                          <div className="h-full"><ChatPanel chatInput={chatInput} setChatInput={setChatInput} /></div>
-                        </CardContent>
-                      </Card>
-                    </ResizablePanel>
-                  </ResizablePanelGroup>
+                  <Card className="overflow-hidden h-full">
+                    <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-semibold">Course Content</span>
+                        <Badge variant="outline" className="text-[10px]">Synced with instructor</Badge>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-7 w-7"><Settings className="h-3.5 w-3.5" /></Button>
+                    </div>
+                    <div className="h-[calc(100%-44px)]"><CourseContentPanel course={selectedCourse} currentLessonId={currentLesson?.id} /></div>
+                  </Card>
                 </div>
               </ResizablePanel>
               <ResizableHandle withHandle />
             </>
           )}
 
-          <ResizablePanel defaultSize={labExpanded ? 100 : 40} minSize={20}>
+          <ResizablePanel defaultSize={labExpanded ? 100 : 50} minSize={25}>
             <div className="h-full pl-2">
               <Card className="h-full overflow-hidden flex flex-col">
-                <div className="flex items-center justify-between border-b border-border px-3 py-2 shrink-0">
-                  <div className="flex items-center gap-2">
-                    <Monitor className="h-4 w-4 text-success" />
-                    <span className="text-sm font-semibold">Lab Console</span>
+                {/* VM Tabs */}
+                <Tabs defaultValue="vm-web" className="shrink-0">
+                  <div className="flex items-center justify-between border-b border-border px-3 py-1.5 gap-2">
+                    <TabsList className="h-8 bg-muted/50">
+                      {[
+                        { id: "vm-web", name: "Web VM" },
+                        { id: "vm-db", name: "DB VM" },
+                        { id: "vm-app", name: "App VM" },
+                      ].map((v) => (
+                        <TabsTrigger key={v.id} value={v.id} className="text-[11px] h-6 gap-1.5">
+                          <Monitor className="h-3 w-3" /> {v.name}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setLabExpanded(!labExpanded)}>
+                      {labExpanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+                    </Button>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setLabExpanded(!labExpanded)}>
-                    {labExpanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-                  </Button>
-                </div>
+                </Tabs>
                 <div className="flex-1 min-h-0"><ConsolePanel terminalInput={terminalInput} setTerminalInput={setTerminalInput} /></div>
               </Card>
             </div>
