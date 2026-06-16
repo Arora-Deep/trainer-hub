@@ -123,7 +123,30 @@ export function CourseLabsAccessTab({ course }: Props) {
               No lab lessons in this course yet. Add lab lessons in the Content tab first.
             </p>
           )}
-          {labLessons.map(({ chapterId, chapterTitle, lesson }) => {
+          {labLessons.length > 0 && (
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <Input
+                value={labQuery}
+                onChange={(e) => setLabQuery(e.target.value)}
+                placeholder="Search labs by lesson, chapter or template…"
+                className="pl-8 h-9"
+              />
+            </div>
+          )}
+          {labLessons
+            .filter(({ chapterTitle, lesson }) => {
+              if (!labQuery.trim()) return true;
+              const q = labQuery.toLowerCase();
+              const tpl = templates.find((t) => t.id === lesson.lab?.templateId);
+              return (
+                lesson.title.toLowerCase().includes(q) ||
+                chapterTitle.toLowerCase().includes(q) ||
+                (tpl?.name.toLowerCase().includes(q) ?? false) ||
+                (tpl?.region?.toLowerCase().includes(q) ?? false)
+              );
+            })
+            .map(({ chapterId, chapterTitle, lesson }) => {
             const lab = lesson.lab;
             const tpl = templates.find((t) => t.id === lab?.templateId);
             const ready = !!lab?.templateId;
