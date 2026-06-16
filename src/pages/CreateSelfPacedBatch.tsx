@@ -89,15 +89,14 @@ export default function CreateSelfPacedBatch() {
       medium: "online",
       deliveryMode: "self-paced",
       enrollmentMode: "floating",
-      // Access model + per-lab caps now live on the course; not duplicated here.
-      accessModel: course?.settings?.accessModel === "per-lab" ? "lesson-unlock" : "full-course",
-      totalAccessHours: course?.settings?.totalAccessHours,
+      // Access type is per-lab on the course; batch keeps a generic full-course marker for back-compat.
+      accessModel: "full-course",
       selfPacedConfig: {
         enrollmentMode,
         enrollmentStart: enrollmentStart?.toISOString(),
         enrollmentEnd: enrollmentEnd?.toISOString(),
-        accessModel: course?.settings?.accessModel === "per-lab" ? "lesson-unlock" : "full-course",
-        totalAccessHours: course?.settings?.totalAccessHours || 0,
+        accessModel: "full-course",
+        totalAccessHours: 0,
         expiryDays: course?.settings?.validityAfterLaunchDays || 60,
         maxConcurrentLearners,
         perLabCaps: [],
