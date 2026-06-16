@@ -48,6 +48,7 @@ import { MaterialsTab } from "@/components/batches/MaterialsTab";
 import { MeetingsTab } from "@/components/batches/MeetingsTab";
 import { BatchReportsTab } from "@/components/batches/BatchReportsTab";
 import { RequestTemplateSheet } from "@/components/sandbox/RequestTemplateSheet";
+import { SelfPacedBatchView } from "@/components/batches/SelfPacedBatchView";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
@@ -113,6 +114,12 @@ export default function BatchDetails() {
         </div>
       </div>
     );
+  }
+
+  // Self-paced batches use a slim, enrollment-only view. Labs & access live on the course.
+  if (batch.deliveryMode === "self-paced") {
+    const linkedCourse = courses.find((c) => c.id === batch.courseId);
+    return <SelfPacedBatchView batch={batch} course={linkedCourse} />;
   }
 
   const formatDate = (dateStr: string) => {
