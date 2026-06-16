@@ -1,157 +1,155 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, Monitor, Play, Video, BookOpen, Award, Sparkles } from "lucide-react";
-import { studentSchedule } from "@/data/studentMockData";
-import { StudentPageHero } from "@/components/gamification/StudentPageHero";
+import { Calendar, Clock, Monitor, Play, Video, Award, AlarmClock } from "lucide-react";
+import { studentSchedule, type StudentSession } from "@/data/studentMockData";
 
 const typeConfig: Record<string, { icon: any; color: string; bg: string; label: string }> = {
   live: { icon: Video, color: "text-destructive", bg: "bg-destructive/10", label: "Live Class" },
-  lab: { icon: Monitor, color: "text-success", bg: "bg-success/10", label: "Lab Session" },
-  "self-paced": { icon: Sparkles, color: "text-amber-600", bg: "bg-amber-500/10", label: "Self-Paced" },
-  assessment: { icon: Award, color: "text-primary", bg: "bg-primary/10", label: "Assessment" },
+  lab: { icon: Monitor, color: "text-success", bg: "bg-success/10", label: "Lab" },
+  assessment: { icon: Award, color: "text-primary", bg: "bg-primary/10", label: "Deadline" },
+  "self-paced": { icon: AlarmClock, color: "text-amber-600", bg: "bg-amber-500/10", label: "Event" },
 };
 
 export default function StudentSchedule() {
-  const [view, setView] = useState("list");
-  const [filter, setFilter] = useState("all");
+  // Keep only things the student needs to act on: live classes + deadlines/events.
+  // Drop self-paced "recommendations" and past items from this view.
+  const upcoming = useMemo(
+    () =>
+      studentSchedule
+        .filter((s) => s.status !== "completed")
+        .sort((a, b) => a.isoDate.localeCompare(b.isoDate)),
+    []
+  );
 
-  const filtered = useMemo(() => studentSchedule.filter((s) => filter === "all" || s.type === filter), [filter]);
-  const grouped = useMemo(() => filtered.reduce<Record<string, typeof studentSchedule>>((acc, s) => { (acc[s.date] = acc[s.date] || []).push(s); return acc; }, {}), [filtered]);
+  const next = upcoming.find((s) => s.status === "today" && s.type === "live") ?? upcoming[0];
+  const rest = upcoming.filter((s) => s.id !== next?.id);
+
+  const grouped = useMemo(
+    () =>
+      rest.reduce<Record<string, StudentSession[]>>((acc, s) => {
+        (acc[s.date] = acc[s.date] || []).push(s);
+        return acc;
+      }, {}),
+    [rest]
+  );
 
   return (
-    <div className="space-y-6">
-      <StudentPageHero
-        variant="lime"
-        eyebrow="Game Plan"
-        icon={Calendar}
-        title={<>Show up. <span className="text-white/95">Win the week.</span></>}
-        description="Live sessions, labs, assessments and self-paced recommendations."
-        stats={[
-          { icon: Video, label: "Live", value: studentSchedule.filter(s => s.type === "live").length },
-          { icon: Monitor, label: "Labs", value: studentSchedule.filter(s => s.type === "lab").length },
-          { icon: Award, label: "Tests", value: studentSchedule.filter(s => s.type === "assessment").length },
-        ]}
-        actions={
-          <Tabs value={view} onValueChange={setView}>
-            <TabsList className="bg-white/15 border border-white/25 backdrop-blur">
-              <TabsTrigger value="list" className="text-xs text-white data-[state=active]:bg-white data-[state=active]:text-foreground">List</TabsTrigger>
-              <TabsTrigger value="week" className="text-xs text-white data-[state=active]:bg-white data-[state=active]:text-foreground">Week</TabsTrigger>
-              <TabsTrigger value="month" className="text-xs text-white data-[state=active]:bg-white data-[state=active]:text-foreground">Month</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        }
-      />
-
-
-      <div className="flex items-center gap-2 flex-wrap">
-        {[
-          { v: "all", label: "All" },
-          { v: "live", label: "Live" },
-          { v: "lab", label: "Lab" },
-          { v: "self-paced", label: "Self-paced" },
-          { v: "assessment", label: "Assessment" },
-        ].map((c) => (
-          <button key={c.v} onClick={() => setFilter(c.v)} className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${filter === c.v ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}>
-            {c.label}
-          </button>
-        ))}
+    <div className="space-y-6 max-w-3xl mx-auto">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Schedule</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Your upcoming live trainings, deadlines and events.
+        </p>
       </div>
 
-      {view === "list" && (
-        <div className="space-y-6">
-          {Object.entries(grouped).map(([date, sessions]) => (
-            <div key={date}>
-              <div className="flex items-center gap-2 mb-3">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-semibold">{date}</h3>
-                {date === "Today" && <Badge className="bg-primary/10 text-primary text-[10px] border-0">Today</Badge>}
-              </div>
-              <div className="space-y-2 ml-6 border-l-2 border-border pl-4">
-                {sessions.map((s) => {
-                  const tc = typeConfig[s.type];
-                  return (
-                    <Card key={s.id} className={s.status === "completed" ? "opacity-60" : ""}>
-                      <CardContent className="py-3">
-                        <div className="flex items-center gap-3">
-                          <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${tc.bg}`}><tc.icon className={`h-4 w-4 ${tc.color}`} /></div>
-                          <Link to={`/student/schedule/${s.id}`} className="flex-1 min-w-0 group">
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-medium truncate group-hover:text-primary">{s.title}</p>
-                              <Badge variant="outline" className="text-[10px]">{tc.label}</Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground">{s.batch} · {s.instructor}</p>
-                          </Link>
-                          <div className="text-right text-xs text-muted-foreground shrink-0">
-                            <p className="flex items-center gap-1 justify-end"><Clock className="h-3 w-3" />{s.time}</p>
-                            <p>{s.duration}</p>
-                          </div>
-                          {s.status === "today" && s.type === "live" && <Button size="sm" className="gap-1.5"><Play className="h-3.5 w-3.5" /> Join</Button>}
-                          {s.status === "today" && s.type === "lab" && <Button size="sm" variant="outline" className="gap-1.5"><Monitor className="h-3.5 w-3.5" /> Launch</Button>}
-                          {s.type === "self-paced" && s.status !== "completed" && <Button size="sm" variant="outline" className="gap-1.5"><Play className="h-3.5 w-3.5" /> Start</Button>}
-                          {s.status === "completed" && <Badge variant="secondary" className="text-[10px] bg-success/10 text-success">✓ Done</Badge>}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {next && <NextUpCard session={next} />}
 
-      {view === "week" && <WeekView />}
-      {view === "month" && <MonthView />}
+      <div className="space-y-5">
+        {Object.entries(grouped).map(([date, sessions]) => (
+          <div key={date}>
+            <div className="flex items-center gap-2 mb-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold">{date}</h2>
+            </div>
+            <div className="space-y-2">
+              {sessions.map((s) => (
+                <SessionRow key={s.id} session={s} />
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {upcoming.length === 0 && (
+          <Card>
+            <CardContent className="py-10 text-center text-sm text-muted-foreground">
+              Nothing scheduled. You're all caught up.
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
 
-function WeekView() {
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+function NextUpCard({ session }: { session: StudentSession }) {
+  const tc = typeConfig[session.type];
+  const isToday = session.status === "today";
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="grid grid-cols-7 gap-2">
-          {days.map((d, i) => (
-            <div key={d} className="border border-border rounded-lg p-2 min-h-[180px]">
-              <p className="text-xs font-medium text-muted-foreground mb-2">{d} · {18 + i}</p>
-              <div className="space-y-1">
-                {studentSchedule.slice(0, 1 + (i % 3)).map((s) => (
-                  <Link key={`${d}-${s.id}`} to={`/student/schedule/${s.id}`} className="block text-[10px] p-1.5 rounded bg-primary/10 text-primary truncate hover:bg-primary/20">
-                    {s.time} · {s.title}
-                  </Link>
-                ))}
-              </div>
+    <Card className="border-primary/30 bg-primary/5">
+      <CardContent className="py-5">
+        <div className="flex items-start gap-4">
+          <div className={`h-11 w-11 rounded-xl flex items-center justify-center ${tc.bg}`}>
+            <tc.icon className={`h-5 w-5 ${tc.color}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <Badge variant="outline" className="text-[10px]">{tc.label}</Badge>
+              {isToday && <Badge className="bg-primary text-primary-foreground text-[10px] border-0">Today</Badge>}
             </div>
-          ))}
+            <p className="text-base font-semibold">{session.title}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {session.batch} · {session.instructor}
+            </p>
+            <p className="text-xs text-muted-foreground mt-2 flex items-center gap-3">
+              <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{session.date}</span>
+              <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{session.time} · {session.duration}</span>
+            </p>
+          </div>
+          <SessionAction session={session} primary />
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function MonthView() {
+function SessionRow({ session }: { session: StudentSession }) {
+  const tc = typeConfig[session.type];
   return (
     <Card>
-      <CardContent className="pt-6">
-        <div className="grid grid-cols-7 gap-1 text-center">
-          {["S","M","T","W","T","F","S"].map((d, i) => <p key={i} className="text-[10px] text-muted-foreground py-2">{d}</p>)}
-          {Array.from({ length: 35 }).map((_, i) => {
-            const day = i - 4;
-            const hasEvent = [4, 8, 14, 18, 22, 25].includes(i);
-            return (
-              <div key={i} className={`aspect-square border border-border rounded p-1 text-[10px] ${day < 1 || day > 31 ? "opacity-30" : ""}`}>
-                <p className="text-muted-foreground">{day > 0 && day <= 31 ? day : ""}</p>
-                {hasEvent && <div className="h-1 w-1 rounded-full bg-primary mt-1 mx-auto" />}
-              </div>
-            );
-          })}
+      <CardContent className="py-3">
+        <div className="flex items-center gap-3">
+          <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${tc.bg}`}>
+            <tc.icon className={`h-4 w-4 ${tc.color}`} />
+          </div>
+          <Link to={`/student/schedule/${session.id}`} className="flex-1 min-w-0 group">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium truncate group-hover:text-primary">{session.title}</p>
+              <Badge variant="outline" className="text-[10px]">{tc.label}</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground truncate">{session.batch}</p>
+          </Link>
+          <div className="text-right text-xs text-muted-foreground shrink-0">
+            <p className="flex items-center gap-1 justify-end"><Clock className="h-3 w-3" />{session.time}</p>
+            <p>{session.duration}</p>
+          </div>
+          <SessionAction session={session} />
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function SessionAction({ session, primary }: { session: StudentSession; primary?: boolean }) {
+  if (session.status === "today" && session.type === "live") {
+    return (
+      <Button size="sm" className="gap-1.5">
+        <Play className="h-3.5 w-3.5" /> Join now
+      </Button>
+    );
+  }
+  if (session.type === "assessment") {
+    return (
+      <Button asChild size="sm" variant={primary ? "default" : "outline"}>
+        <Link to={`/student/schedule/${session.id}`}>View</Link>
+      </Button>
+    );
+  }
+  return (
+    <Button asChild size="sm" variant="outline">
+      <Link to={`/student/schedule/${session.id}`}>Details</Link>
+    </Button>
   );
 }
