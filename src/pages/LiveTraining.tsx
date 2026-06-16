@@ -85,6 +85,15 @@ export default function LiveTraining() {
   const [splitFullscreen, setSplitFullscreen] = useState(false);
   const [splitSide, setSplitSide] = useState<SplitSide>("students");
   const [bulkAction, setBulkAction] = useState<null | "start" | "stop" | "reclone" | "restore">(null);
+  const [lessonContentOpen, setLessonContentOpen] = useState(false);
+
+  const trainerVMs = useMemo(() => ([
+    { id: "vm1", name: "trainer-master-vm", role: "Primary", ip: "10.0.4.21", specs: "4 vCPU · 8 GB" },
+    { id: "vm2", name: "trainer-db-vm", role: "Database", ip: "10.0.4.22", specs: "2 vCPU · 4 GB" },
+    { id: "vm3", name: "trainer-edge-vm", role: "Edge node", ip: "10.0.4.23", specs: "2 vCPU · 4 GB" },
+  ]), []);
+  const [activeTrainerVmId, setActiveTrainerVmId] = useState(trainerVMs[0].id);
+  const currentTrainerVM = trainerVMs.find(v => v.id === activeTrainerVmId)!;
 
   const [messages, setMessages] = useState<{ id: string; from: string; text: string; t: string; kind: "msg" | "q" | "sys" }[]>([
     { id: "1", from: "Alice Johnson", text: "Can you re-explain VPC peering?", t: "2:34", kind: "q" },
