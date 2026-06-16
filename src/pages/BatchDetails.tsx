@@ -255,7 +255,7 @@ export default function BatchDetails() {
               { value: "materials", label: "Material", icon: FileText },
               { value: "announcements", label: "Announcements", icon: Megaphone, count: batch.announcements.length },
               { value: "assessments", label: "Assessments", icon: ClipboardList },
-              { value: "games", label: "Games", icon: Gamepad2 },
+              ...(isSelfPaced ? [] : [{ value: "games", label: "Games", icon: Gamepad2 }]),
               { value: "reports", label: "Reports", icon: TrendingUp },
               { value: "settings", label: "Settings", icon: Settings },
             ].map((tab) => (
