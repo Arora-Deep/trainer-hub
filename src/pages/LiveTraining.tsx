@@ -523,17 +523,20 @@ export default function LiveTraining() {
             <TrainerView
               vmRunning={trainerVmRunning}
               setVmRunning={setTrainerVmRunning}
-              micOn={micOn} setMicOn={setMicOn}
-              camOn={camOn} setCamOn={setCamOn}
-              shareOn={shareOn} setShareOn={setShareOn}
-              messages={messages}
-              chatInput={chatInput} setChatInput={setChatInput}
-              onSendChat={sendChat}
+              trainerVMs={trainerVMs}
+              activeVmId={activeTrainerVmId}
+              setActiveVmId={setActiveTrainerVmId}
               onOpenConsole={() => setConsoleOpen(true)}
             />
           )}
           {mainTab === "resources" && (
-            <ResourcesView lessons={lessons} activeLessonIdx={activeLessonIdx} setActiveLessonIdx={setActiveLessonIdx} courseName={linkedCourse?.name || "Course"} />
+            <ResourcesView
+              lessons={lessons}
+              activeLessonIdx={activeLessonIdx}
+              setActiveLessonIdx={setActiveLessonIdx}
+              courseName={linkedCourse?.name || "Course"}
+              onViewLessonContent={() => setLessonContentOpen(true)}
+            />
           )}
           {mainTab === "meetings" && (
             <MeetingsView batchId={batch.id} />
@@ -549,16 +552,6 @@ export default function LiveTraining() {
               mainTab={mainTab}
               setMainTab={setMainTab}
               gridLength={grid.length}
-              splitSide={splitSide}
-              setSplitSide={setSplitSide}
-              students={filtered}
-              search={search}
-              setSearch={setSearch}
-              onSelectStudent={(id) => setSelectedStudentId(id)}
-              messages={messages}
-              chatInput={chatInput}
-              setChatInput={setChatInput}
-              onSendChat={sendChat}
               lessons={lessons}
               activeLessonIdx={activeLessonIdx}
               setActiveLessonIdx={setActiveLessonIdx}
@@ -568,6 +561,7 @@ export default function LiveTraining() {
               micOn={micOn} setMicOn={setMicOn}
               camOn={camOn} setCamOn={setCamOn}
               shareOn={shareOn} setShareOn={setShareOn}
+              currentTrainerVM={currentTrainerVM}
               onOpenConsole={() => setConsoleOpen(true)}
               onSnapshot={() => { createSnapshot(batch.id, `Session ${formatTimer(sessionTimer)}`, "Live snapshot"); toast({ title: "Snapshot created" }); }}
               onEnd={() => setEndOpen(true)}
