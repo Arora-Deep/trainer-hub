@@ -1353,12 +1353,18 @@ function StudentDrawer({ student, onClose }: { student: StudentRow; onClose: () 
               { id: "vm3", name: `${student.vmName.replace(/-vm$/, "")}-edge`, role: "Edge node", ip: "10.0.6.18", running: false, specs: "2 vCPU · 4 GB" },
             ]}
           />
-          <Section title="Controls">
+          <Section title="VM controls">
             <div className="grid grid-cols-2 gap-2">
-              <DrawerBtn icon={<Sparkles className="h-3.5 w-3.5" />} label="Assist student" onClick={() => toast({ title: "Joining session" })} />
-              <DrawerBtn icon={<Camera className="h-3.5 w-3.5" />} label="Snapshot" onClick={() => toast({ title: "Snapshot saved" })} />
+              {student.state === "offline" ? (
+                <DrawerBtn icon={<Power className="h-3.5 w-3.5" />} label="Start VM" onClick={() => toast({ title: `Starting ${student.vmName}` })} />
+              ) : (
+                <DrawerBtn icon={<PowerOff className="h-3.5 w-3.5" />} label="Shutdown" onClick={() => toast({ title: `Shutting down ${student.vmName}` })} />
+              )}
               <DrawerBtn icon={<RotateCcw className="h-3.5 w-3.5" />} label="Restart VM" onClick={() => toast({ title: "VM restarting" })} />
-              <DrawerBtn icon={<RotateCcw className="h-3.5 w-3.5" />} label="Restore snapshot" onClick={() => toast({ title: "Restoring…" })} />
+              <DrawerBtn icon={<Pause className="h-3.5 w-3.5" />} label="Suspend" onClick={() => toast({ title: "VM suspended" })} />
+              <DrawerBtn icon={<RefreshCw className="h-3.5 w-3.5" />} label="Reset" onClick={() => toast({ title: "VM reset" })} />
+              <DrawerBtn icon={<Camera className="h-3.5 w-3.5" />} label="Snapshot" onClick={() => toast({ title: "Snapshot saved" })} />
+              <DrawerBtn icon={<History className="h-3.5 w-3.5" />} label="Restore snapshot" onClick={() => toast({ title: "Restoring…" })} />
             </div>
           </Section>
           <Section title="Recent activity">
