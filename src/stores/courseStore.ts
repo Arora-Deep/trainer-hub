@@ -38,18 +38,20 @@ export interface LabAllocation {
   onExpire?: 'suspend' | 'delete' | 'lock';
 }
 
+export type LabAccessType = 'full-course' | 'limited';
+
 export interface LabAttachment {
   templateId: string;
   templateName: string;
   mode: LabMode;
   estimatedHours?: number;
   allocation?: LabAllocation;
-  // Self-paced per-lab caps (owned by the course)
-  runtimeLimitMin?: number;
+  // Self-paced per-lab access (owned by the course)
+  accessType?: LabAccessType;       // 'full-course' = unlimited during validity, 'limited' = capped
+  hoursCap?: number;                 // total hours cap when accessType = 'limited'
+  runtimeLimitMin?: number;          // per-launch runtime cap
   maxLaunches?: number;
   idleShutdownMin?: number;
-  hoursAllocated?: number;
-  unlockAfterLessonId?: string;
 }
 
 export type LessonSource = 'inline' | 'library';
@@ -184,7 +186,7 @@ export type LabPolicy = 'hourly-wallet' | 'unlimited-during-validity';
 export type CourseVisibility = 'private' | 'customer' | 'marketplace';
 export type CourseOwnerType = 'admin' | 'trainer' | 'customer';
 export type CourseModerationStatus = 'draft' | 'pending-review' | 'approved' | 'rejected';
-export type SelfPacedAccessModel = 'full-course' | 'per-lab' | 'module-unlock';
+export type SelfPacedAccessModel = 'full-course' | 'per-lab';
 export type OnExpireBehavior = 'suspend' | 'delete' | 'lock';
 
 export interface CourseSettings {

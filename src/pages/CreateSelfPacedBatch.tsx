@@ -89,15 +89,14 @@ export default function CreateSelfPacedBatch() {
       medium: "online",
       deliveryMode: "self-paced",
       enrollmentMode: "floating",
-      // Access model + per-lab caps now live on the course; not duplicated here.
-      accessModel: course?.settings?.accessModel === "per-lab" ? "lesson-unlock" : "full-course",
-      totalAccessHours: course?.settings?.totalAccessHours,
+      // Access type is per-lab on the course; batch keeps a generic full-course marker for back-compat.
+      accessModel: "full-course",
       selfPacedConfig: {
         enrollmentMode,
         enrollmentStart: enrollmentStart?.toISOString(),
         enrollmentEnd: enrollmentEnd?.toISOString(),
-        accessModel: course?.settings?.accessModel === "per-lab" ? "lesson-unlock" : "full-course",
-        totalAccessHours: course?.settings?.totalAccessHours || 0,
+        accessModel: "full-course",
+        totalAccessHours: 0,
         expiryDays: course?.settings?.validityAfterLaunchDays || 60,
         maxConcurrentLearners,
         perLabCaps: [],
@@ -189,7 +188,7 @@ export default function CreateSelfPacedBatch() {
 
               {courseReady && (
                 <p className="text-[11px] text-success mt-2 flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3 w-3" /> {courseLabReadiness.ready} lab{courseLabReadiness.ready === 1 ? "" : "s"} ready · access model: <span className="font-medium">{course?.settings?.accessModel || "full-course"}</span>
+                  <CheckCircle2 className="h-3 w-3" /> {courseLabReadiness.ready} lab{courseLabReadiness.ready === 1 ? "" : "s"} ready — access is configured per VM in the course.
                 </p>
               )}
             </div>
@@ -253,12 +252,12 @@ export default function CreateSelfPacedBatch() {
 
             <div className="p-3 rounded-xl border border-border bg-muted/30 text-xs">
               <p className="font-medium mb-1">Inherited from course</p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-muted-foreground">
-                <div><span className="text-foreground">Access model:</span> {course?.settings?.accessModel || "full-course"}</div>
-                <div><span className="text-foreground">VM hours:</span> {course?.settings?.totalAccessHours ?? "—"}</div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-muted-foreground">
+                <div><span className="text-foreground">Labs configured:</span> {courseLabReadiness.ready} / {courseLabReadiness.total}</div>
                 <div><span className="text-foreground">Validity:</span> {course?.settings?.validityAfterLaunchDays ?? "—"} d</div>
                 <div><span className="text-foreground">Idle shutdown:</span> {course?.settings?.defaultIdleShutdownMin ?? "—"} min</div>
               </div>
+              <p className="text-[10px] mt-2 text-muted-foreground">Access type (full / limited) is set per VM on the course.</p>
             </div>
           </CardContent>
         </Card>
@@ -278,8 +277,7 @@ export default function CreateSelfPacedBatch() {
               <Row k="Window" v={`${enrollmentStart ? format(enrollmentStart, "MMM d, yyyy") : "—"} → ${enrollmentEnd ? format(enrollmentEnd, "MMM d, yyyy") : "—"}`} />
             )}
             <Row k="Max concurrent" v={String(maxConcurrentLearners)} />
-            <Row k="Access model (course)" v={course?.settings?.accessModel || "full-course"} />
-            <Row k="VM hours / learner (course)" v={`${course?.settings?.totalAccessHours ?? "—"} h`} />
+            <Row k="Validity after launch" v={`${course?.settings?.validityAfterLaunchDays ?? "—"} d`} />
             <Row k="Configured labs (course)" v={`${courseLabReadiness.ready} of ${courseLabReadiness.total}`} />
           </CardContent>
         </Card>

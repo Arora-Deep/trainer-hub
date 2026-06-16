@@ -5,9 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Monitor, Sparkles, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, Monitor, Sparkles, CheckCircle2, AlertCircle, Infinity as InfinityIcon, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCourseStore, type Course, type Lesson, type SelfPacedAccessModel, type OnExpireBehavior } from "@/stores/courseStore";
+import { useCourseStore, type Course, type Lesson, type LabAccessType, type OnExpireBehavior } from "@/stores/courseStore";
 import { useLabStore } from "@/stores/labStore";
 import { RequestTemplateSheet } from "@/components/sandbox/RequestTemplateSheet";
 import { toast } from "@/hooks/use-toast";
@@ -21,8 +21,6 @@ export function CourseLabsAccessTab({ course }: Props) {
   const { templates } = useLabStore();
 
   const s = course.settings || ({} as any);
-  const [accessModel, setAccessModel] = useState<SelfPacedAccessModel>(s.accessModel || "full-course");
-  const [totalHours, setTotalHours] = useState<number>(s.totalAccessHours || 120);
   const [validityDays, setValidityDays] = useState<number>(s.validityAfterLaunchDays || 60);
   const [idleMin, setIdleMin] = useState<number>(s.defaultIdleShutdownMin || 15);
   const [onExpire, setOnExpire] = useState<OnExpireBehavior>(s.onExpire || "suspend");
@@ -40,21 +38,13 @@ export function CourseLabsAccessTab({ course }: Props) {
     return out;
   }, [course]);
 
-  const allLessons = useMemo(() => {
-    const out: Array<{ chapterId: string; lesson: Lesson }> = [];
-    course.chapters.forEach((ch) => ch.lessons.forEach((l) => out.push({ chapterId: ch.id, lesson: l })));
-    return out;
-  }, [course]);
-
-  const saveAccess = () => {
+  const saveDefaults = () => {
     updateSettings(course.id, {
-      accessModel,
-      totalAccessHours: totalHours,
       validityAfterLaunchDays: validityDays,
       defaultIdleShutdownMin: idleMin,
       onExpire,
     });
-    toast({ title: "Access model saved" });
+    toast({ title: "Defaults saved" });
   };
 
   const updateLab = (chapterId: string, lesson: Lesson, patch: Partial<NonNullable<Lesson["lab"]>>) => {
@@ -69,6 +59,7 @@ export function CourseLabsAccessTab({ course }: Props) {
       templateId: tpl.id,
       templateName: tpl.name,
       runtimeLimitMin: lesson.lab?.runtimeLimitMin || tpl.runtimeLimit,
+      accessType: lesson.lab?.accessType || "full-course",
     });
   };
 
@@ -76,41 +67,14 @@ export function CourseLabsAccessTab({ course }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Section A — Course-wide access */}
+      {/* Course-wide defaults (no access model — that's per-lab now) */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Access model</CardTitle>
-          <CardDescription>How learners spend lab time across this course.</CardDescription>
+          <CardTitle className="text-base">Course-wide defaults</CardTitle>
+          <CardDescription>Validity, idle behavior, and expiry rules applied to every lab unless overridden.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-            {[
-              { v: "full-course", l: "Full-course pool", d: "Shared VM-hour budget" },
-              { v: "per-lab", l: "Per-lab allocation", d: "Each lab has its own cap" },
-              { v: "module-unlock", l: "Module unlock", d: "Labs unlock as learner progresses" },
-            ].map((opt) => (
-              <button
-                key={opt.v}
-                type="button"
-                onClick={() => setAccessModel(opt.v as SelfPacedAccessModel)}
-                className={cn(
-                  "p-3 rounded-xl border-2 text-left transition-all",
-                  accessModel === opt.v ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-                )}
-              >
-                <p className="text-xs font-semibold">{opt.l}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{opt.d}</p>
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            {accessModel === "full-course" && (
-              <div>
-                <Label className="text-xs">Total VM hours / learner</Label>
-                <Input type="number" min={1} value={totalHours} onChange={(e) => setTotalHours(Number(e.target.value))} className="mt-1" />
-              </div>
-            )}
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <Label className="text-xs">Validity after first launch (days)</Label>
               <Input type="number" min={1} value={validityDays} onChange={(e) => setValidityDays(Number(e.target.value))} className="mt-1" />
@@ -131,22 +95,21 @@ export function CourseLabsAccessTab({ course }: Props) {
               </Select>
             </div>
           </div>
-
           <div className="flex justify-end">
-            <Button size="sm" onClick={saveAccess}>Save access model</Button>
+            <Button size="sm" onClick={saveDefaults}>Save defaults</Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Section B — Per-lab template + caps */}
+      {/* Per-lab template + access type */}
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-3">
           <div>
             <CardTitle className="text-base flex items-center gap-2">
-              <Monitor className="h-4 w-4 text-primary" /> Lab templates
+              <Monitor className="h-4 w-4 text-primary" /> Lab templates &amp; access
             </CardTitle>
             <CardDescription>
-              {readyCount} of {labLessons.length} lab lessons have a template configured.
+              {readyCount} of {labLessons.length} lab lessons have a template configured. Set how each VM is rationed.
             </CardDescription>
           </div>
           <Button size="sm" variant="outline" className="gap-1.5" onClick={() => { setRequestContext(course.name); setRequestOpen(true); }}>
@@ -163,6 +126,7 @@ export function CourseLabsAccessTab({ course }: Props) {
             const lab = lesson.lab;
             const tpl = templates.find((t) => t.id === lab?.templateId);
             const ready = !!lab?.templateId;
+            const accessType: LabAccessType = lab?.accessType || "full-course";
             return (
               <div key={lesson.id} className={cn("p-4 rounded-xl border", ready ? "border-border" : "border-amber-500/30 bg-amber-500/5")}>
                 <div className="flex items-start justify-between gap-3">
@@ -177,20 +141,54 @@ export function CourseLabsAccessTab({ course }: Props) {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
-                  <div className="md:col-span-2">
-                    <Label className="text-[10px] text-muted-foreground">Template</Label>
-                    <Select value={lab?.templateId || ""} onValueChange={(v) => setTemplate(chapterId, lesson, v)}>
-                      <SelectTrigger className="mt-1 text-xs"><SelectValue placeholder="Choose template" /></SelectTrigger>
-                      <SelectContent>
-                        {templates.map((t) => (
-                          <SelectItem key={t.id} value={t.id} className="text-xs">
-                            {t.name} {t.source === "sandbox" && <span className="text-muted-foreground">· sandbox</span>}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                {/* Template picker */}
+                <div className="mt-3">
+                  <Label className="text-[10px] text-muted-foreground">Template</Label>
+                  <Select value={lab?.templateId || ""} onValueChange={(v) => setTemplate(chapterId, lesson, v)}>
+                    <SelectTrigger className="mt-1 text-xs"><SelectValue placeholder="Choose template" /></SelectTrigger>
+                    <SelectContent>
+                      {templates.map((t) => (
+                        <SelectItem key={t.id} value={t.id} className="text-xs">
+                          {t.name} {t.source === "sandbox" && <span className="text-muted-foreground">· sandbox</span>}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Access type — per VM */}
+                {ready && (
+                  <div className="mt-3">
+                    <Label className="text-[10px] text-muted-foreground mb-1.5 block">Access type for this VM</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => updateLab(chapterId, lesson, { accessType: "full-course" })}
+                        className={cn(
+                          "p-3 rounded-xl border-2 text-left transition-all",
+                          accessType === "full-course" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                        )}
+                      >
+                        <p className="text-xs font-semibold flex items-center gap-1.5"><InfinityIcon className="h-3 w-3" /> Full course access</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Unlimited usage during course validity</p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateLab(chapterId, lesson, { accessType: "limited" })}
+                        className={cn(
+                          "p-3 rounded-xl border-2 text-left transition-all",
+                          accessType === "limited" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                        )}
+                      >
+                        <p className="text-xs font-semibold flex items-center gap-1.5"><Clock className="h-3 w-3" /> Limited usage</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">Capped by hours / launches</p>
+                      </button>
+                    </div>
                   </div>
+                )}
+
+                {/* Per-lab caps */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
                   <div>
                     <Label className="text-[10px] text-muted-foreground">Runtime / launch (min)</Label>
                     <Input
@@ -198,17 +196,6 @@ export function CourseLabsAccessTab({ course }: Props) {
                       min={5}
                       value={lab?.runtimeLimitMin ?? tpl?.runtimeLimit ?? 60}
                       onChange={(e) => updateLab(chapterId, lesson, { runtimeLimitMin: Number(e.target.value) })}
-                      className="mt-1 text-xs h-9"
-                      disabled={!ready}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-[10px] text-muted-foreground">Max launches / learner</Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={lab?.maxLaunches ?? 10}
-                      onChange={(e) => updateLab(chapterId, lesson, { maxLaunches: Number(e.target.value) })}
                       className="mt-1 text-xs h-9"
                       disabled={!ready}
                     />
@@ -224,37 +211,31 @@ export function CourseLabsAccessTab({ course }: Props) {
                       disabled={!ready}
                     />
                   </div>
-                  {accessModel === "per-lab" && (
-                    <div>
-                      <Label className="text-[10px] text-muted-foreground">Hours allocated</Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        value={lab?.hoursAllocated ?? 10}
-                        onChange={(e) => updateLab(chapterId, lesson, { hoursAllocated: Number(e.target.value) })}
-                        className="mt-1 text-xs h-9"
-                        disabled={!ready}
-                      />
-                    </div>
-                  )}
-                  {accessModel === "module-unlock" && (
-                    <div className="md:col-span-2">
-                      <Label className="text-[10px] text-muted-foreground">Unlock after lesson</Label>
-                      <Select
-                        value={lab?.unlockAfterLessonId || ""}
-                        onValueChange={(v) => updateLab(chapterId, lesson, { unlockAfterLessonId: v })}
-                        disabled={!ready}
-                      >
-                        <SelectTrigger className="mt-1 text-xs"><SelectValue placeholder="Pick lesson" /></SelectTrigger>
-                        <SelectContent>
-                          {allLessons
-                            .filter(({ lesson: l }) => l.id !== lesson.id)
-                            .map(({ lesson: l }) => (
-                              <SelectItem key={l.id} value={l.id} className="text-xs">{l.title}</SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  {accessType === "limited" && (
+                    <>
+                      <div>
+                        <Label className="text-[10px] text-muted-foreground">Total hours cap</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={lab?.hoursCap ?? 10}
+                          onChange={(e) => updateLab(chapterId, lesson, { hoursCap: Number(e.target.value) })}
+                          className="mt-1 text-xs h-9"
+                          disabled={!ready}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-[10px] text-muted-foreground">Max launches / learner</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={lab?.maxLaunches ?? 10}
+                          onChange={(e) => updateLab(chapterId, lesson, { maxLaunches: Number(e.target.value) })}
+                          className="mt-1 text-xs h-9"
+                          disabled={!ready}
+                        />
+                      </div>
+                    </>
                   )}
                 </div>
 

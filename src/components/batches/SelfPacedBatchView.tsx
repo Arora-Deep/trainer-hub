@@ -113,10 +113,10 @@ export function SelfPacedBatchView({ batch, course }: Props) {
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               {[
-                { label: "Access Model", value: course.settings?.accessModel || "full-course" },
-                { label: "VM Hours / Learner", value: course.settings?.totalAccessHours ?? "—" },
+                { label: "Lab Lessons", value: labLessons.length },
                 { label: "Validity After Launch", value: `${course.settings?.validityAfterLaunchDays ?? "—"} d` },
                 { label: "Idle Shutdown", value: `${course.settings?.defaultIdleShutdownMin ?? "—"} min` },
+                { label: "On Expiry", value: course.settings?.onExpire || "suspend" },
               ].map((item) => (
                 <div key={item.label} className="p-3 rounded-lg bg-muted/30 border border-border/50">
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{item.label}</p>
