@@ -52,6 +52,9 @@ export interface LabAttachment {
   runtimeLimitMin?: number;          // per-launch runtime cap
   maxLaunches?: number;
   idleShutdownMin?: number;
+  // Lab guide shown to students inside the lab workspace
+  guideEnabled?: boolean;
+  guide?: string;
 }
 
 export type LessonSource = 'inline' | 'library';
