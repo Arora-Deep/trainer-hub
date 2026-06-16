@@ -1468,138 +1468,108 @@ function ChatInput({ value, onChange, onSend }: { value: string; onChange: (v: s
 
 /* ---------------- Trainer View ---------------- */
 
+type TrainerVM = { id: string; name: string; role: string; ip: string; specs: string };
+
 type TrainerViewProps = {
   vmRunning: boolean;
   setVmRunning: (v: boolean) => void;
-  micOn: boolean; setMicOn: (v: boolean | ((p: boolean) => boolean)) => void;
-  camOn: boolean; setCamOn: (v: boolean | ((p: boolean) => boolean)) => void;
-  shareOn: boolean; setShareOn: (v: boolean | ((p: boolean) => boolean)) => void;
-  messages: { id: string; from: string; text: string; t: string; kind: "msg" | "q" | "sys" }[];
-  chatInput: string; setChatInput: (v: string) => void;
-  onSendChat: () => void;
+  trainerVMs: TrainerVM[];
+  activeVmId: string;
+  setActiveVmId: (id: string) => void;
   onOpenConsole: () => void;
 };
 
 function TrainerView({
-  vmRunning, setVmRunning,
-  micOn, setMicOn, camOn, setCamOn, shareOn, setShareOn,
-  messages, chatInput, setChatInput, onSendChat, onOpenConsole,
+  vmRunning, setVmRunning, trainerVMs, activeVmId, setActiveVmId, onOpenConsole,
 }: TrainerViewProps) {
-  const [chatOpen, setChatOpen] = useState(true);
-  const [fullscreen, setFullscreen] = useState(false);
-  const trainerVMs = [
-    { id: "vm1", name: "trainer-master-vm", role: "Primary", ip: "10.0.4.21", specs: "4 vCPU · 8 GB" },
-    { id: "vm2", name: "trainer-db-vm", role: "Database", ip: "10.0.4.22", specs: "2 vCPU · 4 GB" },
-    { id: "vm3", name: "trainer-edge-vm", role: "Edge node", ip: "10.0.4.23", specs: "2 vCPU · 4 GB" },
-  ];
-  const [activeVm, setActiveVm] = useState(trainerVMs[0].id);
-  const current = trainerVMs.find(v => v.id === activeVm)!;
+  const current = trainerVMs.find(v => v.id === activeVmId) || trainerVMs[0];
   return (
-    <div className="-mx-6 lg:-mx-8 -mt-8 -mb-24">
-      <ResizablePanelGroup direction="horizontal" className="h-[calc(100vh-64px)]">
-        <ResizablePanel defaultSize={chatOpen ? 75 : 100} minSize={40}>
-          <div className="h-full flex flex-col">
+    <div className="-mx-6 lg:-mx-8 -mt-8 -mb-24 h-[calc(100vh-64px)] flex flex-col bg-muted/30">
+      {/* Header */}
+      <div className="px-6 py-3 border-b border-border bg-card flex items-center justify-between">
+        <div className="flex items-center gap-3 min-w-0">
+          <Monitor className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold truncate">{current.name}</p>
+            <p className="text-[11px] text-muted-foreground truncate">{current.role} · {current.ip} · {current.specs}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {vmRunning ? (
+            <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => { setVmRunning(false); toast({ title: "VM stopped" }); }}>
+              <Square className="h-3.5 w-3.5" /> Stop
+            </Button>
+          ) : (
+            <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => { setVmRunning(true); toast({ title: "VM starting" }); }}>
+              <Play className="h-3.5 w-3.5" /> Start
+            </Button>
+          )}
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => toast({ title: "VM restarting" })}>
+            <RotateCcw className="h-3.5 w-3.5" /> Restart
+          </Button>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => toast({ title: "Snapshot saved" })}>
+            <Camera className="h-3.5 w-3.5" /> Snapshot
+          </Button>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => toast({ title: "VM reset" })}>
+            <RefreshCw className="h-3.5 w-3.5" /> Reset
+          </Button>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={onOpenConsole}>
+            <Maximize2 className="h-3.5 w-3.5" /> Pop out
+          </Button>
+        </div>
+      </div>
 
-        {/* CENTER CONSOLE */}
-        <section className="flex-1 min-w-0 bg-muted/30 flex flex-col">
-          <div className="px-6 py-3 border-b border-border bg-card flex items-center justify-between">
-            <div className="flex items-center gap-3 min-w-0">
-              <Monitor className="h-4 w-4 text-muted-foreground shrink-0" />
-              <div className="min-w-0">
-                <p className="text-sm font-semibold truncate">{current.name}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{current.role} · {current.ip} · {current.specs}</p>
+      {/* VM Tabs */}
+      <div className="px-4 border-b border-border bg-card flex items-center gap-1 overflow-x-auto">
+        {trainerVMs.map(vm => (
+          <button
+            key={vm.id}
+            onClick={() => setActiveVmId(vm.id)}
+            className={cn(
+              "h-9 px-3 inline-flex items-center gap-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
+              activeVmId === vm.id ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Monitor className="h-3.5 w-3.5" />
+            <span>{vm.name}</span>
+            <span className="text-[10px] text-muted-foreground">· {vm.role}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="flex-1 p-6 overflow-hidden">
+        <div className="h-full w-full rounded-2xl border border-border bg-zinc-950 overflow-hidden relative shadow-sm">
+          {vmRunning ? (
+            <>
+              <div className="absolute inset-0 p-6 font-mono text-[13px] leading-relaxed text-emerald-400 overflow-auto">
+                <div>$ ssh {current.ip}</div>
+                <div className="text-zinc-500">Connected to {current.name}</div>
+                <div>$ kubectl get pods -n training</div>
+                <div className="text-zinc-500">NAME                READY   STATUS    AGE</div>
+                <div>vpc-router-7d4f      1/1     Running   2h</div>
+                <div>peering-gw-6a9e      1/1     Running   2h</div>
+                <div>nat-instance-2f      1/1     Running   2h</div>
+                <div className="mt-3">$ terraform apply -auto-approve</div>
+                <div className="text-zinc-500">Plan: 4 to add, 0 to change, 0 to destroy.</div>
+                <div className="text-emerald-400">Apply complete! Resources: 4 added.</div>
+                <div className="mt-3 inline-flex items-center">$ <span className="ml-1 inline-block h-3.5 w-2 bg-emerald-400 animate-pulse" /></div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button onClick={onOpenConsole} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors">
-                <Maximize2 className="h-3.5 w-3.5" /> Pop out
+              <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                <span className="text-[10px] font-medium text-white tracking-wide">RUNNING</span>
+              </div>
+            </>
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-zinc-500">
+              <Power className="h-10 w-10" />
+              <span className="text-sm">VM is stopped</span>
+              <button onClick={() => setVmRunning(true)} className="mt-2 h-9 px-4 inline-flex items-center gap-2 rounded-lg bg-foreground text-background text-xs font-medium hover:opacity-90 transition">
+                <Play className="h-3.5 w-3.5" /> Start VM
               </button>
-              <button onClick={() => setChatOpen(o => !o)} className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border hover:bg-muted transition-colors" aria-label="Toggle chat">
-                {chatOpen ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
-              </button>
             </div>
-          </div>
-
-          {/* VM Tabs */}
-          <div className="px-4 border-b border-border bg-card flex items-center gap-1 overflow-x-auto">
-            {trainerVMs.map(vm => (
-              <button
-                key={vm.id}
-                onClick={() => setActiveVm(vm.id)}
-                className={cn(
-                  "h-9 px-3 inline-flex items-center gap-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
-                  activeVm === vm.id ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Monitor className="h-3.5 w-3.5" />
-                <span>{vm.name}</span>
-                <span className="text-[10px] text-muted-foreground">· {vm.role}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="flex-1 p-6 overflow-hidden">
-            <div className="h-full w-full rounded-2xl border border-border bg-zinc-950 overflow-hidden relative shadow-sm">
-              {vmRunning ? (
-                <>
-                  <div className="absolute inset-0 p-6 font-mono text-[13px] leading-relaxed text-emerald-400 overflow-auto">
-                    <div>$ kubectl get pods -n training</div>
-                    <div className="text-zinc-500">NAME                READY   STATUS    AGE</div>
-                    <div>vpc-router-7d4f      1/1     Running   2h</div>
-                    <div>peering-gw-6a9e      1/1     Running   2h</div>
-                    <div>nat-instance-2f      1/1     Running   2h</div>
-                    <div className="mt-3">$ terraform apply -auto-approve</div>
-                    <div className="text-zinc-500">Plan: 4 to add, 0 to change, 0 to destroy.</div>
-                    <div className="text-emerald-400">Apply complete! Resources: 4 added.</div>
-                    <div className="mt-3">$ aws ec2 describe-vpc-peering-connections</div>
-                    <div className="text-zinc-500">{`{ "VpcPeeringConnections": [ ... ] }`}</div>
-                    <div className="mt-3 inline-flex items-center">$ <span className="ml-1 inline-block h-3.5 w-2 bg-emerald-400 animate-pulse" /></div>
-                  </div>
-                  <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                    <span className="text-[10px] font-medium text-white tracking-wide">RUNNING</span>
-                  </div>
-                </>
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-zinc-500">
-                  <Power className="h-10 w-10" />
-                  <span className="text-sm">VM is stopped</span>
-                  <button onClick={() => setVmRunning(true)} className="mt-2 h-9 px-4 inline-flex items-center gap-2 rounded-lg bg-foreground text-background text-xs font-medium hover:opacity-90 transition">
-                    <Play className="h-3.5 w-3.5" /> Start VM
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-          </div>
-        </ResizablePanel>
-
-        {chatOpen && (
-          <>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={25} minSize={15} maxSize={50}>
-              <aside className="h-full border-l border-border bg-card flex flex-col">
-                <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold">Live chat</p>
-                    <p className="text-[11px] text-muted-foreground">Class conversation</p>
-                  </div>
-                  <button onClick={() => setChatOpen(false)} className="h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted" aria-label="Collapse chat">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-                <ScrollArea className="flex-1">
-                  <div className="px-5 py-4 space-y-3">
-                    {messages.map(m => <ChatBubble key={m.id} {...m} />)}
-                  </div>
-                </ScrollArea>
-                <ChatInput value={chatInput} onChange={setChatInput} onSend={onSendChat} />
-              </aside>
-            </ResizablePanel>
-          </>
-        )}
-      </ResizablePanelGroup>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
