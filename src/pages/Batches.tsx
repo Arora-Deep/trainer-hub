@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { BatchTypeChooser } from "@/components/batches/BatchTypeChooser";
 
 const statusMap: Record<string, { status: "success" | "warning" | "primary" | "default"; label: string }> = {
   upcoming: { status: "primary", label: "Upcoming" },
@@ -47,6 +48,7 @@ export default function Batches() {
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"table" | "grid">("grid");
   const [sortBy, setSortBy] = useState<"newest" | "name" | "students">("newest");
+  const [chooserOpen, setChooserOpen] = useState(false);
 
   const filterCounts = useMemo(() => ({
     all: batches.length,
@@ -97,7 +99,7 @@ export default function Batches() {
               <Download className="mr-1.5 h-4 w-4" />
               Export
             </Button>
-            <Button size="sm" onClick={() => navigate("/batches/create")}>
+            <Button size="sm" onClick={() => setChooserOpen(true)}>
               <Plus className="mr-1.5 h-4 w-4" />
               Create Batch
             </Button>
@@ -220,7 +222,7 @@ export default function Batches() {
                     {search ? "Try adjusting your search or filters" : "Create your first batch to get started"}
                   </p>
                   {!search && (
-                    <Button className="mt-4" size="sm" onClick={() => navigate("/batches/create")}>
+                    <Button className="mt-4" size="sm" onClick={() => setChooserOpen(true)}>
                       <Plus className="mr-1.5 h-4 w-4" />
                       Create Batch
                     </Button>
