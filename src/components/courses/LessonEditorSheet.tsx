@@ -742,3 +742,68 @@ function LabInstructionEditor({ value, onChange }: { value: NonNullable<Lesson["
   );
 }
 
+
+function LibrarySearchPicker({
+  options,
+  value,
+  placeholder,
+  onSelect,
+}: {
+  options: { id: string; label: string }[];
+  value?: string;
+  placeholder?: string;
+  onSelect: (opt: { id: string; label: string }) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const filtered = options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()));
+  const selected = options.find((o) => o.id === value);
+
+  if (options.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed bg-muted/20 px-3 py-6 text-center">
+        <Library className="h-5 w-5 text-muted-foreground mx-auto mb-1.5" />
+        <p className="text-xs text-muted-foreground">No items yet — use "Create new" to build one.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={placeholder || "Search…"}
+          className="pl-8 h-9"
+        />
+      </div>
+      <div className="rounded-lg border bg-card max-h-64 overflow-y-auto divide-y">
+        {filtered.length === 0 ? (
+          <p className="px-3 py-6 text-center text-xs text-muted-foreground">No matches for "{query}"</p>
+        ) : (
+          filtered.map((o) => {
+            const isSelected = o.id === value;
+            return (
+              <button
+                key={o.id}
+                type="button"
+                onClick={() => onSelect(o)}
+                className={cn(
+                  "w-full text-left px-3 py-2 text-sm flex items-center justify-between gap-2 transition-colors",
+                  isSelected ? "bg-primary/10 text-primary" : "hover:bg-muted/50"
+                )}
+              >
+                <span className="truncate">{o.label}</span>
+                {isSelected && <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0">Selected</Badge>}
+              </button>
+            );
+          })
+        )}
+      </div>
+      {selected && (
+        <p className="text-[11px] text-muted-foreground">Linked to <span className="font-medium text-foreground">{selected.label}</span></p>
+      )}
+    </div>
+  );
+}
