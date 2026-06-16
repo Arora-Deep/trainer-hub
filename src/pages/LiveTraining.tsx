@@ -11,10 +11,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  Radio, Hand, Users, AlertCircle, Megaphone, BookOpen, Camera, Power,
+  Radio, Hand, Users, AlertCircle, Megaphone, BookOpen, Camera, Power, PowerOff,
   MessageSquare, Send, X, Search, Wifi, WifiOff, RotateCcw, Monitor,
-  FileText, Link2, Download, Sparkles, ChevronLeft, ChevronRight, Play,
-  CheckCircle2, Circle, Mic, Video, ScreenShare, Square, RefreshCw,
+  FileText, Link2, Download, Sparkles, ChevronLeft, ChevronRight, Play, Pause,
+  CheckCircle2, Circle, Mic, Video, ScreenShare, Square, RefreshCw, History,
   BarChart3, TrendingUp, Clock, Activity, Maximize2, LayoutPanelLeft, Minimize2,
   Zap, HelpCircle, Brain, Gamepad2,
 } from "lucide-react";
