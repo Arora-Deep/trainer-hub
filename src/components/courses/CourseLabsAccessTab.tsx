@@ -2,10 +2,12 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Monitor, Sparkles, CheckCircle2, AlertCircle, Infinity as InfinityIcon, Clock, MapPin, Search } from "lucide-react";
+import { Plus, Monitor, Sparkles, CheckCircle2, AlertCircle, Infinity as InfinityIcon, Clock, MapPin, Search, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCourseStore, type Course, type Lesson, type LabAccessType, type OnExpireBehavior } from "@/stores/courseStore";
 import { useLabStore } from "@/stores/labStore";
@@ -269,6 +271,40 @@ export function CourseLabsAccessTab({ course }: Props) {
                     </>
                   )}
                 </div>
+
+                {/* Lab guide */}
+                {ready && (
+                  <div className="mt-4 rounded-xl border bg-muted/30 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <BookOpen className="h-3.5 w-3.5 text-primary shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold">Lab guide</p>
+                          <p className="text-[10px] text-muted-foreground truncate">
+                            Show step-by-step instructions inside the student's lab view.
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={!!lab?.guideEnabled}
+                        onCheckedChange={(v) => updateLab(chapterId, lesson, { guideEnabled: v })}
+                      />
+                    </div>
+                    {lab?.guideEnabled && (
+                      <div className="mt-3">
+                        <Textarea
+                          value={lab?.guide ?? ""}
+                          onChange={(e) => updateLab(chapterId, lesson, { guide: e.target.value })}
+                          placeholder={"# Lab guide\n\n## Objective\nDescribe what the student will accomplish.\n\n## Steps\n1. Launch the VM and log in\n2. ...\n\n## Verification\nHow the student knows they're done."}
+                          className="min-h-[180px] text-xs font-mono bg-background"
+                        />
+                        <p className="text-[10px] text-muted-foreground mt-1.5">
+                          Supports plain text and Markdown. Students will see this in the Guide panel of the lab workspace.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {!ready && (
                   <div className="mt-3 flex items-center gap-2">
