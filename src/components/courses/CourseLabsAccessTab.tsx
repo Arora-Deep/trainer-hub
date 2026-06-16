@@ -158,11 +158,18 @@ export function CourseLabsAccessTab({ course }: Props) {
                     <p className="text-sm font-medium truncate">{lesson.title}</p>
                     <p className="text-[11px] text-muted-foreground">{chapterTitle}</p>
                   </div>
-                  {ready ? (
-                    <Badge variant="outline" className="text-[10px] gap-1"><CheckCircle2 className="h-3 w-3 text-success" /> Template set</Badge>
-                  ) : (
-                    <Badge variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-600 gap-1"><AlertCircle className="h-3 w-3" /> Awaiting template</Badge>
-                  )}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {ready && tpl?.region && (
+                      <Badge variant="outline" className="text-[10px] gap-1 font-normal">
+                        <MapPin className="h-3 w-3" /> Located in {tpl.region}
+                      </Badge>
+                    )}
+                    {ready ? (
+                      <Badge variant="outline" className="text-[10px] gap-1"><CheckCircle2 className="h-3 w-3 text-success" /> Template set</Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-600 gap-1"><AlertCircle className="h-3 w-3" /> Awaiting template</Badge>
+                    )}
+                  </div>
                 </div>
 
                 {/* Template picker */}
