@@ -47,6 +47,7 @@ import { BatchSettingsTab } from "@/components/batches/BatchSettingsTab";
 import { MaterialsTab } from "@/components/batches/MaterialsTab";
 import { MeetingsTab } from "@/components/batches/MeetingsTab";
 import { BatchReportsTab } from "@/components/batches/BatchReportsTab";
+import { RequestTemplateSheet } from "@/components/sandbox/RequestTemplateSheet";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
@@ -97,6 +98,7 @@ export default function BatchDetails() {
   const [consoleSheetVM, setConsoleSheetVM] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [openAssessment, setOpenAssessment] = useState<Lesson | null>(null);
+  const [requestTplOpen, setRequestTplOpen] = useState(false);
 
   if (!batch) {
     return (
@@ -411,6 +413,17 @@ export default function BatchDetails() {
                     </div>
                   ))}
                 </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl border border-dashed border-border bg-muted/20">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">Need a different template?</p>
+                    <p className="text-[11px] text-muted-foreground">Request a sandbox VM and the CloudAdda team will publish it as a new template for your library.</p>
+                  </div>
+                  <Button size="sm" variant="outline" className="gap-1.5 text-xs shrink-0" onClick={() => setRequestTplOpen(true)}>
+                    <Plus className="h-3.5 w-3.5" /> Request a template
+                  </Button>
+                </div>
+
 
                 {/* Trainer VM Workflow */}
                 <Card>
