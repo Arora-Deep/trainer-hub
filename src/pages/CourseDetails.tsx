@@ -22,6 +22,7 @@ import { useParams, Link, Navigate } from "react-router-dom";
 import { useCourseStore, getCourseAssessments } from "@/stores/courseStore";
 import { CourseContentEditor } from "@/components/courses/CourseContentEditor";
 import { CourseAssessmentsTab } from "@/components/courses/CourseAssessmentsTab";
+import { CourseLabsAccessTab } from "@/components/courses/CourseLabsAccessTab";
 
 const enrolledBatches = [
   { id: 1, name: "AWS SA - Batch 12", trainer: "John Smith", students: 24, status: "live" },
