@@ -344,7 +344,8 @@ export default function LiveTraining() {
 
       {/* Body: Sticky Trainer Rail + Main */}
       <div className="flex">
-        {/* LEFT TRAINER RAIL */}
+        {/* LEFT TRAINER RAIL — only in students view */}
+        {mainTab === "students" && (
         <aside
           className={cn(
             "sticky top-[64px] self-start shrink-0 border-r border-border bg-card transition-all duration-200",
@@ -507,6 +508,7 @@ export default function LiveTraining() {
             </div>
           )}
         </aside>
+        )}
 
         {/* MAIN */}
         <main className="flex-1 px-6 lg:px-8 pt-8 pb-24 max-w-[1400px]">
