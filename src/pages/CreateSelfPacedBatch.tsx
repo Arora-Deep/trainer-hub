@@ -188,7 +188,7 @@ export default function CreateSelfPacedBatch() {
 
               {courseReady && (
                 <p className="text-[11px] text-success mt-2 flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3 w-3" /> {courseLabReadiness.ready} lab{courseLabReadiness.ready === 1 ? "" : "s"} ready · access model: <span className="font-medium">{course?.settings?.accessModel || "full-course"}</span>
+                  <CheckCircle2 className="h-3 w-3" /> {courseLabReadiness.ready} lab{courseLabReadiness.ready === 1 ? "" : "s"} ready — access is configured per VM in the course.
                 </p>
               )}
             </div>
