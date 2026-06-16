@@ -630,6 +630,8 @@ export default function BatchDetails() {
                   </CardContent>
                 </Card>
 
+                </>)}
+
                 {/* Participant VMs Table with Rich Actions */}
                 {vm.participantVMs.length > 0 && (
                   <Card>
