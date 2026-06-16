@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Video, FileText, HelpCircle, ClipboardList, Code2, FlaskConical, Flag, GraduationCap,
-  Upload, Link2, Library, Plus, X, FileUp, Trash2, Radio, ListChecks, MessageSquareQuote, Gamepad2, Brain,
+  Upload, Link2, Library, Plus, X, FileUp, Trash2, Radio, ListChecks, MessageSquareQuote, Gamepad2, Brain, Search,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TemplatePickerDropdown } from "@/components/labs/TemplatePickerDropdown";
@@ -106,7 +106,8 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-[720px] overflow-y-auto">
+      <SheetContent side="right" className="w-full sm:max-w-[920px] p-0 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-y-auto px-6 pt-6 pb-2">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <Icon className="h-5 w-5 text-primary" />
@@ -442,17 +443,12 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
                 </div>
 
                 {(form.source ?? "library") === "library" ? (
-                  <Select value={form.refId ?? ""} onValueChange={(v) => {
-                    const opt = libraryOptions.find((o) => o.id === v);
-                    setForm((p) => ({ ...p, refId: v, title: opt?.label ?? p.title }));
-                  }}>
-                    <SelectTrigger><SelectValue placeholder="Choose an item…" /></SelectTrigger>
-                    <SelectContent>
-                      {libraryOptions.length === 0 ? (
-                        <div className="px-3 py-2 text-xs text-muted-foreground">No items yet — use "Create new" to build one.</div>
-                      ) : libraryOptions.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <LibrarySearchPicker
+                    options={libraryOptions}
+                    value={form.refId}
+                    placeholder={`Search ${typeMeta[form.type].label.toLowerCase()}s…`}
+                    onSelect={(opt) => setForm((p) => ({ ...p, refId: opt.id, title: opt.label ?? p.title }))}
+                  />
                 ) : createNewHref ? (
                   <div className="rounded-md border border-dashed bg-background/60 p-3 space-y-2">
                     <p className="text-xs text-muted-foreground">
@@ -521,8 +517,11 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
             )}
           </div>
         </div>
+        </div>
 
-        <SheetFooter>
+
+
+        <SheetFooter className="border-t bg-background/95 backdrop-blur px-6 py-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleSave}>{initial ? "Save changes" : "Add lesson"}</Button>
         </SheetFooter>
@@ -743,3 +742,68 @@ function LabInstructionEditor({ value, onChange }: { value: NonNullable<Lesson["
   );
 }
 
+
+function LibrarySearchPicker({
+  options,
+  value,
+  placeholder,
+  onSelect,
+}: {
+  options: { id: string; label: string }[];
+  value?: string;
+  placeholder?: string;
+  onSelect: (opt: { id: string; label: string }) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const filtered = options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()));
+  const selected = options.find((o) => o.id === value);
+
+  if (options.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed bg-muted/20 px-3 py-6 text-center">
+        <Library className="h-5 w-5 text-muted-foreground mx-auto mb-1.5" />
+        <p className="text-xs text-muted-foreground">No items yet — use "Create new" to build one.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={placeholder || "Search…"}
+          className="pl-8 h-9"
+        />
+      </div>
+      <div className="rounded-lg border bg-card max-h-64 overflow-y-auto divide-y">
+        {filtered.length === 0 ? (
+          <p className="px-3 py-6 text-center text-xs text-muted-foreground">No matches for "{query}"</p>
+        ) : (
+          filtered.map((o) => {
+            const isSelected = o.id === value;
+            return (
+              <button
+                key={o.id}
+                type="button"
+                onClick={() => onSelect(o)}
+                className={cn(
+                  "w-full text-left px-3 py-2 text-sm flex items-center justify-between gap-2 transition-colors",
+                  isSelected ? "bg-primary/10 text-primary" : "hover:bg-muted/50"
+                )}
+              >
+                <span className="truncate">{o.label}</span>
+                {isSelected && <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0">Selected</Badge>}
+              </button>
+            );
+          })
+        )}
+      </div>
+      {selected && (
+        <p className="text-[11px] text-muted-foreground">Linked to <span className="font-medium text-foreground">{selected.label}</span></p>
+      )}
+    </div>
+  );
+}

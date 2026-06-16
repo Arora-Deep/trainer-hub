@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Monitor, Sparkles, CheckCircle2, AlertCircle, Infinity as InfinityIcon, Clock } from "lucide-react";
+import { Plus, Monitor, Sparkles, CheckCircle2, AlertCircle, Infinity as InfinityIcon, Clock, MapPin, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCourseStore, type Course, type Lesson, type LabAccessType, type OnExpireBehavior } from "@/stores/courseStore";
 import { useLabStore } from "@/stores/labStore";
@@ -27,6 +27,7 @@ export function CourseLabsAccessTab({ course }: Props) {
 
   const [requestOpen, setRequestOpen] = useState(false);
   const [requestContext, setRequestContext] = useState("");
+  const [labQuery, setLabQuery] = useState("");
 
   const labLessons = useMemo(() => {
     const out: Array<{ chapterId: string; chapterTitle: string; lesson: Lesson }> = [];
@@ -122,7 +123,30 @@ export function CourseLabsAccessTab({ course }: Props) {
               No lab lessons in this course yet. Add lab lessons in the Content tab first.
             </p>
           )}
-          {labLessons.map(({ chapterId, chapterTitle, lesson }) => {
+          {labLessons.length > 0 && (
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <Input
+                value={labQuery}
+                onChange={(e) => setLabQuery(e.target.value)}
+                placeholder="Search labs by lesson, chapter or template…"
+                className="pl-8 h-9"
+              />
+            </div>
+          )}
+          {labLessons
+            .filter(({ chapterTitle, lesson }) => {
+              if (!labQuery.trim()) return true;
+              const q = labQuery.toLowerCase();
+              const tpl = templates.find((t) => t.id === lesson.lab?.templateId);
+              return (
+                lesson.title.toLowerCase().includes(q) ||
+                chapterTitle.toLowerCase().includes(q) ||
+                (tpl?.name.toLowerCase().includes(q) ?? false) ||
+                (tpl?.region?.toLowerCase().includes(q) ?? false)
+              );
+            })
+            .map(({ chapterId, chapterTitle, lesson }) => {
             const lab = lesson.lab;
             const tpl = templates.find((t) => t.id === lab?.templateId);
             const ready = !!lab?.templateId;
@@ -134,11 +158,18 @@ export function CourseLabsAccessTab({ course }: Props) {
                     <p className="text-sm font-medium truncate">{lesson.title}</p>
                     <p className="text-[11px] text-muted-foreground">{chapterTitle}</p>
                   </div>
-                  {ready ? (
-                    <Badge variant="outline" className="text-[10px] gap-1"><CheckCircle2 className="h-3 w-3 text-success" /> Template set</Badge>
-                  ) : (
-                    <Badge variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-600 gap-1"><AlertCircle className="h-3 w-3" /> Awaiting template</Badge>
-                  )}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {ready && tpl?.region && (
+                      <Badge variant="outline" className="text-[10px] gap-1 font-normal">
+                        <MapPin className="h-3 w-3" /> Located in {tpl.region}
+                      </Badge>
+                    )}
+                    {ready ? (
+                      <Badge variant="outline" className="text-[10px] gap-1"><CheckCircle2 className="h-3 w-3 text-success" /> Template set</Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-600 gap-1"><AlertCircle className="h-3 w-3" /> Awaiting template</Badge>
+                    )}
+                  </div>
                 </div>
 
                 {/* Template picker */}
