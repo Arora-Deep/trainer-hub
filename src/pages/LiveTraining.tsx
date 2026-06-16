@@ -85,6 +85,15 @@ export default function LiveTraining() {
   const [splitFullscreen, setSplitFullscreen] = useState(false);
   const [splitSide, setSplitSide] = useState<SplitSide>("students");
   const [bulkAction, setBulkAction] = useState<null | "start" | "stop" | "reclone" | "restore">(null);
+  const [lessonContentOpen, setLessonContentOpen] = useState(false);
+
+  const trainerVMs = useMemo(() => ([
+    { id: "vm1", name: "trainer-master-vm", role: "Primary", ip: "10.0.4.21", specs: "4 vCPU · 8 GB" },
+    { id: "vm2", name: "trainer-db-vm", role: "Database", ip: "10.0.4.22", specs: "2 vCPU · 4 GB" },
+    { id: "vm3", name: "trainer-edge-vm", role: "Edge node", ip: "10.0.4.23", specs: "2 vCPU · 4 GB" },
+  ]), []);
+  const [activeTrainerVmId, setActiveTrainerVmId] = useState(trainerVMs[0].id);
+  const currentTrainerVM = trainerVMs.find(v => v.id === activeTrainerVmId)!;
 
   const [messages, setMessages] = useState<{ id: string; from: string; text: string; t: string; kind: "msg" | "q" | "sys" }[]>([
     { id: "1", from: "Alice Johnson", text: "Can you re-explain VPC peering?", t: "2:34", kind: "q" },
@@ -371,7 +380,7 @@ export default function LiveTraining() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold truncate">You · Trainer</p>
-                    <p className="text-[11px] text-muted-foreground truncate">trainer-master-vm</p>
+                    <p className="text-[11px] text-muted-foreground truncate font-mono">{currentTrainerVM.name}</p>
                   </div>
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-1.5">
@@ -392,26 +401,20 @@ export default function LiveTraining() {
                         trainerVmRunning ? "cursor-pointer" : "cursor-not-allowed",
                       )}
                     >
-                      {/* Mock terminal */}
                       {trainerVmRunning ? (
                         <>
                           <div className="absolute inset-0 p-3 font-mono text-[9px] leading-tight text-emerald-400/80 overflow-hidden">
+                            <div>$ ssh {currentTrainerVM.ip}</div>
+                            <div className="text-zinc-500">Connected to {currentTrainerVM.name}</div>
                             <div>$ kubectl get pods -n training</div>
-                            <div className="text-zinc-500">NAME                READY   STATUS</div>
                             <div>vpc-router-7d4f      1/1     Running</div>
                             <div>peering-gw-6a9e      1/1     Running</div>
-                            <div>nat-instance-2f      1/1     Running</div>
-                            <div className="mt-1">$ terraform apply</div>
-                            <div className="text-zinc-500">Plan: 4 to add, 0 to change.</div>
-                            <div className="text-emerald-400">Apply complete! Resources: 4 added.</div>
                             <div className="mt-1 inline-flex items-center">$ <span className="ml-1 inline-block h-2 w-1.5 bg-emerald-400 animate-pulse" /></div>
                           </div>
-                          {/* status chip */}
                           <div className="absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-0.5">
                             <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                             <span className="text-[9px] font-medium text-white tracking-wide">RUNNING</span>
                           </div>
-                          {/* hover overlay */}
                           <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                             <Maximize2 className="h-5 w-5 text-white" />
                             <span className="text-[11px] font-medium text-white">Open console</span>
@@ -425,8 +428,28 @@ export default function LiveTraining() {
                       )}
                     </div>
                     <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-                      <span className="font-mono">10.0.4.21</span>
-                      <span>4 vCPU · 8 GB</span>
+                      <span className="font-mono">{currentTrainerVM.ip}</span>
+                      <span>{currentTrainerVM.specs}</span>
+                    </div>
+                  </RailSection>
+
+                  {/* VM SWITCHER TABS */}
+                  <RailSection title="My machines">
+                    <div className="grid grid-cols-1 gap-1">
+                      {trainerVMs.map(vm => (
+                        <button
+                          key={vm.id}
+                          onClick={() => setActiveTrainerVmId(vm.id)}
+                          className={cn(
+                            "w-full h-9 px-2.5 inline-flex items-center gap-2 rounded-lg border text-[12px] font-medium transition-colors text-left",
+                            activeTrainerVmId === vm.id ? "border-foreground bg-muted" : "border-border hover:bg-muted/60"
+                          )}
+                        >
+                          <Monitor className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="flex-1 truncate">{vm.role}</span>
+                          <span className="text-[10px] text-muted-foreground font-mono">{vm.ip}</span>
+                        </button>
+                      ))}
                     </div>
                   </RailSection>
 
@@ -500,17 +523,20 @@ export default function LiveTraining() {
             <TrainerView
               vmRunning={trainerVmRunning}
               setVmRunning={setTrainerVmRunning}
-              micOn={micOn} setMicOn={setMicOn}
-              camOn={camOn} setCamOn={setCamOn}
-              shareOn={shareOn} setShareOn={setShareOn}
-              messages={messages}
-              chatInput={chatInput} setChatInput={setChatInput}
-              onSendChat={sendChat}
+              trainerVMs={trainerVMs}
+              activeVmId={activeTrainerVmId}
+              setActiveVmId={setActiveTrainerVmId}
               onOpenConsole={() => setConsoleOpen(true)}
             />
           )}
           {mainTab === "resources" && (
-            <ResourcesView lessons={lessons} activeLessonIdx={activeLessonIdx} setActiveLessonIdx={setActiveLessonIdx} courseName={linkedCourse?.name || "Course"} />
+            <ResourcesView
+              lessons={lessons}
+              activeLessonIdx={activeLessonIdx}
+              setActiveLessonIdx={setActiveLessonIdx}
+              courseName={linkedCourse?.name || "Course"}
+              onViewLessonContent={() => setLessonContentOpen(true)}
+            />
           )}
           {mainTab === "meetings" && (
             <MeetingsView batchId={batch.id} />
@@ -526,16 +552,6 @@ export default function LiveTraining() {
               mainTab={mainTab}
               setMainTab={setMainTab}
               gridLength={grid.length}
-              splitSide={splitSide}
-              setSplitSide={setSplitSide}
-              students={filtered}
-              search={search}
-              setSearch={setSearch}
-              onSelectStudent={(id) => setSelectedStudentId(id)}
-              messages={messages}
-              chatInput={chatInput}
-              setChatInput={setChatInput}
-              onSendChat={sendChat}
               lessons={lessons}
               activeLessonIdx={activeLessonIdx}
               setActiveLessonIdx={setActiveLessonIdx}
@@ -545,6 +561,7 @@ export default function LiveTraining() {
               micOn={micOn} setMicOn={setMicOn}
               camOn={camOn} setCamOn={setCamOn}
               shareOn={shareOn} setShareOn={setShareOn}
+              currentTrainerVM={currentTrainerVM}
               onOpenConsole={() => setConsoleOpen(true)}
               onSnapshot={() => { createSnapshot(batch.id, `Session ${formatTimer(sessionTimer)}`, "Live snapshot"); toast({ title: "Snapshot created" }); }}
               onEnd={() => setEndOpen(true)}
@@ -579,16 +596,6 @@ export default function LiveTraining() {
           mainTab={mainTab}
           setMainTab={setMainTab}
           gridLength={grid.length}
-          splitSide={splitSide}
-          setSplitSide={setSplitSide}
-          students={filtered}
-          search={search}
-          setSearch={setSearch}
-          onSelectStudent={(id) => setSelectedStudentId(id)}
-          messages={messages}
-          chatInput={chatInput}
-          setChatInput={setChatInput}
-          onSendChat={sendChat}
           lessons={lessons}
           activeLessonIdx={activeLessonIdx}
           setActiveLessonIdx={setActiveLessonIdx}
@@ -598,6 +605,7 @@ export default function LiveTraining() {
           micOn={micOn} setMicOn={setMicOn}
           camOn={camOn} setCamOn={setCamOn}
           shareOn={shareOn} setShareOn={setShareOn}
+          currentTrainerVM={currentTrainerVM}
           onOpenConsole={() => setConsoleOpen(true)}
           onSnapshot={() => { createSnapshot(batch.id, `Session ${formatTimer(sessionTimer)}`, "Live snapshot"); toast({ title: "Snapshot created" }); }}
           onEnd={() => setEndOpen(true)}
@@ -605,6 +613,19 @@ export default function LiveTraining() {
           setFullscreen={setSplitFullscreen}
         />
       )}
+
+      {/* Lesson Content Dialog */}
+      <Dialog open={lessonContentOpen} onOpenChange={setLessonContentOpen}>
+        <DialogContent className="max-w-3xl p-0 overflow-hidden max-h-[85vh]">
+          <DialogHeader className="px-5 py-3 border-b border-border">
+            <DialogTitle className="text-sm font-semibold">Lesson content</DialogTitle>
+            <DialogDescription className="text-xs">{lessons[activeLessonIdx]?.module}</DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[70vh]">
+            <LessonContent lesson={lessons[activeLessonIdx]} />
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       {/* Student Drawer */}
       <Sheet open={!!selectedStudent} onOpenChange={(o) => !o && setSelectedStudentId(null)}>
@@ -918,13 +939,54 @@ function RowAction({ children, label, onClick }: { children: React.ReactNode; la
   );
 }
 
+function LessonContent({ lesson }: { lesson?: { id: string; title: string; module: string; duration?: string } }) {
+  if (!lesson) {
+    return <div className="p-8 text-center text-sm text-muted-foreground">No lesson selected.</div>;
+  }
+  return (
+    <div className="p-6 space-y-6">
+      <div>
+        <p className="text-[10px] uppercase tracking-wider text-primary font-medium">{lesson.module}</p>
+        <h3 className="text-xl font-semibold tracking-tight mt-1">{lesson.title}</h3>
+        {lesson.duration && <p className="text-xs text-muted-foreground mt-1">Duration · {lesson.duration}</p>}
+      </div>
+      <div className="aspect-video rounded-xl bg-zinc-900 flex items-center justify-center text-zinc-400 text-sm border border-border">
+        <Play className="h-6 w-6 mr-2" /> Lesson video
+      </div>
+      <div>
+        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Learning objectives</h4>
+        <ul className="space-y-1.5 text-sm">
+          <li className="flex gap-2"><Circle className="h-3 w-3 mt-1 shrink-0 text-muted-foreground" />Understand the core concept of {lesson.title}.</li>
+          <li className="flex gap-2"><Circle className="h-3 w-3 mt-1 shrink-0 text-muted-foreground" />Apply it hands-on in the lab environment.</li>
+          <li className="flex gap-2"><Circle className="h-3 w-3 mt-1 shrink-0 text-muted-foreground" />Validate progress with the embedded assessment.</li>
+        </ul>
+      </div>
+      <div>
+        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Overview</h4>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          This lesson walks through <span className="text-foreground font-medium">{lesson.title}</span> with worked examples and a guided exercise. The trainer demonstrates the workflow live while students follow along on their own VMs.
+        </p>
+      </div>
+      <div>
+        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Key points</h4>
+        <ol className="space-y-1.5 text-sm list-decimal list-inside text-muted-foreground">
+          <li>Introduce the topic and recap prerequisites.</li>
+          <li>Walk through the live demo step-by-step.</li>
+          <li>Run the guided exercise on the lab VM.</li>
+          <li>Wrap up with Q&amp;A and a short knowledge check.</li>
+        </ol>
+      </div>
+    </div>
+  );
+}
+
 function ResourcesView({
-  lessons, activeLessonIdx, setActiveLessonIdx, courseName,
+  lessons, activeLessonIdx, setActiveLessonIdx, courseName, onViewLessonContent,
 }: {
   lessons: { id: string; title: string; module: string; duration?: string }[];
   activeLessonIdx: number; setActiveLessonIdx: (i: number) => void; courseName: string;
+  onViewLessonContent: () => void;
 }) {
-  // group by module
   const grouped = useMemo(() => {
     const map = new Map<string, typeof lessons>();
     lessons.forEach(l => {
@@ -934,13 +996,6 @@ function ResourcesView({
     return Array.from(map.entries());
   }, [lessons]);
 
-  const materials = [
-    { i: <FileText className="h-4 w-4" />, t: "Lab guide.pdf", s: "1.2 MB" },
-    { i: <FileText className="h-4 w-4" />, t: "Slides — VPC peering.pdf", s: "3.4 MB" },
-    { i: <Link2 className="h-4 w-4" />, t: "github.com/cloudadda/aws-labs", s: "Repository" },
-    { i: <FileText className="h-4 w-4" />, t: "Architecture diagram.png", s: "820 KB" },
-  ];
-
   return (
     <>
       <div className="flex items-end justify-between mb-6">
@@ -948,121 +1003,92 @@ function ResourcesView({
           <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Course content</p>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight">{courseName}</h2>
         </div>
-        <Button variant="outline" size="sm">Push current lesson</Button>
+        <Button size="sm" onClick={onViewLessonContent}>
+          <BookOpen className="h-3.5 w-3.5 mr-1.5" /> View lesson content
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-        {/* Curriculum + active lesson preview */}
-        <div className="space-y-5">
-          {lessons[activeLessonIdx] && (
-            <div className="rounded-2xl border border-border bg-card overflow-hidden">
-              <div className="px-5 py-3 border-b border-border flex items-center justify-between">
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-wider text-primary font-medium">Now teaching</p>
-                  <h3 className="text-base font-semibold tracking-tight truncate mt-0.5">{lessons[activeLessonIdx].title}</h3>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{lessons[activeLessonIdx].module}{lessons[activeLessonIdx].duration ? ` · ${lessons[activeLessonIdx].duration}` : ""}</p>
-                </div>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 ring-1 ring-primary/20 shrink-0">
-                  <Play className="h-3 w-3 text-primary" />
-                  <span className="text-[10px] font-semibold tracking-wider text-primary">LIVE</span>
-                </span>
+      <div className="space-y-5 max-w-4xl">
+        {lessons[activeLessonIdx] && (
+          <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-wider text-primary font-medium">Now teaching</p>
+                <h3 className="text-base font-semibold tracking-tight truncate mt-0.5">{lessons[activeLessonIdx].title}</h3>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{lessons[activeLessonIdx].module}{lessons[activeLessonIdx].duration ? ` · ${lessons[activeLessonIdx].duration}` : ""}</p>
               </div>
-              <div className="px-5 py-5 space-y-4">
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  This lesson covers the key concepts and hands-on exercises for <span className="text-foreground font-medium">{lessons[activeLessonIdx].title}</span>. Students follow along on their own lab VMs while you walk through the material.
-                </p>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="rounded-xl border border-border p-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Lesson</p>
-                    <p className="text-sm font-semibold mt-1">{activeLessonIdx + 1} / {lessons.length}</p>
-                  </div>
-                  <div className="rounded-xl border border-border p-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Completed</p>
-                    <p className="text-sm font-semibold mt-1 text-success">{activeLessonIdx}</p>
-                  </div>
-                  <div className="rounded-xl border border-border p-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Remaining</p>
-                    <p className="text-sm font-semibold mt-1">{Math.max(0, lessons.length - activeLessonIdx - 1)}</p>
-                  </div>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 ring-1 ring-primary/20 shrink-0">
+                <Play className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-semibold tracking-wider text-primary">LIVE</span>
+              </span>
+            </div>
+            <div className="px-5 py-5 space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-xl border border-border p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Lesson</p>
+                  <p className="text-sm font-semibold mt-1">{activeLessonIdx + 1} / {lessons.length}</p>
                 </div>
-                <div className="flex items-center gap-2 pt-1">
-                  <Button size="sm" variant="outline" onClick={() => setActiveLessonIdx(Math.max(0, activeLessonIdx - 1))} disabled={activeLessonIdx === 0}>
-                    <ChevronLeft className="h-3.5 w-3.5" /> Previous
-                  </Button>
-                  <Button size="sm" onClick={() => setActiveLessonIdx(Math.min(lessons.length - 1, activeLessonIdx + 1))} disabled={activeLessonIdx >= lessons.length - 1}>
-                    Mark complete & next <ChevronRight className="h-3.5 w-3.5" />
-                  </Button>
+                <div className="rounded-xl border border-border p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Completed</p>
+                  <p className="text-sm font-semibold mt-1 text-success">{activeLessonIdx}</p>
+                </div>
+                <div className="rounded-xl border border-border p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Remaining</p>
+                  <p className="text-sm font-semibold mt-1">{Math.max(0, lessons.length - activeLessonIdx - 1)}</p>
                 </div>
               </div>
-            </div>
-          )}
-
-          {grouped.map(([module, items]) => (
-            <div key={module} className="rounded-2xl border border-border bg-card overflow-hidden">
-              <div className="px-5 py-3 border-b border-border flex items-center justify-between">
-                <h3 className="text-sm font-semibold tracking-tight">{module}</h3>
-                <span className="text-[11px] text-muted-foreground">{items.length} lessons</span>
+              <div className="flex items-center gap-2 pt-1">
+                <Button size="sm" variant="outline" onClick={onViewLessonContent}>
+                  <BookOpen className="h-3.5 w-3.5 mr-1.5" /> View lesson content
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setActiveLessonIdx(Math.max(0, activeLessonIdx - 1))} disabled={activeLessonIdx === 0}>
+                  <ChevronLeft className="h-3.5 w-3.5" /> Previous
+                </Button>
+                <Button size="sm" onClick={() => setActiveLessonIdx(Math.min(lessons.length - 1, activeLessonIdx + 1))} disabled={activeLessonIdx >= lessons.length - 1}>
+                  Mark complete & next <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
               </div>
-              <ul>
-                {items.map((l) => {
-                  const idx = lessons.findIndex(x => x.id === l.id);
-                  const done = idx < activeLessonIdx;
-                  const active = idx === activeLessonIdx;
-                  return (
-                    <li key={l.id}>
-                      <button
-                        onClick={() => setActiveLessonIdx(idx)}
-                        className={cn(
-                          "w-full flex items-center gap-3 px-5 py-3 text-left border-b border-border last:border-0 transition-colors",
-                          active ? "bg-primary/5" : "hover:bg-muted/40"
-                        )}
-                      >
-                        <span>
-                          {done ? <CheckCircle2 className="h-4 w-4 text-success" /> :
-                            active ? <Play className="h-4 w-4 text-primary" /> :
-                            <Circle className="h-4 w-4 text-muted-foreground" />}
-                        </span>
-                        <span className="flex-1 min-w-0">
-                          <span className={cn("block text-sm truncate", active && "font-medium")}>{l.title}</span>
-                        </span>
-                        {l.duration && <span className="text-[11px] text-muted-foreground">{l.duration}</span>}
-                        {active && <span className="text-[10px] font-medium uppercase tracking-wider text-primary">Now</span>}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
             </div>
-          ))}
-        </div>
-
-        {/* Materials sidebar */}
-        <div className="space-y-5">
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <h3 className="text-sm font-semibold tracking-tight mb-3">Session materials</h3>
-            <div className="space-y-1.5">
-              {materials.map((r, i) => (
-                <button key={i} className="w-full flex items-center justify-between rounded-lg px-2.5 py-2 text-left hover:bg-muted transition-colors">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-muted-foreground">{r.i}</span>
-                    <div className="min-w-0">
-                      <p className="text-[13px] truncate">{r.t}</p>
-                      <p className="text-[10px] text-muted-foreground">{r.s}</p>
-                    </div>
-                  </div>
-                  <Download className="h-3.5 w-3.5 text-muted-foreground" />
-                </button>
-              ))}
-            </div>
-            <Button variant="outline" size="sm" className="w-full mt-4">Share new resource</Button>
           </div>
+        )}
 
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <h3 className="text-sm font-semibold tracking-tight mb-1">Push to class</h3>
-            <p className="text-[11px] text-muted-foreground mb-3">Send a link, file, or command directly to every student VM.</p>
-            <Button size="sm" className="w-full">Open broadcast composer</Button>
+        {grouped.map(([module, items]) => (
+          <div key={module} className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+              <h3 className="text-sm font-semibold tracking-tight">{module}</h3>
+              <span className="text-[11px] text-muted-foreground">{items.length} lessons</span>
+            </div>
+            <ul>
+              {items.map((l) => {
+                const idx = lessons.findIndex(x => x.id === l.id);
+                const done = idx < activeLessonIdx;
+                const active = idx === activeLessonIdx;
+                return (
+                  <li key={l.id}>
+                    <button
+                      onClick={() => setActiveLessonIdx(idx)}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-5 py-3 text-left border-b border-border last:border-0 transition-colors",
+                        active ? "bg-primary/5" : "hover:bg-muted/40"
+                      )}
+                    >
+                      <span>
+                        {done ? <CheckCircle2 className="h-4 w-4 text-success" /> :
+                          active ? <Play className="h-4 w-4 text-primary" /> :
+                          <Circle className="h-4 w-4 text-muted-foreground" />}
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className={cn("block text-sm truncate", active && "font-medium")}>{l.title}</span>
+                      </span>
+                      {l.duration && <span className="text-[11px] text-muted-foreground">{l.duration}</span>}
+                      {active && <span className="text-[10px] font-medium uppercase tracking-wider text-primary">Now</span>}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
-        </div>
+        ))}
       </div>
     </>
   );
@@ -1442,138 +1468,108 @@ function ChatInput({ value, onChange, onSend }: { value: string; onChange: (v: s
 
 /* ---------------- Trainer View ---------------- */
 
+type TrainerVM = { id: string; name: string; role: string; ip: string; specs: string };
+
 type TrainerViewProps = {
   vmRunning: boolean;
   setVmRunning: (v: boolean) => void;
-  micOn: boolean; setMicOn: (v: boolean | ((p: boolean) => boolean)) => void;
-  camOn: boolean; setCamOn: (v: boolean | ((p: boolean) => boolean)) => void;
-  shareOn: boolean; setShareOn: (v: boolean | ((p: boolean) => boolean)) => void;
-  messages: { id: string; from: string; text: string; t: string; kind: "msg" | "q" | "sys" }[];
-  chatInput: string; setChatInput: (v: string) => void;
-  onSendChat: () => void;
+  trainerVMs: TrainerVM[];
+  activeVmId: string;
+  setActiveVmId: (id: string) => void;
   onOpenConsole: () => void;
 };
 
 function TrainerView({
-  vmRunning, setVmRunning,
-  micOn, setMicOn, camOn, setCamOn, shareOn, setShareOn,
-  messages, chatInput, setChatInput, onSendChat, onOpenConsole,
+  vmRunning, setVmRunning, trainerVMs, activeVmId, setActiveVmId, onOpenConsole,
 }: TrainerViewProps) {
-  const [chatOpen, setChatOpen] = useState(true);
-  const [fullscreen, setFullscreen] = useState(false);
-  const trainerVMs = [
-    { id: "vm1", name: "trainer-master-vm", role: "Primary", ip: "10.0.4.21", specs: "4 vCPU · 8 GB" },
-    { id: "vm2", name: "trainer-db-vm", role: "Database", ip: "10.0.4.22", specs: "2 vCPU · 4 GB" },
-    { id: "vm3", name: "trainer-edge-vm", role: "Edge node", ip: "10.0.4.23", specs: "2 vCPU · 4 GB" },
-  ];
-  const [activeVm, setActiveVm] = useState(trainerVMs[0].id);
-  const current = trainerVMs.find(v => v.id === activeVm)!;
+  const current = trainerVMs.find(v => v.id === activeVmId) || trainerVMs[0];
   return (
-    <div className="-mx-6 lg:-mx-8 -mt-8 -mb-24">
-      <ResizablePanelGroup direction="horizontal" className="h-[calc(100vh-64px)]">
-        <ResizablePanel defaultSize={chatOpen ? 75 : 100} minSize={40}>
-          <div className="h-full flex flex-col">
+    <div className="-mx-6 lg:-mx-8 -mt-8 -mb-24 h-[calc(100vh-64px)] flex flex-col bg-muted/30">
+      {/* Header */}
+      <div className="px-6 py-3 border-b border-border bg-card flex items-center justify-between">
+        <div className="flex items-center gap-3 min-w-0">
+          <Monitor className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold truncate">{current.name}</p>
+            <p className="text-[11px] text-muted-foreground truncate">{current.role} · {current.ip} · {current.specs}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {vmRunning ? (
+            <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => { setVmRunning(false); toast({ title: "VM stopped" }); }}>
+              <Square className="h-3.5 w-3.5" /> Stop
+            </Button>
+          ) : (
+            <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => { setVmRunning(true); toast({ title: "VM starting" }); }}>
+              <Play className="h-3.5 w-3.5" /> Start
+            </Button>
+          )}
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => toast({ title: "VM restarting" })}>
+            <RotateCcw className="h-3.5 w-3.5" /> Restart
+          </Button>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => toast({ title: "Snapshot saved" })}>
+            <Camera className="h-3.5 w-3.5" /> Snapshot
+          </Button>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={() => toast({ title: "VM reset" })}>
+            <RefreshCw className="h-3.5 w-3.5" /> Reset
+          </Button>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={onOpenConsole}>
+            <Maximize2 className="h-3.5 w-3.5" /> Pop out
+          </Button>
+        </div>
+      </div>
 
-        {/* CENTER CONSOLE */}
-        <section className="flex-1 min-w-0 bg-muted/30 flex flex-col">
-          <div className="px-6 py-3 border-b border-border bg-card flex items-center justify-between">
-            <div className="flex items-center gap-3 min-w-0">
-              <Monitor className="h-4 w-4 text-muted-foreground shrink-0" />
-              <div className="min-w-0">
-                <p className="text-sm font-semibold truncate">{current.name}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{current.role} · {current.ip} · {current.specs}</p>
+      {/* VM Tabs */}
+      <div className="px-4 border-b border-border bg-card flex items-center gap-1 overflow-x-auto">
+        {trainerVMs.map(vm => (
+          <button
+            key={vm.id}
+            onClick={() => setActiveVmId(vm.id)}
+            className={cn(
+              "h-9 px-3 inline-flex items-center gap-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
+              activeVmId === vm.id ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Monitor className="h-3.5 w-3.5" />
+            <span>{vm.name}</span>
+            <span className="text-[10px] text-muted-foreground">· {vm.role}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="flex-1 p-6 overflow-hidden">
+        <div className="h-full w-full rounded-2xl border border-border bg-zinc-950 overflow-hidden relative shadow-sm">
+          {vmRunning ? (
+            <>
+              <div className="absolute inset-0 p-6 font-mono text-[13px] leading-relaxed text-emerald-400 overflow-auto">
+                <div>$ ssh {current.ip}</div>
+                <div className="text-zinc-500">Connected to {current.name}</div>
+                <div>$ kubectl get pods -n training</div>
+                <div className="text-zinc-500">NAME                READY   STATUS    AGE</div>
+                <div>vpc-router-7d4f      1/1     Running   2h</div>
+                <div>peering-gw-6a9e      1/1     Running   2h</div>
+                <div>nat-instance-2f      1/1     Running   2h</div>
+                <div className="mt-3">$ terraform apply -auto-approve</div>
+                <div className="text-zinc-500">Plan: 4 to add, 0 to change, 0 to destroy.</div>
+                <div className="text-emerald-400">Apply complete! Resources: 4 added.</div>
+                <div className="mt-3 inline-flex items-center">$ <span className="ml-1 inline-block h-3.5 w-2 bg-emerald-400 animate-pulse" /></div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button onClick={onOpenConsole} className="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors">
-                <Maximize2 className="h-3.5 w-3.5" /> Pop out
+              <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                <span className="text-[10px] font-medium text-white tracking-wide">RUNNING</span>
+              </div>
+            </>
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-zinc-500">
+              <Power className="h-10 w-10" />
+              <span className="text-sm">VM is stopped</span>
+              <button onClick={() => setVmRunning(true)} className="mt-2 h-9 px-4 inline-flex items-center gap-2 rounded-lg bg-foreground text-background text-xs font-medium hover:opacity-90 transition">
+                <Play className="h-3.5 w-3.5" /> Start VM
               </button>
-              <button onClick={() => setChatOpen(o => !o)} className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border hover:bg-muted transition-colors" aria-label="Toggle chat">
-                {chatOpen ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
-              </button>
             </div>
-          </div>
-
-          {/* VM Tabs */}
-          <div className="px-4 border-b border-border bg-card flex items-center gap-1 overflow-x-auto">
-            {trainerVMs.map(vm => (
-              <button
-                key={vm.id}
-                onClick={() => setActiveVm(vm.id)}
-                className={cn(
-                  "h-9 px-3 inline-flex items-center gap-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
-                  activeVm === vm.id ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Monitor className="h-3.5 w-3.5" />
-                <span>{vm.name}</span>
-                <span className="text-[10px] text-muted-foreground">· {vm.role}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="flex-1 p-6 overflow-hidden">
-            <div className="h-full w-full rounded-2xl border border-border bg-zinc-950 overflow-hidden relative shadow-sm">
-              {vmRunning ? (
-                <>
-                  <div className="absolute inset-0 p-6 font-mono text-[13px] leading-relaxed text-emerald-400 overflow-auto">
-                    <div>$ kubectl get pods -n training</div>
-                    <div className="text-zinc-500">NAME                READY   STATUS    AGE</div>
-                    <div>vpc-router-7d4f      1/1     Running   2h</div>
-                    <div>peering-gw-6a9e      1/1     Running   2h</div>
-                    <div>nat-instance-2f      1/1     Running   2h</div>
-                    <div className="mt-3">$ terraform apply -auto-approve</div>
-                    <div className="text-zinc-500">Plan: 4 to add, 0 to change, 0 to destroy.</div>
-                    <div className="text-emerald-400">Apply complete! Resources: 4 added.</div>
-                    <div className="mt-3">$ aws ec2 describe-vpc-peering-connections</div>
-                    <div className="text-zinc-500">{`{ "VpcPeeringConnections": [ ... ] }`}</div>
-                    <div className="mt-3 inline-flex items-center">$ <span className="ml-1 inline-block h-3.5 w-2 bg-emerald-400 animate-pulse" /></div>
-                  </div>
-                  <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                    <span className="text-[10px] font-medium text-white tracking-wide">RUNNING</span>
-                  </div>
-                </>
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-zinc-500">
-                  <Power className="h-10 w-10" />
-                  <span className="text-sm">VM is stopped</span>
-                  <button onClick={() => setVmRunning(true)} className="mt-2 h-9 px-4 inline-flex items-center gap-2 rounded-lg bg-foreground text-background text-xs font-medium hover:opacity-90 transition">
-                    <Play className="h-3.5 w-3.5" /> Start VM
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-          </div>
-        </ResizablePanel>
-
-        {chatOpen && (
-          <>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={25} minSize={15} maxSize={50}>
-              <aside className="h-full border-l border-border bg-card flex flex-col">
-                <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold">Live chat</p>
-                    <p className="text-[11px] text-muted-foreground">Class conversation</p>
-                  </div>
-                  <button onClick={() => setChatOpen(false)} className="h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted" aria-label="Collapse chat">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-                <ScrollArea className="flex-1">
-                  <div className="px-5 py-4 space-y-3">
-                    {messages.map(m => <ChatBubble key={m.id} {...m} />)}
-                  </div>
-                </ScrollArea>
-                <ChatInput value={chatInput} onChange={setChatInput} onSend={onSendChat} />
-              </aside>
-            </ResizablePanel>
-          </>
-        )}
-      </ResizablePanelGroup>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1663,16 +1659,6 @@ function SplitView(props: {
   mainTab: MainTab;
   setMainTab: (t: MainTab) => void;
   gridLength: number;
-  splitSide: SplitSide;
-  setSplitSide: (s: SplitSide) => void;
-  students: StudentRow[];
-  search: string;
-  setSearch: (v: string) => void;
-  onSelectStudent: (id: string) => void;
-  messages: Msg[];
-  chatInput: string;
-  setChatInput: (v: string) => void;
-  onSendChat: () => void;
   lessons: { id: string; title: string; module: string; duration?: string }[];
   activeLessonIdx: number;
   setActiveLessonIdx: (i: number) => void;
@@ -1682,6 +1668,7 @@ function SplitView(props: {
   micOn: boolean; setMicOn: (v: boolean) => void;
   camOn: boolean; setCamOn: (v: boolean) => void;
   shareOn: boolean; setShareOn: (v: boolean) => void;
+  currentTrainerVM: TrainerVM;
   onOpenConsole: () => void;
   onSnapshot: () => void;
   onEnd: () => void;
@@ -1690,15 +1677,11 @@ function SplitView(props: {
 }) {
   const {
     batchName, sessionTimer, sessionActive, setMainTab, gridLength,
-    splitSide, setSplitSide, students, search, setSearch, onSelectStudent,
-    messages, chatInput, setChatInput, onSendChat,
     lessons, activeLessonIdx, setActiveLessonIdx, courseName,
     trainerVmRunning, setTrainerVmRunning, micOn, setMicOn, camOn, setCamOn,
-    shareOn, setShareOn, onOpenConsole, onSnapshot, onEnd,
+    shareOn, setShareOn, currentTrainerVM, onOpenConsole, onSnapshot, onEnd,
     fullscreen = false, setFullscreen,
   } = props;
-
-  const sideOpen = splitSide !== null;
 
   return (
     <div className={cn(
@@ -1745,210 +1728,91 @@ function SplitView(props: {
         </div>
       </header>
 
-      {/* Body: console | LMS | side panel */}
+      {/* Body: trainer console | lesson content */}
       <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
-        <ResizablePanel defaultSize={40} minSize={20}>
-        {/* CONSOLE */}
-        <section className="h-full min-w-0 flex flex-col border-r border-border bg-zinc-950">
-          <div className="h-9 shrink-0 px-3 flex items-center justify-between border-b border-zinc-800 bg-zinc-900/60">
-            <div className="flex items-center gap-2 min-w-0">
-              <Monitor className="h-3.5 w-3.5 text-zinc-400" />
-              <span className="text-[12px] font-medium text-zinc-200 truncate">trainer-master-vm</span>
-              <span className="text-[10px] text-zinc-500 font-mono">10.0.4.21</span>
-              {trainerVmRunning && (
-                <span className="inline-flex items-center gap-1 ml-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                  <span className="text-[9px] text-zinc-400 tracking-wider">RUNNING</span>
-                </span>
-              )}
+        <ResizablePanel defaultSize={50} minSize={25}>
+          <section className="h-full min-w-0 flex flex-col border-r border-border bg-zinc-950">
+            <div className="h-9 shrink-0 px-3 flex items-center justify-between border-b border-zinc-800 bg-zinc-900/60">
+              <div className="flex items-center gap-2 min-w-0">
+                <Monitor className="h-3.5 w-3.5 text-zinc-400" />
+                <span className="text-[12px] font-medium text-zinc-200 truncate">{currentTrainerVM.name}</span>
+                <span className="text-[10px] text-zinc-500 font-mono">{currentTrainerVM.ip}</span>
+                {trainerVmRunning && (
+                  <span className="inline-flex items-center gap-1 ml-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                    <span className="text-[9px] text-zinc-400 tracking-wider">RUNNING</span>
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                {trainerVmRunning ? (
+                  <button onClick={() => setTrainerVmRunning(false)} className="h-6 px-2 inline-flex items-center gap-1 rounded text-[10px] text-zinc-300 hover:bg-zinc-800"><Square className="h-3 w-3" /> Stop</button>
+                ) : (
+                  <button onClick={() => setTrainerVmRunning(true)} className="h-6 px-2 inline-flex items-center gap-1 rounded text-[10px] text-zinc-300 hover:bg-zinc-800"><Play className="h-3 w-3" /> Start</button>
+                )}
+                <button className="h-6 w-6 inline-flex items-center justify-center rounded text-zinc-300 hover:bg-zinc-800" title="Restart"><RotateCcw className="h-3 w-3" /></button>
+                <button onClick={onOpenConsole} className="h-6 w-6 inline-flex items-center justify-center rounded text-zinc-300 hover:bg-zinc-800" title="Expand"><Maximize2 className="h-3 w-3" /></button>
+              </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex-1 p-4 font-mono text-[12px] leading-relaxed text-emerald-400 overflow-auto">
               {trainerVmRunning ? (
-                <button onClick={() => setTrainerVmRunning(false)} className="h-6 px-2 inline-flex items-center gap-1 rounded text-[10px] text-zinc-300 hover:bg-zinc-800"><Square className="h-3 w-3" /> Stop</button>
+                <>
+                  <div>$ ssh {currentTrainerVM.ip}</div>
+                  <div className="text-zinc-500">Connected to {currentTrainerVM.name}</div>
+                  <div>$ kubectl get pods -n training</div>
+                  <div className="text-zinc-500">NAME                READY   STATUS    AGE</div>
+                  <div>vpc-router-7d4f      1/1     Running   2h</div>
+                  <div>peering-gw-6a9e      1/1     Running   2h</div>
+                  <div>nat-instance-2f      1/1     Running   2h</div>
+                  <div className="mt-2">$ terraform apply -auto-approve</div>
+                  <div className="text-zinc-500">Plan: 4 to add, 0 to change, 0 to destroy.</div>
+                  <div className="text-emerald-400">Apply complete! Resources: 4 added.</div>
+                  <div className="mt-2 inline-flex items-center">$ <span className="ml-1 inline-block h-3 w-2 bg-emerald-400 animate-pulse" /></div>
+                </>
               ) : (
-                <button onClick={() => setTrainerVmRunning(true)} className="h-6 px-2 inline-flex items-center gap-1 rounded text-[10px] text-zinc-300 hover:bg-zinc-800"><Play className="h-3 w-3" /> Start</button>
+                <div className="h-full flex flex-col items-center justify-center text-zinc-500 gap-2">
+                  <Power className="h-8 w-8" />
+                  <span className="text-xs">VM stopped</span>
+                  <button onClick={() => setTrainerVmRunning(true)} className="mt-2 h-7 px-3 rounded-md bg-emerald-500/20 text-emerald-300 text-[11px] hover:bg-emerald-500/30">Start VM</button>
+                </div>
               )}
-              <button className="h-6 w-6 inline-flex items-center justify-center rounded text-zinc-300 hover:bg-zinc-800" title="Restart"><RotateCcw className="h-3 w-3" /></button>
-              <button onClick={onOpenConsole} className="h-6 w-6 inline-flex items-center justify-center rounded text-zinc-300 hover:bg-zinc-800" title="Expand"><Maximize2 className="h-3 w-3" /></button>
             </div>
-          </div>
-          <div className="flex-1 p-4 font-mono text-[12px] leading-relaxed text-emerald-400 overflow-auto">
-            {trainerVmRunning ? (
-              <>
-                <div>$ kubectl get pods -n training</div>
-                <div className="text-zinc-500">NAME                READY   STATUS    AGE</div>
-                <div>vpc-router-7d4f      1/1     Running   2h</div>
-                <div>peering-gw-6a9e      1/1     Running   2h</div>
-                <div>nat-instance-2f      1/1     Running   2h</div>
-                <div className="mt-2">$ terraform apply -auto-approve</div>
-                <div className="text-zinc-500">Plan: 4 to add, 0 to change, 0 to destroy.</div>
-                <div className="text-emerald-400">Apply complete! Resources: 4 added.</div>
-                <div className="mt-2 inline-flex items-center">$ <span className="ml-1 inline-block h-3 w-2 bg-emerald-400 animate-pulse" /></div>
-              </>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-zinc-500 gap-2">
-                <Power className="h-8 w-8" />
-                <span className="text-xs">VM stopped</span>
-                <button onClick={() => setTrainerVmRunning(true)} className="mt-2 h-7 px-3 rounded-md bg-emerald-500/20 text-emerald-300 text-[11px] hover:bg-emerald-500/30">Start VM</button>
-              </div>
-            )}
-          </div>
-        </section>
+          </section>
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={40} minSize={20}>
-        {/* LMS */}
-        <section className="h-full min-w-0 flex flex-col bg-card">
-          <div className="h-9 shrink-0 px-3 flex items-center justify-between border-b border-border">
-            <div className="flex items-center gap-2 min-w-0">
-              <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-[12px] font-medium truncate">{courseName}</span>
-            </div>
-            <span className="text-[10px] text-muted-foreground">{lessons.length} lessons</span>
-          </div>
-          <div className="px-4 py-3 border-b border-border bg-muted/20">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Now playing</p>
-            <p className="text-sm font-medium mt-0.5 truncate">{lessons[activeLessonIdx]?.title}</p>
-            <div className="mt-2 h-1 rounded-full bg-muted overflow-hidden">
-              <div className="h-full bg-primary" style={{ width: "40%" }} />
-            </div>
-          </div>
-          <ScrollArea className="flex-1">
-            <ul className="p-2">
-              {lessons.map((l, idx) => {
-                const done = idx < activeLessonIdx;
-                const active = idx === activeLessonIdx;
-                return (
-                  <li key={l.id}>
-                    <button
-                      onClick={() => setActiveLessonIdx(idx)}
-                      className={cn(
-                        "w-full flex items-center gap-2.5 px-3 py-2 text-left rounded-lg transition-colors",
-                        active ? "bg-primary/10" : "hover:bg-muted/60"
-                      )}
-                    >
-                      {done ? <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" /> :
-                        active ? <Play className="h-3.5 w-3.5 text-primary shrink-0" /> :
-                        <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
-                      <span className="flex-1 min-w-0">
-                        <span className={cn("block text-[12px] truncate", active && "font-medium")}>{l.title}</span>
-                        <span className="block text-[10px] text-muted-foreground truncate">{l.module}</span>
-                      </span>
-                      {l.duration && <span className="text-[10px] text-muted-foreground">{l.duration}</span>}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </ScrollArea>
-        </section>
-        </ResizablePanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={20} minSize={5} maxSize={45}>
-        {/* SIDE PANEL: students / chat */}
-        <aside className={cn("h-full border-l border-border bg-card flex flex-col transition-all duration-200")}>
-          {/* tab switcher */}
-          <div className="h-9 shrink-0 border-b border-border flex items-center">
-            <SidePanelTab
-              active={splitSide === "students"}
-              icon={<Users className="h-3.5 w-3.5" />}
-              label="Students"
-              badge={gridLength}
-              collapsed={!sideOpen}
-              onClick={() => setSplitSide(splitSide === "students" ? null : "students")}
-            />
-            <SidePanelTab
-              active={splitSide === "chat"}
-              icon={<MessageSquare className="h-3.5 w-3.5" />}
-              label="Live chat"
-              badge={messages.filter(m => m.kind === "q").length || undefined}
-              collapsed={!sideOpen}
-              onClick={() => setSplitSide(splitSide === "chat" ? null : "chat")}
-            />
-            {sideOpen && (
-              <button onClick={() => setSplitSide(null)} className="ml-auto mr-1 h-6 w-6 inline-flex items-center justify-center rounded text-muted-foreground hover:bg-muted" title="Collapse">
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-
-          {sideOpen && splitSide === "students" && (
-            <div className="flex-1 flex flex-col min-h-0">
-              <div className="p-2.5 border-b border-border">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                  <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search students" className="h-8 pl-7 text-[12px]" />
-                </div>
+        <ResizablePanel defaultSize={50} minSize={25}>
+          {/* LESSON CONTENT */}
+          <section className="h-full min-w-0 flex flex-col bg-card">
+            <div className="h-9 shrink-0 px-3 flex items-center justify-between border-b border-border">
+              <div className="flex items-center gap-2 min-w-0">
+                <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-[12px] font-medium truncate">{courseName}</span>
               </div>
-              <ScrollArea className="flex-1">
-                <ul className="p-1.5">
-                  {students.map(s => {
-                    const accent = stateAccent[s.state];
-                    return (
-                      <li key={s.id}>
-                        <button
-                          onClick={() => onSelectStudent(s.id)}
-                          className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-left hover:bg-muted/60 transition-colors"
-                        >
-                          <div className={cn("relative h-7 w-7 rounded-full ring-2 shrink-0", accent.ring)}>
-                            <Avatar className="h-7 w-7">
-                              <AvatarFallback className="bg-muted text-[10px] font-medium">{s.initials}</AvatarFallback>
-                            </Avatar>
-                            <span className={cn("absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-card", accent.dot)} />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[12px] font-medium truncate">{s.name}</p>
-                            <p className="text-[10px] text-muted-foreground font-mono truncate">{s.vmName}</p>
-                          </div>
-                          {s.state === "raised" && <Hand className="h-3 w-3 text-warning animate-pulse shrink-0" />}
-                          <Monitor className="h-3 w-3 text-muted-foreground shrink-0" />
-                        </button>
-                      </li>
-                    );
-                  })}
-                  {students.length === 0 && (
-                    <div className="text-center py-8 text-[11px] text-muted-foreground">No students match.</div>
-                  )}
-                </ul>
-              </ScrollArea>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setActiveLessonIdx(Math.max(0, activeLessonIdx - 1))}
+                  disabled={activeLessonIdx === 0}
+                  className="h-6 w-6 inline-flex items-center justify-center rounded hover:bg-muted disabled:opacity-30"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </button>
+                <span className="text-[10px] text-muted-foreground tabular-nums">{activeLessonIdx + 1} / {lessons.length}</span>
+                <button
+                  onClick={() => setActiveLessonIdx(Math.min(lessons.length - 1, activeLessonIdx + 1))}
+                  disabled={activeLessonIdx >= lessons.length - 1}
+                  className="h-6 w-6 inline-flex items-center justify-center rounded hover:bg-muted disabled:opacity-30"
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
-          )}
-
-          {sideOpen && splitSide === "chat" && (
-            <div className="flex-1 flex flex-col min-h-0">
-              <ScrollArea className="flex-1 px-3">
-                <div className="space-y-2.5 py-3">
-                  {messages.map(m => <ChatBubble key={m.id} {...m} />)}
-                </div>
-              </ScrollArea>
-              <ChatInput value={chatInput} onChange={setChatInput} onSend={onSendChat} />
-            </div>
-          )}
-        </aside>
+            <ScrollArea className="flex-1">
+              <LessonContent lesson={lessons[activeLessonIdx]} />
+            </ScrollArea>
+          </section>
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
-  );
-}
-
-function SidePanelTab({ active, icon, label, badge, collapsed, onClick }: {
-  active: boolean; icon: React.ReactNode; label: string; badge?: number; collapsed: boolean; onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "h-full px-3 inline-flex items-center gap-1.5 text-[11px] font-medium border-b-2 transition-colors",
-        active ? "border-primary text-foreground bg-muted/40" : "border-transparent text-muted-foreground hover:text-foreground"
-      )}
-      title={label}
-    >
-      {icon}
-      {!collapsed && <span>{label}</span>}
-      {!collapsed && badge !== undefined && (
-        <span className="ml-0.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[9px] font-semibold">{badge}</span>
-      )}
-    </button>
   );
 }
 
