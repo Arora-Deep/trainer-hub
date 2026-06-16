@@ -520,8 +520,11 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
                 <Input type="number" min={0} max={100} value={form.weight ?? ""} onChange={(e) => setField("weight", Number(e.target.value))} />
               </div>
             )}
+          </div>
         </div>
         </div>
+
+
 
         <SheetFooter className="border-t bg-background/95 backdrop-blur px-6 py-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
