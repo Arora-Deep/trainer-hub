@@ -116,7 +116,9 @@ export default function BatchDetails() {
     );
   }
 
-  // Self-paced batches use the same full batch details view as live training.
+  // Self-paced batches use the same full batch details view as live training,
+  // with a few sections trimmed (no trainer-VM workflow, no separate Games tab).
+  const isSelfPaced = batch.deliveryMode === "self-paced";
 
   const formatDate = (dateStr: string) => {
     try { return format(new Date(dateStr), "MMM d, yyyy"); } catch { return dateStr; }
