@@ -380,7 +380,7 @@ export default function LiveTraining() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold truncate">You · Trainer</p>
-                    <p className="text-[11px] text-muted-foreground truncate">trainer-master-vm</p>
+                    <p className="text-[11px] text-muted-foreground truncate font-mono">{currentTrainerVM.name}</p>
                   </div>
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-1.5">
@@ -401,26 +401,20 @@ export default function LiveTraining() {
                         trainerVmRunning ? "cursor-pointer" : "cursor-not-allowed",
                       )}
                     >
-                      {/* Mock terminal */}
                       {trainerVmRunning ? (
                         <>
                           <div className="absolute inset-0 p-3 font-mono text-[9px] leading-tight text-emerald-400/80 overflow-hidden">
+                            <div>$ ssh {currentTrainerVM.ip}</div>
+                            <div className="text-zinc-500">Connected to {currentTrainerVM.name}</div>
                             <div>$ kubectl get pods -n training</div>
-                            <div className="text-zinc-500">NAME                READY   STATUS</div>
                             <div>vpc-router-7d4f      1/1     Running</div>
                             <div>peering-gw-6a9e      1/1     Running</div>
-                            <div>nat-instance-2f      1/1     Running</div>
-                            <div className="mt-1">$ terraform apply</div>
-                            <div className="text-zinc-500">Plan: 4 to add, 0 to change.</div>
-                            <div className="text-emerald-400">Apply complete! Resources: 4 added.</div>
                             <div className="mt-1 inline-flex items-center">$ <span className="ml-1 inline-block h-2 w-1.5 bg-emerald-400 animate-pulse" /></div>
                           </div>
-                          {/* status chip */}
                           <div className="absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-0.5">
                             <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                             <span className="text-[9px] font-medium text-white tracking-wide">RUNNING</span>
                           </div>
-                          {/* hover overlay */}
                           <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                             <Maximize2 className="h-5 w-5 text-white" />
                             <span className="text-[11px] font-medium text-white">Open console</span>
@@ -434,8 +428,28 @@ export default function LiveTraining() {
                       )}
                     </div>
                     <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-                      <span className="font-mono">10.0.4.21</span>
-                      <span>4 vCPU · 8 GB</span>
+                      <span className="font-mono">{currentTrainerVM.ip}</span>
+                      <span>{currentTrainerVM.specs}</span>
+                    </div>
+                  </RailSection>
+
+                  {/* VM SWITCHER TABS */}
+                  <RailSection title="My machines">
+                    <div className="grid grid-cols-1 gap-1">
+                      {trainerVMs.map(vm => (
+                        <button
+                          key={vm.id}
+                          onClick={() => setActiveTrainerVmId(vm.id)}
+                          className={cn(
+                            "w-full h-9 px-2.5 inline-flex items-center gap-2 rounded-lg border text-[12px] font-medium transition-colors text-left",
+                            activeTrainerVmId === vm.id ? "border-foreground bg-muted" : "border-border hover:bg-muted/60"
+                          )}
+                        >
+                          <Monitor className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="flex-1 truncate">{vm.role}</span>
+                          <span className="text-[10px] text-muted-foreground font-mono">{vm.ip}</span>
+                        </button>
+                      ))}
                     </div>
                   </RailSection>
 
