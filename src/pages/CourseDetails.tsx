@@ -22,6 +22,7 @@ import { useParams, Link, Navigate } from "react-router-dom";
 import { useCourseStore, getCourseAssessments } from "@/stores/courseStore";
 import { CourseContentEditor } from "@/components/courses/CourseContentEditor";
 import { CourseAssessmentsTab } from "@/components/courses/CourseAssessmentsTab";
+import { CourseLabsAccessTab } from "@/components/courses/CourseLabsAccessTab";
 
 const enrolledBatches = [
   { id: 1, name: "AWS SA - Batch 12", trainer: "John Smith", students: 24, status: "live" },
@@ -127,6 +128,9 @@ export default function CourseDetails() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="content">Content</TabsTrigger>
+          {course.settings?.deliveryType === "self-paced" && (
+            <TabsTrigger value="labs">Labs & Access</TabsTrigger>
+          )}
           <TabsTrigger value="assessments">Assessments</TabsTrigger>
           <TabsTrigger value="batches">Enrolled Batches</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
@@ -199,6 +203,12 @@ export default function CourseDetails() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {course.settings?.deliveryType === "self-paced" && (
+          <TabsContent value="labs">
+            <CourseLabsAccessTab course={course} />
+          </TabsContent>
+        )}
 
         <TabsContent value="assessments">
           <CourseAssessmentsTab course={course} />

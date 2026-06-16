@@ -48,6 +48,7 @@ import { MaterialsTab } from "@/components/batches/MaterialsTab";
 import { MeetingsTab } from "@/components/batches/MeetingsTab";
 import { BatchReportsTab } from "@/components/batches/BatchReportsTab";
 import { RequestTemplateSheet } from "@/components/sandbox/RequestTemplateSheet";
+import { SelfPacedBatchView } from "@/components/batches/SelfPacedBatchView";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
@@ -113,6 +114,12 @@ export default function BatchDetails() {
         </div>
       </div>
     );
+  }
+
+  // Self-paced batches use a slim, enrollment-only view. Labs & access live on the course.
+  if (batch.deliveryMode === "self-paced") {
+    const linkedCourse = courses.find((c) => c.id === batch.courseId);
+    return <SelfPacedBatchView batch={batch} course={linkedCourse} />;
   }
 
   const formatDate = (dateStr: string) => {
@@ -195,8 +202,8 @@ export default function BatchDetails() {
         />
         <div className="flex items-center gap-2 shrink-0">
           <Badge variant="outline" className="capitalize gap-1 text-xs">
-            {batch.deliveryMode === "self-paced" ? <Clock className="h-3 w-3" /> : <Video className="h-3 w-3" />}
-            {batch.deliveryMode === "self-paced" ? "Self-paced" : "Live"}
+            <Video className="h-3 w-3" />
+            Live
           </Badge>
           <StatusBadge
             status={statusMap[batch.status].status}
@@ -204,7 +211,7 @@ export default function BatchDetails() {
             pulse={batch.status === "live"}
           />
           <Button variant="outline" size="sm"><RefreshCw className="mr-1.5 h-3.5 w-3.5" />Refresh</Button>
-          {batch.status === "live" && batch.deliveryMode !== "self-paced" && (
+          {batch.status === "live" && (
             <Button size="sm" onClick={() => navigate("/live-training")}><Play className="mr-1.5 h-3.5 w-3.5" />Start Session</Button>
           )}
         </div>

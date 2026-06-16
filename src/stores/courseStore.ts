@@ -44,6 +44,12 @@ export interface LabAttachment {
   mode: LabMode;
   estimatedHours?: number;
   allocation?: LabAllocation;
+  // Self-paced per-lab caps (owned by the course)
+  runtimeLimitMin?: number;
+  maxLaunches?: number;
+  idleShutdownMin?: number;
+  hoursAllocated?: number;
+  unlockAfterLessonId?: string;
 }
 
 export type LessonSource = 'inline' | 'library';
@@ -178,6 +184,8 @@ export type LabPolicy = 'hourly-wallet' | 'unlimited-during-validity';
 export type CourseVisibility = 'private' | 'customer' | 'marketplace';
 export type CourseOwnerType = 'admin' | 'trainer' | 'customer';
 export type CourseModerationStatus = 'draft' | 'pending-review' | 'approved' | 'rejected';
+export type SelfPacedAccessModel = 'full-course' | 'per-lab' | 'module-unlock';
+export type OnExpireBehavior = 'suspend' | 'delete' | 'lock';
 
 export interface CourseSettings {
   deliveryType: 'self-paced' | 'instructor-led' | 'hybrid';
@@ -195,6 +203,12 @@ export interface CourseSettings {
   certificationId?: string;
   discussionEnabled: boolean;
   visibility: CourseVisibility;
+  // Self-paced course-wide lab access (owned by course)
+  accessModel?: SelfPacedAccessModel;
+  totalAccessHours?: number;
+  validityAfterLaunchDays?: number;
+  defaultIdleShutdownMin?: number;
+  onExpire?: OnExpireBehavior;
 }
 
 export interface Course {

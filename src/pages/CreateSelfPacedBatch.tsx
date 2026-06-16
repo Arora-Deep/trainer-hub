@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,125 +7,73 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useBatchStore } from "@/stores/batchStore";
-import { useCourseStore, type Lesson } from "@/stores/courseStore";
-import { useLabStore } from "@/stores/labStore";
+import { useCourseStore } from "@/stores/courseStore";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
-  Sparkles, FileText, Clock, Monitor, CheckCircle2, ArrowRight, ArrowLeft,
-  CalendarIcon, Users, AlertCircle, Plus,
+  Sparkles, FileText, Users, CheckCircle2, ArrowRight, ArrowLeft,
+  CalendarIcon, AlertCircle,
 } from "lucide-react";
-import { RequestTemplateSheet } from "@/components/sandbox/RequestTemplateSheet";
 
 const steps = [
   { id: 1, name: "Basics", icon: FileText },
-  { id: 2, name: "Access & enrollment", icon: Clock },
-  { id: 3, name: "On-demand labs", icon: Monitor },
-  { id: 4, name: "Review", icon: CheckCircle2 },
+  { id: 2, name: "Enrollment", icon: Users },
+  { id: 3, name: "Review", icon: CheckCircle2 },
 ];
-
-type LabRow = {
-  key: string;            // chapter:lesson
-  lessonId: string;
-  lessonTitle: string;
-  chapterTitle: string;
-  attachedTemplateId?: string;
-  templateId?: string;    // chosen
-  runtimeLimit: number;
-  maxLaunches: number;
-  idleShutdownMin: number;
-  skipped: boolean;
-};
 
 export default function CreateSelfPacedBatch() {
   const navigate = useNavigate();
   const { addBatch } = useBatchStore();
   const { courses } = useCourseStore();
-  const { templates } = useLabStore();
 
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Step 1
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [courseId, setCourseId] = useState("");
   const course = useMemo(() => courses.find((c) => c.id === courseId), [courses, courseId]);
 
-  // Step 2
   const [enrollmentMode, setEnrollmentMode] = useState<"always-open" | "window" | "invite-only">("always-open");
   const [enrollmentStart, setEnrollmentStart] = useState<Date | undefined>();
   const [enrollmentEnd, setEnrollmentEnd] = useState<Date | undefined>();
-  const [accessModel, setAccessModel] = useState<"full-course" | "lesson-unlock">("full-course");
-  const [totalAccessHours, setTotalAccessHours] = useState(120);
-  const [expiryDays, setExpiryDays] = useState(60);
   const [maxConcurrentLearners, setMaxConcurrentLearners] = useState(50);
 
-  // Step 3
-  const labLessons = useMemo<Array<{ key: string; lesson: Lesson; chapterTitle: string }>>(() => {
-    if (!course) return [];
-    const out: Array<{ key: string; lesson: Lesson; chapterTitle: string }> = [];
+  // Only self-paced courses can back a self-paced batch
+  const selfPacedCourses = useMemo(
+    () => courses.filter((c) => c.settings?.deliveryType === "self-paced"),
+    [courses]
+  );
+
+  const courseLabReadiness = useMemo(() => {
+    if (!course) return { total: 0, ready: 0, pending: [] as string[] };
+    const labLessons: Array<{ title: string; ready: boolean }> = [];
     course.chapters.forEach((ch) => {
       ch.lessons.forEach((l) => {
-        if (l.type === "lab" || l.lab) out.push({ key: `${ch.id}:${l.id}`, lesson: l, chapterTitle: ch.title });
+        if (l.type === "lab" || l.lab) {
+          labLessons.push({ title: l.title, ready: !!l.lab?.templateId });
+        }
       });
     });
-    return out;
+    return {
+      total: labLessons.length,
+      ready: labLessons.filter((l) => l.ready).length,
+      pending: labLessons.filter((l) => !l.ready).map((l) => l.title),
+    };
   }, [course]);
 
-  const [labRows, setLabRows] = useState<Record<string, LabRow>>({});
-  const [requestSheetOpen, setRequestSheetOpen] = useState(false);
-  const [requestContext, setRequestContext] = useState<string>("");
+  const courseReady = course && courseLabReadiness.total > 0 && courseLabReadiness.pending.length === 0;
 
-  // initialize labRows when course picked
-  useEffect(() => {
-    setLabRows((prev) => {
-      const next: Record<string, LabRow> = {};
-      labLessons.forEach(({ key, lesson, chapterTitle }) => {
-        const existing = prev[key];
-        const initialTplId = existing?.templateId || lesson.lab?.templateId;
-        const tpl = templates.find((t) => t.id === initialTplId);
-        next[key] = existing || {
-          key,
-          lessonId: lesson.id,
-          lessonTitle: lesson.title,
-          chapterTitle,
-          attachedTemplateId: lesson.lab?.templateId,
-          templateId: initialTplId,
-          runtimeLimit: tpl?.runtimeLimit || 120,
-          maxLaunches: 10,
-          idleShutdownMin: 15,
-          skipped: false,
-        };
-      });
-      return next;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [labLessons.length]);
-
-  const updateLab = (key: string, patch: Partial<LabRow>) =>
-    setLabRows((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
-
-  const labsReady = useMemo(() => {
-    const rows = Object.values(labRows);
-    if (rows.length === 0) return true;
-    return rows.every((r) => r.skipped || r.templateId);
-  }, [labRows]);
-
-  // Step validation
   const canNext = () => {
-    if (currentStep === 1) return name.trim().length > 1 && !!courseId;
-    if (currentStep === 2) return totalAccessHours > 0 && (enrollmentMode !== "window" || (enrollmentStart && enrollmentEnd));
-    if (currentStep === 3) return labsReady;
+    if (currentStep === 1) return name.trim().length > 1 && !!courseId && !!courseReady;
+    if (currentStep === 2) return enrollmentMode !== "window" || (enrollmentStart && enrollmentEnd);
     return true;
   };
 
   const handleCreate = () => {
-    const rows = Object.values(labRows);
     addBatch({
       name,
       description,
@@ -134,36 +82,28 @@ export default function CreateSelfPacedBatch() {
       instructors: ["You"],
       settings: { published: true, allowSelfEnrollment: enrollmentMode !== "invite-only", certification: true },
       startDate: (enrollmentStart || new Date()).toISOString(),
-      endDate: (enrollmentEnd || new Date(Date.now() + expiryDays * 86400000)).toISOString(),
-      evaluationEndDate: (enrollmentEnd || new Date(Date.now() + expiryDays * 86400000)).toISOString(),
+      endDate: (enrollmentEnd || new Date(Date.now() + 365 * 86400000)).toISOString(),
+      evaluationEndDate: (enrollmentEnd || new Date(Date.now() + 365 * 86400000)).toISOString(),
       additionalDetails: "",
       seatCount: 0,
       medium: "online",
       deliveryMode: "self-paced",
-      accessModel,
-      totalAccessHours,
       enrollmentMode: "floating",
+      // Access model + per-lab caps now live on the course; not duplicated here.
+      accessModel: course?.settings?.accessModel === "per-lab" ? "lesson-unlock" : "full-course",
+      totalAccessHours: course?.settings?.totalAccessHours,
       selfPacedConfig: {
         enrollmentMode,
         enrollmentStart: enrollmentStart?.toISOString(),
         enrollmentEnd: enrollmentEnd?.toISOString(),
-        accessModel,
-        totalAccessHours,
-        expiryDays,
+        accessModel: course?.settings?.accessModel === "per-lab" ? "lesson-unlock" : "full-course",
+        totalAccessHours: course?.settings?.totalAccessHours || 0,
+        expiryDays: course?.settings?.validityAfterLaunchDays || 60,
         maxConcurrentLearners,
-        perLabCaps: rows
-          .filter((r) => !r.skipped && r.templateId)
-          .map((r) => ({
-            labId: r.lessonId,
-            labName: r.lessonTitle,
-            templateId: r.templateId!,
-            runtimeLimit: r.runtimeLimit,
-            maxLaunches: r.maxLaunches,
-            idleShutdownMin: r.idleShutdownMin,
-          })),
+        perLabCaps: [],
       },
     });
-    toast({ title: "Self-paced batch created", description: `"${name}" is now live for floating enrollment.` });
+    toast({ title: "Self-paced batch published", description: `"${name}" is open for enrollment.` });
     navigate("/batches");
   };
 
@@ -171,11 +111,10 @@ export default function CreateSelfPacedBatch() {
     <div className="space-y-6 max-w-5xl">
       <PageHeader
         title="Create self-paced batch"
-        description="Set up an always-on batch where learners run labs on demand from your template library."
+        description="Open enrollment on a self-paced course. All lab settings come from the course itself."
         breadcrumbs={[{ label: "Batches", href: "/batches" }, { label: "Create self-paced" }]}
       />
 
-      {/* Stepper */}
       <div className="flex items-center gap-2">
         {steps.map((s, i) => {
           const Icon = s.icon;
@@ -198,12 +137,11 @@ export default function CreateSelfPacedBatch() {
         })}
       </div>
 
-      {/* STEP 1 */}
       {currentStep === 1 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Basics</CardTitle>
-            <CardDescription>Name your batch and link a course whose lessons have labs attached.</CardDescription>
+            <CardDescription>Pick a self-paced course that already has its labs &amp; access configured.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -212,37 +150,62 @@ export default function CreateSelfPacedBatch() {
             </div>
             <div>
               <Label className="text-xs">Description</Label>
-              <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="mt-1" placeholder="What learners will achieve." />
+              <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="mt-1" />
             </div>
             <div>
               <Label className="text-xs">Linked course</Label>
               <Select value={courseId} onValueChange={setCourseId}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Pick a course" /></SelectTrigger>
-                <SelectContent>{courses.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Pick a self-paced course" /></SelectTrigger>
+                <SelectContent>
+                  {selfPacedCourses.length === 0 && (
+                    <div className="px-3 py-4 text-xs text-muted-foreground">No self-paced courses yet. Create one in Courses.</div>
+                  )}
+                  {selfPacedCourses.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
               </Select>
-              {course && labLessons.length === 0 && (
-                <p className="text-[11px] text-amber-600 mt-2 flex items-center gap-1.5">
-                  <AlertCircle className="h-3 w-3" /> This course has no lab lessons. Self-paced batches need on-demand labs.
-                </p>
+
+              {course && courseLabReadiness.total === 0 && (
+                <div className="mt-3 p-3 rounded-xl border border-amber-500/30 bg-amber-500/5 text-xs">
+                  <p className="font-medium flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5 text-amber-600" /> No lab lessons in this course</p>
+                  <p className="text-muted-foreground mt-1">Add lab lessons in the course content first, then come back.</p>
+                  <Button asChild variant="outline" size="sm" className="mt-2 h-7 text-[11px]">
+                    <Link to={`/courses/${course.id}`}>Open course</Link>
+                  </Button>
+                </div>
               )}
-              {course && labLessons.length > 0 && (
-                <p className="text-[11px] text-muted-foreground mt-2">{labLessons.length} lab lesson{labLessons.length === 1 ? "" : "s"} found.</p>
+
+              {course && courseLabReadiness.pending.length > 0 && (
+                <div className="mt-3 p-3 rounded-xl border border-amber-500/30 bg-amber-500/5 text-xs">
+                  <p className="font-medium flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5 text-amber-600" /> Course labs aren't ready</p>
+                  <p className="text-muted-foreground mt-1">
+                    {courseLabReadiness.pending.length} lab{courseLabReadiness.pending.length === 1 ? "" : "s"} still need a template:&nbsp;
+                    {courseLabReadiness.pending.slice(0, 3).join(", ")}{courseLabReadiness.pending.length > 3 ? "…" : ""}
+                  </p>
+                  <Button asChild variant="outline" size="sm" className="mt-2 h-7 text-[11px]">
+                    <Link to={`/courses/${course.id}`}>Configure labs in course →</Link>
+                  </Button>
+                </div>
+              )}
+
+              {courseReady && (
+                <p className="text-[11px] text-success mt-2 flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3 w-3" /> {courseLabReadiness.ready} lab{courseLabReadiness.ready === 1 ? "" : "s"} ready · access model: <span className="font-medium">{course?.settings?.accessModel || "full-course"}</span>
+                </p>
               )}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* STEP 2 */}
       {currentStep === 2 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Access & enrollment</CardTitle>
-            <CardDescription>How learners join and how much VM time they get.</CardDescription>
+            <CardTitle className="text-base">Enrollment</CardTitle>
+            <CardDescription>Who can join this batch, and when. VM hours and per-lab caps are inherited from the course.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div>
-              <Label className="text-xs mb-2 block">Enrollment</Label>
+              <Label className="text-xs mb-2 block">Enrollment mode</Label>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { v: "always-open", l: "Always open", d: "Anyone with the link" },
@@ -280,130 +243,53 @@ export default function CreateSelfPacedBatch() {
               </div>
             )}
 
-            <div>
-              <Label className="text-xs mb-2 block">Access model</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => setAccessModel("full-course")}
-                  className={cn("p-3 rounded-xl border-2 text-left transition-all", accessModel === "full-course" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40")}>
-                  <p className="text-xs font-semibold">Full-course pool</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Learner spends from a shared VM-hour budget</p>
-                </button>
-                <button type="button" onClick={() => setAccessModel("lesson-unlock")}
-                  className={cn("p-3 rounded-xl border-2 text-left transition-all", accessModel === "lesson-unlock" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40")}>
-                  <p className="text-xs font-semibold">Lesson-unlock</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Per-lab caps unlocked as they progress</p>
-                </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Max concurrent learners (soft cap)</Label>
+                <Input type="number" min={1} value={maxConcurrentLearners} onChange={(e) => setMaxConcurrentLearners(Number(e.target.value))} className="mt-1" />
+                <p className="text-[10px] text-muted-foreground mt-1">Used for capacity projections only — doesn't hard-block enrollment.</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <Label className="text-xs">Total VM hours / learner</Label>
-                <Input type="number" min={1} value={totalAccessHours} onChange={(e) => setTotalAccessHours(Number(e.target.value))} className="mt-1" />
-              </div>
-              <div>
-                <Label className="text-xs">Expiry after first launch (days)</Label>
-                <Input type="number" min={1} value={expiryDays} onChange={(e) => setExpiryDays(Number(e.target.value))} className="mt-1" />
-              </div>
-              <div>
-                <Label className="text-xs">Max concurrent learners</Label>
-                <Input type="number" min={1} value={maxConcurrentLearners} onChange={(e) => setMaxConcurrentLearners(Number(e.target.value))} className="mt-1" />
+            <div className="p-3 rounded-xl border border-border bg-muted/30 text-xs">
+              <p className="font-medium mb-1">Inherited from course</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-muted-foreground">
+                <div><span className="text-foreground">Access model:</span> {course?.settings?.accessModel || "full-course"}</div>
+                <div><span className="text-foreground">VM hours:</span> {course?.settings?.totalAccessHours ?? "—"}</div>
+                <div><span className="text-foreground">Validity:</span> {course?.settings?.validityAfterLaunchDays ?? "—"} d</div>
+                <div><span className="text-foreground">Idle shutdown:</span> {course?.settings?.defaultIdleShutdownMin ?? "—"} min</div>
               </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* STEP 3 */}
       {currentStep === 3 && (
         <Card>
-          <CardHeader className="flex flex-row items-start justify-between">
-            <div>
-              <CardTitle className="text-base">On-demand labs</CardTitle>
-              <CardDescription>Pick a published lab template for every lab lesson, or request one.</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.values(labRows).length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-8">No lab lessons in this course.</p>
-            )}
-            {Object.values(labRows).map((row) => {
-              const tpl = templates.find((t) => t.id === row.templateId);
-              return (
-                <div key={row.key} className={cn("p-4 rounded-xl border", row.skipped ? "border-dashed opacity-60" : "border-border")}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{row.lessonTitle}</p>
-                      <p className="text-[11px] text-muted-foreground">{row.chapterTitle}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {!row.templateId && !row.skipped && <Badge variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-600">Needs template</Badge>}
-                      {row.templateId && tpl?.source === "sandbox" && <Badge variant="outline" className="text-[10px]">From your sandbox</Badge>}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
-                    <div className="md:col-span-2">
-                      <Label className="text-[10px] text-muted-foreground">Template</Label>
-                      <Select value={row.templateId || ""} onValueChange={(v) => updateLab(row.key, { templateId: v, runtimeLimit: templates.find((t) => t.id === v)?.runtimeLimit || row.runtimeLimit })} disabled={row.skipped}>
-                        <SelectTrigger className="mt-1 text-xs"><SelectValue placeholder="Choose template" /></SelectTrigger>
-                        <SelectContent>
-                          {templates.map((t) => <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-[10px] text-muted-foreground">Runtime / launch (min)</Label>
-                      <Input type="number" min={5} value={row.runtimeLimit} onChange={(e) => updateLab(row.key, { runtimeLimit: Number(e.target.value) })} className="mt-1 text-xs h-9" disabled={row.skipped} />
-                    </div>
-                    <div>
-                      <Label className="text-[10px] text-muted-foreground">Max launches / learner</Label>
-                      <Input type="number" min={1} value={row.maxLaunches} onChange={(e) => updateLab(row.key, { maxLaunches: Number(e.target.value) })} className="mt-1 text-xs h-9" disabled={row.skipped} />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 mt-3">
-                    <Button size="sm" variant="outline" className="text-[11px] h-7 gap-1"
-                      onClick={() => { setRequestContext(`${row.lessonTitle} (${course?.name})`); setRequestSheetOpen(true); }}>
-                      <Plus className="h-3 w-3" /> Request a new template
-                    </Button>
-                    <Button size="sm" variant="ghost" className="text-[11px] h-7" onClick={() => updateLab(row.key, { skipped: !row.skipped })}>
-                      {row.skipped ? "Include lab" : "Skip / manual later"}
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* STEP 4 */}
-      {currentStep === 4 && (
-        <Card>
           <CardHeader>
-            <CardTitle className="text-base">Review & publish</CardTitle>
-            <CardDescription>Confirm the setup. Self-paced batches publish immediately.</CardDescription>
+            <CardTitle className="text-base">Review &amp; publish</CardTitle>
+            <CardDescription>Confirm and publish. The batch goes live immediately.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm">
+          <CardContent className="space-y-2 text-sm">
             <Row k="Name" v={name} />
             <Row k="Course" v={course?.name || "—"} />
             <Row k="Enrollment" v={enrollmentMode} />
-            <Row k="Access model" v={accessModel} />
-            <Row k="VM hours / learner" v={`${totalAccessHours} h`} />
-            <Row k="Expiry after first launch" v={`${expiryDays} days`} />
-            <Row k="Max concurrent learners" v={String(maxConcurrentLearners)} />
-            <Row k="Configured labs" v={`${Object.values(labRows).filter((r) => r.templateId && !r.skipped).length} of ${Object.values(labRows).length}`} />
+            {enrollmentMode === "window" && (
+              <Row k="Window" v={`${enrollmentStart ? format(enrollmentStart, "MMM d, yyyy") : "—"} → ${enrollmentEnd ? format(enrollmentEnd, "MMM d, yyyy") : "—"}`} />
+            )}
+            <Row k="Max concurrent" v={String(maxConcurrentLearners)} />
+            <Row k="Access model (course)" v={course?.settings?.accessModel || "full-course"} />
+            <Row k="VM hours / learner (course)" v={`${course?.settings?.totalAccessHours ?? "—"} h`} />
+            <Row k="Configured labs (course)" v={`${courseLabReadiness.ready} of ${courseLabReadiness.total}`} />
           </CardContent>
         </Card>
       )}
 
-      {/* Nav */}
       <div className="flex items-center justify-between">
         <Button variant="outline" onClick={() => currentStep === 1 ? navigate("/batches") : setCurrentStep(currentStep - 1)} className="gap-1.5">
           <ArrowLeft className="h-4 w-4" /> {currentStep === 1 ? "Cancel" : "Back"}
         </Button>
-        {currentStep < 4 ? (
+        {currentStep < 3 ? (
           <Button disabled={!canNext()} onClick={() => setCurrentStep(currentStep + 1)} className="gap-1.5">
             Next <ArrowRight className="h-4 w-4" />
           </Button>
@@ -411,13 +297,6 @@ export default function CreateSelfPacedBatch() {
           <Button onClick={handleCreate} className="gap-1.5"><Sparkles className="h-4 w-4" /> Publish self-paced batch</Button>
         )}
       </div>
-
-      <RequestTemplateSheet
-        open={requestSheetOpen}
-        onOpenChange={setRequestSheetOpen}
-        contextLabel={requestContext}
-        defaultCourse={course?.name}
-      />
     </div>
   );
 }
