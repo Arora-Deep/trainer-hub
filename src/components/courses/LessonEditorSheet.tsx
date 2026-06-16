@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Video, FileText, HelpCircle, ClipboardList, Code2, FlaskConical, Flag, GraduationCap,
-  Upload, Link2, Library, Plus, X, FileUp, Trash2, Radio, ListChecks, MessageSquareQuote, Gamepad2, Brain,
+  Upload, Link2, Library, Plus, X, FileUp, Trash2, Radio, ListChecks, MessageSquareQuote, Gamepad2, Brain, Search,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TemplatePickerDropdown } from "@/components/labs/TemplatePickerDropdown";
