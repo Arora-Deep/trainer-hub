@@ -252,12 +252,12 @@ export default function CreateSelfPacedBatch() {
 
             <div className="p-3 rounded-xl border border-border bg-muted/30 text-xs">
               <p className="font-medium mb-1">Inherited from course</p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-muted-foreground">
-                <div><span className="text-foreground">Access model:</span> {course?.settings?.accessModel || "full-course"}</div>
-                <div><span className="text-foreground">VM hours:</span> {course?.settings?.totalAccessHours ?? "—"}</div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-muted-foreground">
+                <div><span className="text-foreground">Labs configured:</span> {courseLabReadiness.ready} / {courseLabReadiness.total}</div>
                 <div><span className="text-foreground">Validity:</span> {course?.settings?.validityAfterLaunchDays ?? "—"} d</div>
                 <div><span className="text-foreground">Idle shutdown:</span> {course?.settings?.defaultIdleShutdownMin ?? "—"} min</div>
               </div>
+              <p className="text-[10px] mt-2 text-muted-foreground">Access type (full / limited) is set per VM on the course.</p>
             </div>
           </CardContent>
         </Card>
