@@ -38,6 +38,7 @@ interface SandboxState {
   approveProvision: (id: string) => void;
   reject: (id: string, reason: string) => void;
   markReady: (id: string) => void;
+  submitForSnapshot: (id: string) => void;
   startValidation: (id: string) => void;
   snapshotAndPublish: (id: string, templateName: string) => void;
 }
@@ -128,7 +129,15 @@ export const useSandboxStore = create<SandboxState>((set) => ({
   markReady: (id) =>
     set((s) => ({
       items: s.items.map((it) =>
-        it.id === id ? { ...it, status: "ready", history: [...it.history, { ts: now(), status: "ready", note: "Marked ready for snapshot" }] } : it,
+        it.id === id ? { ...it, status: "ready", history: [...it.history, { ts: now(), status: "ready", note: "VM ready for configuration" }] } : it,
+      ),
+    })),
+  submitForSnapshot: (id) =>
+    set((s) => ({
+      items: s.items.map((it) =>
+        it.id === id
+          ? { ...it, status: "validation", history: [...it.history, { ts: now(), status: "validation", note: "Trainer submitted for snapshot — awaiting admin review" }] }
+          : it,
       ),
     })),
   startValidation: (id) =>
