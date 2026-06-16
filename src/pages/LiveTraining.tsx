@@ -900,8 +900,10 @@ function StudentListRow({
 
       <div className="flex items-center gap-1 justify-end" onClick={e => e.stopPropagation()}>
         <RowAction onClick={onClick} label="Open VM"><Monitor className="h-3.5 w-3.5" /></RowAction>
-        <RowAction onClick={onAssist} label="Assist"><Sparkles className="h-3.5 w-3.5" /></RowAction>
         <RowAction onClick={onRestart} label="Restart"><RotateCcw className="h-3.5 w-3.5" /></RowAction>
+        <RowAction onClick={onAssist} label={student.state === "offline" ? "Start VM" : "Shutdown"}>
+          {student.state === "offline" ? <Power className="h-3.5 w-3.5" /> : <PowerOff className="h-3.5 w-3.5" />}
+        </RowAction>
       </div>
     </motion.div>
   );
