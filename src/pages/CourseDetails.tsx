@@ -204,6 +204,12 @@ export default function CourseDetails() {
           </Card>
         </TabsContent>
 
+        {course.settings?.deliveryType === "self-paced" && (
+          <TabsContent value="labs">
+            <CourseLabsAccessTab course={course} />
+          </TabsContent>
+        )}
+
         <TabsContent value="assessments">
           <CourseAssessmentsTab course={course} />
         </TabsContent>
