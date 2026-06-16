@@ -20,7 +20,7 @@ const statusStyle: Record<SandboxStatus, string> = {
 
 export default function SandboxVMs() {
   const navigate = useNavigate();
-  const { items, markReady } = useSandboxStore();
+  const { items, submitForSnapshot } = useSandboxStore();
   // Filter to current trainer (mock)
   const mine = items.filter((i) => i.trainerEmail === "john@techskills.com" || i.trainerName === "John Smith");
 
@@ -66,9 +66,9 @@ export default function SandboxVMs() {
                           <a href={it.consoleUrl} target="_blank" rel="noreferrer"><ExternalLink className="h-3 w-3" /> Console</a>
                         </Button>
                       )}
-                      {it.status === "provisioning" && (
-                        <Button size="sm" className="text-xs h-7" onClick={() => { markReady(it.id); toast({ title: "Marked ready", description: "Admin will snapshot & publish." }); }}>
-                          <CheckCircle2 className="h-3 w-3 mr-1" /> Mark Ready
+                      {it.status === "ready" && (
+                        <Button size="sm" className="text-xs h-7" onClick={() => { submitForSnapshot(it.id); toast({ title: "Submitted for snapshot", description: "The CloudAdda team will review and publish it as a template." }); }}>
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> Submit for snapshot
                         </Button>
                       )}
                     </div>

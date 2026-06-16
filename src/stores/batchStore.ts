@@ -179,6 +179,23 @@ export interface Batch {
   lessonVMAccess?: LessonVMAccess[];
   enrollmentMode?: EnrollmentMode;
   enrolledCount?: number;
+  selfPacedConfig?: {
+    enrollmentMode: "always-open" | "window" | "invite-only";
+    enrollmentStart?: string;
+    enrollmentEnd?: string;
+    accessModel: AccessModel;
+    totalAccessHours: number;
+    expiryDays: number;
+    maxConcurrentLearners: number;
+    perLabCaps: Array<{
+      labId: string;
+      labName: string;
+      templateId: string;
+      runtimeLimit: number;
+      maxLaunches: number;
+      idleShutdownMin: number;
+    }>;
+  };
   // ── Additive admin / trainer extensions ──
   hideLMS?: boolean;
   targetNode?: string;

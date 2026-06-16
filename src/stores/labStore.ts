@@ -51,6 +51,11 @@ export interface LabTemplate {
   startupScript: string;
   lastUpdated: string;
   createdAt: string;
+  // Provenance (additive, optional)
+  source?: "builtin" | "sandbox";
+  sourceSandboxId?: string;
+  createdByTrainerId?: string;
+  createdByTrainerName?: string;
 }
 
 interface LabStore {

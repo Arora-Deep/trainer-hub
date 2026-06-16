@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Batches from "./pages/Batches";
 import BatchDetails from "./pages/BatchDetails";
 import CreateBatch from "./pages/CreateBatch";
+import CreateSelfPacedBatch from "./pages/CreateSelfPacedBatch";
 import Labs from "./pages/Labs";
 import LabDetails from "./pages/LabDetails";
 import CreateLabTemplate from "./pages/CreateLabTemplate";
@@ -141,6 +142,7 @@ const App = () => (
             <Route path="/" element={<Dashboard />} />
             <Route path="/batches" element={<Batches />} />
             <Route path="/batches/create" element={<CreateBatch />} />
+            <Route path="/batches/create-self-paced" element={<CreateSelfPacedBatch />} />
             <Route path="/batches/:id" element={<BatchDetails />} />
             <Route path="/labs" element={<Labs />} />
             <Route path="/labs/create" element={<CreateLab />} />

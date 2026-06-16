@@ -80,6 +80,9 @@ export default function SandboxVMRequests() {
       tags: ["self-paced", "trainer-built"],
       policies: { internetAccess: true, clipboardAccess: true, fileUpload: true, fileDownload: true, sshAccess: true, rdpAccess: false },
       startupScript: "",
+      source: "sandbox",
+      sourceSandboxId: selected.id,
+      createdByTrainerName: selected.trainerName,
     });
     log({ action: "sandbox_publish", target: selected.id, reason: `Promoted to template: ${templateName}` });
     toast({ title: "Published", description: `Template "${templateName}" is now available to the trainer.` });
