@@ -514,7 +514,7 @@ export default function LiveTraining() {
             <StudentsView
               filtered={filtered} grid={grid} search={search} setSearch={setSearch}
               onSelect={(id) => setSelectedStudentId(id)}
-              onAssist={(s) => toast({ title: `Assisting ${s.name}` })}
+              onAssist={(s) => toast({ title: s.state === "offline" ? `Starting ${s.vmName}` : `Shutting down ${s.vmName}` })}
               onRestart={(s) => toast({ title: `Restarting ${s.vmName}` })}
               onBulk={(a) => setBulkAction(a)}
             />
