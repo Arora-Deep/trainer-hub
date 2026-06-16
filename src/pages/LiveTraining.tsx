@@ -52,7 +52,7 @@ function formatTimer(s: number) {
 
 type StudentRow = {
   id: string; name: string; email: string; initials: string; ip: string;
-  state: StudentState; connection: string; vmName: string; cpu: number; ram: number;
+  state: StudentState; connection: string; vmName: string;
   lessonIdx: number; errors: number; attendance: number;
 };
 
@@ -146,8 +146,6 @@ export default function LiveTraining() {
         state,
         connection: state === "offline" ? "offline" : (i % 13 === 5 ? "weak" : "strong"),
         vmName: vm?.vmName || `${p.name.split(" ")[0].toLowerCase()}-vm`,
-        cpu: 18 + ((i * 13) % 60),
-        ram: 24 + ((i * 17) % 55),
         lessonIdx,
         errors: state === "warning" ? 2 + (i % 3) : (i % 9 === 0 ? 1 : 0),
         attendance: state === "offline" ? 0 : 70 + ((i * 7) % 30),
@@ -834,13 +832,12 @@ function StudentsView({
       </div>
 
       <div className="rounded-2xl border border-border bg-card overflow-hidden">
-        {/* header */}
-        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1.2fr_auto] items-center gap-4 px-5 py-3 border-b border-border bg-muted/30 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+      {/* header */}
+        <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center gap-4 px-5 py-3 border-b border-border bg-muted/30 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
           <span>Student</span>
           <span>Status</span>
           <span>VM</span>
           <span>Network</span>
-          <span>Resources</span>
           <span className="text-right">Actions</span>
         </div>
         {filtered.map((s, idx) => (
@@ -871,7 +868,7 @@ function StudentListRow({
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18, delay: Math.min(index * 0.008, 0.2) }}
-      className="grid grid-cols-[2fr_1fr_1fr_1fr_1.2fr_auto] items-center gap-4 px-5 py-3 border-b border-border last:border-0 hover:bg-muted/40 transition-colors cursor-pointer"
+      className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center gap-4 px-5 py-3 border-b border-border last:border-0 hover:bg-muted/40 transition-colors cursor-pointer"
       onClick={onClick}
     >
       <div className="flex items-center gap-3 min-w-0">
@@ -899,11 +896,6 @@ function StudentListRow({
       <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
         {student.connection === "offline" ? <WifiOff className="h-3 w-3" /> : <Wifi className="h-3 w-3" />}
         <span className="font-mono">{student.ip}</span>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <MicroMeter label="CPU" value={student.cpu} />
-        <MicroMeter label="RAM" value={student.ram} />
       </div>
 
       <div className="flex items-center gap-1 justify-end" onClick={e => e.stopPropagation()}>
@@ -1107,8 +1099,6 @@ function AnalyticsView({
   const avgAttendance = Math.round(grid.reduce((a, s) => a + s.attendance, 0) / total);
   const totalErrors = grid.reduce((a, s) => a + s.errors, 0);
   const handsRaised = grid.filter(s => s.state === "raised").length;
-  const avgCpu = Math.round(grid.reduce((a, s) => a + s.cpu, 0) / total);
-  const avgRam = Math.round(grid.reduce((a, s) => a + s.ram, 0) / total);
 
   // per-lesson distribution
   const lessonBuckets = lessons.map((l, i) => ({
@@ -1133,11 +1123,10 @@ function AnalyticsView({
       </div>
 
       {/* KPI strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <Kpi icon={<Users className="h-4 w-4" />} label="Attendance" value={`${attendancePct}%`} sub={`${online}/${total} online`} />
         <Kpi icon={<TrendingUp className="h-4 w-4" />} label="Avg engagement" value={`${avgAttendance}%`} sub="Across session" />
         <Kpi icon={<AlertCircle className="h-4 w-4" />} label="Errors" value={totalErrors} sub={`${handsRaised} hands raised`} tone={totalErrors > 0 ? "warn" : "default"} />
-        <Kpi icon={<Activity className="h-4 w-4" />} label="Avg load" value={`${avgCpu}% / ${avgRam}%`} sub="CPU · RAM" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6">
@@ -1362,12 +1351,6 @@ function StudentDrawer({ student, onClose }: { student: StudentRow; onClose: () 
               { id: "vm3", name: `${student.vmName.replace(/-vm$/, "")}-edge`, role: "Edge node", ip: "10.0.6.18", running: false, specs: "2 vCPU · 4 GB" },
             ]}
           />
-          <Section title="Resources">
-            <div className="space-y-3">
-              <Meter label="CPU" value={student.cpu} />
-              <Meter label="Memory" value={student.ram} />
-            </div>
-          </Section>
           <Section title="Controls">
             <div className="grid grid-cols-2 gap-2">
               <DrawerBtn icon={<Sparkles className="h-3.5 w-3.5" />} label="Assist student" onClick={() => toast({ title: "Joining session" })} />
