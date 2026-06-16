@@ -1197,6 +1197,59 @@ export default function BatchDetails() {
                             </div>
                           </div>
 
+                          {openAssessment.type === "game-based-learning" && (() => {
+                            const board = getLeaderboardsForBatch(batch.id).find((b) => b.lessonId === openAssessment.id);
+                            if (!board) {
+                              return (
+                                <div className="rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center mb-5">
+                                  <Gamepad2 className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
+                                  <p className="text-sm font-medium">No game plays yet</p>
+                                  <p className="text-xs text-muted-foreground mt-1">Leaderboard appears once participants finish a run.</p>
+                                </div>
+                              );
+                            }
+                            return (
+                              <div className="rounded-xl border border-border overflow-hidden mb-5">
+                                <div className="flex items-center justify-between px-4 py-2.5 bg-muted/30 border-b border-border">
+                                  <div className="flex items-center gap-2">
+                                    <Trophy className="h-4 w-4 text-amber-500" />
+                                    <p className="text-sm font-semibold">Leaderboard</p>
+                                  </div>
+                                  <span className="text-[11px] text-muted-foreground capitalize">
+                                    {board.gameType.replace("-", " ")} · {board.totalPlayers} players · avg {board.averageScore}
+                                  </span>
+                                </div>
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow className="bg-muted/10 hover:bg-muted/10">
+                                      <TableHead className="w-12">Rank</TableHead>
+                                      <TableHead>Student</TableHead>
+                                      <TableHead className="text-right">Score</TableHead>
+                                      <TableHead className="text-right">Time</TableHead>
+                                      <TableHead className="text-right">Attempts</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {board.entries.map((e) => (
+                                      <TableRow key={e.studentId}>
+                                        <TableCell>
+                                          {e.rank === 1 ? <Crown className="h-3.5 w-3.5 text-amber-500" />
+                                            : e.rank === 2 ? <Medal className="h-3.5 w-3.5 text-zinc-400" />
+                                            : e.rank === 3 ? <Medal className="h-3.5 w-3.5 text-orange-500" />
+                                            : <span className="text-xs text-muted-foreground">#{e.rank}</span>}
+                                        </TableCell>
+                                        <TableCell className="text-sm font-medium">{e.name}</TableCell>
+                                        <TableCell className="text-right font-semibold tabular-nums">{e.score}</TableCell>
+                                        <TableCell className="text-right tabular-nums text-muted-foreground">{formatLeaderboardTime(e.timeSec)}</TableCell>
+                                        <TableCell className="text-right tabular-nums text-muted-foreground">{e.attempts}x</TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            );
+                          })()}
+
                           <Table>
                             <TableHeader>
                               <TableRow className="bg-muted/30 hover:bg-muted/30">
