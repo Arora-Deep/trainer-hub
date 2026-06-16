@@ -128,6 +128,9 @@ export default function CourseDetails() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="content">Content</TabsTrigger>
+          {course.settings?.deliveryType === "self-paced" && (
+            <TabsTrigger value="labs">Labs & Access</TabsTrigger>
+          )}
           <TabsTrigger value="assessments">Assessments</TabsTrigger>
           <TabsTrigger value="batches">Enrolled Batches</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
