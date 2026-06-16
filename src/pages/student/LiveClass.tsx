@@ -684,7 +684,7 @@ export default function StudentLiveClass() {
                 <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px] gap-1"><RotateCw className="h-3 w-3" /> Restart</Button>
                 <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px] gap-1"><Zap className="h-3 w-3" /> Reset</Button>
                 <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px] gap-1"><Save className="h-3 w-3" /> Snapshot</Button>
-                <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px] gap-1"><History className="h-3 w-3" /> Restore</Button>
+                <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px] gap-1"><HistoryIcon className="h-3 w-3" /> Restore</Button>
                 <div className="ml-auto flex items-center gap-3 text-[10px] text-muted-foreground">
                   <span className="flex items-center gap-1"><Cpu className="h-3 w-3" /> 45%</span>
                   <span className="flex items-center gap-1"><MemoryStick className="h-3 w-3" /> 62%</span>
