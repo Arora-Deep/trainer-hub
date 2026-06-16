@@ -596,16 +596,6 @@ export default function LiveTraining() {
           mainTab={mainTab}
           setMainTab={setMainTab}
           gridLength={grid.length}
-          splitSide={splitSide}
-          setSplitSide={setSplitSide}
-          students={filtered}
-          search={search}
-          setSearch={setSearch}
-          onSelectStudent={(id) => setSelectedStudentId(id)}
-          messages={messages}
-          chatInput={chatInput}
-          setChatInput={setChatInput}
-          onSendChat={sendChat}
           lessons={lessons}
           activeLessonIdx={activeLessonIdx}
           setActiveLessonIdx={setActiveLessonIdx}
@@ -615,6 +605,7 @@ export default function LiveTraining() {
           micOn={micOn} setMicOn={setMicOn}
           camOn={camOn} setCamOn={setCamOn}
           shareOn={shareOn} setShareOn={setShareOn}
+          currentTrainerVM={currentTrainerVM}
           onOpenConsole={() => setConsoleOpen(true)}
           onSnapshot={() => { createSnapshot(batch.id, `Session ${formatTimer(sessionTimer)}`, "Live snapshot"); toast({ title: "Snapshot created" }); }}
           onEnd={() => setEndOpen(true)}
@@ -622,6 +613,19 @@ export default function LiveTraining() {
           setFullscreen={setSplitFullscreen}
         />
       )}
+
+      {/* Lesson Content Dialog */}
+      <Dialog open={lessonContentOpen} onOpenChange={setLessonContentOpen}>
+        <DialogContent className="max-w-3xl p-0 overflow-hidden max-h-[85vh]">
+          <DialogHeader className="px-5 py-3 border-b border-border">
+            <DialogTitle className="text-sm font-semibold">Lesson content</DialogTitle>
+            <DialogDescription className="text-xs">{lessons[activeLessonIdx]?.module}</DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[70vh]">
+            <LessonContent lesson={lessons[activeLessonIdx]} />
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       {/* Student Drawer */}
       <Sheet open={!!selectedStudent} onOpenChange={(o) => !o && setSelectedStudentId(null)}>
