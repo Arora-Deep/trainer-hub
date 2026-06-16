@@ -443,17 +443,12 @@ export function LessonEditorSheet({ open, onOpenChange, initial, defaultType, on
                 </div>
 
                 {(form.source ?? "library") === "library" ? (
-                  <Select value={form.refId ?? ""} onValueChange={(v) => {
-                    const opt = libraryOptions.find((o) => o.id === v);
-                    setForm((p) => ({ ...p, refId: v, title: opt?.label ?? p.title }));
-                  }}>
-                    <SelectTrigger><SelectValue placeholder="Choose an item…" /></SelectTrigger>
-                    <SelectContent>
-                      {libraryOptions.length === 0 ? (
-                        <div className="px-3 py-2 text-xs text-muted-foreground">No items yet — use "Create new" to build one.</div>
-                      ) : libraryOptions.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <LibrarySearchPicker
+                    options={libraryOptions}
+                    value={form.refId}
+                    placeholder={`Search ${typeMeta[form.type].label.toLowerCase()}s…`}
+                    onSelect={(opt) => setForm((p) => ({ ...p, refId: opt.id, title: opt.label ?? p.title }))}
+                  />
                 ) : createNewHref ? (
                   <div className="rounded-md border border-dashed bg-background/60 p-3 space-y-2">
                     <p className="text-xs text-muted-foreground">
