@@ -11,10 +11,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  Radio, Hand, Users, AlertCircle, Megaphone, BookOpen, Camera, Power,
+  Radio, Hand, Users, AlertCircle, Megaphone, BookOpen, Camera, Power, PowerOff,
   MessageSquare, Send, X, Search, Wifi, WifiOff, RotateCcw, Monitor,
-  FileText, Link2, Download, Sparkles, ChevronLeft, ChevronRight, Play,
-  CheckCircle2, Circle, Mic, Video, ScreenShare, Square, RefreshCw,
+  FileText, Link2, Download, Sparkles, ChevronLeft, ChevronRight, Play, Pause,
+  CheckCircle2, Circle, Mic, Video, ScreenShare, Square, RefreshCw, History,
   BarChart3, TrendingUp, Clock, Activity, Maximize2, LayoutPanelLeft, Minimize2,
   Zap, HelpCircle, Brain, Gamepad2,
 } from "lucide-react";
@@ -514,7 +514,7 @@ export default function LiveTraining() {
             <StudentsView
               filtered={filtered} grid={grid} search={search} setSearch={setSearch}
               onSelect={(id) => setSelectedStudentId(id)}
-              onAssist={(s) => toast({ title: `Assisting ${s.name}` })}
+              onAssist={(s) => toast({ title: s.state === "offline" ? `Starting ${s.vmName}` : `Shutting down ${s.vmName}` })}
               onRestart={(s) => toast({ title: `Restarting ${s.vmName}` })}
               onBulk={(a) => setBulkAction(a)}
             />
@@ -900,8 +900,10 @@ function StudentListRow({
 
       <div className="flex items-center gap-1 justify-end" onClick={e => e.stopPropagation()}>
         <RowAction onClick={onClick} label="Open VM"><Monitor className="h-3.5 w-3.5" /></RowAction>
-        <RowAction onClick={onAssist} label="Assist"><Sparkles className="h-3.5 w-3.5" /></RowAction>
         <RowAction onClick={onRestart} label="Restart"><RotateCcw className="h-3.5 w-3.5" /></RowAction>
+        <RowAction onClick={onAssist} label={student.state === "offline" ? "Start VM" : "Shutdown"}>
+          {student.state === "offline" ? <Power className="h-3.5 w-3.5" /> : <PowerOff className="h-3.5 w-3.5" />}
+        </RowAction>
       </div>
     </motion.div>
   );
@@ -1351,12 +1353,18 @@ function StudentDrawer({ student, onClose }: { student: StudentRow; onClose: () 
               { id: "vm3", name: `${student.vmName.replace(/-vm$/, "")}-edge`, role: "Edge node", ip: "10.0.6.18", running: false, specs: "2 vCPU · 4 GB" },
             ]}
           />
-          <Section title="Controls">
+          <Section title="VM controls">
             <div className="grid grid-cols-2 gap-2">
-              <DrawerBtn icon={<Sparkles className="h-3.5 w-3.5" />} label="Assist student" onClick={() => toast({ title: "Joining session" })} />
-              <DrawerBtn icon={<Camera className="h-3.5 w-3.5" />} label="Snapshot" onClick={() => toast({ title: "Snapshot saved" })} />
+              {student.state === "offline" ? (
+                <DrawerBtn icon={<Power className="h-3.5 w-3.5" />} label="Start VM" onClick={() => toast({ title: `Starting ${student.vmName}` })} />
+              ) : (
+                <DrawerBtn icon={<PowerOff className="h-3.5 w-3.5" />} label="Shutdown" onClick={() => toast({ title: `Shutting down ${student.vmName}` })} />
+              )}
               <DrawerBtn icon={<RotateCcw className="h-3.5 w-3.5" />} label="Restart VM" onClick={() => toast({ title: "VM restarting" })} />
-              <DrawerBtn icon={<RotateCcw className="h-3.5 w-3.5" />} label="Restore snapshot" onClick={() => toast({ title: "Restoring…" })} />
+              <DrawerBtn icon={<Pause className="h-3.5 w-3.5" />} label="Suspend" onClick={() => toast({ title: "VM suspended" })} />
+              <DrawerBtn icon={<RefreshCw className="h-3.5 w-3.5" />} label="Reset" onClick={() => toast({ title: "VM reset" })} />
+              <DrawerBtn icon={<Camera className="h-3.5 w-3.5" />} label="Snapshot" onClick={() => toast({ title: "Snapshot saved" })} />
+              <DrawerBtn icon={<History className="h-3.5 w-3.5" />} label="Restore snapshot" onClick={() => toast({ title: "Restoring…" })} />
             </div>
           </Section>
           <Section title="Recent activity">
