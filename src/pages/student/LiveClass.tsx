@@ -605,157 +605,41 @@ export default function StudentLiveClass() {
 
       {/* ===== CONTENT VIEW ===== */}
       {viewMode === "content" && (
-        <ResizablePanelGroup direction="horizontal" className="min-h-[760px]">
-          <ResizablePanel defaultSize={contentLeftCollapsed ? 5 : 25} minSize={4} maxSize={50}>
-          <div className="h-full pr-2">
-          {/* Left: Console & Actions rail (matches Split-view "You" rail) */}
-          <Card className="overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between border-b border-border px-2 py-1.5 shrink-0">
-              {!contentLeftCollapsed && <span className="text-xs font-semibold px-1 text-muted-foreground uppercase tracking-wider">You</span>}
-              <Button variant="ghost" size="icon" className="h-6 w-6 ml-auto" onClick={() => setContentLeftCollapsed(!contentLeftCollapsed)}>
-                {contentLeftCollapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
-              </Button>
-            </div>
-
-            {!contentLeftCollapsed && (
-              <ScrollArea className="flex-1 h-[700px]">
-                <div className="p-3 space-y-4">
-                  {/* Profile */}
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold">SR</div>
-                      <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-success border-2 border-background" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold leading-tight">You · Student</div>
-                      <div className="text-[11px] text-muted-foreground truncate">student-vm-sarah-42</div>
-                    </div>
-                  </div>
-
-                  {/* Mic / Cam / Share */}
-                  <div className="grid grid-cols-3 gap-1.5">
-                    <Button variant={micOn ? "default" : "outline"} size="sm"
-                      className={`h-12 flex-col gap-0.5 text-[10px] ${micOn ? "bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20" : ""}`}
-                      onClick={() => setMicOn(!micOn)}>
-                      <Mic className="h-3.5 w-3.5" /> Mic
-                    </Button>
-                    <Button variant={camOn ? "default" : "outline"} size="sm"
-                      className={`h-12 flex-col gap-0.5 text-[10px] ${camOn ? "bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20" : ""}`}
-                      onClick={() => setCamOn(!camOn)}>
-                      <Camera className="h-3.5 w-3.5" /> Cam
-                    </Button>
-                    <Button variant="outline" size="sm" className="h-12 flex-col gap-0.5 text-[10px]">
-                      <Share2 className="h-3.5 w-3.5" /> Share
-                    </Button>
-                  </div>
-
-                  {/* Your Machine */}
-                  <div>
-                    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Your Machine</div>
-                    <div className="rounded-lg overflow-hidden border border-border bg-foreground text-background p-2.5 font-mono text-[10px] leading-relaxed">
-                      <div className="text-success">$ kubectl get pods -n training</div>
-                      <div className="text-background/70">NAME    READY  STATUS</div>
-                      <div className="text-background/70">vpc-router-7d4f  1/1  Running</div>
-                      <div className="text-background/70">peering-gw-6a9e  1/1  Running</div>
-                      <div className="text-background/70">nat-instance-2f  1/1  Running</div>
-                      <div className="text-success mt-1">$ terraform apply</div>
-                      <div className="text-background/70">Plan: 4 to add, 0 to change.</div>
-                      <div className="text-background/70">Apply complete! Resources: 4 added.</div>
-                      <div className="text-success">$ <span className="animate-pulse">▍</span></div>
-                    </div>
-                    <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1 px-0.5">
-                      <span className="font-mono">10.0.4.21</span>
-                      <span>4 vCPU · 8 GB</span>
-                    </div>
-                  </div>
-
-                  {/* VM Controls */}
-                  <div>
-                    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">VM Controls</div>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1 justify-start"><Power className="h-3 w-3" /> Stop</Button>
-                      <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1 justify-start"><RotateCw className="h-3 w-3" /> Restart</Button>
-                      <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1 justify-start"><Save className="h-3 w-3" /> Snapshot</Button>
-                      <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1 justify-start"><Zap className="h-3 w-3" /> Reset VM</Button>
-                      <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1 justify-start"><Monitor className="h-3 w-3" /> Console</Button>
-                      <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1 justify-start"><Share2 className="h-3 w-3" /> Share VM</Button>
-                    </div>
-                  </div>
-
-                  {/* Live Chat (replaces Now Playing) */}
-                  <div>
-                    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Live Chat</div>
-                    <div className="rounded-lg border border-border overflow-hidden h-[260px]">
-                      <ChatPanel chatInput={chatInput} setChatInput={setChatInput} />
-                    </div>
-                  </div>
-
-                  {/* Class Pulse */}
-                  <div>
-                    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Class Pulse</div>
-                    <div className="space-y-1.5 text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5"><Circle className="h-2 w-2 fill-success text-success" /> Online</span>
-                        <span className="text-muted-foreground">{participants.filter(p => p.status === "watching" || p.status === "presenting").length}/{participants.length}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5"><Circle className="h-2 w-2 fill-warning text-warning" /> Hands raised</span>
-                        <span className="text-muted-foreground">{participants.filter(p => p.status === "hand_raised").length}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5"><Circle className="h-2 w-2 fill-destructive text-destructive" /> Issues</span>
-                        <span className="text-muted-foreground">0</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </ScrollArea>
-            )}
-          </Card>
+        <Card className="overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
+            <BookOpen className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold">{currentLesson?.title ?? selectedCourse.name} — Lesson Material</span>
+            <Badge variant="outline" className="text-[10px] ml-auto">Current</Badge>
           </div>
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={75} minSize={30}>
-          <div className="h-full pl-2">
-          {/* Right: Full course content */}
-          <Card className="overflow-hidden h-full">
-            <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
-              <BookOpen className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold">{currentLesson?.title ?? selectedCourse.name} — Lesson Material</span>
-              <Badge variant="outline" className="text-[10px] ml-auto">Current</Badge>
-            </div>
-            <ScrollArea className="h-[700px]">
-              <div className="p-6 max-w-3xl space-y-4">
-                <h2 className="text-lg font-semibold">{currentLesson?.title ?? selectedCourse.name}</h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {currentLesson?.body ?? selectedCourse.description}
-                </p>
-                <h3 className="text-sm font-semibold mt-4">Course focus</h3>
-                <p className="text-xs text-muted-foreground">{selectedCourse.category} · {selectedCourse.totalHours}h total · {selectedCourse.modules} lessons</p>
-                <h3 className="text-sm font-semibold mt-4">Next step</h3>
-                <p className="text-xs text-muted-foreground">Continue from the highlighted lesson in the course outline below.</p>
-                {isSelfPaced && (
-                  <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-700 dark:text-amber-400">
-                    Self-paced access is active. You can move through lessons independently with {hoursLeft}h lab access remaining.
-                  </div>
-                )}
-                <div className="mt-6 grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg border border-border bg-muted/30">
-                    <h4 className="text-xs font-semibold mb-1">Module list</h4>
-                    <CourseContentPanel course={selectedCourse} currentLessonId={currentLesson?.id} />
-                  </div>
-                  <div className="p-3 rounded-lg border border-primary/30 bg-primary/5">
-                    <h4 className="text-xs font-semibold mb-1">Try it in your lab</h4>
-                    <p className="text-[11px] text-muted-foreground mb-2">Run the commands shown in the console on the left.</p>
-                    <Badge className="bg-primary/10 text-primary text-[10px]">Hands-on</Badge>
-                  </div>
+          <ScrollArea className="h-[760px]">
+            <div className="p-6 max-w-3xl space-y-4">
+              <h2 className="text-lg font-semibold">{currentLesson?.title ?? selectedCourse.name}</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {currentLesson?.body ?? selectedCourse.description}
+              </p>
+              <h3 className="text-sm font-semibold mt-4">Course focus</h3>
+              <p className="text-xs text-muted-foreground">{selectedCourse.category} · {selectedCourse.totalHours}h total · {selectedCourse.modules} lessons</p>
+              <h3 className="text-sm font-semibold mt-4">Next step</h3>
+              <p className="text-xs text-muted-foreground">Continue from the highlighted lesson in the course outline below.</p>
+              {isSelfPaced && (
+                <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-700 dark:text-amber-400">
+                  Self-paced access is active. You can move through lessons independently with {hoursLeft}h lab access remaining.
+                </div>
+              )}
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg border border-border bg-muted/30">
+                  <h4 className="text-xs font-semibold mb-1">Module list</h4>
+                  <CourseContentPanel course={selectedCourse} currentLessonId={currentLesson?.id} />
+                </div>
+                <div className="p-3 rounded-lg border border-primary/30 bg-primary/5">
+                  <h4 className="text-xs font-semibold mb-1">Try it in your lab</h4>
+                  <p className="text-[11px] text-muted-foreground mb-2">Switch to the Lab view to launch the console for this lesson.</p>
+                  <Badge className="bg-primary/10 text-primary text-[10px]">Hands-on</Badge>
                 </div>
               </div>
-            </ScrollArea>
-          </Card>
-          </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+            </div>
+          </ScrollArea>
+        </Card>
       )}
 
       {/* ===== LAB VIEW ===== */}
