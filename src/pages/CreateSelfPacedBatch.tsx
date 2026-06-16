@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -82,26 +82,28 @@ export default function CreateSelfPacedBatch() {
   const [requestContext, setRequestContext] = useState<string>("");
 
   // initialize labRows when course picked
-  useMemo(() => {
-    const next: Record<string, LabRow> = {};
-    labLessons.forEach(({ key, lesson, chapterTitle }) => {
-      const existing = labRows[key];
-      const initialTplId = existing?.templateId || lesson.lab?.templateId;
-      const tpl = templates.find((t) => t.id === initialTplId);
-      next[key] = existing || {
-        key,
-        lessonId: lesson.id,
-        lessonTitle: lesson.title,
-        chapterTitle,
-        attachedTemplateId: lesson.lab?.templateId,
-        templateId: initialTplId,
-        runtimeLimit: tpl?.runtimeLimit || 120,
-        maxLaunches: 10,
-        idleShutdownMin: 15,
-        skipped: false,
-      };
+  useEffect(() => {
+    setLabRows((prev) => {
+      const next: Record<string, LabRow> = {};
+      labLessons.forEach(({ key, lesson, chapterTitle }) => {
+        const existing = prev[key];
+        const initialTplId = existing?.templateId || lesson.lab?.templateId;
+        const tpl = templates.find((t) => t.id === initialTplId);
+        next[key] = existing || {
+          key,
+          lessonId: lesson.id,
+          lessonTitle: lesson.title,
+          chapterTitle,
+          attachedTemplateId: lesson.lab?.templateId,
+          templateId: initialTplId,
+          runtimeLimit: tpl?.runtimeLimit || 120,
+          maxLaunches: 10,
+          idleShutdownMin: 15,
+          skipped: false,
+        };
+      });
+      return next;
     });
-    setLabRows(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [labLessons.length]);
 
