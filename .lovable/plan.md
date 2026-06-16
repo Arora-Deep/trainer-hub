@@ -1,62 +1,107 @@
-# Admin Infra & Lab Controls — Implementation Plan
+# Self-Paced Templates & Batches
 
-All UI-only / mock data, extending existing Zustand stores. Follows existing Apple-minimalist patterns (right-side drawers, sticky headers, status chips).
-
----
-
-## 1. Node VM Pool & Assignment
-
-**New page:** `src/pages/admin/NodeVMPool.tsx` (route `/admin/infra/node-vms`)
-- Filter bar: Node, Region, Status, Customer, Batch, "Unassigned only"
-- Table columns: VM Name · Node · vCPU/RAM/Disk · OS · IP · Status chip · Assigned to (student / batch / —) · Actions
-- Bulk selection with sticky action bar: **Assign to Student**, **Assign to Batch**, **Reassign**, **Release**
-- Assign drawer (right side): pick Customer → Batch → one/many Students (multi-select) or "Entire batch"; shows VM count vs. participant count with mismatch warning; reason field; confirm
-
-**Node drill-down:** extend `src/pages/admin/Nodes.tsx`
-- Row click opens existing node detail; add new **"VMs on this node"** tab that embeds the same `<NodeVMTable />` component scoped to that node, with the same assign drawer
-
-**Shared component:** `src/components/admin/NodeVMTable.tsx` + `AssignVMDrawer.tsx` so both views stay in sync.
-
-**Store:** extend `labStore.ts` with a `nodeVMs: NodeVM[]` collection and `assignNodeVM(vmId, target)` / `releaseNodeVM(vmId)` actions. Mock ~40 VMs across 5 nodes.
+Two connected pieces:
+1. A clear pipeline for trainers to **request** lab templates (from two entry points), with admin/CloudAdda team owning the **snapshot & publish** step.
+2. A **dedicated self-paced batch wizard** distinct from the live-training one, plus a self-paced-aware Batch Details view.
 
 ---
 
-## 2. Self-Paced Lab Template Provisioning
+## 1. Trainer request flow → admin publishes template
 
-Two entry paths converging into one pipeline:
+### Entry points (both feed the same pipeline)
 
-**Path A — Direct provision (admin-initiated)**
-- New action on `src/pages/admin/Customers.tsx` row & customer detail: **"Provision Sandbox VM for Trainer"**
-- Opens drawer: pick Trainer (from customer's trainer list), base OS / size / region, purpose note → creates a `SandboxVM` in status `provisioning`
+**A. Labs → Templates page** (`src/pages/Labs.tsx`)
+- Add a primary `Request a template` CTA in the header.
+- Add a sub-tab/view "Pending requests" so trainer can see their own in-flight requests (status badge: Requested → Provisioning → Ready (configure) → Submitted for snapshot → Published).
+- Once `published`, the resulting template appears in the main table with a small "From your sandbox" pill.
 
-**Path B — Trainer request (request-first)**
-- Trainer portal: new page `src/pages/RequestSandboxVM.tsx` (link in Labs sidebar) — form: desired OS, size, software notes, target self-paced course
-- Lands in new admin queue `src/pages/admin/SandboxVMRequests.tsx` (route `/admin/infra/sandbox-requests`)
-- Admin **Approve & Provision** → same pipeline as Path A
+**B. Batch Details → VM area** (`src/pages/BatchDetails.tsx`)
+- In the VM tab, when picking a template, add a `Need a different template?` inline action that opens the same request sheet, prefilled with the batch's course context.
 
-**Pipeline status chip:** `Requested → Provisioning → Ready (trainer configuring) → Validation → Snapshot → Published`
-- Trainer side: `src/pages/SandboxVMs.tsx` lists their sandbox VMs with **Open Console**, **Mark Ready for Snapshot**
-- Admin side: detail drawer with **Snapshot & Promote to Template** button → creates new `LabTemplate` (kind: `self_paced`) in `labStore.templates`, auto-attaches to trainer's available templates, marks VM `Published`
+Both reuse a single `RequestTemplateSheet` (right-side drawer per memory) — refactor from existing `RequestSandboxVM.tsx` into a sheet component so it works inline too.
 
-**Store:** new `sandboxVMStore.ts` (requests + sandbox VMs + status history) and a `kind?: 'self_paced' | 'instructor_led'` flag on `LabTemplate`.
+### Trainer workspace: My Sandbox VMs (`src/pages/SandboxVMs.tsx`)
+Keep as the trainer's working area. Card per sandbox showing status, console link, and a `Submit for snapshot` action (renames "Mark ready"). Once submitted, status moves to `validation` and is locked from further edits.
+
+### Admin/CloudAdda queue (`src/pages/admin/SandboxVMRequests.tsx`)
+Existing page; tighten the workflow into four columns / filters:
+1. **New requests** → `Approve & Provision` or `Reject`
+2. **Provisioning** → auto-advances to Ready
+3. **Awaiting snapshot** (trainer submitted) → admin reviews, runs validation, then `Snapshot & Publish as template` (modal asks for template name, category, runtime limit; writes to `labStore.templates` with `source: "sandbox"` and `sourceSandboxId`)
+4. **Published** → audit history
+
+`sandboxVMStore` already supports the full state machine; just add a `submitForSnapshot` action (renames current `markReady` semantics — keep both for back-compat).
+
+`labStore`: add optional fields on `LabTemplate`: `source?: "builtin" | "sandbox"`, `sourceSandboxId?`, `createdByTrainerId?`. No breaking changes.
+
+### Notifications
+- Trainer notification when status changes (Provisioning → Ready → Published / Rejected).
+- Admin notification on new request.
+Implemented via existing `notificationStore`.
 
 ---
 
-## 3. Extra-Time Overrides (4 scopes)
+## 2. Dedicated self-paced batch wizard
 
-Single reusable drawer `src/components/admin/ExtendTimeDrawer.tsx` invoked from each scope's row action. Inputs: hours to add (1/2/4/8/custom), reason (required), notify trainer toggle.
+New page `src/pages/CreateSelfPacedBatch.tsx`, route `/batches/create-self-paced`. Live wizard stays at `/batches/create`. Add a chooser dialog on the Batches page "New batch" button → `Live cohort` vs `Self-paced batch`.
 
-- **Per-VM** — action button on `src/pages/admin/VMManagement.tsx` row and `AssignVM.tsx`
-- **Per-batch (all VMs)** — action in `src/pages/admin/AdminBatchDetail.tsx` header overflow menu; applies bonus hours to every VM in batch
-- **Per-session/day window** — control in `src/components/batches/VMDaySchedule.tsx` (admin-only) to extend today's availability window (+1/2/3h)
-- **Template runtimeLimit override (per customer)** — on customer detail, "Template Overrides" section to bump `runtimeLimit` for a template scoped to that customer; stored as `templateOverrides: { customerId, templateId, runtimeLimit }[]` in `labStore`
+### Why a separate wizard
+Self-paced has no schedule, no fixed seats, no trainer-led VM provisioning timeline. Instead it needs: enrollment window, access model, on-demand lab quotas, and template→lab mappings.
 
-**Audit logging:** every extend / assign / promote / release action calls a shared `logAdminAction(actor, action, target, reason)` helper writing to a `useAuditStore` (or extend existing `notificationStore`). Visible in `src/pages/admin/AuditLogs.tsx` via the existing log table — add filter chips for new action types.
+### Steps
+
+**Step 1 — Basics**
+- Name, description, linked course (required — must be a course whose lessons have on-demand labs attached).
+- Tags, cover image.
+
+**Step 2 — Access & enrollment**
+- Enrollment mode: always-open / window (date range) / invite-only.
+- Access model: `full-course` (X total VM hours per learner) or `lesson-unlock` (per-lesson cap).
+- Total access hours / per-lab cap; expiry after first launch (days).
+- Max concurrent learners (soft cap for cost projection).
+
+**Step 3 — On-demand labs**
+- Auto-lists every lab attached to the linked course's lessons.
+- For each lab, shows the chosen template (from `labStore.templates`), per-launch runtime limit (defaults from template), max launches per learner, idle shutdown minutes.
+- Inline `Request a template` if a lab still needs one — opens the same `RequestTemplateSheet`. Lab row shows "Awaiting template" status until published.
+- Cannot advance to Review until every lab has a published template (or trainer explicitly marks lab as "manual provision later").
+
+**Step 4 — Review & publish**
+- Summary, cost estimate (concurrent learners × avg hours × node rate).
+- `Save as draft` or `Publish self-paced batch`.
+
+Writes to `batchStore.addBatch` with `deliveryMode: "self-paced"`, `enrollmentMode: "floating"`, plus a new optional `selfPacedConfig` blob: `{ accessModel, totalAccessHours, expiryDays, perLabCaps: [{ labId, runtimeLimit, maxLaunches, idleShutdownMin }] }`. Skips the live wizard's date-grid / seat fields.
+
+### Self-paced Batch Details
+On `BatchDetails.tsx`, when `deliveryMode === "self-paced"`, swap the tab set to:
+- **Overview** — enrolled count, active sessions, hours consumed
+- **Learners** — floating enrollment list, hours used / remaining, expiry
+- **Labs** — per-lab template, runtime cap, launch count, currently-running VMs
+- **Analytics** — completion %, avg time-on-lab, drop-off
+- **Settings** — edit access model, caps, enrollment window
+Hide the trainer-VM / snapshot / participant-VM tabs that only make sense for cohort batches.
 
 ---
 
-## Technical Summary
+## Technical summary
 
-- **New files:** `pages/admin/NodeVMPool.tsx`, `pages/admin/SandboxVMRequests.tsx`, `pages/RequestSandboxVM.tsx`, `pages/SandboxVMs.tsx`, `components/admin/NodeVMTable.tsx`, `components/admin/AssignVMDrawer.tsx`, `components/admin/ExtendTimeDrawer.tsx`, `stores/sandboxVMStore.ts`, `lib/auditLog.ts`
-- **Modified:** `labStore.ts` (nodeVMs, templateOverrides, template.kind), `App.tsx` (routes), `AppSidebar.tsx` (admin: Infra → Node VM Pool, Sandbox Requests; trainer: Labs → Request Sandbox VM, My Sandbox VMs), `Nodes.tsx`, `VMManagement.tsx`, `AdminBatchDetail.tsx`, `AssignVM.tsx`, `VMDaySchedule.tsx`, `Customers.tsx`/`CustomerDetail.tsx`, `AuditLogs.tsx`
-- **No backend** — all mock data, Zustand persistence, follows existing role-gating via `roleStore`
+**New files**
+- `src/pages/CreateSelfPacedBatch.tsx`
+- `src/components/batches/SelfPacedLabsStep.tsx`
+- `src/components/batches/SelfPacedOverviewTab.tsx`, `SelfPacedLearnersTab.tsx`, `SelfPacedLabsTab.tsx`
+- `src/components/sandbox/RequestTemplateSheet.tsx` (reusable drawer; replaces page-only `RequestSandboxVM`)
+- `src/components/batches/BatchTypeChooser.tsx` (live vs self-paced modal)
+
+**Modified files**
+- `src/App.tsx` — new route
+- `src/pages/Labs.tsx` — `Request a template` CTA, "My pending requests" view
+- `src/pages/BatchDetails.tsx` — inline request action; conditional self-paced tab set
+- `src/pages/Batches.tsx` — chooser modal on "New batch"
+- `src/pages/SandboxVMs.tsx` — `Submit for snapshot` action, status copy
+- `src/pages/admin/SandboxVMRequests.tsx` — 4-stage swimlane, snapshot-publish modal
+- `src/stores/sandboxVMStore.ts` — add `submitForSnapshot`
+- `src/stores/labStore.ts` — add `source`, `sourceSandboxId`, `createdByTrainerId` on `LabTemplate`
+- `src/stores/batchStore.ts` — add optional `selfPacedConfig`
+- `src/stores/notificationStore.ts` — fire on status transitions
+
+**Out of scope for this round** (will note as TODO): real BBB-like provisioning callbacks, billing meter wiring, per-learner cost breakdown UI.
