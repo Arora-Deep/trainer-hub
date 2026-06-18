@@ -33,6 +33,8 @@ export default function AssignVM() {
   const log = useAuditStore((s) => s.log);
 
   const [vmQuery, setVmQuery] = useState("");
+  const [vmInput, setVmInput] = useState("");
+  const [bulkInput, setBulkInput] = useState("");
   const [selectedVMs, setSelectedVMs] = useState<string[]>([]);
   const [customerId, setCustomerId] = useState("");
   const [batchId, setBatchId] = useState("");
@@ -45,22 +47,43 @@ export default function AssignVM() {
   const customer = customers.find((c) => c.id === customerId);
   const participants = batch?.participants || [];
 
-  const searchResults = useMemo(() => {
-    if (!vmQuery.trim()) return [];
-    const q = vmQuery.toLowerCase();
-    return vms
-      .filter((v) => !selectedVMs.includes(v.id))
-      .filter((v) => v.id.toLowerCase().includes(q) || v.name.toLowerCase().includes(q) || v.ipAddress.includes(q))
-      .slice(0, 8);
-  }, [vmQuery, vms, selectedVMs]);
-
   const selectedVMObjects = useMemo(() => vms.filter((v) => selectedVMs.includes(v.id)), [vms, selectedVMs]);
 
-  const addVM = (id: string) => {
-    setSelectedVMs((prev) => [...prev, id]);
-    setVmQuery("");
+  const resolveVM = (token: string) => {
+    const q = token.trim().toLowerCase();
+    if (!q) return null;
+    return vms.find((v) => v.id.toLowerCase() === q || v.name.toLowerCase() === q || v.ipAddress === q) || null;
   };
+
+  const addVMs = (tokens: string[]) => {
+    const added: string[] = [];
+    const notFound: string[] = [];
+    const dupes: string[] = [];
+    tokens.map((t) => t.trim()).filter(Boolean).forEach((t) => {
+      const v = resolveVM(t);
+      if (!v) return notFound.push(t);
+      if (selectedVMs.includes(v.id) || added.includes(v.id)) return dupes.push(t);
+      added.push(v.id);
+    });
+    if (added.length) setSelectedVMs((prev) => [...prev, ...added]);
+    if (notFound.length) toast({ title: "VM not found", description: notFound.join(", "), variant: "destructive" });
+    if (added.length) toast({ title: `Added ${added.length} VM(s)`, description: dupes.length ? `${dupes.length} duplicate(s) skipped` : undefined });
+  };
+
+  const handleAddSingle = () => {
+    if (!vmInput.trim()) return;
+    addVMs([vmInput]);
+    setVmInput("");
+  };
+
+  const handleAddBulk = () => {
+    if (!bulkInput.trim()) return;
+    addVMs(bulkInput.split(/[\s,;\n]+/));
+    setBulkInput("");
+  };
+
   const removeVM = (id: string) => setSelectedVMs((prev) => prev.filter((x) => x !== id));
+
 
   const toggleStudent = (id: string) => {
     const next = new Set(studentIds);
