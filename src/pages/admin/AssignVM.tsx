@@ -2,205 +2,330 @@ import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCustomerStore } from "@/stores/customerStore";
 import { useBatchStore } from "@/stores/batchStore";
+import { useNodeVMStore } from "@/stores/nodeVMStore";
+import { useAuditStore } from "@/stores/auditStore";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Monitor, Zap, Users, CheckCircle2, Server } from "lucide-react";
+import { Monitor, Search, X, AlertTriangle, CheckCircle2, Users, Server, Plus } from "lucide-react";
 
-const NODE_OPTIONS = [
-  { value: "auto", label: "Auto-balance (recommended)" },
-  { value: "node-a-01", label: "node-a-01 · Mumbai · 38% load" },
-  { value: "node-a-02", label: "node-a-02 · Mumbai · 62% load" },
-  { value: "node-b-01", label: "node-b-01 · Bangalore · 24% load" },
-  { value: "node-b-02", label: "node-b-02 · Bangalore · 71% load" },
-  { value: "node-c-01", label: "node-c-01 · Singapore · 19% load" },
-];
+type Mode = "batch" | "students" | "single";
 
 const statusConfig: Record<string, { dot: string; bg: string; text: string; label: string }> = {
   running: { dot: "bg-green-500", bg: "bg-green-500/10", text: "text-green-600", label: "Running" },
-  not_assigned: { dot: "bg-muted-foreground", bg: "bg-muted", text: "text-muted-foreground", label: "Not Assigned" },
-  error: { dot: "bg-red-500", bg: "bg-red-500/10", text: "text-red-600", label: "Failed" },
   stopped: { dot: "bg-amber-500", bg: "bg-amber-500/10", text: "text-amber-600", label: "Stopped" },
+  error: { dot: "bg-red-500", bg: "bg-red-500/10", text: "text-red-600", label: "Failed" },
+  provisioning: { dot: "bg-blue-500", bg: "bg-blue-500/10", text: "text-blue-600", label: "Provisioning" },
 };
 
 export default function AssignVM() {
   const { customers } = useCustomerStore();
-  const { batches, assignParticipantVM, recloneParticipantVM } = useBatchStore();
+  const { batches } = useBatchStore();
+  const { vms, assign } = useNodeVMStore();
+  const log = useAuditStore((s) => s.log);
+
+  const [vmQuery, setVmQuery] = useState("");
+  const [selectedVMs, setSelectedVMs] = useState<string[]>([]);
   const [customerId, setCustomerId] = useState("");
   const [batchId, setBatchId] = useState("");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [targetNode, setTargetNode] = useState("auto");
+  const [mode, setMode] = useState<Mode>("batch");
+  const [studentIds, setStudentIds] = useState<Set<string>>(new Set());
+  const [singleStudent, setSingleStudent] = useState("");
+  const [reason, setReason] = useState("");
 
   const batch = batches.find((b) => b.id === batchId);
-  const filteredBatches = useMemo(() => batches, [batches]);
+  const customer = customers.find((c) => c.id === customerId);
   const participants = batch?.participants || [];
-  const vms = batch?.vmConfig?.participantVMs || [];
 
-  const findVM = (email: string) => vms.find((v) => v.assignedEmail === email);
-  const assignedCount = participants.filter((p) => findVM(p.email)).length;
-  const unassignedCount = participants.length - assignedCount;
+  const searchResults = useMemo(() => {
+    if (!vmQuery.trim()) return [];
+    const q = vmQuery.toLowerCase();
+    return vms
+      .filter((v) => !selectedVMs.includes(v.id))
+      .filter((v) => v.id.toLowerCase().includes(q) || v.name.toLowerCase().includes(q) || v.ipAddress.includes(q))
+      .slice(0, 8);
+  }, [vmQuery, vms, selectedVMs]);
 
-  const toggle = (id: string) => {
-    const next = new Set(selected);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    setSelected(next);
+  const selectedVMObjects = useMemo(() => vms.filter((v) => selectedVMs.includes(v.id)), [vms, selectedVMs]);
+
+  const addVM = (id: string) => {
+    setSelectedVMs((prev) => [...prev, id]);
+    setVmQuery("");
+  };
+  const removeVM = (id: string) => setSelectedVMs((prev) => prev.filter((x) => x !== id));
+
+  const toggleStudent = (id: string) => {
+    const next = new Set(studentIds);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setStudentIds(next);
   };
 
-  const nodeLabel = () => targetNode === "auto" ? "auto-balanced node" : targetNode;
+  const targetCount = mode === "batch" ? participants.length : mode === "students" ? studentIds.size : singleStudent ? 1 : 0;
+  const mismatch = targetCount > 0 && selectedVMs.length !== targetCount;
 
-  const handleAssign = (participantId: string, name: string) => {
-    if (!batch) return;
-    assignParticipantVM(batch.id, participantId);
-    toast({ title: "VM Assigned", description: `Provisioning a VM for ${name} on ${nodeLabel()}.` });
+  const reset = () => {
+    setSelectedVMs([]);
+    setStudentIds(new Set());
+    setSingleStudent("");
+    setReason("");
   };
 
-  const handleAutoAssign = () => {
-    if (!batch) return;
-    let count = 0;
-    participants.forEach((p) => {
-      if (!findVM(p.email)) {
-        assignParticipantVM(batch.id, p.id);
-        count++;
+  const handleAssign = () => {
+    if (selectedVMs.length === 0) return toast({ title: "Add at least one VM", variant: "destructive" });
+    if (!batchId) return toast({ title: "Select a batch", variant: "destructive" });
+    if (mode === "students" && studentIds.size === 0) return toast({ title: "Select students", variant: "destructive" });
+    if (mode === "single" && !singleStudent) return toast({ title: "Select a student", variant: "destructive" });
+
+    const base = { customerId, customerName: customer?.name, batchId, batchName: batch?.name };
+
+    if (mode === "batch") {
+      assign(selectedVMs, base);
+    } else {
+      const ids = mode === "single" ? [singleStudent] : Array.from(studentIds);
+      selectedVMs.slice(0, ids.length).forEach((vmId, i) => {
+        const p = participants.find((x) => x.id === ids[i]);
+        assign([vmId], { ...base, studentId: p?.id, studentName: p?.name });
+      });
+      if (selectedVMs.length > ids.length) {
+        assign(selectedVMs.slice(ids.length), base);
       }
-    });
-    toast({ title: "Auto Assign", description: `Assigning ${count} VMs to ${nodeLabel()}.` });
-  };
+    }
 
-  const handleBulkAssign = () => {
-    if (!batch) return;
-    selected.forEach((id) => {
-      const p = participants.find((x) => x.id === id);
-      if (p && !findVM(p.email)) assignParticipantVM(batch.id, id);
+    log({
+      action: "assign_vm",
+      target: mode === "batch"
+        ? `Batch ${batch?.name}`
+        : mode === "single"
+          ? `Student ${participants.find((p) => p.id === singleStudent)?.name}`
+          : `${studentIds.size} students in ${batch?.name}`,
+      reason: reason || undefined,
+      meta: { vmIds: selectedVMs, mode },
     });
-    toast({ title: "Bulk Assign", description: `Assigning ${selected.size} VMs to ${nodeLabel()}.` });
-    setSelected(new Set());
+
+    toast({ title: "VMs assigned", description: `${selectedVMs.length} VM(s) assigned successfully.` });
+    reset();
   };
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Assign VM</h1>
-        <p className="text-muted-foreground text-sm mt-1">Assign VMs to participants by batch — supports bulk assignment</p>
+        <p className="text-muted-foreground text-sm mt-1">Pick VMs by ID or name, then assign them to a student, multiple students, or an entire batch.</p>
       </div>
 
+      {/* Step 1 — Pick VMs */}
       <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-sm">Select Customer & Batch</CardTitle></CardHeader>
-        <CardContent>
-          <div className="flex gap-3 flex-wrap">
-            <Select value={customerId} onValueChange={setCustomerId}>
-              <SelectTrigger className="w-[220px]"><SelectValue placeholder="All Customers" /></SelectTrigger>
-              <SelectContent>
-                {customers.filter((c) => c.status === "active").map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={batchId} onValueChange={setBatchId}>
-              <SelectTrigger className="w-[260px]"><SelectValue placeholder="Select Batch" /></SelectTrigger>
-              <SelectContent>
-                {filteredBatches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2"><Monitor className="h-4 w-4" /> 1. Pick VMs</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={vmQuery}
+              onChange={(e) => setVmQuery(e.target.value)}
+              placeholder="Search VM by ID, name, or IP (e.g. nvm-001, vm-mum-01, 10.10.1.5)"
+              className="pl-9"
+            />
+            {searchResults.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full rounded-md border bg-popover shadow-md max-h-64 overflow-auto">
+                {searchResults.map((v) => {
+                  const sc = statusConfig[v.status];
+                  return (
+                    <button
+                      key={v.id}
+                      onClick={() => addVM(v.id)}
+                      className="w-full flex items-center justify-between px-3 py-2 hover:bg-muted text-left"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+                        <div>
+                          <div className="text-xs font-mono">{v.id} · {v.name}</div>
+                          <div className="text-[10px] text-muted-foreground">{v.node} · {v.ipAddress} · {v.os}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {v.batchName && <Badge variant="outline" className="text-[10px]">{v.batchName}</Badge>}
+                        <Badge variant="secondary" className={cn("text-[10px] gap-1", sc.bg, sc.text)}>
+                          <span className={cn("h-1.5 w-1.5 rounded-full", sc.dot)} />{sc.label}
+                        </Badge>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {selectedVMObjects.length > 0 && (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">VM ID</TableHead>
+                    <TableHead className="text-xs">Name</TableHead>
+                    <TableHead className="text-xs">Node</TableHead>
+                    <TableHead className="text-xs">IP</TableHead>
+                    <TableHead className="text-xs">Status</TableHead>
+                    <TableHead className="text-xs">Current assignment</TableHead>
+                    <TableHead className="w-10"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {selectedVMObjects.map((v) => {
+                    const sc = statusConfig[v.status];
+                    return (
+                      <TableRow key={v.id}>
+                        <TableCell className="text-xs font-mono">{v.id}</TableCell>
+                        <TableCell className="text-xs font-mono">{v.name}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{v.node}</TableCell>
+                        <TableCell className="text-xs font-mono text-muted-foreground">{v.ipAddress}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className={cn("text-[10px] gap-1", sc.bg, sc.text)}>
+                            <span className={cn("h-1.5 w-1.5 rounded-full", sc.dot)} />{sc.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {v.batchName ? `${v.batchName}${v.studentName ? ` · ${v.studentName}` : ""}` : "—"}
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm" onClick={() => removeVM(v.id)}><X className="h-3.5 w-3.5" /></Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          <div className="text-xs text-muted-foreground flex items-center gap-2">
+            <Server className="h-3.5 w-3.5" />
+            {selectedVMs.length} VM{selectedVMs.length === 1 ? "" : "s"} selected
+            {selectedVMObjects.some((v) => v.batchName) && (
+              <span className="text-amber-600">· Some VMs are already assigned and will be reassigned.</span>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {batch && (
-        <div className="grid grid-cols-3 gap-4">
-          <Card><CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10"><Users className="h-4 w-4 text-primary" /></div>
-            <div><p className="text-xs text-muted-foreground">Total Participants</p><p className="text-xl font-bold">{participants.length}</p></div>
-          </CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-500/10"><CheckCircle2 className="h-4 w-4 text-green-600" /></div>
-            <div><p className="text-xs text-muted-foreground">Assigned</p><p className="text-xl font-bold">{assignedCount}</p></div>
-          </CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/10"><Monitor className="h-4 w-4 text-amber-600" /></div>
-            <div><p className="text-xs text-muted-foreground">Unassigned</p><p className="text-xl font-bold">{unassignedCount}</p></div>
-          </CardContent></Card>
-        </div>
-      )}
+      {/* Step 2 — Target */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2"><Users className="h-4 w-4" /> 2. Pick target</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Customer</Label>
+              <Select value={customerId} onValueChange={(v) => { setCustomerId(v); setBatchId(""); }}>
+                <SelectTrigger className="h-9 text-xs mt-1"><SelectValue placeholder="Select customer" /></SelectTrigger>
+                <SelectContent>
+                  {customers.map((c) => <SelectItem key={c.id} value={c.id} className="text-xs">{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Batch</Label>
+              <Select value={batchId} onValueChange={setBatchId}>
+                <SelectTrigger className="h-9 text-xs mt-1"><SelectValue placeholder="Select batch" /></SelectTrigger>
+                <SelectContent>
+                  {batches.map((b) => <SelectItem key={b.id} value={b.id} className="text-xs">{b.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-      {batch && (
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <CardTitle className="text-sm">Participants</CardTitle>
-              <div className="flex gap-2 items-center flex-wrap">
-                <div className="flex items-center gap-2">
-                  <Server className="h-3.5 w-3.5 text-muted-foreground" />
-                  <Select value={targetNode} onValueChange={setTargetNode}>
-                    <SelectTrigger className="h-8 w-[240px] text-xs">
-                      <SelectValue placeholder="Target node" />
-                    </SelectTrigger>
+          {batch && (
+            <>
+              <div>
+                <Label className="text-xs">Assignment mode</Label>
+                <div className="flex gap-2 mt-1.5">
+                  <Button type="button" size="sm" variant={mode === "batch" ? "default" : "outline"} className="text-xs flex-1" onClick={() => setMode("batch")}>
+                    Entire batch ({participants.length})
+                  </Button>
+                  <Button type="button" size="sm" variant={mode === "students" ? "default" : "outline"} className="text-xs flex-1" onClick={() => setMode("students")}>
+                    Multiple students
+                  </Button>
+                  <Button type="button" size="sm" variant={mode === "single" ? "default" : "outline"} className="text-xs flex-1" onClick={() => setMode("single")}>
+                    Single student
+                  </Button>
+                </div>
+              </div>
+
+              {mode === "single" && (
+                <div>
+                  <Label className="text-xs">Student</Label>
+                  <Select value={singleStudent} onValueChange={setSingleStudent}>
+                    <SelectTrigger className="h-9 text-xs mt-1"><SelectValue placeholder="Select student" /></SelectTrigger>
                     <SelectContent>
-                      {NODE_OPTIONS.map((n) => (
-                        <SelectItem key={n.value} value={n.value} className="text-xs">{n.label}</SelectItem>
-                      ))}
+                      {participants.map((p) => <SelectItem key={p.id} value={p.id} className="text-xs">{p.name} — {p.email}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleAutoAssign} disabled={unassignedCount === 0}>
-                  <Zap className="h-3 w-3" /> Auto Assign
-                </Button>
-                <Button size="sm" className="gap-1.5 text-xs" onClick={handleBulkAssign} disabled={selected.size === 0}>
-                  <Monitor className="h-3 w-3" /> Bulk Assign ({selected.size})
-                </Button>
+              )}
+
+              {mode === "students" && (
+                <div>
+                  <Label className="text-xs">Students ({studentIds.size} selected)</Label>
+                  <ScrollArea className="h-[200px] rounded-md border mt-1.5">
+                    <div className="p-2 space-y-1">
+                      {participants.map((p) => (
+                        <label key={p.id} className="flex items-center gap-2 text-xs px-2 py-1.5 rounded hover:bg-muted cursor-pointer">
+                          <Checkbox checked={studentIds.has(p.id)} onCheckedChange={() => toggleStudent(p.id)} />
+                          <span className="flex-1">{p.name}</span>
+                          <span className="text-muted-foreground text-[10px]">{p.email}</span>
+                        </label>
+                      ))}
+                      {participants.length === 0 && <p className="text-xs text-muted-foreground px-2 py-3">No participants in this batch.</p>}
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
+            </>
+          )}
+
+          <div>
+            <Label className="text-xs">Reason / note (optional)</Label>
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} className="mt-1.5 text-xs" placeholder="Recorded in the audit log" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Step 3 — Review & assign */}
+      <Card>
+        <CardContent className="p-4 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3 text-sm">
+            {mismatch ? (
+              <div className="flex items-center gap-2 text-amber-600">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="text-xs">VM count ({selectedVMs.length}) ≠ target count ({targetCount}). Extra VMs assign to the batch only; missing VMs leave students unassigned.</span>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10"></TableHead>
-                  <TableHead>Participant</TableHead>
-                  <TableHead>Assigned VM</TableHead>
-                  <TableHead>Node</TableHead>
-                  <TableHead>IP</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {participants.map((p, idx) => {
-                  const vm = findVM(p.email);
-                  const status = vm ? vm.status : "not_assigned";
-                  const sc = statusConfig[status] || statusConfig.not_assigned;
-                  const nodeForRow = vm
-                    ? (targetNode === "auto" ? `node-${["a", "b", "c"][idx % 3]}-0${(idx % 2) + 1}` : targetNode)
-                    : "—";
-                  return (
-                    <TableRow key={p.id}>
-                      <TableCell><Checkbox checked={selected.has(p.id)} onCheckedChange={() => toggle(p.id)} disabled={!!vm} /></TableCell>
-                      <TableCell className="text-sm font-medium">{p.name}<div className="text-xs text-muted-foreground">{p.email}</div></TableCell>
-                      <TableCell className="text-sm font-mono">{vm?.vmName || "—"}</TableCell>
-                      <TableCell className="text-xs font-mono text-muted-foreground">{nodeForRow}</TableCell>
-                      <TableCell className="text-sm font-mono text-muted-foreground">{vm?.ipAddress || "—"}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className={cn("text-xs gap-1.5", sc.bg, sc.text)}>
-                          <span className={cn("h-1.5 w-1.5 rounded-full", sc.dot)} />{sc.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {!vm && (
-                          <Button size="sm" className="text-xs" onClick={() => handleAssign(p.id, p.name)}>Assign VM</Button>
-                        )}
-                        {vm && vm.status === "error" && (
-                          <Button variant="outline" size="sm" className="text-xs text-red-600" onClick={() => { recloneParticipantVM(batch.id, vm.id); toast({ title: "Replacing", description: `New VM for ${p.name}` }); }}>Replace</Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+            ) : selectedVMs.length > 0 && targetCount > 0 ? (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle2 className="h-4 w-4" />
+                <span className="text-xs">Ready to assign {selectedVMs.length} VM(s) to {mode === "batch" ? `entire batch (${targetCount})` : `${targetCount} student(s)`}.</span>
+              </div>
+            ) : (
+              <span className="text-xs text-muted-foreground">Pick VMs and a target to continue.</span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={reset}>Reset</Button>
+            <Button size="sm" onClick={handleAssign} disabled={selectedVMs.length === 0 || !batchId}>
+              Assign VM{selectedVMs.length === 1 ? "" : "s"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
