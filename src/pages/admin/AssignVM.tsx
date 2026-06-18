@@ -32,7 +32,7 @@ export default function AssignVM() {
   const { vms, assign } = useNodeVMStore();
   const log = useAuditStore((s) => s.log);
 
-  const [vmQuery, setVmQuery] = useState("");
+  
   const [vmInput, setVmInput] = useState("");
   const [bulkInput, setBulkInput] = useState("");
   const [selectedVMs, setSelectedVMs] = useState<string[]>([]);
