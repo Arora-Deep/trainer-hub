@@ -15,7 +15,7 @@ import { useNodeVMStore } from "@/stores/nodeVMStore";
 import { useAuditStore } from "@/stores/auditStore";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Monitor, Search, X, AlertTriangle, CheckCircle2, Users, Server, Plus } from "lucide-react";
+import { Monitor, X, AlertTriangle, CheckCircle2, Users, Server, Plus } from "lucide-react";
 
 type Mode = "batch" | "students" | "single";
 
