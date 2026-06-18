@@ -15,7 +15,7 @@ import { useNodeVMStore } from "@/stores/nodeVMStore";
 import { useAuditStore } from "@/stores/auditStore";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Monitor, Search, X, AlertTriangle, CheckCircle2, Users, Server, Plus } from "lucide-react";
+import { Monitor, X, AlertTriangle, CheckCircle2, Users, Server, Plus } from "lucide-react";
 
 type Mode = "batch" | "students" | "single";
 
@@ -32,7 +32,9 @@ export default function AssignVM() {
   const { vms, assign } = useNodeVMStore();
   const log = useAuditStore((s) => s.log);
 
-  const [vmQuery, setVmQuery] = useState("");
+  
+  const [vmInput, setVmInput] = useState("");
+  const [bulkInput, setBulkInput] = useState("");
   const [selectedVMs, setSelectedVMs] = useState<string[]>([]);
   const [customerId, setCustomerId] = useState("");
   const [batchId, setBatchId] = useState("");
@@ -45,22 +47,43 @@ export default function AssignVM() {
   const customer = customers.find((c) => c.id === customerId);
   const participants = batch?.participants || [];
 
-  const searchResults = useMemo(() => {
-    if (!vmQuery.trim()) return [];
-    const q = vmQuery.toLowerCase();
-    return vms
-      .filter((v) => !selectedVMs.includes(v.id))
-      .filter((v) => v.id.toLowerCase().includes(q) || v.name.toLowerCase().includes(q) || v.ipAddress.includes(q))
-      .slice(0, 8);
-  }, [vmQuery, vms, selectedVMs]);
-
   const selectedVMObjects = useMemo(() => vms.filter((v) => selectedVMs.includes(v.id)), [vms, selectedVMs]);
 
-  const addVM = (id: string) => {
-    setSelectedVMs((prev) => [...prev, id]);
-    setVmQuery("");
+  const resolveVM = (token: string) => {
+    const q = token.trim().toLowerCase();
+    if (!q) return null;
+    return vms.find((v) => v.id.toLowerCase() === q || v.name.toLowerCase() === q || v.ipAddress === q) || null;
   };
+
+  const addVMs = (tokens: string[]) => {
+    const added: string[] = [];
+    const notFound: string[] = [];
+    const dupes: string[] = [];
+    tokens.map((t) => t.trim()).filter(Boolean).forEach((t) => {
+      const v = resolveVM(t);
+      if (!v) return notFound.push(t);
+      if (selectedVMs.includes(v.id) || added.includes(v.id)) return dupes.push(t);
+      added.push(v.id);
+    });
+    if (added.length) setSelectedVMs((prev) => [...prev, ...added]);
+    if (notFound.length) toast({ title: "VM not found", description: notFound.join(", "), variant: "destructive" });
+    if (added.length) toast({ title: `Added ${added.length} VM(s)`, description: dupes.length ? `${dupes.length} duplicate(s) skipped` : undefined });
+  };
+
+  const handleAddSingle = () => {
+    if (!vmInput.trim()) return;
+    addVMs([vmInput]);
+    setVmInput("");
+  };
+
+  const handleAddBulk = () => {
+    if (!bulkInput.trim()) return;
+    addVMs(bulkInput.split(/[\s,;\n]+/));
+    setBulkInput("");
+  };
+
   const removeVM = (id: string) => setSelectedVMs((prev) => prev.filter((x) => x !== id));
+
 
   const toggleStudent = (id: string) => {
     const next = new Set(studentIds);
@@ -127,43 +150,40 @@ export default function AssignVM() {
           <CardTitle className="text-sm flex items-center gap-2"><Monitor className="h-4 w-4" /> 1. Pick VMs</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={vmQuery}
-              onChange={(e) => setVmQuery(e.target.value)}
-              placeholder="Search VM by ID, name, or IP (e.g. nvm-001, vm-mum-01, 10.10.1.5)"
-              className="pl-9"
-            />
-            {searchResults.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full rounded-md border bg-popover shadow-md max-h-64 overflow-auto">
-                {searchResults.map((v) => {
-                  const sc = statusConfig[v.status];
-                  return (
-                    <button
-                      key={v.id}
-                      onClick={() => addVM(v.id)}
-                      className="w-full flex items-center justify-between px-3 py-2 hover:bg-muted text-left"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Plus className="h-3.5 w-3.5 text-muted-foreground" />
-                        <div>
-                          <div className="text-xs font-mono">{v.id} · {v.name}</div>
-                          <div className="text-[10px] text-muted-foreground">{v.node} · {v.ipAddress} · {v.os}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {v.batchName && <Badge variant="outline" className="text-[10px]">{v.batchName}</Badge>}
-                        <Badge variant="secondary" className={cn("text-[10px] gap-1", sc.bg, sc.text)}>
-                          <span className={cn("h-1.5 w-1.5 rounded-full", sc.dot)} />{sc.label}
-                        </Badge>
-                      </div>
-                    </button>
-                  );
-                })}
+          <div className="grid md:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Add one VM</Label>
+              <div className="flex gap-2 mt-1.5">
+                <Input
+                  value={vmInput}
+                  onChange={(e) => setVmInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddSingle(); } }}
+                  placeholder="VM name, ID, or IP (e.g. vm-mum-01)"
+                  className="text-xs"
+                />
+                <Button type="button" size="sm" onClick={handleAddSingle} className="gap-1.5">
+                  <Plus className="h-3.5 w-3.5" /> Add
+                </Button>
               </div>
-            )}
+              <p className="text-[10px] text-muted-foreground mt-1">Press Enter to add.</p>
+            </div>
+            <div>
+              <Label className="text-xs">Add many VMs</Label>
+              <div className="flex gap-2 mt-1.5">
+                <Textarea
+                  value={bulkInput}
+                  onChange={(e) => setBulkInput(e.target.value)}
+                  placeholder="Paste names separated by comma, space, or new line"
+                  rows={2}
+                  className="text-xs"
+                />
+                <Button type="button" size="sm" variant="outline" onClick={handleAddBulk} className="gap-1.5 self-start">
+                  <Plus className="h-3.5 w-3.5" /> Add list
+                </Button>
+              </div>
+            </div>
           </div>
+
 
           {selectedVMObjects.length > 0 && (
             <div className="rounded-md border">
