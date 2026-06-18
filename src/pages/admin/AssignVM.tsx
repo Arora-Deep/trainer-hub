@@ -150,43 +150,40 @@ export default function AssignVM() {
           <CardTitle className="text-sm flex items-center gap-2"><Monitor className="h-4 w-4" /> 1. Pick VMs</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={vmQuery}
-              onChange={(e) => setVmQuery(e.target.value)}
-              placeholder="Search VM by ID, name, or IP (e.g. nvm-001, vm-mum-01, 10.10.1.5)"
-              className="pl-9"
-            />
-            {searchResults.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full rounded-md border bg-popover shadow-md max-h-64 overflow-auto">
-                {searchResults.map((v) => {
-                  const sc = statusConfig[v.status];
-                  return (
-                    <button
-                      key={v.id}
-                      onClick={() => addVM(v.id)}
-                      className="w-full flex items-center justify-between px-3 py-2 hover:bg-muted text-left"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Plus className="h-3.5 w-3.5 text-muted-foreground" />
-                        <div>
-                          <div className="text-xs font-mono">{v.id} · {v.name}</div>
-                          <div className="text-[10px] text-muted-foreground">{v.node} · {v.ipAddress} · {v.os}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {v.batchName && <Badge variant="outline" className="text-[10px]">{v.batchName}</Badge>}
-                        <Badge variant="secondary" className={cn("text-[10px] gap-1", sc.bg, sc.text)}>
-                          <span className={cn("h-1.5 w-1.5 rounded-full", sc.dot)} />{sc.label}
-                        </Badge>
-                      </div>
-                    </button>
-                  );
-                })}
+          <div className="grid md:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Add one VM</Label>
+              <div className="flex gap-2 mt-1.5">
+                <Input
+                  value={vmInput}
+                  onChange={(e) => setVmInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddSingle(); } }}
+                  placeholder="VM name, ID, or IP (e.g. vm-mum-01)"
+                  className="text-xs"
+                />
+                <Button type="button" size="sm" onClick={handleAddSingle} className="gap-1.5">
+                  <Plus className="h-3.5 w-3.5" /> Add
+                </Button>
               </div>
-            )}
+              <p className="text-[10px] text-muted-foreground mt-1">Press Enter to add.</p>
+            </div>
+            <div>
+              <Label className="text-xs">Add many VMs</Label>
+              <div className="flex gap-2 mt-1.5">
+                <Textarea
+                  value={bulkInput}
+                  onChange={(e) => setBulkInput(e.target.value)}
+                  placeholder="Paste names separated by comma, space, or new line"
+                  rows={2}
+                  className="text-xs"
+                />
+                <Button type="button" size="sm" variant="outline" onClick={handleAddBulk} className="gap-1.5 self-start">
+                  <Plus className="h-3.5 w-3.5" /> Add list
+                </Button>
+              </div>
+            </div>
           </div>
+
 
           {selectedVMObjects.length > 0 && (
             <div className="rounded-md border">
