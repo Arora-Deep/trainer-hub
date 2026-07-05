@@ -381,9 +381,14 @@ export default function AdminBatchDetail() {
                 </div>
                 <div className="flex gap-2 ml-auto flex-wrap">
                   {trainerVMStatus === "not_provisioned" && (
-                    <Button size="sm" disabled={!canProvision} onClick={() => provisionTrainerVM(batch.storeBatchId)}>
-                      <Play className="h-3 w-3 mr-1" /> Provision Admin VM
-                    </Button>
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => setAssignTrainerDrawerOpen(true)}>
+                        <Server className="h-3 w-3 mr-1" /> Assign Existing VM
+                      </Button>
+                      <Button size="sm" disabled={!canProvision} onClick={() => provisionTrainerVM(batch.storeBatchId)}>
+                        <Play className="h-3 w-3 mr-1" /> Provision Admin VM
+                      </Button>
+                    </>
                   )}
                   {trainerVMStatus === "provisioning" && (
                     <Button size="sm" disabled><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Provisioning...</Button>
