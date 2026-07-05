@@ -797,6 +797,13 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
                     provisionedAt: new Date().toISOString(),
                     consoleUrl: `https://console.cloudadda.io/vm/vm-adm-${batchId}`,
                     credentials: { username: "root", password: `Tr@in${Math.random().toString(36).slice(2, 8)}!`, sshPort: 22 },
+                  },
+                },
+              }
+            : b
+        ),
+      }));
+    }, 3000);
   },
 
   assignTrainerVMDirect: (batchId, payload) => {
@@ -823,13 +830,6 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
           : b
       ),
     }));
-  },
-                },
-              }
-            : b
-        ),
-      }));
-    }, 3000);
   },
 
   markTrainerVMConfigured: (batchId) => {
