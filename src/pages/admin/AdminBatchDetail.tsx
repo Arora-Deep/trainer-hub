@@ -142,6 +142,7 @@ export default function AdminBatchDetail() {
 
   // VM Configuration state for Labs tab
   const [showVMConfig, setShowVMConfig] = useState(false);
+  const [assignTrainerDrawerOpen, setAssignTrainerDrawerOpen] = useState(false);
   const [vmType, setVmType] = useState<"single" | "multi">("single");
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [instanceName, setInstanceName] = useState("");
