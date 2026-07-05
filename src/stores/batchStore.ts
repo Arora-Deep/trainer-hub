@@ -797,7 +797,33 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
                     provisionedAt: new Date().toISOString(),
                     consoleUrl: `https://console.cloudadda.io/vm/vm-adm-${batchId}`,
                     credentials: { username: "root", password: `Tr@in${Math.random().toString(36).slice(2, 8)}!`, sshPort: 22 },
+  },
+
+  assignTrainerVMDirect: (batchId, payload) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b,
+              vmConfig: {
+                ...b.vmConfig,
+                trainerVM: {
+                  status: "configured" as const,
+                  ipAddress: payload.ipAddress,
+                  provisionedAt: new Date().toISOString(),
+                  consoleUrl: payload.consoleUrl || `https://console.cloudadda.io/vm/${payload.poolVmId || payload.vmName}`,
+                  credentials: payload.credentials || {
+                    username: "root",
+                    password: `Tr@in${Math.random().toString(36).slice(2, 8)}!`,
+                    sshPort: 22,
                   },
+                },
+              },
+            }
+          : b
+      ),
+    }));
+  },
                 },
               }
             : b
