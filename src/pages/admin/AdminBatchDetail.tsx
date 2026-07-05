@@ -18,6 +18,7 @@ import { useBatchStore, type VMSnapshot } from "@/stores/batchStore";
 import { TemplatePickerDropdown } from "@/components/labs/TemplatePickerDropdown";
 import { VMDaySchedule } from "@/components/batches/VMDaySchedule";
 import type { DaySchedule } from "@/components/batches/VMDaySchedule";
+import { AssignTrainerVMDrawer } from "@/components/admin/AssignTrainerVMDrawer";
 import { cn } from "@/lib/utils";
 import { format, differenceInDays, eachDayOfInterval, subDays, isAfter, isBefore, isEqual, formatDistanceToNow } from "date-fns";
 import type { DateRange } from "react-day-picker";
@@ -141,6 +142,7 @@ export default function AdminBatchDetail() {
 
   // VM Configuration state for Labs tab
   const [showVMConfig, setShowVMConfig] = useState(false);
+  const [assignTrainerDrawerOpen, setAssignTrainerDrawerOpen] = useState(false);
   const [vmType, setVmType] = useState<"single" | "multi">("single");
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [instanceName, setInstanceName] = useState("");
@@ -379,9 +381,14 @@ export default function AdminBatchDetail() {
                 </div>
                 <div className="flex gap-2 ml-auto flex-wrap">
                   {trainerVMStatus === "not_provisioned" && (
-                    <Button size="sm" disabled={!canProvision} onClick={() => provisionTrainerVM(batch.storeBatchId)}>
-                      <Play className="h-3 w-3 mr-1" /> Provision Admin VM
-                    </Button>
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => setAssignTrainerDrawerOpen(true)}>
+                        <Server className="h-3 w-3 mr-1" /> Assign Existing VM
+                      </Button>
+                      <Button size="sm" disabled={!canProvision} onClick={() => provisionTrainerVM(batch.storeBatchId)}>
+                        <Play className="h-3 w-3 mr-1" /> Provision Admin VM
+                      </Button>
+                    </>
                   )}
                   {trainerVMStatus === "provisioning" && (
                     <Button size="sm" disabled><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Provisioning...</Button>
@@ -1259,6 +1266,14 @@ export default function AdminBatchDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AssignTrainerVMDrawer
+        open={assignTrainerDrawerOpen}
+        onOpenChange={setAssignTrainerDrawerOpen}
+        batchId={batch.storeBatchId}
+        batchName={batch.batch}
+        customerName={batch.customer}
+      />
     </div>
   );
 }

@@ -226,6 +226,17 @@ interface BatchStore {
   setCourse: (batchId: string, courseId: string, courseName: string) => void;
   setVMConfig: (batchId: string, vmConfig: VMConfig) => void;
   provisionTrainerVM: (batchId: string) => void;
+  assignTrainerVMDirect: (
+    batchId: string,
+    payload: {
+      vmName: string;
+      ipAddress: string;
+      consoleUrl?: string;
+      credentials?: { username: string; password: string; sshPort: number };
+      poolVmId?: string;
+      note?: string;
+    }
+  ) => void;
   markTrainerVMConfigured: (batchId: string) => void;
   cloneTrainerVMForBatch: (batchId: string) => void;
   createSnapshot: (batchId: string, name: string, description: string) => void;
@@ -793,6 +804,32 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
         ),
       }));
     }, 3000);
+  },
+
+  assignTrainerVMDirect: (batchId, payload) => {
+    set((state) => ({
+      batches: state.batches.map((b) =>
+        b.id === batchId && b.vmConfig
+          ? {
+              ...b,
+              vmConfig: {
+                ...b.vmConfig,
+                trainerVM: {
+                  status: "configured" as const,
+                  ipAddress: payload.ipAddress,
+                  provisionedAt: new Date().toISOString(),
+                  consoleUrl: payload.consoleUrl || `https://console.cloudadda.io/vm/${payload.poolVmId || payload.vmName}`,
+                  credentials: payload.credentials || {
+                    username: "root",
+                    password: `Tr@in${Math.random().toString(36).slice(2, 8)}!`,
+                    sshPort: 22,
+                  },
+                },
+              },
+            }
+          : b
+      ),
+    }));
   },
 
   markTrainerVMConfigured: (batchId) => {
