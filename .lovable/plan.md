@@ -1,73 +1,41 @@
-# Move all lab + access config to the Course; Batch is just enrollment
+# Direct Trainer VM Assignment
 
-For a self-paced course, **everything about labs and access lives on the course** — template, allocation model, runtime caps, VM-hour budget. The batch only decides *who* gets in and *when* enrollment is open.
+Right now, giving a trainer their VM in a batch always requires the full lifecycle: Provision Admin VM → Configure → Snapshot → Clone. Many training companies just want us to hand over a fully-prepared VM. We need a shortcut path.
 
-## 1. Course Details → new "Labs & Access" tab (self-paced courses only)
+## What we're adding
 
-On `src/pages/CourseDetails.tsx`, when `course.settings.deliveryType === "self-paced"`, add a **Labs & Access** tab.
+In the admin batch detail's **Labs & VMs** tab, next to the existing "Provision Admin VM" flow, add a second option:
 
-**Section A — Course-wide access model**
-- Access model (single choice):
-  - **Full-course pool** — shared VM-hour budget across all labs
-  - **Per-lab allocation** — each lab has its own cap
-  - **Module unlock** — labs unlock as learner progresses through lessons
-- Total VM hours per learner (when full-course pool)
-- Validity after first launch (days)
-- Idle shutdown default (min)
-- On-expiry behavior (suspend / delete / lock)
+**"Assign an existing VM as Trainer VM"** — pick a VM from the node VM pool (or create a fresh one) and hand it directly to the trainer, skipping configure/snapshot/clone.
 
-These persist onto `course.settings` (extending `CourseSettings` with `accessModel`, `totalAccessHours`, `validityAfterLaunchDays`, `defaultIdleShutdownMin`, `onExpire`).
+The trainer then sees this VM in their batch's VM area just like any other trainer machine.
 
-**Section B — Per-lab template & limits**
-Auto-lists every lab lesson in the course. For each:
-- Template picker (dropdown from `labStore.templates`) + inline **Request a template** opening the existing `RequestTemplateSheet`
-- Runtime per launch (min) — defaults from template
-- Max launches per learner
-- Idle shutdown (overrides course default)
-- Allocation (when "Per-lab allocation"): hours for this lab
-- Unlock-after lesson picker (when "Module unlock")
+## Flow
 
-Persists onto `Lesson.lab` (extending `LabAttachment` with `runtimeLimitMin?`, `maxLaunches?`, `idleShutdownMin?`, `hoursAllocated?`, `unlockAfterLessonId?`). "Awaiting template" badge on rows that still need one.
+Admin batch detail → Labs & VMs tab → Admin VM section shows two side-by-side options when `trainerVMStatus === "not_provisioned"`:
 
-Reuses `RequestTemplateSheet` for inline template requests.
+1. **Standard lifecycle** (existing) — Provision → Configure → Snapshot → Clone
+2. **Direct assign (new)** — "Already have a VM prepared? Assign it directly"
 
-## 2. Self-paced batch wizard slims to 3 steps
+Clicking (2) opens a right-side drawer:
 
-`src/pages/CreateSelfPacedBatch.tsx` becomes:
+- **VM source** toggle:
+  - *Pick from pool* — search the Node VM Pool by ID / name / IP (only unassigned, running VMs)
+  - *Create new* — mini form (name, template, region, node auto-place) that provisions and immediately marks ready
+- **Assignment note** (optional, audit) — e.g. "Customer provided pre-configured image"
+- **Confirm** button → sets the batch's `trainerVM` to `status: "configured"` (skips provisioning/running steps) with the chosen VM's IP, credentials, and console URL, and links the pool VM to this batch as "Trainer Master" purpose.
 
-1. **Basics** — name, description, linked self-paced course. Course picker is filtered to courses where `deliveryType === "self-paced"` AND all lab lessons have a template configured. If the chosen course isn't ready, show a banner with a link to its Labs & Access tab.
-2. **Enrollment** — enrollment mode (always-open / window / invite-only), enrollment window dates, max concurrent learners (soft cap). No access model, no VM-hour budget, no per-lab caps — all of that is read from the course.
-3. **Review** — summary + publish.
+Result: the Admin VM card immediately shows the VM as ready (green, "Configured"), console-open button available, and the trainer portal batch view surfaces it as the assigned trainer VM.
 
-`batchStore.selfPacedConfig` shrinks to `{ enrollmentMode, enrollmentStart?, enrollmentEnd?, maxConcurrentLearners }`. We keep the old fields as optional/back-compat readers but no new batch writes them.
+## Technical notes
 
-## 3. Self-paced Batch Details
-
-On `src/pages/BatchDetails.tsx`, when `batch.deliveryMode === "self-paced"`, swap to:
-
-- **Overview** — enrolled count, active VM sessions, hours consumed, completion %
-- **Learners** — floating enrollment list, hours used / remaining, expiry
-- **Running VMs** — live list of student-launched VMs (status, learner, lab, time remaining, force-stop)
-- **Assessments** — per-assessment progress across enrolled learners (existing component)
-- **Settings** — enrollment window + max concurrent only (everything else is on the course, with a "Edit lab settings in course" link)
-
-Hidden for self-paced: trainer-VM tab, snapshot tab, cohort participant-VM tab, materials/meetings.
-
-## Files
-
-**Modified**
-- `src/stores/courseStore.ts` — extend `CourseSettings` with `accessModel`, `totalAccessHours`, `validityAfterLaunchDays`, `defaultIdleShutdownMin`, `onExpire`; extend `LabAttachment` with `runtimeLimitMin?`, `maxLaunches?`, `idleShutdownMin?`, `hoursAllocated?`, `unlockAfterLessonId?`
-- `src/pages/CourseDetails.tsx` — conditional **Labs & Access** tab
-- `src/pages/CreateSelfPacedBatch.tsx` — drop access/labs steps; gate course picker
-- `src/pages/BatchDetails.tsx` — self-paced tab set
-- `src/stores/batchStore.ts` — `selfPacedConfig` reduced to enrollment fields
-
-**New**
-- `src/components/courses/CourseLabsAccessTab.tsx` — the editor used in Course Details
+- **Store change** (`src/stores/batchStore.ts`): add `assignTrainerVMDirect(batchId, { vmId?, vmName, ipAddress, credentials, consoleUrl, note })` that patches `vmConfig.trainerVM` to `status: "configured"` with the supplied fields, records to audit log, and (if `vmId` provided) calls `useNodeVMStore.assign()` to link that pool VM to the batch as trainer.
+- **New component** `src/components/admin/AssignTrainerVMDrawer.tsx` — right-side drawer with the two-mode form (pick / create), search over `useNodeVMStore` filtered by `!customerId && status === "running"`, and create form mirroring the compact fields from `VMManagement`.
+- **Edit** `src/pages/admin/AdminBatchDetail.tsx` — in the Admin VM Lifecycle card, when `trainerVMStatus === "not_provisioned"`, render a secondary "Assign existing VM" button opening the drawer. When directly assigned, hide the Configure/Snapshot lifecycle steps (or mark them all done) since cloning to students still works via the existing "Clone to students" action from the trainer VM's current state.
+- No trainer portal changes needed — it already reads `vmConfig.trainerVM` and will show the newly-assigned VM automatically.
 
 ## Out of scope
-- Migrating existing batches that wrote the old `perLabCaps` shape (read as fallback only)
-- Real provisioning callbacks for the Running VMs tab (still mock)
-- Per-learner cost breakdown
 
-Approve and I'll build.
+- Changing the standard provision-configure-snapshot-clone workflow.
+- Bulk trainer VM assignment across multiple batches.
+- Changing how student/participant VMs are provisioned.
