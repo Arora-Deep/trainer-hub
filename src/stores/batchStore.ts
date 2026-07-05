@@ -645,6 +645,63 @@ const initialBatches: Batch[] = [
     enrollmentMode: "floating",
     enrolledCount: 50,
   },
+  // ───────── SQL Batch — Direct Trainer VM Assignment demo ─────────
+  {
+    id: "12",
+    name: "SQL for Analysts — Cohort 07",
+    description: "Instructor-led SQL bootcamp. Trainer VM was handed over directly by CloudAdda ops (pre-configured image supplied by customer).",
+    courseId: "12",
+    courseName: "SQL for Analysts",
+    instructors: ["Neha Kapoor"],
+    settings: { published: true, allowSelfEnrollment: false, certification: true },
+    startDate: "2026-07-06",
+    endDate: "2026-08-03",
+    evaluationEndDate: "2026-08-10",
+    additionalDetails: "Customer supplied a pre-configured SQL trainer image. Admin assigned it directly — no provision/configure/snapshot lifecycle needed before hand-off. Trainer clones to students when ready.",
+    seatCount: 12,
+    medium: "online",
+    status: "upcoming",
+    createdAt: "Jul 3, 2026",
+    deliveryMode: "live",
+    participants: [
+      { id: "sql-s1",  name: "Aditi Menon",     email: "aditi.menon@demo.in",     quizScore: null, currentModule: "Setup",  lastActive: "just now", attendance: { present: 0, total: 0 }, vmStatus: "not_assigned" },
+      { id: "sql-s2",  name: "Kabir Anand",     email: "kabir.anand@demo.in",     quizScore: null, currentModule: "Setup",  lastActive: "1h ago",   attendance: { present: 0, total: 0 }, vmStatus: "not_assigned" },
+      { id: "sql-s3",  name: "Tanya Bhatt",     email: "tanya.bhatt@demo.in",     quizScore: null, currentModule: "Setup",  lastActive: "3h ago",   attendance: { present: 0, total: 0 }, vmStatus: "not_assigned" },
+      { id: "sql-s4",  name: "Vivaan Shetty",   email: "vivaan.shetty@demo.in",   quizScore: null, currentModule: "Setup",  lastActive: "1d ago",   attendance: { present: 0, total: 0 }, vmStatus: "not_assigned" },
+      { id: "sql-s5",  name: "Zoya Khan",       email: "zoya.khan@demo.in",       quizScore: null, currentModule: "Setup",  lastActive: "2d ago",   attendance: { present: 0, total: 0 }, vmStatus: "not_assigned" },
+      { id: "sql-s6",  name: "Harsh Vardhan",   email: "harsh.vardhan@demo.in",   quizScore: null, currentModule: "Setup",  lastActive: "2d ago",   attendance: { present: 0, total: 0 }, vmStatus: "not_assigned" },
+    ],
+    assignedLabs: [
+      { id: "al-sql-1", labId: "lab-12", name: "SQL Practice Sandbox (PostgreSQL 16)", type: "Linux", duration: "120 min", completions: 0 },
+    ],
+    announcements: [
+      { id: "ann-sql-1", title: "Trainer VM ready", content: "Your pre-configured SQL trainer VM has been assigned. Console access is live in the Labs & VMs tab.", date: "Jul 3, 2026" },
+    ],
+    materials: [
+      { id: "mat-sql-1", name: "SQL — Joins Cheat Sheet", type: "document", url: "data:text/plain;charset=utf-8,SQL%20JOINS%0AINNER%20/%20LEFT%20/%20RIGHT%20/%20FULL%20OUTER%20/%20CROSS", description: "One-pager cheat sheet on JOIN types.", uploadedBy: "Neha Kapoor", uploadedAt: "Jul 3, 2026", size: "6 KB" },
+    ],
+    vmConfig: {
+      id: "vm-12",
+      dateRange: { from: "2026-07-06", to: "2026-08-03" },
+      vmType: "single",
+      vmTemplates: [{ templateId: "tpl-sql", instanceName: "SQL Practice Sandbox" }],
+      vmEntries: [],
+      trainerVM: {
+        status: "configured",
+        ipAddress: "10.9.47.128",
+        provisionedAt: "2026-07-03T09:15:00Z",
+        consoleUrl: "https://console.cloudadda.io/vm/nvm-sql-trainer",
+        credentials: { username: "root", password: "Sq!Tr@in2026", sshPort: 22 },
+      },
+      snapshots: [],
+      participantVMs: [],
+      cloneStatus: "not_cloned",
+      pricing: { compute: 1250, storage: 125, network: 50, support: 40, total: 1465 },
+      approval: { cloudAdda: "approved", companyAdmin: "approved", requested: true },
+      createdAt: "Jul 3, 2026",
+    },
+    labConfigs: [],
+  },
 ];
 
 export const useBatchStore = create<BatchStore>((set, get) => ({
