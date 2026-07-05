@@ -1266,6 +1266,14 @@ export default function AdminBatchDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AssignTrainerVMDrawer
+        open={assignTrainerDrawerOpen}
+        onOpenChange={setAssignTrainerDrawerOpen}
+        batchId={batch.storeBatchId}
+        batchName={batch.batch}
+        customerName={batch.customer}
+      />
     </div>
   );
 }
