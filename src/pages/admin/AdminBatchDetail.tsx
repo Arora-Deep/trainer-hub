@@ -18,6 +18,7 @@ import { useBatchStore, type VMSnapshot } from "@/stores/batchStore";
 import { TemplatePickerDropdown } from "@/components/labs/TemplatePickerDropdown";
 import { VMDaySchedule } from "@/components/batches/VMDaySchedule";
 import type { DaySchedule } from "@/components/batches/VMDaySchedule";
+import { AssignTrainerVMDrawer } from "@/components/admin/AssignTrainerVMDrawer";
 import { cn } from "@/lib/utils";
 import { format, differenceInDays, eachDayOfInterval, subDays, isAfter, isBefore, isEqual, formatDistanceToNow } from "date-fns";
 import type { DateRange } from "react-day-picker";
