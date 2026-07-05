@@ -226,6 +226,17 @@ interface BatchStore {
   setCourse: (batchId: string, courseId: string, courseName: string) => void;
   setVMConfig: (batchId: string, vmConfig: VMConfig) => void;
   provisionTrainerVM: (batchId: string) => void;
+  assignTrainerVMDirect: (
+    batchId: string,
+    payload: {
+      vmName: string;
+      ipAddress: string;
+      consoleUrl?: string;
+      credentials?: { username: string; password: string; sshPort: number };
+      poolVmId?: string;
+      note?: string;
+    }
+  ) => void;
   markTrainerVMConfigured: (batchId: string) => void;
   cloneTrainerVMForBatch: (batchId: string) => void;
   createSnapshot: (batchId: string, name: string, description: string) => void;
