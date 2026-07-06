@@ -550,7 +550,7 @@ export default function AdminBatchDetail() {
         {/* Labs & VMs Tab */}
         <TabsContent value="labs" className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">{labInstances.length} lab instances</p>
+            <p className="text-sm text-muted-foreground">{displayParticipantVMs.length} lab instances</p>
             <div className="flex gap-2">
               <Button
                 variant="outline"
