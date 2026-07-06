@@ -64,6 +64,7 @@ export interface VMConfig {
   vmEntries: VMEntry[];
   trainerVM: {
     status: "not_provisioned" | "provisioning" | "running" | "configured" | "snapshotted" | "stopped";
+    vmName?: string;
     ipAddress: string;
     provisionedAt: string;
     consoleUrl: string;
@@ -688,6 +689,7 @@ const initialBatches: Batch[] = [
       vmEntries: [],
       trainerVM: {
         status: "configured",
+        vmName: "sql-trainer-direct-vm",
         ipAddress: "10.9.47.128",
         provisionedAt: "2026-07-03T09:15:00Z",
         consoleUrl: "https://console.cloudadda.io/vm/nvm-sql-trainer",
@@ -850,6 +852,7 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
                 ...b, vmConfig: {
                   ...b.vmConfig, trainerVM: {
                     status: "running" as const,
+                    vmName: `trainer-vm-${batchId}`,
                     ipAddress: `10.0.1.${100 + Math.floor(Math.random() * 50)}`,
                     provisionedAt: new Date().toISOString(),
                     consoleUrl: `https://console.cloudadda.io/vm/vm-adm-${batchId}`,
@@ -873,6 +876,7 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
                 ...b.vmConfig,
                 trainerVM: {
                   status: "configured" as const,
+                  vmName: payload.vmName,
                   ipAddress: payload.ipAddress,
                   provisionedAt: new Date().toISOString(),
                   consoleUrl: payload.consoleUrl || `https://console.cloudadda.io/vm/${payload.poolVmId || payload.vmName}`,
@@ -919,7 +923,7 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
         startedAt: new Date().toISOString(),
       }));
       const remaining = currentBatch.seatCount - currentBatch.participants.length;
-      for (let i = 0; i < Math.min(remaining, 5); i++) {
+      for (let i = 0; i < remaining; i++) {
         participantVMs.push({
           id: `vm-unassigned-${Date.now()}-${i}`,
           assignedTo: `Seat ${currentBatch.participants.length + i + 1}`, assignedEmail: "unassigned",

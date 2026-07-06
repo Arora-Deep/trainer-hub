@@ -31,7 +31,7 @@ import {
   Monitor, Loader2, ExternalLink, Copy, CheckCircle2, Terminal, Mail,
   ClipboardList, Settings, GraduationCap, TrendingUp, Zap, BarChart3,
   AlertCircle, Globe, Building2, MoreVertical, RotateCcw, Power, PowerOff,
-  Camera, Trash2, Star, Eye, EyeOff, Clipboard, Video, FileText, Award, ChevronRight, Edit,
+  Camera, Trash2, Star, Eye, EyeOff, Clipboard, Video, FileText, Award, ChevronRight, Edit, Shield,
   Gamepad2, Trophy, Crown, Medal,
 } from "lucide-react";
 import { getLeaderboardsForBatch, formatLeaderboardTime } from "@/data/gameLeaderboards";
@@ -162,6 +162,8 @@ export default function BatchDetails() {
   const MediumIcon = mediumConfig[batch.medium]?.icon || Globe;
   const snapshots = vm?.snapshots || [];
   const goldenSnapshot = snapshots.find(s => s.isGolden);
+  const showTrainerVMRow = !!vm && (trainerStatus !== "not_provisioned" || Boolean(vm.trainerVM.ipAddress));
+  const totalVMRows = (showTrainerVMRow ? 1 : 0) + (vm?.participantVMs.length || 0);
 
   // Clone gating: only allow re-clone within 2 days of batch start (or once batch is live)
   const daysToStart = (() => {
@@ -632,17 +634,17 @@ export default function BatchDetails() {
 
                 </>)}
 
-                {/* Participant VMs Table with Rich Actions */}
-                {vm.participantVMs.length > 0 && (
+                {/* Batch VMs Table with Trainer + Participant VMs */}
+                {totalVMRows > 0 && (
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                       <div>
                         <CardTitle className="text-base flex items-center gap-2">
                           <Monitor className="h-4 w-4 text-primary" />
-                          Participant VMs ({vm.participantVMs.length})
+                          Batch VMs ({totalVMRows})
                         </CardTitle>
                         <CardDescription>
-                          {vm.participantVMs.filter(v => v.status === "running").length} running,{" "}
+                          Trainer VM plus {vm.participantVMs.length} participant VM{vm.participantVMs.length === 1 ? "" : "s"} · {vm.participantVMs.filter(v => v.status === "running").length} running,{" "}
                           {vm.participantVMs.filter(v => v.status === "stopped").length} stopped,{" "}
                           {vm.participantVMs.filter(v => v.status === "error").length} errors
                         </CardDescription>
@@ -712,7 +714,7 @@ export default function BatchDetails() {
                                 onCheckedChange={selectAllVMs}
                               />
                             </TableHead>
-                            <TableHead className="font-medium">Assigned To</TableHead>
+                            <TableHead className="font-medium">Owner</TableHead>
                             <TableHead className="font-medium">VM Name</TableHead>
                             <TableHead className="font-medium">IP Address</TableHead>
                             <TableHead className="font-medium">Status</TableHead>
@@ -722,6 +724,69 @@ export default function BatchDetails() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
+                          {showTrainerVMRow && (
+                            <TableRow className="group bg-primary/[0.03]">
+                              <TableCell>
+                                <Shield className="h-4 w-4 text-primary" />
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-7 w-7">
+                                    <AvatarFallback className="bg-primary/10 text-primary text-xs"><Shield className="h-3.5 w-3.5" /></AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <p className="font-medium text-sm">Trainer VM</p>
+                                    <p className="text-xs text-muted-foreground">{batch.instructors[0] || "Trainer"}</p>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-sm">{vm.trainerVM.vmName || vm.vmTemplates[0]?.instanceName || "Trainer VM"}</TableCell>
+                              <TableCell>
+                                {vm.trainerVM.ipAddress ? <code className="text-xs font-mono px-2 py-0.5 rounded bg-muted">{vm.trainerVM.ipAddress}</code> : <span className="text-xs text-muted-foreground">—</span>}
+                              </TableCell>
+                              <TableCell>
+                                <StatusBadge
+                                  status={trainerStatus === "running" || trainerStatus === "configured" || trainerStatus === "snapshotted" ? "success" : trainerStatus === "provisioning" ? "warning" : "default"}
+                                  label={trainerStatus === "not_provisioned" ? "Not Ready" : trainerStatus.replace("_", " ")}
+                                  pulse={trainerStatus === "provisioning"}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                {trainerStatus === "running" || trainerStatus === "configured" || trainerStatus === "snapshotted" ? (
+                                  <div className="space-y-1 w-24">
+                                    <div className="flex items-center justify-between text-[10px]"><span className="text-muted-foreground">CPU</span><span className="font-mono">12%</span></div>
+                                    <Progress value={12} className="h-1" />
+                                    <div className="flex items-center justify-between text-[10px]"><span className="text-muted-foreground">RAM</span><span className="font-mono">28%</span></div>
+                                    <Progress value={28} className="h-1" />
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <span className="text-xs text-muted-foreground">{goldenSnapshot?.name || "Master image"}</span>
+                              </TableCell>
+                              <TableCell>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <MoreVertical className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-52">
+                                    <DropdownMenuItem onClick={() => window.open(vm.trainerVM.consoleUrl, "_blank")}>
+                                      <ExternalLink className="mr-2 h-3.5 w-3.5" />Open Console
+                                    </DropdownMenuItem>
+                                    {vm.trainerVM.ipAddress && (
+                                      <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(`ssh ${vm.trainerVM.credentials.username}@${vm.trainerVM.ipAddress}`); toast({ title: "SSH Command Copied" }); }}>
+                                        <Clipboard className="mr-2 h-3.5 w-3.5" />Copy SSH Command
+                                      </DropdownMenuItem>
+                                    )}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          )}
                           {vm.participantVMs.map((svm) => {
                             const mockCpu = Math.floor(20 + Math.random() * 60);
                             const mockRam = Math.floor(30 + Math.random() * 50);
