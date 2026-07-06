@@ -158,6 +158,27 @@ export default function AdminBatchDetail() {
   const trainerVMStatus = vmConfig?.trainerVM.status || "not_provisioned";
   const trainerVM = vmConfig?.trainerVM;
 
+  // Derive participant VM rows from the real store data once clone completes.
+  // Falls back to the seeded demo list only for legacy batches where the
+  // vmConfig has no participantVMs entry at all (keeps existing demos intact).
+  const nodePool = ["node-mum-01", "node-mum-02", "node-mum-03"];
+  const derivedParticipantVMs = (vmConfig?.participantVMs && vmConfig.participantVMs.length > 0)
+    ? vmConfig.participantVMs.map((pv, i) => ({
+        id: pv.id.toUpperCase().startsWith("VM-") ? pv.id.toUpperCase() : `VM-${pv.id.toUpperCase()}`,
+        student: pv.assignedTo,
+        node: nodePool[i % nodePool.length],
+        cpu: pv.status === "running" ? `${25 + ((i * 13) % 55)}%` : "0%",
+        ram: pv.status === "running" ? `${35 + ((i * 17) % 50)}%` : "0%",
+        status: pv.status,
+        uptime: pv.status === "running" ? "3d 4h" : "—",
+      }))
+    : [];
+  const displayParticipantVMs = vmConfig
+    ? (vmConfig.cloneStatus === "cloned" ? derivedParticipantVMs : [])
+    : labInstances;
+
+
+
   // Prep period logic: Admin VM can be provisioned 2 days before batch start
   const batchStartDate = new Date(batch.start);
   const prepDate = subDays(batchStartDate, 2);
@@ -529,7 +550,7 @@ export default function AdminBatchDetail() {
         {/* Labs & VMs Tab */}
         <TabsContent value="labs" className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">{labInstances.length} lab instances</p>
+            <p className="text-sm text-muted-foreground">{displayParticipantVMs.length} lab instances</p>
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -658,7 +679,7 @@ export default function AdminBatchDetail() {
           <div className="space-y-2">
             <h3 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
               <Users className="h-4 w-4" />
-              Participant VMs ({labInstances.length})
+              Participant VMs ({displayParticipantVMs.length})
             </h3>
             <Card>
               <CardContent className="p-0">
@@ -676,7 +697,18 @@ export default function AdminBatchDetail() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {labInstances.map(l => (
+                    {displayParticipantVMs.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center text-muted-foreground py-10 text-sm">
+                          {vmConfig?.cloneStatus === "cloning"
+                            ? "Cloning admin VM to participants…"
+                            : trainerVMStatus === "not_provisioned"
+                              ? "Provision the admin VM, snapshot it, then clone to create participant VMs."
+                              : "No participant VMs yet. Clone the admin VM's golden snapshot to provision one per student."}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {displayParticipantVMs.map(l => (
                       <TableRow key={l.id}>
                         <TableCell className="text-sm font-mono">{l.id}</TableCell>
                         <TableCell className="text-sm">{l.student}</TableCell>
@@ -707,6 +739,7 @@ export default function AdminBatchDetail() {
                       </TableRow>
                     ))}
                   </TableBody>
+
                 </Table>
               </CardContent>
             </Card>
