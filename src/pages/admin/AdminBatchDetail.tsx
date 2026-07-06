@@ -697,7 +697,18 @@ export default function AdminBatchDetail() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {labInstances.map(l => (
+                    {displayParticipantVMs.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center text-muted-foreground py-10 text-sm">
+                          {vmConfig?.cloneStatus === "cloning"
+                            ? "Cloning admin VM to participants…"
+                            : trainerVMStatus === "not_provisioned"
+                              ? "Provision the admin VM, snapshot it, then clone to create participant VMs."
+                              : "No participant VMs yet. Clone the admin VM's golden snapshot to provision one per student."}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {displayParticipantVMs.map(l => (
                       <TableRow key={l.id}>
                         <TableCell className="text-sm font-mono">{l.id}</TableCell>
                         <TableCell className="text-sm">{l.student}</TableCell>
@@ -728,6 +739,7 @@ export default function AdminBatchDetail() {
                       </TableRow>
                     ))}
                   </TableBody>
+
                 </Table>
               </CardContent>
             </Card>
