@@ -923,7 +923,7 @@ export const useBatchStore = create<BatchStore>((set, get) => ({
         startedAt: new Date().toISOString(),
       }));
       const remaining = currentBatch.seatCount - currentBatch.participants.length;
-      for (let i = 0; i < Math.min(remaining, 5); i++) {
+      for (let i = 0; i < remaining; i++) {
         participantVMs.push({
           id: `vm-unassigned-${Date.now()}-${i}`,
           assignedTo: `Seat ${currentBatch.participants.length + i + 1}`, assignedEmail: "unassigned",
