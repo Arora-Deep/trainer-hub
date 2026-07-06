@@ -158,6 +158,27 @@ export default function AdminBatchDetail() {
   const trainerVMStatus = vmConfig?.trainerVM.status || "not_provisioned";
   const trainerVM = vmConfig?.trainerVM;
 
+  // Derive participant VM rows from the real store data once clone completes.
+  // Falls back to the seeded demo list only for legacy batches where the
+  // vmConfig has no participantVMs entry at all (keeps existing demos intact).
+  const nodePool = ["node-mum-01", "node-mum-02", "node-mum-03"];
+  const derivedParticipantVMs = (vmConfig?.participantVMs && vmConfig.participantVMs.length > 0)
+    ? vmConfig.participantVMs.map((pv, i) => ({
+        id: pv.id.toUpperCase().startsWith("VM-") ? pv.id.toUpperCase() : `VM-${pv.id.toUpperCase()}`,
+        student: pv.assignedTo,
+        node: nodePool[i % nodePool.length],
+        cpu: pv.status === "running" ? `${25 + ((i * 13) % 55)}%` : "0%",
+        ram: pv.status === "running" ? `${35 + ((i * 17) % 50)}%` : "0%",
+        status: pv.status,
+        uptime: pv.status === "running" ? "3d 4h" : "—",
+      }))
+    : [];
+  const displayParticipantVMs = vmConfig
+    ? (vmConfig.cloneStatus === "cloned" ? derivedParticipantVMs : [])
+    : labInstances;
+
+
+
   // Prep period logic: Admin VM can be provisioned 2 days before batch start
   const batchStartDate = new Date(batch.start);
   const prepDate = subDays(batchStartDate, 2);
