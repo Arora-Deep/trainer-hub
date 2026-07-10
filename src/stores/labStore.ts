@@ -56,6 +56,11 @@ export interface LabTemplate {
   sourceSandboxId?: string;
   createdByTrainerId?: string;
   createdByTrainerName?: string;
+  // Descriptive metadata (additive, optional)
+  credentials?: { username: string; password: string };
+  builtFor?: string;      // e.g. "AWS SA — Cohort 12"
+  requestedBy?: string;   // e.g. "Priya Sharma (DevOps Academy)"
+  lastUsedAt?: string;    // e.g. "Feb 20, 2026"
 }
 
 interface LabStore {
@@ -97,6 +102,10 @@ const initialTemplates: LabTemplate[] = [
     startupScript: "#!/bin/bash\necho 'Lab ready'",
     lastUpdated: "Jan 10, 2024",
     createdAt: "Dec 15, 2023",
+    credentials: { username: "ubuntu", password: "AwsTr@in2026" },
+    builtFor: "AWS Solutions Architect — Cohort 12",
+    requestedBy: "Rajesh Kumar (DevOps Academy)",
+    lastUsedAt: "Mar 04, 2026",
   },
   {
     id: "tpl-2",
@@ -124,6 +133,10 @@ const initialTemplates: LabTemplate[] = [
     startupScript: "",
     lastUpdated: "Jan 8, 2024",
     createdAt: "Dec 20, 2023",
+    credentials: { username: "Administrator", password: "W!nSrv#2026" },
+    builtFor: "Windows Admin Bootcamp — Batch 08",
+    requestedBy: "Mike Chen (Corporate L&D Co)",
+    lastUsedAt: "Feb 25, 2026",
   },
   {
     id: "tpl-3",
@@ -151,6 +164,10 @@ const initialTemplates: LabTemplate[] = [
     startupScript: "#!/bin/bash\nkubeadm init",
     lastUpdated: "Jan 5, 2024",
     createdAt: "Nov 28, 2023",
+    credentials: { username: "k8sadmin", password: "K8sCl!ust3r" },
+    builtFor: "K8s Fundamentals — Cohort 05",
+    requestedBy: "Amit Patel (SkillBridge Labs)",
+    lastUsedAt: "Mar 10, 2026",
   },
   {
     id: "tpl-4",
@@ -178,6 +195,10 @@ const initialTemplates: LabTemplate[] = [
     startupScript: "#!/bin/bash\ndocker --version",
     lastUpdated: "Dec 28, 2023",
     createdAt: "Dec 10, 2023",
+    credentials: { username: "docker", password: "D0ckerL@b" },
+    builtFor: "DevOps Foundations — Cohort 15",
+    requestedBy: "Rajesh Kumar (DevOps Academy)",
+    lastUsedAt: "Feb 12, 2026",
   },
   {
     id: "tpl-5",
@@ -205,6 +226,10 @@ const initialTemplates: LabTemplate[] = [
     startupScript: "#!/bin/bash\nterraform --version",
     lastUpdated: "Jan 12, 2024",
     createdAt: "Dec 5, 2023",
+    credentials: { username: "centos", password: "T3rraf0rm!" },
+    builtFor: "IaC Workshop — Cohort 02",
+    requestedBy: "Priya Sharma (DataScience Bootcamp)",
+    lastUsedAt: "Jan 30, 2026",
   },
 ];
 

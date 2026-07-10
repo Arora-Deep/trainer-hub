@@ -43,6 +43,7 @@ const adminNav: NavConfig = {
   icon: Shield,
   groups: [
     { label: "Dashboard", icon: Home, items: [
+      { title: "Important Tasks", icon: Flag, path: "/admin/important-tasks" },
       { title: "Overview", icon: Gauge, path: "/admin/dashboard" },
       { title: "Activity Feed", icon: Activity, path: "/admin/activity-feed" },
       { title: "Alerts", icon: AlertTriangle, path: "/admin/alerts" },

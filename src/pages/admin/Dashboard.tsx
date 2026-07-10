@@ -2,15 +2,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Building2, Server, AlertTriangle, DollarSign, FlaskConical, TicketCheck, RotateCcw, ChevronRight, Clock, XCircle, ClipboardList, Timer } from "lucide-react";
+import { Building2, Server, AlertTriangle, DollarSign, FlaskConical, TicketCheck, RotateCcw, ChevronRight, Clock, XCircle, ClipboardList, Timer, Sparkles, Flame, Zap } from "lucide-react";
 import { useCustomerStore } from "@/stores/customerStore";
 import { useBatchStore } from "@/stores/batchStore";
+import { useSandboxStore } from "@/stores/sandboxVMStore";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
   const { customers, provisionJobs, incidents, invoices, tickets } = useCustomerStore();
   const { batches } = useBatchStore();
+  const { items: sandboxItems } = useSandboxStore();
   const navigate = useNavigate();
+  const pendingSandbox = sandboxItems.filter((s) => s.status === "requested");
 
   const activeCustomers = customers.filter(c => c.status === "active").length;
   const activeBatches = customers.reduce((s, c) => s + c.activeBatches, 0);
@@ -57,6 +60,7 @@ export default function AdminDashboard() {
     ...slaBreachedTickets.map(t => ({ type: "sla", label: `SLA Breached: ${t.subject}`, sublabel: t.tenant, action: () => navigate("/admin/support/tickets") })),
     ...failedJobs.map(j => ({ type: "job", label: `Failed: ${j.id} — ${j.failureReason?.slice(0, 50)}`, sublabel: j.tenant, action: () => navigate("/admin/labs/queue") })),
     ...(pendingRequests > 0 ? [{ type: "request", label: `${pendingRequests} pending batch requests`, sublabel: "Awaiting review", action: () => navigate("/admin/batches/requests") }] : []),
+    ...(pendingSandbox.length > 0 ? [{ type: "sandbox", label: `${pendingSandbox.length} sandbox VM request(s)`, sublabel: "Awaiting provisioning", action: () => navigate("/admin/labs/sandbox-requests") }] : []),
     ...overdueInvoices.map(i => ({ type: "invoice", label: `Overdue: ${i.id} — ₹${i.amount.toLocaleString()}`, sublabel: i.tenant, action: () => navigate("/admin/billing/invoices") })),
   ];
 
@@ -65,6 +69,7 @@ export default function AdminDashboard() {
     sla: Timer,
     job: XCircle,
     request: ClipboardList,
+    sandbox: Sparkles,
     invoice: DollarSign,
   };
 
@@ -73,15 +78,55 @@ export default function AdminDashboard() {
     sla: "text-destructive bg-destructive/10",
     job: "text-destructive bg-destructive/10",
     request: "text-warning bg-warning/10",
+    sandbox: "text-violet-600 bg-violet-500/10",
     invoice: "text-warning bg-warning/10",
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
-        <p className="text-muted-foreground text-sm mt-1">System health, activity, and key metrics</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
+          <p className="text-muted-foreground text-sm mt-1">System health, activity, and key metrics</p>
+        </div>
+        <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => navigate("/admin/important-tasks")}>
+          <Flame className="h-3.5 w-3.5 text-destructive" /> Important Tasks
+        </Button>
       </div>
+
+      {/* Time-Critical Requests */}
+      <Card className="border-warning/40 bg-warning/[0.02]">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <Zap className="h-4 w-4 text-warning" /> Time-Critical Requests
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button className="text-left p-3 rounded-lg border hover:border-primary/40 hover:bg-muted/30 transition-colors" onClick={() => navigate("/admin/batches/requests")}>
+              <ClipboardList className="h-4 w-4 text-primary mb-2" />
+              <p className="text-2xl font-bold">{pendingRequests}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Batch Requests</p>
+            </button>
+            <button className="text-left p-3 rounded-lg border hover:border-primary/40 hover:bg-muted/30 transition-colors" onClick={() => navigate("/admin/labs/sandbox-requests")}>
+              <Sparkles className="h-4 w-4 text-violet-600 mb-2" />
+              <p className="text-2xl font-bold">{pendingSandbox.length}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Sandbox VM Requests</p>
+            </button>
+            <button className="text-left p-3 rounded-lg border hover:border-primary/40 hover:bg-muted/30 transition-colors" onClick={() => navigate("/admin/labs/instances")}>
+              <XCircle className="h-4 w-4 text-destructive mb-2" />
+              <p className="text-2xl font-bold">{failedJobs.length}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Provision Failures</p>
+            </button>
+            <button className="text-left p-3 rounded-lg border hover:border-primary/40 hover:bg-muted/30 transition-colors" onClick={() => navigate("/admin/support/tickets")}>
+              <Timer className="h-4 w-4 text-destructive mb-2" />
+              <p className="text-2xl font-bold">{criticalTickets.length + slaBreachedTickets.length}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Critical / SLA Tickets</p>
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+
 
       {/* KPI Cards */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">

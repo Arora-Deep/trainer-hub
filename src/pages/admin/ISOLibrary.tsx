@@ -80,7 +80,6 @@ export default function ISOLibrary() {
   };
 
   const handleDelete = (iso: ISO) => {
-    if (iso.usedBy > 0) { toast({ title: "Cannot Delete", description: `${iso.name} is used by ${iso.usedBy} templates.`, variant: "destructive" }); return; }
     setIsos(isos.filter((i) => i.id !== iso.id));
     toast({ title: "ISO Deleted", description: `${iso.name} removed.` });
   };
@@ -137,7 +136,6 @@ export default function ISOLibrary() {
                 <TableHead>Source</TableHead>
                 <TableHead>Size</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Used By</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -172,7 +170,7 @@ export default function ISOLibrary() {
                       <Badge variant="secondary" className="text-xs bg-destructive/10 text-destructive">Failed</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm">{iso.usedBy} templates</TableCell>
+
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                       {iso.source === "url-pull" && iso.status === "ready" && (

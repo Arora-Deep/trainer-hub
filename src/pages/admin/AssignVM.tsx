@@ -267,10 +267,10 @@ export default function AssignVM() {
           {batch && (
             <>
               <div>
-                <Label className="text-xs">Assignment mode</Label>
+                <Label className="text-xs">Assignment mode <span className="text-[10px] text-muted-foreground font-normal">— entire batch selected by default</span></Label>
                 <div className="flex gap-2 mt-1.5">
                   <Button type="button" size="sm" variant={mode === "batch" ? "default" : "outline"} className="text-xs flex-1" onClick={() => setMode("batch")}>
-                    Entire batch ({participants.length})
+                    Entire batch ({participants.length}) · Default
                   </Button>
                   <Button type="button" size="sm" variant={mode === "students" ? "default" : "outline"} className="text-xs flex-1" onClick={() => setMode("students")}>
                     Multiple students

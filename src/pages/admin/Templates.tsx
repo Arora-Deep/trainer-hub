@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLabStore, type LabTemplate } from "@/stores/labStore";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Edit, Copy, Archive, Cpu, MemoryStick, HardDrive, Search } from "lucide-react";
+import { Plus, Edit, Copy, Archive, Cpu, MemoryStick, HardDrive, Search, KeyRound, Eye, EyeOff, Copy as CopyIcon, User, Tag as TagIcon, Calendar, Clock } from "lucide-react";
 
 export default function AdminTemplates() {
   const navigate = useNavigate();
@@ -21,6 +21,7 @@ export default function AdminTemplates() {
   const [search, setSearch] = useState("");
   const [osFilter, setOsFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [showPassword, setShowPassword] = useState(false);
 
   const osList = useMemo(() => Array.from(new Set(templates.map((t) => t.os).filter(Boolean))), [templates]);
   const categoryList = useMemo(() => Array.from(new Set(templates.map((t) => t.category).filter(Boolean))), [templates]);
@@ -96,24 +97,37 @@ export default function AdminTemplates() {
               <TableRow>
                 <TableHead>Template</TableHead>
                 <TableHead>OS</TableHead>
-                <TableHead className="text-center">CPU</TableHead>
-                <TableHead className="text-center">RAM</TableHead>
-                <TableHead className="text-center">Disk</TableHead>
-                <TableHead>Category</TableHead>
+                <TableHead className="text-center">Resources</TableHead>
+                <TableHead>Category / Tags</TableHead>
+                <TableHead>Built for</TableHead>
+                <TableHead>Requested by</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead>Last used</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((t) => (
                 <TableRow key={t.id} className="group">
-                  <TableCell>
-                    <button className="text-sm font-medium text-primary hover:underline" onClick={() => openEdit(t)}>{t.name}</button>
+                  <TableCell className="max-w-[240px]">
+                    <button className="text-sm font-medium text-primary hover:underline text-left" onClick={() => openEdit(t)}>{t.name}</button>
+                    {t.description && <p className="text-[11px] text-muted-foreground truncate">{t.description}</p>}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{t.os} {t.osVersion}</TableCell>
-                  <TableCell className="text-sm text-center">{t.vcpus} vCPU</TableCell>
-                  <TableCell className="text-sm text-center">{t.memory} GB</TableCell>
-                  <TableCell className="text-sm text-center">{t.storage} GB</TableCell>
-                  <TableCell><Badge variant="secondary" className="text-xs">{t.category}</Badge></TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{t.os} {t.osVersion}</TableCell>
+                  <TableCell className="text-xs text-center whitespace-nowrap">{t.vcpus}C · {t.memory}G · {t.storage}G</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="text-[10px]">{t.category}</Badge>
+                    <div className="flex gap-1 flex-wrap mt-1">
+                      {t.tags?.slice(0, 3).map((tag) => (
+                        <Badge key={tag} variant="outline" className="text-[9px] px-1 py-0">{tag}</Badge>
+                      ))}
+                      {t.tags && t.tags.length > 3 && <span className="text-[9px] text-muted-foreground">+{t.tags.length - 3}</span>}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground max-w-[160px] truncate">{t.builtFor || "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground max-w-[160px] truncate">{t.requestedBy || "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{t.createdAt}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{t.lastUsedAt || "—"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="sm" title="Edit" onClick={() => openEdit(t)}><Edit className="h-3 w-3" /></Button>
@@ -171,10 +185,53 @@ export default function AdminTemplates() {
                   </div>
                 </div>
 
+                {/* About this template */}
+                <div className="rounded-lg border p-3 space-y-2 bg-muted/20">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold"><TagIcon className="h-3.5 w-3.5" /> About this template</div>
+                  {selected.description && <p className="text-xs text-muted-foreground">{selected.description}</p>}
+                  <div className="grid grid-cols-2 gap-3 text-xs pt-1">
+                    <div><span className="text-muted-foreground">Built for:</span> <span className="font-medium">{selected.builtFor || "—"}</span></div>
+                    <div><span className="text-muted-foreground">Requested by:</span> <span className="font-medium">{selected.requestedBy || "—"}</span></div>
+                    <div className="flex items-center gap-1"><Calendar className="h-3 w-3 text-muted-foreground" /><span className="text-muted-foreground">Created:</span> <span className="font-medium">{selected.createdAt}</span></div>
+                    <div className="flex items-center gap-1"><Clock className="h-3 w-3 text-muted-foreground" /><span className="text-muted-foreground">Last used:</span> <span className="font-medium">{selected.lastUsedAt || "—"}</span></div>
+                    <div className="col-span-2"><span className="text-muted-foreground">Category:</span> <Badge variant="secondary" className="text-[10px] ml-1">{selected.category}</Badge></div>
+                  </div>
+                  {selected.tags?.length > 0 && (
+                    <div className="flex gap-1 flex-wrap pt-1">
+                      {selected.tags.map((t) => <Badge key={t} variant="outline" className="text-[10px]">{t}</Badge>)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Default login credentials */}
+                {selected.credentials && (
+                  <div className="rounded-lg border p-3 space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold"><KeyRound className="h-3.5 w-3.5" /> Default login credentials</div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] text-muted-foreground">Username</Label>
+                        <div className="flex items-center gap-1">
+                          <code className="flex-1 text-xs bg-muted px-2 py-1.5 rounded font-mono">{selected.credentials.username}</code>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { navigator.clipboard.writeText(selected.credentials!.username); toast({ title: "Copied" }); }}><CopyIcon className="h-3 w-3" /></Button>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] text-muted-foreground">Password</Label>
+                        <div className="flex items-center gap-1">
+                          <code className="flex-1 text-xs bg-muted px-2 py-1.5 rounded font-mono">{showPassword ? selected.credentials.password : "••••••••••"}</code>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}</Button>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { navigator.clipboard.writeText(selected.credentials!.password); toast({ title: "Copied" }); }}><CopyIcon className="h-3 w-3" /></Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-1.5">
                   <Label className="text-xs">Startup Script</Label>
                   <Textarea value={draft.startupScript ?? selected.startupScript} onChange={(e) => setDraft({ ...draft, startupScript: e.target.value })} rows={6} className="font-mono text-xs" placeholder="#!/bin/bash" />
                 </div>
+
 
                 <div className="flex gap-2">
                   <Button className="flex-1" onClick={handleSave}>Save Changes</Button>
