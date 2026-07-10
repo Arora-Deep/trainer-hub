@@ -81,10 +81,49 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
-        <p className="text-muted-foreground text-sm mt-1">System health, activity, and key metrics</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
+          <p className="text-muted-foreground text-sm mt-1">System health, activity, and key metrics</p>
+        </div>
+        <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => navigate("/admin/important-tasks")}>
+          <Flame className="h-3.5 w-3.5 text-destructive" /> Important Tasks
+        </Button>
       </div>
+
+      {/* Time-Critical Requests */}
+      <Card className="border-warning/40 bg-warning/[0.02]">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <Zap className="h-4 w-4 text-warning" /> Time-Critical Requests
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button className="text-left p-3 rounded-lg border hover:border-primary/40 hover:bg-muted/30 transition-colors" onClick={() => navigate("/admin/batches/requests")}>
+              <ClipboardList className="h-4 w-4 text-primary mb-2" />
+              <p className="text-2xl font-bold">{pendingRequests}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Batch Requests</p>
+            </button>
+            <button className="text-left p-3 rounded-lg border hover:border-primary/40 hover:bg-muted/30 transition-colors" onClick={() => navigate("/admin/labs/sandbox-requests")}>
+              <Sparkles className="h-4 w-4 text-violet-600 mb-2" />
+              <p className="text-2xl font-bold">{pendingSandbox.length}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Sandbox VM Requests</p>
+            </button>
+            <button className="text-left p-3 rounded-lg border hover:border-primary/40 hover:bg-muted/30 transition-colors" onClick={() => navigate("/admin/labs/instances")}>
+              <XCircle className="h-4 w-4 text-destructive mb-2" />
+              <p className="text-2xl font-bold">{failedJobs.length}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Provision Failures</p>
+            </button>
+            <button className="text-left p-3 rounded-lg border hover:border-primary/40 hover:bg-muted/30 transition-colors" onClick={() => navigate("/admin/support/tickets")}>
+              <Timer className="h-4 w-4 text-destructive mb-2" />
+              <p className="text-2xl font-bold">{criticalTickets.length + slaBreachedTickets.length}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Critical / SLA Tickets</p>
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+
 
       {/* KPI Cards */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
