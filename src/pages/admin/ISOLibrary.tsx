@@ -137,7 +137,6 @@ export default function ISOLibrary() {
                 <TableHead>Source</TableHead>
                 <TableHead>Size</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Used By</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -172,7 +171,7 @@ export default function ISOLibrary() {
                       <Badge variant="secondary" className="text-xs bg-destructive/10 text-destructive">Failed</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm">{iso.usedBy} templates</TableCell>
+
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                       {iso.source === "url-pull" && iso.status === "ready" && (
