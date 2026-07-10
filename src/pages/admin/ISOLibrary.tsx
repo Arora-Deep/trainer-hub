@@ -80,7 +80,6 @@ export default function ISOLibrary() {
   };
 
   const handleDelete = (iso: ISO) => {
-    if (iso.usedBy > 0) { toast({ title: "Cannot Delete", description: `${iso.name} is used by ${iso.usedBy} templates.`, variant: "destructive" }); return; }
     setIsos(isos.filter((i) => i.id !== iso.id));
     toast({ title: "ISO Deleted", description: `${iso.name} removed.` });
   };
