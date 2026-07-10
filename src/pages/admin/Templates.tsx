@@ -185,10 +185,53 @@ export default function AdminTemplates() {
                   </div>
                 </div>
 
+                {/* About this template */}
+                <div className="rounded-lg border p-3 space-y-2 bg-muted/20">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold"><TagIcon className="h-3.5 w-3.5" /> About this template</div>
+                  {selected.description && <p className="text-xs text-muted-foreground">{selected.description}</p>}
+                  <div className="grid grid-cols-2 gap-3 text-xs pt-1">
+                    <div><span className="text-muted-foreground">Built for:</span> <span className="font-medium">{selected.builtFor || "—"}</span></div>
+                    <div><span className="text-muted-foreground">Requested by:</span> <span className="font-medium">{selected.requestedBy || "—"}</span></div>
+                    <div className="flex items-center gap-1"><Calendar className="h-3 w-3 text-muted-foreground" /><span className="text-muted-foreground">Created:</span> <span className="font-medium">{selected.createdAt}</span></div>
+                    <div className="flex items-center gap-1"><Clock className="h-3 w-3 text-muted-foreground" /><span className="text-muted-foreground">Last used:</span> <span className="font-medium">{selected.lastUsedAt || "—"}</span></div>
+                    <div className="col-span-2"><span className="text-muted-foreground">Category:</span> <Badge variant="secondary" className="text-[10px] ml-1">{selected.category}</Badge></div>
+                  </div>
+                  {selected.tags?.length > 0 && (
+                    <div className="flex gap-1 flex-wrap pt-1">
+                      {selected.tags.map((t) => <Badge key={t} variant="outline" className="text-[10px]">{t}</Badge>)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Default login credentials */}
+                {selected.credentials && (
+                  <div className="rounded-lg border p-3 space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold"><KeyRound className="h-3.5 w-3.5" /> Default login credentials</div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] text-muted-foreground">Username</Label>
+                        <div className="flex items-center gap-1">
+                          <code className="flex-1 text-xs bg-muted px-2 py-1.5 rounded font-mono">{selected.credentials.username}</code>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { navigator.clipboard.writeText(selected.credentials!.username); toast({ title: "Copied" }); }}><CopyIcon className="h-3 w-3" /></Button>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] text-muted-foreground">Password</Label>
+                        <div className="flex items-center gap-1">
+                          <code className="flex-1 text-xs bg-muted px-2 py-1.5 rounded font-mono">{showPassword ? selected.credentials.password : "••••••••••"}</code>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}</Button>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { navigator.clipboard.writeText(selected.credentials!.password); toast({ title: "Copied" }); }}><CopyIcon className="h-3 w-3" /></Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-1.5">
                   <Label className="text-xs">Startup Script</Label>
                   <Textarea value={draft.startupScript ?? selected.startupScript} onChange={(e) => setDraft({ ...draft, startupScript: e.target.value })} rows={6} className="font-mono text-xs" placeholder="#!/bin/bash" />
                 </div>
+
 
                 <div className="flex gap-2">
                   <Button className="flex-1" onClick={handleSave}>Save Changes</Button>
