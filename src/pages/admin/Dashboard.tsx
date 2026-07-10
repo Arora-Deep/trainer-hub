@@ -60,6 +60,7 @@ export default function AdminDashboard() {
     ...slaBreachedTickets.map(t => ({ type: "sla", label: `SLA Breached: ${t.subject}`, sublabel: t.tenant, action: () => navigate("/admin/support/tickets") })),
     ...failedJobs.map(j => ({ type: "job", label: `Failed: ${j.id} — ${j.failureReason?.slice(0, 50)}`, sublabel: j.tenant, action: () => navigate("/admin/labs/queue") })),
     ...(pendingRequests > 0 ? [{ type: "request", label: `${pendingRequests} pending batch requests`, sublabel: "Awaiting review", action: () => navigate("/admin/batches/requests") }] : []),
+    ...(pendingSandbox.length > 0 ? [{ type: "sandbox", label: `${pendingSandbox.length} sandbox VM request(s)`, sublabel: "Awaiting provisioning", action: () => navigate("/admin/labs/sandbox-requests") }] : []),
     ...overdueInvoices.map(i => ({ type: "invoice", label: `Overdue: ${i.id} — ₹${i.amount.toLocaleString()}`, sublabel: i.tenant, action: () => navigate("/admin/billing/invoices") })),
   ];
 
@@ -68,6 +69,7 @@ export default function AdminDashboard() {
     sla: Timer,
     job: XCircle,
     request: ClipboardList,
+    sandbox: Sparkles,
     invoice: DollarSign,
   };
 
@@ -76,6 +78,7 @@ export default function AdminDashboard() {
     sla: "text-destructive bg-destructive/10",
     job: "text-destructive bg-destructive/10",
     request: "text-warning bg-warning/10",
+    sandbox: "text-violet-600 bg-violet-500/10",
     invoice: "text-warning bg-warning/10",
   };
 
