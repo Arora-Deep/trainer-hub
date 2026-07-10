@@ -66,7 +66,7 @@ export default function ImportantTasks() {
         id: `sbx-${s.id}`,
         category: "sandbox_vm",
         title: `Sandbox VM: ${s.templateName || s.id}`,
-        subtitle: `Requested by ${s.requestedBy || "trainer"}`,
+        subtitle: `Requested by ${s.trainerName || "trainer"}`,
         meta: s.customerName,
         priority: "high",
         action: () => navigate("/admin/labs/sandbox-requests"),
