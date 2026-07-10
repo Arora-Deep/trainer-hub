@@ -2,15 +2,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Building2, Server, AlertTriangle, DollarSign, FlaskConical, TicketCheck, RotateCcw, ChevronRight, Clock, XCircle, ClipboardList, Timer } from "lucide-react";
+import { Building2, Server, AlertTriangle, DollarSign, FlaskConical, TicketCheck, RotateCcw, ChevronRight, Clock, XCircle, ClipboardList, Timer, Sparkles, Flame, Zap } from "lucide-react";
 import { useCustomerStore } from "@/stores/customerStore";
 import { useBatchStore } from "@/stores/batchStore";
+import { useSandboxStore } from "@/stores/sandboxVMStore";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
   const { customers, provisionJobs, incidents, invoices, tickets } = useCustomerStore();
   const { batches } = useBatchStore();
+  const { items: sandboxItems } = useSandboxStore();
   const navigate = useNavigate();
+  const pendingSandbox = sandboxItems.filter((s) => s.status === "requested");
 
   const activeCustomers = customers.filter(c => c.status === "active").length;
   const activeBatches = customers.reduce((s, c) => s + c.activeBatches, 0);
