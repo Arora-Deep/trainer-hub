@@ -93,6 +93,7 @@ import CourseModeration from "./pages/admin/CourseModeration";
 import PlansAndPricing from "./pages/admin/PlansAndPricing";
 import NodeVMPool from "./pages/admin/NodeVMPool";
 import SandboxVMRequests from "./pages/admin/SandboxVMRequests";
+import ImportantTasks from "./pages/admin/ImportantTasks";
 import RequestSandboxVM from "./pages/RequestSandboxVM";
 import SandboxVMs from "./pages/SandboxVMs";
 
@@ -186,6 +187,7 @@ const App = () => (
 
             {/* Admin routes */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/important-tasks" element={<ImportantTasks />} />
             <Route path="/admin/activity-feed" element={<AdminActivityFeed />} />
             <Route path="/admin/alerts" element={<AdminAlerts />} />
             <Route path="/admin/customers" element={<AdminCustomers />} />
