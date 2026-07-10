@@ -56,6 +56,11 @@ export interface LabTemplate {
   sourceSandboxId?: string;
   createdByTrainerId?: string;
   createdByTrainerName?: string;
+  // Descriptive metadata (additive, optional)
+  credentials?: { username: string; password: string };
+  builtFor?: string;      // e.g. "AWS SA — Cohort 12"
+  requestedBy?: string;   // e.g. "Priya Sharma (DevOps Academy)"
+  lastUsedAt?: string;    // e.g. "Feb 20, 2026"
 }
 
 interface LabStore {
